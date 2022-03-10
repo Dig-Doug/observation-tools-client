@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package observation_tools.proto;
+
+option java_multiple_files = true;
+option java_package = "observation_tools.proto";
+
+message Number {
+  double d = 1;
+}
+
+message Point2 {
+  Number x = 1;
+  Number y = 2;
+}
+
+message Segment2 {
+  Point2 start = 1;
+  Point2 end = 2;
+}
+
+message Point3 {
+  Number x = 1;
+  Number y = 2;
+  Number z = 3;
+}
+
+message Vector2 {
+  Number x = 1;
+  Number y = 2;
+}
+
+message Vector3 {
+  Number x = 1;
+  Number y = 2;
+  Number z = 3;
+}
+
+message PolygonEdge2 {
+  Point2 vertex = 1;
+}
+
+message Polygon2 {
+  repeated PolygonEdge2 edges = 1;
+}
+
+message Graph {
+  map<string, GraphNode> nodes = 1;
+
+  map<string, GraphEdge> edges = 2;
+}
+
+message GraphNode {
+  Point3 position = 1;
+}
+
+message GraphEdge {
+  string start_node_id = 1;
+  string end_node_id = 2;
+}
+
+
+message Matrix3x3 {
+  // m<Row>_<Col>
+  Number m0_0 = 1;
+  Number m0_1 = 2;
+  Number m0_2 = 3;
+  Number m1_0 = 4;
+  Number m1_1 = 5;
+  Number m1_2 = 6;
+  Number m2_0 = 7;
+  Number m2_1 = 8;
+  Number m2_2 = 9;
+}
+
+message Matrix4x4 {
+  // m<Row>_<Col>
+  Number m0_0 = 1;
+  Number m0_1 = 2;
+  Number m0_2 = 3;
+  Number m0_3 = 4;
+  Number m1_0 = 5;
+  Number m1_1 = 6;
+  Number m1_2 = 7;
+  Number m1_3 = 8;
+  Number m2_0 = 9;
+  Number m2_1 = 10;
+  Number m2_2 = 11;
+  Number m2_3 = 12;
+  Number m3_0 = 13;
+  Number m3_1 = 14;
+  Number m3_2 = 15;
+  Number m3_3 = 16;
+}
+
+message Transform2 {
+  oneof data {
+    TRS2 trs = 1;
+    bool identity = 2;
+  }
+}
+
+message Transform3 {
+  oneof data {
+    TRS3 trs = 1;
+    Matrix4x4 matrix = 2;
+    bool identity = 3;
+  }
+}
+
+message TRS2 {
+  Vector2 translation = 1;
+
+  // TODO(doug): Rotation
+
+  Vector2 scale = 3;
+}
+
+message TRS3 {
+  Vector3 translation = 1;
+
+  // TODO(doug): Rotation
+
+  Vector3 scale = 3;
+}

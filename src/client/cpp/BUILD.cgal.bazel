@@ -1,0 +1,47 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+filegroup(
+    name = "all",
+    srcs = glob(["**"]),
+)
+
+cmake(
+    name = "cgal",
+    cache_entries = {
+        "BOOST_INCLUDEDIR": "$EXT_BUILD_DEPS/boost",
+        "CGAL_HEADER_ONLY": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        #        "GMP_INCLUDE_DIR": "$EXT_BUILD_DEPS/libgmp",
+        #        "GMP_LIBRARIES_DIR": "$EXT_BUILD_DEPS/libgmp",
+        #        "GMP_LIBRARIES": "$EXT_BUILD_DEPS/libgmp/libgmp.a",
+        #        "GMPXX_INCLUDE_DIR": "$EXT_BUILD_DEPS/libgmp",
+        #        "GMPXX_LIBRARIES_DIR": "$EXT_BUILD_DEPS/libgmp",
+        #        "GMPXX_LIBRARIES": "$EXT_BUILD_DEPS/libgmp/libgmpxx.a",
+        #        "MPFR_INCLUDE_DIR": "$EXT_BUILD_DEPS/libmpfr",
+        #        "MPFR_LIBRARIES_DIR": "$EXT_BUILD_DEPS/libmpfr",
+        #        "MPFR_LIBRARIES": "$EXT_BUILD_DEPS/libmpfr/libmpfr.a",
+    },
+    defines = [
+        "CGAL_HEADER_ONLY",
+        "CGAL_DONT_USE_LAZY_KERNEL",
+        "CGAL_HAS_THREADS",
+        "BOOST_HAS_THREADS",
+    ],
+    lib_source = "@cgal//:all",
+    linkopts = [
+        "-ldl",
+        "-lgmp",
+        "-lmpfr",
+    ],
+    out_headers_only = True,
+    deps = [
+        "@boost//:dynamic_bitset",
+        "@boost//:fiber",
+        "@boost//:graph",
+        "@boost//:math",
+        "@boost//:multiprecision",
+        "@boost//:thread",
+    ],
+)

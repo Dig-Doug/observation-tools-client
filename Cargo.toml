@@ -1,0 +1,33 @@
+[package]
+name = "observation_tools_client"
+version = "0.0.0"
+edition = "2021"
+
+[workspace]
+members = [
+    "src/api/artifacts",
+    "src/client/rust",
+]
+
+[lib]
+name = "server"
+path = "unused.rs"
+
+[package.metadata.raze]
+workspace_path = "//cargo"
+package_aliases_dir = "cargo"
+targets = [
+    "x86_64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu",
+]
+genmode = "Remote"
+
+[package.metadata.raze.crates.ring.'*']
+data_attr = 'glob(["**/*.der"])'
+
+[package.metadata.raze.crates.webpki.'*']
+data_attr = 'glob(["**/*.der"])'
+
+[package.metadata.raze.crates.derive_builder_core.'*']
+data_attr = 'glob(["**/*.md"])'

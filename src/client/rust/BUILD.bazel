@@ -1,0 +1,50 @@
+load("@rules_rust//rust:defs.bzl", "rust_shared_library", "rust_static_library")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_static_library(
+    name = "client",
+    srcs = glob([
+        "*.rs",
+    ]),
+    deps = [
+        "//src/api/artifacts:artifacts_api_rust_proto",
+        "//src/client/rust/cargo:base64",
+        "//src/client/rust/cargo:bs58",
+        "//src/client/rust/cargo:cached",
+        "//src/client/rust/cargo:cxx",
+        "//src/client/rust/cargo:derive_builder",
+        "//src/client/rust/cargo:env_logger",
+        "//src/client/rust/cargo:futures",
+        "//src/client/rust/cargo:google_cloud_auth",
+        "//src/client/rust/cargo:itertools",
+        "//src/client/rust/cargo:log",
+        "//src/client/rust/cargo:reqwest",
+        "//src/client/rust/cargo:tempfile",
+        "//src/client/rust/cargo:tokio",
+        "//src/client/rust/cargo:uuid",
+        "@rules_rust//proto/raze:protobuf",
+    ],
+)
+
+# TODO(doug): Generate this automatically instead of manually
+cc_library(
+    name = "cpp_bindings",
+    srcs = [
+        "generated/rust_cxx.cpp",
+    ],
+    hdrs = [
+        "generated/rust_cxx.h",
+    ],
+    include_prefix = "observation-tools",
+    linkopts = [
+        "-lssl",
+        "-lcrypto",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//src/client/rust:client",
+    ],
+)

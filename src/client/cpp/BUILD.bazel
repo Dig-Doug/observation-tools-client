@@ -1,0 +1,29 @@
+package(default_visibility = ["//visibility:public"])
+
+PUBLIC_HDRS = [
+    "artifact_uploader.h",
+    "client.h",
+    "run_uploader.h",
+]
+
+cc_library(
+    name = "client",
+    srcs = glob(
+        [
+            "*.cpp",
+            "*.h",
+        ],
+        exclude = PUBLIC_HDRS,
+    ),
+    hdrs = PUBLIC_HDRS,
+    include_prefix = "observation-tools",
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//src/api/artifacts:all_cc_proto",
+        "//src/client/cpp/converters",
+        "//src/client/rust:client",
+        "//src/client/rust:cpp_bindings",
+    ],
+)

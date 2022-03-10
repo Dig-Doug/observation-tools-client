@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "src/api/artifacts/artifact.proto";
+import "google/protobuf/timestamp.proto";
+
+package observation_tools.proto;
+
+option java_multiple_files = true;
+option java_package = "observation_tools.proto";
+
+message RunData {
+  .google.protobuf.Timestamp client_creation_time = 3;
+
+  // Only stores the bucket config, not an object
+  //BucketObject storage_bucket = 4;
+  
+  ArtifactId root_group_id = 5;
+
+  reserved 1, 2;
+}
