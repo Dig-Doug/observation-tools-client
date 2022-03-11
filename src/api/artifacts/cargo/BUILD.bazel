@@ -157,6 +157,15 @@ alias(
 )
 
 alias(
+    name = "tokio_util",
+    actual = "@raze__tokio_util__0_7_0//:tokio_util",
+    tags = [
+        "cargo-raze",
+        "manual",
+    ],
+)
+
+alias(
     name = "uuid",
     actual = "@raze__uuid__0_8_2//:uuid",
     tags = [

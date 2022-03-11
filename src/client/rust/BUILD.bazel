@@ -22,6 +22,7 @@ rust_static_library(
         "//src/client/rust/cargo:reqwest",
         "//src/client/rust/cargo:tempfile",
         "//src/client/rust/cargo:tokio",
+        "//src/client/rust/cargo:tokio_util",
         "//src/client/rust/cargo:uuid",
         "@rules_rust//proto/raze:protobuf",
     ],
@@ -37,14 +38,14 @@ cc_library(
         "generated/rust_cxx.h",
     ],
     include_prefix = "observation-tools",
-    linkopts = [
-        "-lssl",
-        "-lcrypto",
-    ],
     visibility = [
         "//visibility:public",
     ],
     deps = [
         "//src/client/rust:client",
+    ],
+    linkopts = [
+        "-lssl",
+       # "-lcrypto",
     ],
 )

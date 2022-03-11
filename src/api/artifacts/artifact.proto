@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 package observation_tools.proto;
 
 option java_multiple_files = true;
-option java_package = "observation_tools.proto";
+option java_package = "tools.observation.proto";
 
 message ArtifactId {
   Uuid uuid = 1;
@@ -21,7 +21,6 @@ message ArtifactData {
   ArtifactType artifact_type = 8;
 
   oneof type_data {
-    //BucketObject raw_data = 4;
     RunStageData run_stage_data = 9;
     Map2dTo3dData map_2d_to_3d = 10;
     Group3d group_3d = 11;
@@ -29,7 +28,7 @@ message ArtifactData {
 
   .google.protobuf.Timestamp client_creation_time = 5;
 
-  reserved 1 to 3;
+  reserved 1 to 4;
 }
 
 message ArtifactUserMetadata {

@@ -32,11 +32,12 @@ licenses([
 # Generated Targets
 
 rust_library(
-    name = "futures_io",
+    name = "tokio_rustls",
     srcs = glob(["**/*.rs"]),
     crate_features = [
         "default",
-        "std",
+        "logging",
+        "tls12",
     ],
     crate_root = "src/lib.rs",
     data = [],
@@ -48,8 +49,19 @@ rust_library(
         "cargo-raze",
         "manual",
     ],
-    version = "0.3.21",
+    version = "0.23.2",
     # buildifier: leave-alone
     deps = [
+        "@raze__rustls__0_20_4//:rustls",
+        "@raze__tokio__1_17_0//:tokio",
+        "@raze__webpki__0_22_0//:webpki",
     ],
 )
+
+# Unsupported target "badssl" with type "test" omitted
+
+# Unsupported target "early-data" with type "test" omitted
+
+# Unsupported target "test" with type "test" omitted
+
+# Unsupported target "utils" with type "test" omitted

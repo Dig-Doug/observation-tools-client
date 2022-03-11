@@ -5,16 +5,22 @@ use artifacts_api_rust_proto::{
     ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse,
 };
 use base64::decode;
-use log::{debug, info};
+use log::{debug, error, info};
 use protobuf::{parse_from_bytes, Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::collections::HashMap;
 use std::env;
+use std::fs::File;
+use std::future::Future;
 use std::io::Write;
 use std::sync::Arc;
-use tempfile::{NamedTempFile, TempDir};
-use crate::google_token_generator::GoogleTokenGenerator;
+use reqwest::Body;
+use reqwest::multipart::Part;
+use tempfile::{NamedTempFile, SpooledTempFile, TempDir};
+use tokio::runtime::Runtime;
+use crate::google_token_generator::{GenericError, GoogleTokenGenerator};
+use tokio_util::codec::{BytesCodec, FramedRead};
 
 #[derive(Clone)]
 #[cfg_attr(feature = "python", pyclass)]
@@ -23,7 +29,8 @@ pub struct Client {
     host: String,
     token_generator: Box<GoogleTokenGenerator>,
     project_id: String,
-    client: reqwest::blocking::Client,
+    client: reqwest::Client,
+    runtime: Arc<Runtime>,
 }
 
 pub(crate) fn ffi_new_client(project_id: String) -> Box<Client> {
@@ -45,40 +52,41 @@ impl Client {
         Self::new_impl(project_id)
     }
 
-    pub fn create_run(&self) -> RunUploader {
+    pub async fn create_run(&self) -> Result<RunUploader, GenericError> {
         let mut request = CreateRunRequest::new();
         request.set_project_id(self.project_id.clone());
         request.mut_run_data().set_client_creation_time(time_now());
 
         let mut params = HashMap::new();
         params.insert("request", base64::encode(request.write_to_bytes().unwrap()));
-        let res = self
+        let token = self.token_generator.token(self.client.clone()).await?;
+        let response = self
             .client
             .post(format!("{}/create-run", self.host))
-            .bearer_auth(self.token_generator.token())
+            .bearer_auth(token)
             .form(&params)
-            .send();
-        let response = res.unwrap();
+            .send().await?;
         if response.status().is_server_error() {
             debug!("{:?}", response);
             panic!("Server error {:?}", response)
         }
 
-        let response_body = response.text().unwrap();
+        let response_body = response.text().await?;
+        info!("{}", response_body);
         let response: CreateRunResponse =
             parse_from_bytes(&decode(response_body).unwrap()).unwrap();
         let mut new_data = ArtifactGroupUploaderData::new();
         new_data.set_project_id(request.get_project_id().to_string());
         new_data.set_run_id(response.get_run_id().clone());
         new_data.set_id(response.get_root_stage_id().clone());
-        RunUploader {
+        Ok(RunUploader {
             base: BaseArtifactUploaderBuilder::default()
                 .client(self.clone())
                 .data(new_data)
                 .context_behavior(ContextBehavior::Init)
                 .init(),
             response,
-        }
+        })
     }
 }
 
@@ -95,12 +103,19 @@ impl Client {
             host,
             token_generator: Box::new(GoogleTokenGenerator::new()),
             project_id,
-            client: reqwest::blocking::Client::new(),
+            client: reqwest::Client::builder()
+                .use_rustls_tls()
+                .build().expect("Failed to build reqwest client"),
+            runtime: Arc::new(tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .unwrap()),
         }
     }
 
     pub(crate) fn ffi_create_run(&self) -> Box<RunUploader> {
-        Box::new(self.create_run())
+        let uploader = self.runtime.block_on(self.create_run()).unwrap();
+        Box::new(uploader)
     }
 
     fn deserialize_run_stage(&self, serialized: String) -> RunStageUploader {
@@ -128,25 +143,32 @@ impl Client {
         };
 
         let req_b64 = base64::encode(request.write_to_bytes().unwrap());
-        let mut form = reqwest::blocking::multipart::Form::new().text("request", req_b64);
-        if tmp_file.is_some() {
-            form = form.file("raw_data", tmp_file.as_ref().unwrap()).unwrap();
-        }
+        let this = self.clone();
+        let task = async move {
+            let mut form = reqwest::multipart::Form::new().text("request", req_b64);
+            if tmp_file.is_some() {
+                let f = tmp_file.as_ref().unwrap();
+                let file = tokio::fs::File::open(f).await?;
+                let reader = Body::wrap_stream(FramedRead::new(file, BytesCodec::new()));
+                form = form.part("raw_data", Part::stream(reader));
+            }
 
-        let res = self
-            .client
-            .post(format!("{}/create-artifact", self.host))
-            .bearer_auth(self.token_generator.token())
-            .multipart(form)
-            .send();
-        let response = res.unwrap();
-        if response.status().is_server_error() {
-            debug!("{:?}", response);
-            panic!("Server error")
-        }
+            let token = this.token_generator.token(this.client.clone()).await?;
+            let response = this
+                .client
+                .post(format!("{}/create-artifact", this.host))
+                .bearer_auth(token)
+                .multipart(form)
+                .send()
+                .await?;
 
-        if tmp_file.is_some() {
-            tmp_file.unwrap().close().unwrap();
-        }
+            if response.status().is_server_error() {
+                debug!("{:?}", response);
+                panic!("Server error")
+            }
+
+            Ok::<(), GenericError>(())
+        };
+        self.runtime.spawn(task);
     }
 }

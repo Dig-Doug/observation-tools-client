@@ -622,6 +622,16 @@ def raze_fetch_remote_crates():
 
     maybe(
         http_archive,
+        name = "raze__hyper_rustls__0_23_0",
+        url = "https://crates.io/api/v1/crates/hyper-rustls/0.23.0/download",
+        type = "tar.gz",
+        sha256 = "d87c48c02e0dc5e3b849a2041db3029fd066650f8f717c07bf8ed78ccb895cac",
+        strip_prefix = "hyper-rustls-0.23.0",
+        build_file = Label("//cargo/remote:BUILD.hyper-rustls-0.23.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "raze__hyper_tls__0_5_0",
         url = "https://crates.io/api/v1/crates/hyper-tls/0.5.0/download",
         type = "tar.gz",
@@ -1512,12 +1522,32 @@ def raze_fetch_remote_crates():
 
     maybe(
         http_archive,
+        name = "raze__tokio_rustls__0_23_2",
+        url = "https://crates.io/api/v1/crates/tokio-rustls/0.23.2/download",
+        type = "tar.gz",
+        sha256 = "a27d5f2b839802bd8267fa19b0530f5a08b9c08cd417976be2a65d130fe1c11b",
+        strip_prefix = "tokio-rustls-0.23.2",
+        build_file = Label("//cargo/remote:BUILD.tokio-rustls-0.23.2.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "raze__tokio_util__0_6_9",
         url = "https://crates.io/api/v1/crates/tokio-util/0.6.9/download",
         type = "tar.gz",
         sha256 = "9e99e1983e5d376cd8eb4b66604d2e99e79f5bd988c3055891dcd8c9e2604cc0",
         strip_prefix = "tokio-util-0.6.9",
         build_file = Label("//cargo/remote:BUILD.tokio-util-0.6.9.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "raze__tokio_util__0_7_0",
+        url = "https://crates.io/api/v1/crates/tokio-util/0.7.0/download",
+        type = "tar.gz",
+        sha256 = "64910e1b9c1901aaf5375561e35b9c057d95ff41a44ede043a03e09279eabaf1",
+        strip_prefix = "tokio-util-0.7.0",
+        build_file = Label("//cargo/remote:BUILD.tokio-util-0.7.0.bazel"),
     )
 
     maybe(
@@ -1758,6 +1788,16 @@ def raze_fetch_remote_crates():
         sha256 = "f095d78192e208183081cc07bc5515ef55216397af48b873e5edcd72637fa1bd",
         strip_prefix = "webpki-0.22.0",
         build_file = Label("//cargo/remote:BUILD.webpki-0.22.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "raze__webpki_roots__0_22_2",
+        url = "https://crates.io/api/v1/crates/webpki-roots/0.22.2/download",
+        type = "tar.gz",
+        sha256 = "552ceb903e957524388c4d3475725ff2c8b7960922063af6ce53c9a43da07449",
+        strip_prefix = "webpki-roots-0.22.2",
+        build_file = Label("//cargo/remote:BUILD.webpki-roots-0.22.2.bazel"),
     )
 
     maybe(
