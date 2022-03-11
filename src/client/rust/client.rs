@@ -5,19 +5,17 @@ use artifacts_api_rust_proto::{
     ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse,
 };
 use base64::decode;
-use log::{debug, error, info};
+use log::{debug};
 use protobuf::{parse_from_bytes, Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::collections::HashMap;
 use std::env;
-use std::fs::File;
-use std::future::Future;
 use std::io::Write;
 use std::sync::Arc;
 use reqwest::Body;
 use reqwest::multipart::Part;
-use tempfile::{NamedTempFile, SpooledTempFile, TempDir};
+use tempfile::{NamedTempFile, TempDir};
 use tokio::runtime::Runtime;
 use crate::google_token_generator::{GenericError, GoogleTokenGenerator};
 use tokio_util::codec::{BytesCodec, FramedRead};
@@ -52,41 +50,8 @@ impl Client {
         Self::new_impl(project_id)
     }
 
-    pub async fn create_run(&self) -> Result<RunUploader, GenericError> {
-        let mut request = CreateRunRequest::new();
-        request.set_project_id(self.project_id.clone());
-        request.mut_run_data().set_client_creation_time(time_now());
-
-        let mut params = HashMap::new();
-        params.insert("request", base64::encode(request.write_to_bytes().unwrap()));
-        let token = self.token_generator.token(self.client.clone()).await?;
-        let response = self
-            .client
-            .post(format!("{}/create-run", self.host))
-            .bearer_auth(token)
-            .form(&params)
-            .send().await?;
-        if response.status().is_server_error() {
-            debug!("{:?}", response);
-            panic!("Server error {:?}", response)
-        }
-
-        let response_body = response.text().await?;
-        info!("{}", response_body);
-        let response: CreateRunResponse =
-            parse_from_bytes(&decode(response_body).unwrap()).unwrap();
-        let mut new_data = ArtifactGroupUploaderData::new();
-        new_data.set_project_id(request.get_project_id().to_string());
-        new_data.set_run_id(response.get_run_id().clone());
-        new_data.set_id(response.get_root_stage_id().clone());
-        Ok(RunUploader {
-            base: BaseArtifactUploaderBuilder::default()
-                .client(self.clone())
-                .data(new_data)
-                .context_behavior(ContextBehavior::Init)
-                .init(),
-            response,
-        })
+    pub fn create_run_blocking(&self) -> RunUploader {
+        self.runtime.block_on(self.create_run()).unwrap()
     }
 }
 
@@ -111,6 +76,42 @@ impl Client {
                 .build()
                 .unwrap()),
         }
+    }
+
+    pub async fn create_run(&self) -> Result<RunUploader, GenericError> {
+        let mut request = CreateRunRequest::new();
+        request.set_project_id(self.project_id.clone());
+        request.mut_run_data().set_client_creation_time(time_now());
+
+        let mut params = HashMap::new();
+        params.insert("request", base64::encode(request.write_to_bytes().unwrap()));
+        let token = self.token_generator.token(self.client.clone()).await?;
+        let response = self
+            .client
+            .post(format!("{}/create-run", self.host))
+            .bearer_auth(token)
+            .form(&params)
+            .send().await?;
+        if response.status().is_server_error() {
+            debug!("{:?}", response);
+            panic!("Server error {:?}", response)
+        }
+
+        let response_body = response.text().await?;
+        let response: CreateRunResponse =
+            parse_from_bytes(&decode(response_body).unwrap()).unwrap();
+        let mut new_data = ArtifactGroupUploaderData::new();
+        new_data.set_project_id(request.get_project_id().to_string());
+        new_data.set_run_id(response.get_run_id().clone());
+        new_data.set_id(response.get_root_stage_id().clone());
+        Ok(RunUploader {
+            base: BaseArtifactUploaderBuilder::default()
+                .client(self.clone())
+                .data(new_data)
+                .context_behavior(ContextBehavior::Init)
+                .init(),
+            response,
+        })
     }
 
     pub(crate) fn ffi_create_run(&self) -> Box<RunUploader> {

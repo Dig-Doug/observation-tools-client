@@ -12,6 +12,7 @@ rust_static_library(
         "//src/client/rust/cargo:base64",
         "//src/client/rust/cargo:bs58",
         "//src/client/rust/cargo:cached",
+        "//src/client/rust/cargo:custom_error",
         "//src/client/rust/cargo:cxx",
         "//src/client/rust/cargo:derive_builder",
         "//src/client/rust/cargo:env_logger",
@@ -43,9 +44,5 @@ cc_library(
     ],
     deps = [
         "//src/client/rust:client",
-    ],
-    linkopts = [
-        "-lssl",
-       # "-lcrypto",
     ],
 )

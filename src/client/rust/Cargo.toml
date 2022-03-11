@@ -10,13 +10,14 @@ crate-type = ["cdylib"]
 
 [dependencies]
 artifacts_api_rust_proto = { path = "../../api/artifacts" }
-cached = "0.30.0"
 base64 = "0.13.0"
-futures = "0.3"
 bs58 = "0.4.0"
+cached = "0.30.0"
+custom_error = "1.9.2"
 cxx = "1.0"
 derive_builder = "0.10.2"
 env_logger = "=0.8.4"
+futures = "0.3"
 google-cloud-auth = { git = "https://github.com/googleapis/google-cloud-rust" }
 itertools = "0.10.3"
 log = "0.4.14"
