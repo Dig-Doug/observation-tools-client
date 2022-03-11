@@ -1,0 +1,10 @@
+[package]
+name = "artifacts_api_rust_proto"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+path = "generated/lib.rs"
+
+[dependencies]
+protobuf = "=2.8.2"

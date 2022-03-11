@@ -1,0 +1,16 @@
+package(default_visibility = [
+    "//visibility:public",
+])
+
+cc_library(
+    name = "converters",
+    srcs = glob(["*.cpp"]),
+    hdrs = glob(["*.h"]),
+    include_prefix = "observation-tools/converters",
+    deps = [
+        "//src/api/artifacts:all_cc_proto",
+        "@cgal",
+        "@opencv",
+        "@eigen",
+    ],
+)

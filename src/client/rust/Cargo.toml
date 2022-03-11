@@ -1,0 +1,47 @@
+[package]
+name = "observation-tools-client"
+version = "0.0.2"
+edition = "2021"
+license = "Apache-2.0"
+description = "Export and visualize data from anywhere in your stack"
+readme = "README.md"
+homepage = "https://observation.tools"
+repository = "https://github.com/Dig-Doug/observation-tools-client"
+documentation = "https://www.observation.tools/docs/intro"
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+    "pyproject.toml",
+    "**/*.md",
+]
+
+[lib]
+name = "observation_tools_client"
+path = "lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+artifacts_api_rust_proto = { path = "../../api/artifacts" }
+base64 = "0.13.0"
+bs58 = "0.4.0"
+cached = "0.30.0"
+cxx = "1.0"
+derive_builder = "0.10.2"
+env_logger = "=0.8.4"
+futures = "0.3"
+google-cloud-auth = { git = "https://github.com/googleapis/google-cloud-rust" }
+itertools = "0.10.3"
+log = "0.4.14"
+protobuf = "=2.8.2"
+pyo3 = { version = "0.15.1", features = ["extension-module"] }
+reqwest = { version = "0.11", disable-default-features = true, features = ["rustls-tls", "stream", "json", "multipart"] }
+tempfile = "3"
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7.0", features = ["full"] }
+uuid = { version = "0.8.2", features = ["v4"] }
+
+[build-dependencies]
+protobuf-codegen = "=2.8.2"
+
+[features]
+python = []

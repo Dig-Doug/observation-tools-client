@@ -1,0 +1,20 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+filegroup(
+    name = "all",
+    srcs = glob(["**"],
+        exclude = ["libs/wave/test/**/*"],
+    ),
+    visibility = ["//visibility:public"]
+)
+
+cmake(
+    name = "eigen",
+    cache_entries = {
+        "EIGEN_MPL2_ONLY": "ON",
+    },
+    lib_source = "@eigen//:all",
+    out_headers_only = True,
+)

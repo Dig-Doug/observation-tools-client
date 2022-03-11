@@ -1,0 +1,18 @@
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library", "kt_jvm_test")
+
+package(default_visibility = ["//src/client/java:__subpackages__"])
+
+kt_jvm_library(
+    name = "client",
+    srcs = glob(
+        [
+            "*.kt",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/api/artifacts:all_java_proto",
+        "@com_google_protobuf//:protobuf_java",
+        "@maven//:io_ktor_ktor_client_core_jvm",
+    ],
+)

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "src/api/artifacts/uuid.proto";
+
+package observation_tools.proto;
+
+option java_multiple_files = true;
+option java_package = "tools.observation.proto";
+
+message RunId {
+  Uuid uuid = 1;
+}

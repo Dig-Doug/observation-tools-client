@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "src/api/artifacts/artifact.proto";
+import "src/api/artifacts/run_id.proto";
+
+package observation_tools.proto;
+
+option java_multiple_files = true;
+option java_package = "tools.observation.proto";
+
+message CreateArtifactRequest {
+  string project_id = 3;
+  RunId run_id = 4;
+  ArtifactId artifact_id = 5;
+
+  ArtifactData artifact_data = 2;
+
+  reserved 1;
+}
+
+message CreateArtifactResponse {
+}

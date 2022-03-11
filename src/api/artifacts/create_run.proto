@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "src/api/artifacts/run_id.proto";
+import "src/api/artifacts/run_data.proto";
+import "src/api/artifacts/artifact.proto";
+
+package observation_tools.proto;
+
+option java_multiple_files = true;
+option java_package = "tools.observation.proto";
+
+message CreateRunRequest {
+  string project_id = 3;
+
+  RunData run_data = 2;
+
+  reserved 1;
+}
+
+message CreateRunResponse {
+  RunId run_id = 4;
+
+  ArtifactId root_stage_id = 5;
+
+  string viewer_url = 3;
+
+  reserved 1, 2;
+}

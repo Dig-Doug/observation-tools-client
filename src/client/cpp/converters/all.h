@@ -1,0 +1,16 @@
+#pragma once
+
+#include "src/client/cpp/converters/cgal.h"
+#include "src/client/cpp/converters/matrix3x3.h"
+#include "src/client/cpp/converters/matrix4x4.h"
+#include "src/client/cpp/converters/number.h"
+#include "src/client/cpp/converters/object2.h"
+#include "src/client/cpp/converters/object3.h"
+#include "src/client/cpp/converters/opencv.h"
+#include "src/client/cpp/converters/point2.h"
+#include "src/client/cpp/converters/point3.h"
+#include "src/client/cpp/converters/structured.h"
+#include "src/client/cpp/converters/transform2.h"
+#include "src/client/cpp/converters/transform3.h"
+#include "src/client/cpp/converters/vector2.h"
+#include "src/client/cpp/converters/vector3.h"
