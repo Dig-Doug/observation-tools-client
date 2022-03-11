@@ -14,6 +14,8 @@ jobs:
         manylinux: auto
         command: build
         args: --release -o dist -m src/client/rust/Cargo.toml
+    - name: Install deps
+      run: sudo apt install libssl-dev
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:

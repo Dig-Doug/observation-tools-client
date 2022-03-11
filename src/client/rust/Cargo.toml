@@ -1,7 +1,19 @@
 [package]
 name = "observation-tools-client"
-version = "0.0.0"
+version = "0.0.2"
 edition = "2021"
+license = "Apache-2.0"
+description = "Export and visualize data from anywhere in your stack"
+readme = "README.md"
+homepage = "https://observation.tools"
+repository = "https://github.com/Dig-Doug/observation-tools-client"
+documentation = "https://www.observation.tools/docs/intro"
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+    "pyproject.toml",
+    "**/*.md",
+]
 
 [lib]
 name = "observation_tools_client"
