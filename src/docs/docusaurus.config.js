@@ -12,7 +12,7 @@ const config = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.svg',
   organizationName: 'Dig-Doug',
   projectName: 'observation-tools-client',
   plugins: ['docusaurus-plugin-sass'],
@@ -41,6 +41,7 @@ const config = {
         logo: {
           alt: 'observation.tools Logo',
           src: 'img/logo.svg',
+          srcDark: 'img/logo_dark.svg',
         },
         items: [
           {
