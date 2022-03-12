@@ -8,6 +8,8 @@ def main():
     run_uploader = client.create_run_blocking()
     print("View your data at: {}".format(run_uploader.viewer_url()))
 
+    # TODO(doug): Run stages aren't explained
+    # TODO(doug): Can we eliminate the UserMetadataBuilder here
     run_stage = run_uploader.create_initial_run_stage(UserMetadataBuilder("Run stage"))
 
     generic_group = run_stage.child_uploader(UserMetadataBuilder("Generic group"))

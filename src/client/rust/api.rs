@@ -1,4 +1,4 @@
-use artifacts_api_rust_proto::{ArtifactUserMetadata, Image2, StructuredData};
+use artifacts_api_rust_proto::{StructuredData};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 

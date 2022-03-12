@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
-use std::io::ErrorKind;
+
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::mpsc::{channel, Sender};
 use std::time::Duration;
 use hyper::{Body, Response, Server};
 use hyper::service::{make_service_fn, service_fn};
-use log::{error, info, warn};
+use log::{error, info};
 use reqwest::Client;
 use tokio::runtime::Runtime;
 use url::Url;
 use serde::{Deserialize, Serialize};
 use cached::proc_macro::cached;
-use tokio::io::AsyncWriteExt;
+
 use tokio::sync::oneshot::Receiver;
 
 #[derive(Clone)]
@@ -46,11 +46,11 @@ impl SignInWithAwsTokenGenerator {
 // TODO(doug): Use the token's expiration, not a hardcoded value
 // TODO(doug): Cache the token locally in a file so we don't need to prompt every time
 #[cached(
-    time = 3000,
-    result = true,
-    sync_writes = true,
-    key = r#"bool"#,
-    convert = r#"{true}"#
+time = 3000,
+result = true,
+sync_writes = true,
+key = r#"bool"#,
+convert = r#"{true}"#
 )]
 async fn token(runtime: &Runtime, client: &Client) -> Result<String, std::io::Error> {
     let port = 59437;
@@ -75,7 +75,7 @@ async fn token(runtime: &Runtime, client: &Client) -> Result<String, std::io::Er
     map.insert("client_id", CLIENT_ID);
     map.insert("redirect_uri", &redirect_uri);
 
-    let mut json: AwsToken = client
+    let json: AwsToken = client
         .post(format!("{}/oauth2/token", COGNITO_HOST))
         .form(&map)
         .send()
@@ -101,7 +101,7 @@ async fn start_server(port: u16, redirect_uri: String, tx: Sender<String>, shutd
                             Ok::<Response<Body>, Infallible>(Response::<Body>::new("Failed to get auth code, please try again".into()))
                         }
                         Some((_, code)) => {
-                            tx.clone().send(code.to_string());
+                            let _ = tx.send(code.to_string()).unwrap();
                             Ok::<Response<Body>, Infallible>(Response::<Body>::new("Received auth code, you can close your browser".into()))
                         }
                     }
