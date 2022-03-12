@@ -1,0 +1,186 @@
+---
+sidebar_position: 1
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Quickstart
+
+observation.tools helps you quickly inspect complex data without needing to build your own visualization tools.
+
+Integrating observation.tools into your program takes about 5 minutes to do:
+
+1. Create a project
+2. Install a client library
+3. Export your data
+5. Visualize your data
+
+### Organizing your data
+
+We use four different concepts to organize your data:
+
+- **Artifacts** are individual pieces of data, e.g. an image
+- **Artifact groups** help organize artifacts and can define how artifacts can be visualized together.
+- **Runs** are the top level artifact groups. The normally correspond to one program execution or http request.
+- **Projects** allow you to define common settings used across runs.
+
+## Create a project
+
+To create a project, sign in to the [dashboard](https://app.observation.tools/), click "Create project", give your
+project a name, and hit "Create".
+
+Below your project's name will be an ID that you'll need to initialize the observation.tools client. Project IDs
+are not sensitive, so you can embed them in your source code. 
+
+## Install a client library
+
+
+<Tabs groupId="code">
+<TabItem value="py" label="Python">
+
+```py
+pip install observation-tools-client
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+The java library is currently only usable with Bazel. If you'd like to use it with another build system, please [open an issue](https://github.com/Dig-Doug/observation-tools/issues/new) and let us know!
+
+```py
+# WORKSPACE
+git_repository(
+    name = "observation_tools_client",
+    remote = "https://github.com/Dig-Doug/observation-tools-client",
+    branch = "main",
+)
+```
+
+```py
+# BUILD.bazel
+java_library(
+  name = "java_lib",
+  deps = [
+    "@observation_tools_client//src/client/java:client",
+  ]
+)
+```
+
+</TabItem>
+<TabItem value="cpp" label="C++">
+
+The c++ library is currently only usable with Bazel. If you'd like to use it with another build system, please [open an issue](https://github.com/Dig-Doug/observation-tools/issues/new) and let us know!
+
+```py
+# WORKSPACE
+git_repository(
+    name = "observation_tools_client",
+    remote = "https://github.com/Dig-Doug/observation-tools-client",
+    branch = "main",
+)
+```
+
+```py
+# BUILD.bazel
+cc_library(
+  name = "cc_lib",
+  deps = [
+    "@observation_tools_client//src/client/cpp:client",
+  ]
+)
+```
+
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+The rust library is currently only usable with Bazel. If you'd like to use it with another build system, please [open an issue](https://github.com/Dig-Doug/observation-tools/issues/new) and let us know!
+
+```py
+# WORKSPACE
+git_repository(
+    name = "observation_tools_client",
+    remote = "https://github.com/Dig-Doug/observation-tools-client",
+    branch = "main",
+)
+```
+
+```py
+rust_library(
+  name = "rust_lib",
+  deps = [
+    "@observation_tools_client//src/client/rust:client",
+  ]
+)
+```
+
+</TabItem>
+</Tabs>
+
+## Export your data
+
+Before we can start exporting data from your program, we need to setup a client for your project and create a run. After
+that, we can create groups to organize artifacts during different parts of our program.
+
+<Tabs groupId="code">
+<TabItem value="py" label="Python">
+
+> This example uses `opencv-python` to load images (make sure you install it)
+
+```py
+from observation_tools_client import Client, UserMetadataBuilder
+import cv2
+
+def main():
+    client = Client("<project-id>")
+
+    # Create a new run
+    run_uploader = client.create_run_blocking()
+    print("View your data at: {}".format(run_uploader.viewer_url()))
+
+    run_stage = run_uploader.create_initial_run_stage(UserMetadataBuilder("Run stage"))
+
+    generic_group = run_stage.child_uploader(UserMetadataBuilder("Generic group"))
+
+    img = cv2.imread('g4g.png')
+
+if __name__ == "__main__":
+    main()
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// TODO(doug): Java setup
+```
+
+</TabItem>
+<TabItem value="cpp" label="C++">
+
+```c
+#include "observation-tools/client.h"
+
+int main(int argc, char **argv) {
+  auto obs_client = ::observation_tools::CreateClient("<project-id>");
+
+  // TODO(doug): Example
+
+  return 0;
+}
+```
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+// TODO(doug): Rust setup
+```
+
+</TabItem>
+</Tabs>
+
+## Visualize your data
+
+When
