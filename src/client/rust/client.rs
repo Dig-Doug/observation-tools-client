@@ -1,3 +1,4 @@
+
 use crate::base_artifact_uploader::ContextBehavior;
 use crate::base_artifact_uploader::{time_now, BaseArtifactUploaderBuilder};
 use crate::{RunStageUploader, RunUploader};
@@ -10,22 +11,37 @@ use protobuf::{parse_from_bytes, Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::collections::HashMap;
+
 use std::env;
 use std::io::Write;
+
 use std::sync::Arc;
-use reqwest::Body;
+
+
+
+
+
+
 use reqwest::multipart::Part;
 use tempfile::{NamedTempFile, TempDir};
 use tokio::runtime::Runtime;
 use crate::google_token_generator::{GenericError, GoogleTokenGenerator};
 use tokio_util::codec::{BytesCodec, FramedRead};
+use crate::aws_sign_in::SignInWithAwsTokenGenerator;
+
+
+#[derive(Clone)]
+enum TokenGenerator {
+    GoogleToken { i: GoogleTokenGenerator },
+    SignInWithAws { i: SignInWithAwsTokenGenerator },
+}
 
 #[derive(Clone)]
 #[cfg_attr(feature = "python", pyclass)]
 pub struct Client {
     tmp_dir: Arc<TempDir>,
     host: String,
-    token_generator: Box<GoogleTokenGenerator>,
+    token_generator: TokenGenerator,
     project_id: String,
     client: reqwest::Client,
     runtime: Arc<Runtime>,
@@ -58,6 +74,27 @@ impl Client {
 impl Client {
     fn new_impl(project_id: String) -> Self {
         let host = env::var("OBS_HOST").unwrap_or("https://api.observation.tools".to_string());
+        let client = reqwest::Client::builder()
+            .use_rustls_tls()
+            .build().expect("Failed to build reqwest client");
+        let runtime = Arc::new(tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap());
+        let token_generator = if env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok() {
+            TokenGenerator::GoogleToken {
+                i: GoogleTokenGenerator {
+                    client: client.clone(),
+                }
+            }
+        } else {
+            TokenGenerator::SignInWithAws {
+                i: SignInWithAwsTokenGenerator {
+                    runtime: runtime.clone(),
+                    client: client.clone(),
+                }
+            }
+        };
         Client {
             tmp_dir: Arc::new(
                 tempfile::Builder::new()
@@ -66,15 +103,10 @@ impl Client {
                     .unwrap(),
             ),
             host,
-            token_generator: Box::new(GoogleTokenGenerator::new()),
+            token_generator,
             project_id,
-            client: reqwest::Client::builder()
-                .use_rustls_tls()
-                .build().expect("Failed to build reqwest client"),
-            runtime: Arc::new(tokio::runtime::Builder::new_multi_thread()
-                .enable_all()
-                .build()
-                .unwrap()),
+            client,
+            runtime,
         }
     }
 
@@ -85,7 +117,7 @@ impl Client {
 
         let mut params = HashMap::new();
         params.insert("request", base64::encode(request.write_to_bytes().unwrap()));
-        let token = self.token_generator.token(self.client.clone()).await?;
+        let token = self.token().await?;
         let response = self
             .client
             .post(format!("{}/create-run", self.host))
@@ -150,11 +182,11 @@ impl Client {
             if tmp_file.is_some() {
                 let f = tmp_file.as_ref().unwrap();
                 let file = tokio::fs::File::open(f).await?;
-                let reader = Body::wrap_stream(FramedRead::new(file, BytesCodec::new()));
+                let reader = reqwest::Body::wrap_stream(FramedRead::new(file, BytesCodec::new()));
                 form = form.part("raw_data", Part::stream(reader));
             }
 
-            let token = this.token_generator.token(this.client.clone()).await?;
+            let token = this.token().await?;
             let response = this
                 .client
                 .post(format!("{}/create-artifact", this.host))
@@ -171,5 +203,12 @@ impl Client {
             Ok::<(), GenericError>(())
         };
         self.runtime.spawn(task);
+    }
+
+    async fn token(&self) -> Result<String, std::io::Error> {
+        match &self.token_generator {
+            TokenGenerator::GoogleToken { i } => i.token().await,
+            TokenGenerator::SignInWithAws { i } => i.token().await,
+        }
     }
 }

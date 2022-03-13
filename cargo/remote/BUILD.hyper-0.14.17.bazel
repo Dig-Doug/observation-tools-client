@@ -80,10 +80,12 @@ rust_library(
     srcs = glob(["**/*.rs"]),
     crate_features = [
         "client",
+        "default",
         "h2",
         "http1",
         "http2",
         "runtime",
+        "server",
         "socket2",
         "tcp",
     ],

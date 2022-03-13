@@ -6,8 +6,7 @@
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cd src/client/rust
-maturin develop
+maturin develop -m src/client/rust/Cargo.toml
 
 # pip freeze > requirements.txt
 ```

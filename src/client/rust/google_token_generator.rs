@@ -10,15 +10,13 @@ use reqwest::Client;
 pub type GenericError = Box<dyn Error + Send + Sync>;
 
 #[derive(Clone)]
-pub struct GoogleTokenGenerator {}
+pub struct GoogleTokenGenerator {
+    pub(crate) client: Client,
+}
 
 impl GoogleTokenGenerator {
-    pub fn new() -> GoogleTokenGenerator {
-        GoogleTokenGenerator {}
-    }
-
-    pub async fn token(&self, client: Client) -> Result<String, std::io::Error> {
-        get_id_token(client).await.map_err(|e| {
+    pub async fn token(&self) -> Result<String, std::io::Error> {
+        get_id_token(self.client.clone()).await.map_err(|e| {
             warn!("{}", e);
             std::io::Error::new(ErrorKind::Other, e)
         })
@@ -26,11 +24,11 @@ impl GoogleTokenGenerator {
 }
 
 #[cached(
-time = 300,
-result = true,
-sync_writes = true,
-key = r#"bool"#,
-convert = r#"{true}"#
+    time = 3000,
+    result = true,
+    sync_writes = true,
+    key = r#"bool"#,
+    convert = r#"{true}"#
 )]
 async fn get_id_token(client: Client) -> Result<String, GenericError> {
     let credential = Credential::find_default(

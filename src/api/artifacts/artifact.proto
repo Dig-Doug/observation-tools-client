@@ -78,10 +78,6 @@ message StructuredData {
   }
 }
 
-message RawImage {
-  bytes data = 1;
-}
-
 message Image2 {
   bytes data = 4;
 

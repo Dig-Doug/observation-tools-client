@@ -8,6 +8,8 @@ mod run_uploader;
 mod uploader_stack;
 mod user_metadata;
 mod google_token_generator;
+mod api;
+mod aws_sign_in;
 
 #[cfg(feature = "python")]
 use pyo3::prelude::*;

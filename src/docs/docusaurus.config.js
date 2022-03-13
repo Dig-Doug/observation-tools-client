@@ -7,14 +7,15 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Logging meets the 3rd dimension',
-  tagline: 'Spend less time building custom debug views and more time creating amazing experiences',
+  tagline: 'Export and visualize data from anywhere in your program' ,
   url: 'https://observation.tools',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.svg',
   organizationName: 'Dig-Doug',
   projectName: 'observation-tools-client',
+  plugins: ['docusaurus-plugin-sass'],
 
   presets: [
     [
@@ -40,11 +41,12 @@ const config = {
         logo: {
           alt: 'observation.tools Logo',
           src: 'img/logo.svg',
+          srcDark: 'img/logo_dark.svg',
         },
         items: [
           {
             type: 'doc',
-            docId: 'intro',
+            docId: 'quickstart',
             position: 'left',
             label: 'Docs',
           },
@@ -62,8 +64,8 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Getting started',
-                to: '/docs/intro',
+                label: 'Quickstart',
+                to: '/docs/quickstart',
               },
             ],
           },
