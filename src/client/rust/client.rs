@@ -1,4 +1,4 @@
-
+use std::cell::RefCell;
 use crate::base_artifact_uploader::ContextBehavior;
 use crate::base_artifact_uploader::{time_now, BaseArtifactUploaderBuilder};
 use crate::{RunStageUploader, RunUploader};
@@ -11,18 +11,11 @@ use protobuf::{parse_from_bytes, Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::collections::HashMap;
-
 use std::env;
 use std::io::Write;
-
 use std::sync::Arc;
-
-
-
-
-
-
 use reqwest::multipart::Part;
+use reqwest::{RequestBuilder, Response};
 use tempfile::{NamedTempFile, TempDir};
 use tokio::runtime::Runtime;
 use crate::google_token_generator::{GenericError, GoogleTokenGenerator};
@@ -47,23 +40,25 @@ pub struct Client {
     runtime: Arc<Runtime>,
 }
 
+fn default_reqwest_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .use_rustls_tls()
+        .build().expect("Failed to build reqwest client")
+}
+
+#[cfg(not(feature = "python"))]
 pub(crate) fn ffi_new_client(project_id: String) -> Box<Client> {
     env_logger::init();
-    Box::new(Client::new(project_id))
+    Box::new(Client::new(project_id, default_reqwest_client()))
 }
 
 #[cfg_attr(feature = "python", pymethods)]
 impl Client {
-    #[cfg(not(feature = "python"))]
-    pub fn new(project_id: String) -> Self {
-        Self::new_impl(project_id)
-    }
-
     // TODO(doug): Figure out why this doesn't work: #[cfg_attr(feature = "python", new)]
     #[cfg(feature = "python")]
     #[new]
     pub fn new(project_id: String) -> Self {
-        Self::new_impl(project_id)
+        Self::new_impl(project_id, default_reqwest_client())
     }
 
     pub fn create_run_blocking(&self) -> RunUploader {
@@ -72,11 +67,13 @@ impl Client {
 }
 
 impl Client {
-    fn new_impl(project_id: String) -> Self {
+    #[cfg(not(feature = "python"))]
+    pub fn new(project_id: String, client: reqwest::Client) -> Self {
+        Self::new_impl(project_id, client)
+    }
+
+    fn new_impl(project_id: String, client: reqwest::Client) -> Self {
         let host = env::var("OBS_HOST").unwrap_or("https://api.observation.tools".to_string());
-        let client = reqwest::Client::builder()
-            .use_rustls_tls()
-            .build().expect("Failed to build reqwest client");
         let runtime = Arc::new(tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
@@ -111,6 +108,11 @@ impl Client {
     }
 
     pub async fn create_run(&self) -> Result<RunUploader, GenericError> {
+        let response = self.create_run_request().await?.send().await?;
+        self.parse_create_run_response(response).await
+    }
+
+    pub async fn create_run_request(&self) -> Result<RequestBuilder, GenericError> {
         let mut request = CreateRunRequest::new();
         request.set_project_id(self.project_id.clone());
         request.mut_run_data().set_client_creation_time(time_now());
@@ -118,12 +120,15 @@ impl Client {
         let mut params = HashMap::new();
         params.insert("request", base64::encode(request.write_to_bytes().unwrap()));
         let token = self.token().await?;
-        let response = self
+        let request_builder = self
             .client
             .post(format!("{}/create-run", self.host))
             .bearer_auth(token)
-            .form(&params)
-            .send().await?;
+            .form(&params);
+        Ok(request_builder)
+    }
+
+    pub async fn parse_create_run_response(&self, response: Response) -> Result<RunUploader, GenericError> {
         if response.status().is_server_error() {
             debug!("{:?}", response);
             panic!("Server error {:?}", response)
@@ -133,7 +138,7 @@ impl Client {
         let response: CreateRunResponse =
             parse_from_bytes(&decode(response_body).unwrap()).unwrap();
         let mut new_data = ArtifactGroupUploaderData::new();
-        new_data.set_project_id(request.get_project_id().to_string());
+        new_data.set_project_id(self.project_id.clone());
         new_data.set_run_id(response.get_run_id().clone());
         new_data.set_id(response.get_root_stage_id().clone());
         Ok(RunUploader {

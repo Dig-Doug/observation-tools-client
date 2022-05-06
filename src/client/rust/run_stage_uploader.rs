@@ -3,7 +3,7 @@ use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::generic_artifact_uploader::GenericArtifactUploader;
 use crate::user_metadata::UserMetadataBuilder;
-use artifacts_api_rust_proto::Transform3;
+use artifacts_api_rust_proto::{StructuredData, Transform3};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 
@@ -44,6 +44,10 @@ impl RunStageUploader {
         base_transform: Transform3,
     ) -> ArtifactUploader3d {
         self.base.child_uploader_3d(metadata, base_transform)
+    }
+
+    pub fn upload(&self, metadata: &UserMetadataBuilder, data: StructuredData) -> String {
+        self.base.upload_raw(metadata, data)
     }
 
     pub(crate) fn ffi_upload(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
