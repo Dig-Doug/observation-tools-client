@@ -6,6 +6,8 @@ use artifacts_api_rust_proto::{StructuredData, Transform3};
 use protobuf::parse_from_bytes;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
+use crate::api::StructuredDataBuilder;
+use crate::Image2Builder;
 
 #[cfg_attr(feature = "python", pyclass)]
 pub struct GenericArtifactUploader {
@@ -20,6 +22,10 @@ impl GenericArtifactUploader {
 
     pub fn child_uploader_2d(&self, metadata: &UserMetadataBuilder) -> ArtifactUploader2d {
         self.base.child_uploader_2d(metadata)
+    }
+
+    pub fn upload(&self, metadata: &UserMetadataBuilder, data: StructuredDataBuilder) -> String {
+        self.base.upload_raw(metadata, data.into())
     }
 }
 
@@ -53,10 +59,6 @@ impl GenericArtifactUploader {
     ) -> Box<ArtifactUploader3d> {
         let transform: Transform3 = parse_from_bytes(transform3_bytes).unwrap();
         Box::new(self.child_uploader_3d(metadata, transform))
-    }
-
-    pub fn upload(&self, metadata: &UserMetadataBuilder, data: StructuredData) -> String {
-        self.base.upload_raw(metadata, data)
     }
 
     pub(crate) fn ffi_upload(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
