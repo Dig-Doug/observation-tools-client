@@ -6,7 +6,7 @@ use artifacts_api_rust_proto::{
     ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse,
 };
 use base64::decode;
-use log::{debug};
+use log::{debug, trace};
 use protobuf::{parse_from_bytes, Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
@@ -58,6 +58,7 @@ impl Client {
     #[cfg(feature = "python")]
     #[new]
     pub fn new(project_id: String) -> Self {
+        env_logger::init();
         Self::new_impl(project_id, default_reqwest_client())
     }
 
@@ -179,6 +180,8 @@ impl Client {
         } else {
             None
         };
+        
+        trace!("Uploading artifact: {:?}", request);
 
         let req_b64 = base64::encode(request.write_to_bytes().unwrap());
         let this = self.clone();

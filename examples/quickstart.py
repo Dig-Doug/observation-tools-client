@@ -27,7 +27,7 @@ def main():
             raise ValueError('Error encoding image')
         img_builder = Image2Builder(encoded_image.tobytes())
 
-        generic_group.upload(UserMetadataBuilder("Lenna"), img_builder)
+        generic_group.upload_image2(UserMetadataBuilder("Lenna"), img_builder)
 
 if __name__ == "__main__":
     main()
