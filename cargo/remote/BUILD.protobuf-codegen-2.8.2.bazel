@@ -47,6 +47,7 @@ rust_binary(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=protobuf-bin-gen-rust-do-not-use"
     ],
     version = "2.8.2",
     # buildifier: leave-alone
@@ -72,6 +73,7 @@ rust_binary(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=protoc-gen-rust"
     ],
     version = "2.8.2",
     # buildifier: leave-alone
@@ -95,6 +97,7 @@ rust_library(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=protobuf-codegen"
     ],
     version = "2.8.2",
     # buildifier: leave-alone

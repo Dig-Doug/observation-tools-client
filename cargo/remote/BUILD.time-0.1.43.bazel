@@ -47,11 +47,12 @@ rust_library(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=time"
     ],
     version = "0.1.43",
     # buildifier: leave-alone
     deps = [
-        "@raze__libc__0_2_119//:libc",
+        "@raze__libc__0_2_126//:libc",
     ] + selects.with_or({
         # cfg(windows)
         (

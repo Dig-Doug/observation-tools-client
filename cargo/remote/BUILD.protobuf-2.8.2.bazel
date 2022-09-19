@@ -78,6 +78,7 @@ rust_library(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=protobuf"
     ],
     version = "2.8.2",
     # buildifier: leave-alone

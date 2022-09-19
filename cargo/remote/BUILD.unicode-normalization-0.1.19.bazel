@@ -49,10 +49,11 @@ rust_library(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=unicode-normalization"
     ],
     version = "0.1.19",
     # buildifier: leave-alone
     deps = [
-        "@raze__tinyvec__1_5_1//:tinyvec",
+        "@raze__tinyvec__1_6_0//:tinyvec",
     ],
 )

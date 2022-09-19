@@ -48,6 +48,7 @@ rust_library(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=bumpalo"
     ],
     version = "3.9.1",
     # buildifier: leave-alone

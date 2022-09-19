@@ -47,10 +47,11 @@ rust_library(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=aho_corasick"
     ],
     version = "0.7.18",
     # buildifier: leave-alone
     deps = [
-        "@raze__memchr__2_4_1//:memchr",
+        "@raze__memchr__2_5_0//:memchr",
     ],
 )

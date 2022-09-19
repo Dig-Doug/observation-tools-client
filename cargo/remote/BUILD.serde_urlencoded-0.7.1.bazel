@@ -45,14 +45,15 @@ rust_library(
     tags = [
         "cargo-raze",
         "manual",
+        "crate-name=serde_urlencoded"
     ],
     version = "0.7.1",
     # buildifier: leave-alone
     deps = [
         "@raze__form_urlencoded__1_0_1//:form_urlencoded",
-        "@raze__itoa__1_0_1//:itoa",
-        "@raze__ryu__1_0_9//:ryu",
-        "@raze__serde__1_0_136//:serde",
+        "@raze__itoa__1_0_2//:itoa",
+        "@raze__ryu__1_0_10//:ryu",
+        "@raze__serde__1_0_137//:serde",
     ],
 )
 
