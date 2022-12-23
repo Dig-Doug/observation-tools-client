@@ -35,9 +35,9 @@ def observation_tools_cpp_deps():
     maybe(
         http_archive,
         name = "com_github_nelhage_rules_boost",
-        sha256 = "c3264642c6f77a894c19432fed9b0c0d1ad156b56f8e32c13abac4c682bd0873",
-        strip_prefix = "rules_boost-c8b9b4a75c4301778d2e256b8d72ce47a6c9a1a4",
+        sha256 = "6ded3e8c064054c92b79aeadde2d78821c889598e634c595133da0ea8f0f0b85",
+        strip_prefix = "rules_boost-f1065639e6f33741abe2a6a78fa79dd1a07bbf5d",
         urls = [
-            "https://github.com/nelhage/rules_boost/archive/c8b9b4a75c4301778d2e256b8d72ce47a6c9a1a4.tar.gz",
+            "https://github.com/nelhage/rules_boost/archive/f1065639e6f33741abe2a6a78fa79dd1a07bbf5d.tar.gz",
         ],
     )

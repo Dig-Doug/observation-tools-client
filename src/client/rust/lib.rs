@@ -13,6 +13,7 @@ mod aws_sign_in;
 
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
+use crate::api::Image2Builder;
 
 pub use crate::artifact_uploader_2d::ArtifactUploader2d;
 pub use crate::artifact_uploader_3d::ArtifactUploader3d;
@@ -22,10 +23,12 @@ pub use crate::run_stage_uploader::RunStageUploader;
 pub use crate::run_uploader::RunUploader;
 pub use crate::user_metadata::UserMetadataBuilder;
 
+#[cfg(not(feature = "python"))]
 use crate::client::ffi_new_client;
 use crate::uploader_stack::ffi_get_current_group;
 use crate::user_metadata::new_user_metadata;
 
+#[cfg(not(feature = "python"))]
 #[cxx::bridge]
 mod ffi {
     extern "Rust" {
@@ -100,5 +103,6 @@ mod ffi {
 fn observation_tools_client(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Client>()?;
     m.add_class::<UserMetadataBuilder>()?;
+    m.add_class::<Image2Builder>()?;
     Ok(())
 }

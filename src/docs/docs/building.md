@@ -1,12 +1,25 @@
 # Building from source
 
-## Python
+## Client libraries
+
+### Python
+
+Environment setup:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-maturin develop -m src/client/rust/Cargo.toml
+```
 
-# pip freeze > requirements.txt
+Building:
+
+```
+maturin develop -m src/client/rust/Cargo.toml
+```
+
+Updating dependency list:
+
+```
+pip freeze > requirements.txt
 ```

@@ -1,0 +1,18 @@
+load("@rules_rust//proto:toolchain.bzl", "rust_proto_toolchain")
+
+rust_proto_toolchain(
+    name = "proto-toolchain-impl",
+    edition = "2018",
+    proto_compile_deps = [
+        "@crate_index//:protobuf",
+    ],
+    #grpc_plugin = "//cargo/remote:cargo_bin_protoc_gen_rust_grpc",
+    proto_plugin = "@crate_index//:protobuf-codegen__protoc-gen-rust",
+    protoc = "@com_google_protobuf//:protoc",
+)
+
+toolchain(
+    name = "proto-toolchain",
+    toolchain = ":proto-toolchain-impl",
+    toolchain_type = "@rules_rust//proto:toolchain_type",
+)
