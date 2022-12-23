@@ -15,21 +15,18 @@ http_archive(
 
 http_archive(
     name = "io_bazel_rules_kotlin",
-    sha256 = "6cbd4e5768bdfae1598662e40272729ec9ece8b7bded8f0d2c81c8ff96dc139d",
+    sha256 = "15afe2d727f0dba572e0ce58f1dac20aec1441422ca65f7c3f7671b47fd483bf",
     urls = [
-        "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.5.0-beta-4/rules_kotlin_release.tgz",
+        "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.7.0/rules_kotlin_release.tgz",
     ],
 )
 
 http_archive(
     name = "rules_foreign_cc",
-    #sha256 = "73737d50f2908c77e431946cfba41bad7c2530b602efb974cdc3cbc5dcd068f0",
-    sha256 = "eb9fa6adf5002054e6953afb5c40f5cc484a2a5c8dfc0b4e8b0ca1180275b040",
-    #strip_prefix = "rules_foreign_cc-32e222aeff1220605b80b9c36377db27e7a76555",
-    strip_prefix = "rules_foreign_cc-4f6bece436b11381c1952a7dd1e8aa8fb857fa24",
+    sha256 = "8ff19dcd73150f6a2fe659d4467a4d3db4333cbf4708e2d4effb90bdf4d71f42",
+    strip_prefix = "rules_foreign_cc-baeee718db3ce2c9c1861e74a5f56c3bab71e9e3",
     urls = [
-        #"https://github.com/bazelbuild/rules_foreign_cc/archive/32e222aeff1220605b80b9c36377db27e7a76555.tar.gz",
-        "https://github.com/Dig-Doug/rules_foreign_cc/archive/4f6bece436b11381c1952a7dd1e8aa8fb857fa24.tar.gz",
+        "https://github.com/bazelbuild/rules_foreign_cc/archive/baeee718db3ce2c9c1861e74a5f56c3bab71e9e3.tar.gz",
     ],
 )
 
@@ -60,14 +57,18 @@ http_archive(
 
 http_archive(
     name = "rules_rust",
-    sha256 = "fe3af05eceeb4d51d73f96d087870edb8a42f4e317509c964dfeb61d99ad98fc",
-    strip_prefix = "rules_rust-348c3e31667ad0e73d3e0b19b372061c14ee8d58",
+    sha256 = "0b1774c1cf637a8a5321a2726d736d9fb315a1770bcb1e5074b9517a0857d289",
+    strip_prefix = "rules_rust-1357b85b1b53f811ca5e372f1d10e3001a5de501",
     urls = [
-        "https://github.com/bazelbuild/rules_rust/archive/348c3e31667ad0e73d3e0b19b372061c14ee8d58.tar.gz",
+        "https://github.com/bazelbuild/rules_rust/archive/1357b85b1b53f811ca5e372f1d10e3001a5de501.tar.gz",
     ],
 )
 
 ##########
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@observation_tools_client//src/client/java:deps.bzl", "OBSERVATION_TOOLS_JAVA_CLIENT_DEPS")
@@ -110,10 +111,6 @@ load("@io_bazel_rules_kotlin//kotlin:core.bzl", "kt_register_toolchains")
 
 kt_register_toolchains()
 
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
-
 bind(
     name = "guava",
     actual = "@maven//:com_google_guava_guava",
@@ -154,28 +151,47 @@ bind(
     actual = "@maven//:com_google_truth_truth",
 )
 
-load("@rules_rust//rust:repositories.bzl", "rust_register_toolchains", "rust_repositories")
+load("@rules_rust//rust:repositories.bzl", "rust_repositories")
 
-RUST_VERSION = "1.58.1"
+RUST_VERSION = "1.65.0"
 
 rust_repositories(
     edition = "2021",
     version = RUST_VERSION,
 )
 
-rust_register_toolchains()
+load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
+
+crate_universe_dependencies(bootstrap = True)
+
+load("@rules_rust//crate_universe:defs.bzl", "crates_repository")
+
+crates_repository(
+    name = "crate_index",
+    cargo_config = "//:.cargo/config.toml",
+    cargo_lockfile = "//:Cargo.lock",
+    generator = "@cargo_bazel_bootstrap//:cargo-bazel",
+    lockfile = "//:cargo-bazel-lock.json",
+    manifests = [
+        "//:Cargo.toml",
+        "//src/api/artifacts:Cargo.toml",
+        "//src/client/rust:Cargo.toml",
+    ],
+)
+
+load("@crate_index//:defs.bzl", "crate_repositories")
+
+crate_repositories()
 
 load("@rules_rust//proto:repositories.bzl", "rust_proto_repositories")
 
-rust_proto_repositories()
+rust_proto_repositories(register_default_toolchain = False)
 
-load("@rules_rust//proto:transitive_repositories.bzl", "rust_proto_transitive_repositories")
+register_toolchains("//:proto-toolchain")
 
-rust_proto_transitive_repositories()
+load("@rules_rust//wasm_bindgen:repositories.bzl", "rust_wasm_bindgen_repositories")
 
-load("//cargo:crates.bzl", "raze_fetch_remote_crates")
-
-raze_fetch_remote_crates()
+rust_wasm_bindgen_repositories(register_default_toolchain = True)
 
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
 

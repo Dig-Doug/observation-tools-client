@@ -1,4 +1,5 @@
 load("@rules_rust//rust:defs.bzl", "rust_shared_library", "rust_static_library")
+load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -7,31 +8,14 @@ rust_static_library(
     srcs = glob([
         "*.rs",
     ]),
-    proc_macro_deps = [
-        "//src/client/rust/cargo:async_trait",
-    ],
-    deps = [
+    aliases = aliases(),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + [
         "//src/api/artifacts:artifacts_api_rust_proto",
-        "//src/client/rust/cargo:base64",
-        "//src/client/rust/cargo:bs58",
-        "//src/client/rust/cargo:cached",
-        "//src/client/rust/cargo:cxx",
-        "//src/client/rust/cargo:derive_builder",
-        "//src/client/rust/cargo:env_logger",
-        "//src/client/rust/cargo:form_urlencoded",
-        "//src/client/rust/cargo:futures",
-        "//src/client/rust/cargo:google_cloud_auth",
-        "//src/client/rust/cargo:hyper",
-        "//src/client/rust/cargo:itertools",
-        "//src/client/rust/cargo:log",
-        "//src/client/rust/cargo:reqwest",
-        "//src/client/rust/cargo:serde",
-        "//src/client/rust/cargo:tempfile",
-        "//src/client/rust/cargo:tokio",
-        "//src/client/rust/cargo:tokio_util",
-        "//src/client/rust/cargo:url",
-        "//src/client/rust/cargo:uuid",
-        "@rules_rust//proto/raze:protobuf",
     ],
 )
 
