@@ -9,7 +9,7 @@ use hyper::{Body, Response, Server};
 use hyper::service::{make_service_fn, service_fn};
 use log::{error, info};
 use reqwest::Client;
-use tokio::runtime::Runtime;
+use tokio::runtime::{Handle, Runtime};
 use url::Url;
 use serde::{Deserialize, Serialize};
 use cached::proc_macro::cached;
@@ -18,7 +18,7 @@ use tokio::sync::oneshot::Receiver;
 
 #[derive(Clone)]
 pub struct SignInWithAwsTokenGenerator {
-    pub(crate) runtime: Arc<Runtime>,
+    pub(crate) runtime: Handle,
     pub(crate) client: Client,
 }
 
@@ -52,7 +52,7 @@ sync_writes = true,
 key = r#"bool"#,
 convert = r#"{true}"#
 )]
-async fn token(runtime: &Runtime, client: &Client) -> Result<String, std::io::Error> {
+async fn token(runtime: &Handle, client: &Client) -> Result<String, std::io::Error> {
     let port = 59437;
     let redirect_uri = format!("http://localhost:{}", port);
 

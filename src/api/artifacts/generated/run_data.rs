@@ -270,11 +270,11 @@ impl ::protobuf::reflect::ProtobufValue for RunData {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x20src/api/artifacts/run_data.proto\x12\x17observation_tools.proto\
     \x1a\x20src/api/artifacts/artifact.proto\x1a\x1fgoogle/protobuf/timestam\
-    p.proto\"\xac\x01\n\x07RunData\x12L\n\x14client_creation_time\x18\x03\
+    p.proto\"\xb2\x01\n\x07RunData\x12L\n\x14client_creation_time\x18\x03\
     \x20\x01(\x0b2\x1a.google.protobuf.TimestampR\x12clientCreationTime\x12G\
     \n\rroot_group_id\x18\x05\x20\x01(\x0b2#.observation_tools.proto.Artifac\
-    tIdR\x0brootGroupIdJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03B\x1b\n\x17\
-    observation_tools.protoP\x01b\x06proto3\
+    tIdR\x0brootGroupIdJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\
+    \x04\x10\x05B\x1b\n\x17tools.observation.protoP\x01b\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

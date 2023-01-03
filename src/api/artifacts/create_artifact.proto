@@ -13,7 +13,10 @@ message CreateArtifactRequest {
   RunId run_id = 4;
   ArtifactId artifact_id = 5;
 
-  ArtifactData artifact_data = 2;
+  oneof data {
+    ArtifactData artifact_data = 2;
+    ArtifactUpdate artifact_update = 6;
+  }
 
   reserved 1;
 }

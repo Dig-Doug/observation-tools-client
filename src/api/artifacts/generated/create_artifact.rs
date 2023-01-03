@@ -32,7 +32,8 @@ pub struct CreateArtifactRequest {
     pub project_id: ::std::string::String,
     pub run_id: ::protobuf::SingularPtrField<super::run_id::RunId>,
     pub artifact_id: ::protobuf::SingularPtrField<super::artifact::ArtifactId>,
-    pub artifact_data: ::protobuf::SingularPtrField<super::artifact::ArtifactData>,
+    // message oneof groups
+    pub data: ::std::option::Option<CreateArtifactRequest_oneof_data>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -42,6 +43,12 @@ impl<'a> ::std::default::Default for &'a CreateArtifactRequest {
     fn default() -> &'a CreateArtifactRequest {
         <CreateArtifactRequest as ::protobuf::Message>::default_instance()
     }
+}
+
+#[derive(Clone,PartialEq,Debug)]
+pub enum CreateArtifactRequest_oneof_data {
+    artifact_data(super::artifact::ArtifactData),
+    artifact_update(super::artifact::ArtifactUpdate),
 }
 
 impl CreateArtifactRequest {
@@ -145,33 +152,98 @@ impl CreateArtifactRequest {
 
 
     pub fn get_artifact_data(&self) -> &super::artifact::ArtifactData {
-        self.artifact_data.as_ref().unwrap_or_else(|| super::artifact::ArtifactData::default_instance())
+        match self.data {
+            ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(ref v)) => v,
+            _ => super::artifact::ArtifactData::default_instance(),
+        }
     }
     pub fn clear_artifact_data(&mut self) {
-        self.artifact_data.clear();
+        self.data = ::std::option::Option::None;
     }
 
     pub fn has_artifact_data(&self) -> bool {
-        self.artifact_data.is_some()
+        match self.data {
+            ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(..)) => true,
+            _ => false,
+        }
     }
 
     // Param is passed by value, moved
     pub fn set_artifact_data(&mut self, v: super::artifact::ArtifactData) {
-        self.artifact_data = ::protobuf::SingularPtrField::some(v);
+        self.data = ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(v))
     }
 
     // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
     pub fn mut_artifact_data(&mut self) -> &mut super::artifact::ArtifactData {
-        if self.artifact_data.is_none() {
-            self.artifact_data.set_default();
+        if let ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(super::artifact::ArtifactData::new()));
         }
-        self.artifact_data.as_mut().unwrap()
+        match self.data {
+            ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(ref mut v)) => v,
+            _ => panic!(),
+        }
     }
 
     // Take field
     pub fn take_artifact_data(&mut self) -> super::artifact::ArtifactData {
-        self.artifact_data.take().unwrap_or_else(|| super::artifact::ArtifactData::new())
+        if self.has_artifact_data() {
+            match self.data.take() {
+                ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            super::artifact::ArtifactData::new()
+        }
+    }
+
+    // .observation_tools.proto.ArtifactUpdate artifact_update = 6;
+
+
+    pub fn get_artifact_update(&self) -> &super::artifact::ArtifactUpdate {
+        match self.data {
+            ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(ref v)) => v,
+            _ => super::artifact::ArtifactUpdate::default_instance(),
+        }
+    }
+    pub fn clear_artifact_update(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_artifact_update(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_artifact_update(&mut self, v: super::artifact::ArtifactUpdate) {
+        self.data = ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_artifact_update(&mut self) -> &mut super::artifact::ArtifactUpdate {
+        if let ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(super::artifact::ArtifactUpdate::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_artifact_update(&mut self) -> super::artifact::ArtifactUpdate {
+        if self.has_artifact_update() {
+            match self.data.take() {
+                ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            super::artifact::ArtifactUpdate::new()
+        }
     }
 }
 
@@ -187,11 +259,16 @@ impl ::protobuf::Message for CreateArtifactRequest {
                 return false;
             }
         };
-        for v in &self.artifact_data {
+        if let Some(CreateArtifactRequest_oneof_data::artifact_data(ref v)) = self.data {
             if !v.is_initialized() {
                 return false;
             }
-        };
+        }
+        if let Some(CreateArtifactRequest_oneof_data::artifact_update(ref v)) = self.data {
+            if !v.is_initialized() {
+                return false;
+            }
+        }
         true
     }
 
@@ -209,7 +286,16 @@ impl ::protobuf::Message for CreateArtifactRequest {
                     ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.artifact_id)?;
                 },
                 2 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.artifact_data)?;
+                    if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    self.data = ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_data(is.read_message()?));
+                },
+                6 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    self.data = ::std::option::Option::Some(CreateArtifactRequest_oneof_data::artifact_update(is.read_message()?));
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -234,9 +320,17 @@ impl ::protobuf::Message for CreateArtifactRequest {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
-        if let Some(ref v) = self.artifact_data.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        if let ::std::option::Option::Some(ref v) = self.data {
+            match v {
+                &CreateArtifactRequest_oneof_data::artifact_data(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                },
+                &CreateArtifactRequest_oneof_data::artifact_update(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                },
+            };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -257,10 +351,19 @@ impl ::protobuf::Message for CreateArtifactRequest {
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         }
-        if let Some(ref v) = self.artifact_data.as_ref() {
-            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
+        if let ::std::option::Option::Some(ref v) = self.data {
+            match v {
+                &CreateArtifactRequest_oneof_data::artifact_data(ref v) => {
+                    os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+                    os.write_raw_varint32(v.get_cached_size())?;
+                    v.write_to_with_cached_sizes(os)?;
+                },
+                &CreateArtifactRequest_oneof_data::artifact_update(ref v) => {
+                    os.write_tag(6, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+                    os.write_raw_varint32(v.get_cached_size())?;
+                    v.write_to_with_cached_sizes(os)?;
+                },
+            };
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -319,10 +422,15 @@ impl ::protobuf::Message for CreateArtifactRequest {
                     |m: &CreateArtifactRequest| { &m.artifact_id },
                     |m: &mut CreateArtifactRequest| { &mut m.artifact_id },
                 ));
-                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<super::artifact::ArtifactData>>(
+                fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, super::artifact::ArtifactData>(
                     "artifact_data",
-                    |m: &CreateArtifactRequest| { &m.artifact_data },
-                    |m: &mut CreateArtifactRequest| { &mut m.artifact_data },
+                    CreateArtifactRequest::has_artifact_data,
+                    CreateArtifactRequest::get_artifact_data,
+                ));
+                fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, super::artifact::ArtifactUpdate>(
+                    "artifact_update",
+                    CreateArtifactRequest::has_artifact_update,
+                    CreateArtifactRequest::get_artifact_update,
                 ));
                 ::protobuf::reflect::MessageDescriptor::new::<CreateArtifactRequest>(
                     "CreateArtifactRequest",
@@ -349,7 +457,8 @@ impl ::protobuf::Clear for CreateArtifactRequest {
         self.project_id.clear();
         self.run_id.clear();
         self.artifact_id.clear();
-        self.artifact_data.clear();
+        self.data = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
         self.unknown_fields.clear();
     }
 }
@@ -495,13 +604,15 @@ impl ::protobuf::reflect::ProtobufValue for CreateArtifactResponse {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n'src/api/artifacts/create_artifact.proto\x12\x17observation_tools.prot\
     o\x1a\x20src/api/artifacts/artifact.proto\x1a\x1esrc/api/artifacts/run_i\
-    d.proto\"\x85\x02\n\x15CreateArtifactRequest\x12\x1d\n\nproject_id\x18\
+    d.proto\"\xe3\x02\n\x15CreateArtifactRequest\x12\x1d\n\nproject_id\x18\
     \x03\x20\x01(\tR\tprojectId\x125\n\x06run_id\x18\x04\x20\x01(\x0b2\x1e.o\
     bservation_tools.proto.RunIdR\x05runId\x12D\n\x0bartifact_id\x18\x05\x20\
-    \x01(\x0b2#.observation_tools.proto.ArtifactIdR\nartifactId\x12J\n\rarti\
-    fact_data\x18\x02\x20\x01(\x0b2%.observation_tools.proto.ArtifactDataR\
-    \x0cartifactDataJ\x04\x08\x01\x10\x02\"\x18\n\x16CreateArtifactResponseB\
-    \x1b\n\x17observation_tools.protoP\x01b\x06proto3\
+    \x01(\x0b2#.observation_tools.proto.ArtifactIdR\nartifactId\x12L\n\rarti\
+    fact_data\x18\x02\x20\x01(\x0b2%.observation_tools.proto.ArtifactDataH\0\
+    R\x0cartifactData\x12R\n\x0fartifact_update\x18\x06\x20\x01(\x0b2'.obser\
+    vation_tools.proto.ArtifactUpdateH\0R\x0eartifactUpdateB\x06\n\x04dataJ\
+    \x04\x08\x01\x10\x02\"\x18\n\x16CreateArtifactResponseB\x1b\n\x17tools.o\
+    bservation.protoP\x01b\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

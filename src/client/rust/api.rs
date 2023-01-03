@@ -1,7 +1,20 @@
-use artifacts_api_rust_proto::{StructuredData, Image2};
+use artifacts_api_rust_proto::{StructuredData, Image2, Sphere, Geometry3, Number, ArtifactId, Object3};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use crate::artifact_uploader_2d::Type2d;
+use crate::util::{encode_id_proto, new_uuid_proto};
+
+pub struct NumberBuilder {
+    pub(crate) proto: Number,
+}
+
+impl Into<NumberBuilder> for f64 {
+    fn into(self) -> NumberBuilder {
+        let mut proto = Number::new();
+        proto.set_d(self);
+        NumberBuilder { proto }
+    }
+}
 
 #[cfg_attr(feature = "python", pyclass)]
 pub struct Image2Builder {
@@ -39,6 +52,44 @@ impl Into<StructuredData> for &Image2Builder {
     }
 }
 
+pub struct SphereBuilder {
+    pub(crate) proto: Sphere,
+}
+
+impl SphereBuilder {
+    pub fn new(radius: impl Into<NumberBuilder>) -> SphereBuilder {
+        let mut proto = Sphere::new();
+        proto.set_radius(radius.into().proto);
+        SphereBuilder { proto }
+    }
+}
+
+impl Into<Geometry3Builder> for &SphereBuilder {
+    fn into(self) -> Geometry3Builder {
+        Geometry3Builder::sphere(self)
+    }
+}
+
+impl Into<StructuredData> for &SphereBuilder {
+    fn into(self) -> StructuredData {
+        let mut s = StructuredData::new();
+        s.set_sphere(self.proto.clone());
+        s
+    }
+}
+
+pub struct Geometry3Builder {
+    pub(crate) proto: Geometry3,
+}
+
+impl Geometry3Builder {
+    pub fn sphere(sphere: &SphereBuilder) -> Geometry3Builder {
+        let mut proto = Geometry3::new();
+        proto.set_sphere(sphere.proto.clone());
+        Geometry3Builder { proto }
+    }
+}
+
 /*
 impl Type2d for Image2Builder {
     fn convert_2d_to_raw(&self) -> StructuredData {
@@ -46,3 +97,13 @@ impl Type2d for Image2Builder {
     }
 }
  */
+
+pub(crate) fn new_artifact_id() -> ArtifactId {
+    let mut id = ArtifactId::new();
+    id.set_uuid(new_uuid_proto());
+    id
+}
+
+pub(crate) fn new_encoded_artifact_id() -> String {
+    encode_id_proto(&new_artifact_id())
+}

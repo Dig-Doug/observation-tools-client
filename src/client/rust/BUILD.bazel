@@ -1,7 +1,12 @@
-load("@rules_rust//rust:defs.bzl", "rust_shared_library", "rust_static_library")
+load("@rules_rust//rust:defs.bzl", "rust_shared_library", "rust_static_library", "rust_test")
 load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
 
 package(default_visibility = ["//visibility:public"])
+
+CLIENT_DATA = [
+    "upload_source_data_mutation.graphql",
+    "//src/api:schema.json",
+]
 
 rust_static_library(
     name = "client",
@@ -9,6 +14,7 @@ rust_static_library(
         "*.rs",
     ]),
     aliases = aliases(),
+    data = CLIENT_DATA,
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
@@ -16,6 +22,26 @@ rust_static_library(
         normal = True,
     ) + [
         "//src/api/artifacts:artifacts_api_rust_proto",
+    ],
+)
+
+rust_test(
+    name = "test",
+    aliases = aliases(),
+    crate = ":client",
+    crate_features = [
+        "bazel",
+    ],
+    data = CLIENT_DATA + glob([
+        "testdata/*",
+    ]),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    deps = all_crate_deps(
+        normal = True,
+    ) + [
+        "@rules_rust//tools/runfiles",
     ],
 )
 

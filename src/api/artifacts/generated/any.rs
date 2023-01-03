@@ -17,7 +17,7 @@
 #![allow(unsafe_code)]
 #![allow(unused_imports)]
 #![allow(unused_results)]
-//! Generated file from `src/api/artifacts/run_id.proto`
+//! Generated file from `google/protobuf/any.proto`
 
 use protobuf::Message as Message_imported_for_functions;
 use protobuf::ProtobufEnum as ProtobufEnum_imported_for_functions;
@@ -27,66 +27,81 @@ use protobuf::ProtobufEnum as ProtobufEnum_imported_for_functions;
 const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_2_8_2;
 
 #[derive(PartialEq,Clone,Default)]
-pub struct RunId {
+pub struct Any {
     // message fields
-    pub uuid: ::protobuf::SingularPtrField<super::uuid::Uuid>,
+    pub type_url: ::std::string::String,
+    pub value: ::std::vec::Vec<u8>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a RunId {
-    fn default() -> &'a RunId {
-        <RunId as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a Any {
+    fn default() -> &'a Any {
+        <Any as ::protobuf::Message>::default_instance()
     }
 }
 
-impl RunId {
-    pub fn new() -> RunId {
+impl Any {
+    pub fn new() -> Any {
         ::std::default::Default::default()
     }
 
-    // .observation_tools.proto.Uuid uuid = 1;
+    // string type_url = 1;
 
 
-    pub fn get_uuid(&self) -> &super::uuid::Uuid {
-        self.uuid.as_ref().unwrap_or_else(|| super::uuid::Uuid::default_instance())
+    pub fn get_type_url(&self) -> &str {
+        &self.type_url
     }
-    pub fn clear_uuid(&mut self) {
-        self.uuid.clear();
-    }
-
-    pub fn has_uuid(&self) -> bool {
-        self.uuid.is_some()
+    pub fn clear_type_url(&mut self) {
+        self.type_url.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_uuid(&mut self, v: super::uuid::Uuid) {
-        self.uuid = ::protobuf::SingularPtrField::some(v);
+    pub fn set_type_url(&mut self, v: ::std::string::String) {
+        self.type_url = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_uuid(&mut self) -> &mut super::uuid::Uuid {
-        if self.uuid.is_none() {
-            self.uuid.set_default();
-        }
-        self.uuid.as_mut().unwrap()
+    pub fn mut_type_url(&mut self) -> &mut ::std::string::String {
+        &mut self.type_url
     }
 
     // Take field
-    pub fn take_uuid(&mut self) -> super::uuid::Uuid {
-        self.uuid.take().unwrap_or_else(|| super::uuid::Uuid::new())
+    pub fn take_type_url(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.type_url, ::std::string::String::new())
+    }
+
+    // bytes value = 2;
+
+
+    pub fn get_value(&self) -> &[u8] {
+        &self.value
+    }
+    pub fn clear_value(&mut self) {
+        self.value.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_value(&mut self, v: ::std::vec::Vec<u8>) {
+        self.value = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_value(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.value
+    }
+
+    // Take field
+    pub fn take_value(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.value, ::std::vec::Vec::new())
     }
 }
 
-impl ::protobuf::Message for RunId {
+impl ::protobuf::Message for Any {
     fn is_initialized(&self) -> bool {
-        for v in &self.uuid {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
         true
     }
 
@@ -95,7 +110,10 @@ impl ::protobuf::Message for RunId {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.uuid)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.type_url)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.value)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -109,9 +127,11 @@ impl ::protobuf::Message for RunId {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
-        if let Some(ref v) = self.uuid.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        if !self.type_url.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.type_url);
+        }
+        if !self.value.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(2, &self.value);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -119,10 +139,11 @@ impl ::protobuf::Message for RunId {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        if let Some(ref v) = self.uuid.as_ref() {
-            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
+        if !self.type_url.is_empty() {
+            os.write_string(1, &self.type_url)?;
+        }
+        if !self.value.is_empty() {
+            os.write_bytes(2, &self.value)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -154,8 +175,8 @@ impl ::protobuf::Message for RunId {
         Self::descriptor_static()
     }
 
-    fn new() -> RunId {
-        RunId::new()
+    fn new() -> Any {
+        Any::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
@@ -166,13 +187,18 @@ impl ::protobuf::Message for RunId {
         unsafe {
             descriptor.get(|| {
                 let mut fields = ::std::vec::Vec::new();
-                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<super::uuid::Uuid>>(
-                    "uuid",
-                    |m: &RunId| { &m.uuid },
-                    |m: &mut RunId| { &mut m.uuid },
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "type_url",
+                    |m: &Any| { &m.type_url },
+                    |m: &mut Any| { &mut m.type_url },
                 ));
-                ::protobuf::reflect::MessageDescriptor::new::<RunId>(
-                    "RunId",
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
+                    "value",
+                    |m: &Any| { &m.value },
+                    |m: &mut Any| { &mut m.value },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<Any>(
+                    "Any",
                     fields,
                     file_descriptor_proto()
                 )
@@ -180,41 +206,43 @@ impl ::protobuf::Message for RunId {
         }
     }
 
-    fn default_instance() -> &'static RunId {
-        static mut instance: ::protobuf::lazy::Lazy<RunId> = ::protobuf::lazy::Lazy {
+    fn default_instance() -> &'static Any {
+        static mut instance: ::protobuf::lazy::Lazy<Any> = ::protobuf::lazy::Lazy {
             lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const RunId,
+            ptr: 0 as *const Any,
         };
         unsafe {
-            instance.get(RunId::new)
+            instance.get(Any::new)
         }
     }
 }
 
-impl ::protobuf::Clear for RunId {
+impl ::protobuf::Clear for Any {
     fn clear(&mut self) {
-        self.uuid.clear();
+        self.type_url.clear();
+        self.value.clear();
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for RunId {
+impl ::std::fmt::Debug for Any {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for RunId {
+impl ::protobuf::reflect::ProtobufValue for Any {
     fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
         ::protobuf::reflect::ProtobufValueRef::Message(self)
     }
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x1esrc/api/artifacts/run_id.proto\x12\x17observation_tools.proto\x1a\
-    \x1csrc/api/artifacts/uuid.proto\":\n\x05RunId\x121\n\x04uuid\x18\x01\
-    \x20\x01(\x0b2\x1d.observation_tools.proto.UuidR\x04uuidB\x1b\n\x17tools\
-    .observation.protoP\x01b\x06proto3\
+    \n\x19google/protobuf/any.proto\x12\x0fgoogle.protobuf\"6\n\x03Any\x12\
+    \x19\n\x08type_url\x18\x01\x20\x01(\tR\x07typeUrl\x12\x14\n\x05value\x18\
+    \x02\x20\x01(\x0cR\x05valueBv\n\x13com.google.protobufB\x08AnyProtoP\x01\
+    Z,google.golang.org/protobuf/types/known/anypb\xa2\x02\x03GPB\xaa\x02\
+    \x1eGoogle.Protobuf.WellKnownTypesb\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

@@ -4,10 +4,9 @@ use std::error::Error;
 use std::io::ErrorKind;
 use google_cloud_auth::{Credential, CredentialConfigBuilder};
 use cached::proc_macro::cached;
-use log::warn;
+use log::{trace, warn};
 use reqwest::Client;
-
-pub type GenericError = Box<dyn Error + Send + Sync>;
+use crate::util::GenericError;
 
 #[derive(Clone)]
 pub struct GoogleTokenGenerator {
@@ -31,6 +30,7 @@ impl GoogleTokenGenerator {
     convert = r#"{true}"#
 )]
 async fn get_id_token(client: Client) -> Result<String, GenericError> {
+    trace!("Fetching Google ID token");
     let credential = Credential::find_default(
         CredentialConfigBuilder::new()
             .scopes(vec![

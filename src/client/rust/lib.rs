@@ -10,6 +10,8 @@ mod user_metadata;
 mod google_token_generator;
 mod api;
 mod aws_sign_in;
+mod static_source_data;
+mod util;
 
 #[cfg(feature = "python")]
 use pyo3::prelude::*;

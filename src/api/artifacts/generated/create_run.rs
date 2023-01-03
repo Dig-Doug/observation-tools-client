@@ -545,7 +545,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x04\x20\x01(\x0b2\x1e.observation_tools.proto.RunIdR\x05runId\x12G\
     \n\rroot_stage_id\x18\x05\x20\x01(\x0b2#.observation_tools.proto.Artifac\
     tIdR\x0brootStageId\x12\x1d\n\nviewer_url\x18\x03\x20\x01(\tR\tviewerUrl\
-    J\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03B\x1b\n\x17observation_tools.p\
+    J\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03B\x1b\n\x17tools.observation.p\
     rotoP\x01b\x06proto3\
 ";
 

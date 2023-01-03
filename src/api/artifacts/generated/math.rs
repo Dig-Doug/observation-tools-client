@@ -5290,8 +5290,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     le\x18\x03\x20\x01(\x0b2\x20.observation_tools.proto.Vector2R\x05scale\"\
     \x82\x01\n\x04TRS3\x12B\n\x0btranslation\x18\x01\x20\x01(\x0b2\x20.obser\
     vation_tools.proto.Vector3R\x0btranslation\x126\n\x05scale\x18\x03\x20\
-    \x01(\x0b2\x20.observation_tools.proto.Vector3R\x05scaleB\x1b\n\x17obser\
-    vation_tools.protoP\x01b\x06proto3\
+    \x01(\x0b2\x20.observation_tools.proto.Vector3R\x05scaleB\x1b\n\x17tools\
+    .observation.protoP\x01b\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

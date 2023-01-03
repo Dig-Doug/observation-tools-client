@@ -1547,6 +1547,7 @@ pub enum StructuredData_oneof_data {
     segment2(super::math::Segment2),
     object3(Object3),
     object2(Object2),
+    sphere(Sphere),
 }
 
 impl StructuredData {
@@ -1896,6 +1897,55 @@ impl StructuredData {
             Object2::new()
         }
     }
+
+    // .observation_tools.proto.Sphere sphere = 8;
+
+
+    pub fn get_sphere(&self) -> &Sphere {
+        match self.data {
+            ::std::option::Option::Some(StructuredData_oneof_data::sphere(ref v)) => v,
+            _ => Sphere::default_instance(),
+        }
+    }
+    pub fn clear_sphere(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_sphere(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(StructuredData_oneof_data::sphere(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_sphere(&mut self, v: Sphere) {
+        self.data = ::std::option::Option::Some(StructuredData_oneof_data::sphere(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_sphere(&mut self) -> &mut Sphere {
+        if let ::std::option::Option::Some(StructuredData_oneof_data::sphere(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(StructuredData_oneof_data::sphere(Sphere::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(StructuredData_oneof_data::sphere(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_sphere(&mut self) -> Sphere {
+        if self.has_sphere() {
+            match self.data.take() {
+                ::std::option::Option::Some(StructuredData_oneof_data::sphere(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Sphere::new()
+        }
+    }
 }
 
 impl ::protobuf::Message for StructuredData {
@@ -1931,6 +1981,11 @@ impl ::protobuf::Message for StructuredData {
             }
         }
         if let Some(StructuredData_oneof_data::object2(ref v)) = self.data {
+            if !v.is_initialized() {
+                return false;
+            }
+        }
+        if let Some(StructuredData_oneof_data::sphere(ref v)) = self.data {
             if !v.is_initialized() {
                 return false;
             }
@@ -1984,6 +2039,12 @@ impl ::protobuf::Message for StructuredData {
                     }
                     self.data = ::std::option::Option::Some(StructuredData_oneof_data::object2(is.read_message()?));
                 },
+                8 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    self.data = ::std::option::Option::Some(StructuredData_oneof_data::sphere(is.read_message()?));
+                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -2023,6 +2084,10 @@ impl ::protobuf::Message for StructuredData {
                     my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
                 },
                 &StructuredData_oneof_data::object2(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                },
+                &StructuredData_oneof_data::sphere(ref v) => {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
                 },
@@ -2068,6 +2133,11 @@ impl ::protobuf::Message for StructuredData {
                 },
                 &StructuredData_oneof_data::object2(ref v) => {
                     os.write_tag(7, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+                    os.write_raw_varint32(v.get_cached_size())?;
+                    v.write_to_with_cached_sizes(os)?;
+                },
+                &StructuredData_oneof_data::sphere(ref v) => {
+                    os.write_tag(8, ::protobuf::wire_format::WireTypeLengthDelimited)?;
                     os.write_raw_varint32(v.get_cached_size())?;
                     v.write_to_with_cached_sizes(os)?;
                 },
@@ -2150,6 +2220,11 @@ impl ::protobuf::Message for StructuredData {
                     StructuredData::has_object2,
                     StructuredData::get_object2,
                 ));
+                fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, Sphere>(
+                    "sphere",
+                    StructuredData::has_sphere,
+                    StructuredData::get_sphere,
+                ));
                 ::protobuf::reflect::MessageDescriptor::new::<StructuredData>(
                     "StructuredData",
                     fields,
@@ -2179,6 +2254,7 @@ impl ::protobuf::Clear for StructuredData {
         self.data = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
         self.unknown_fields.clear();
     }
 }
@@ -2190,175 +2266,6 @@ impl ::std::fmt::Debug for StructuredData {
 }
 
 impl ::protobuf::reflect::ProtobufValue for StructuredData {
-    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
-        ::protobuf::reflect::ProtobufValueRef::Message(self)
-    }
-}
-
-#[derive(PartialEq,Clone,Default)]
-pub struct RawImage {
-    // message fields
-    pub data: ::std::vec::Vec<u8>,
-    // special fields
-    pub unknown_fields: ::protobuf::UnknownFields,
-    pub cached_size: ::protobuf::CachedSize,
-}
-
-impl<'a> ::std::default::Default for &'a RawImage {
-    fn default() -> &'a RawImage {
-        <RawImage as ::protobuf::Message>::default_instance()
-    }
-}
-
-impl RawImage {
-    pub fn new() -> RawImage {
-        ::std::default::Default::default()
-    }
-
-    // bytes data = 1;
-
-
-    pub fn get_data(&self) -> &[u8] {
-        &self.data
-    }
-    pub fn clear_data(&mut self) {
-        self.data.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_data(&mut self, v: ::std::vec::Vec<u8>) {
-        self.data = v;
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_data(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.data
-    }
-
-    // Take field
-    pub fn take_data(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.data, ::std::vec::Vec::new())
-    }
-}
-
-impl ::protobuf::Message for RawImage {
-    fn is_initialized(&self) -> bool {
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        while !is.eof()? {
-            let (field_number, wire_type) = is.read_tag_unpack()?;
-            match field_number {
-                1 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.data)?;
-                },
-                _ => {
-                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u32 {
-        let mut my_size = 0;
-        if !self.data.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(1, &self.data);
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
-        self.cached_size.set(my_size);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        if !self.data.is_empty() {
-            os.write_bytes(1, &self.data)?;
-        }
-        os.write_unknown_fields(self.get_unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn get_cached_size(&self) -> u32 {
-        self.cached_size.get()
-    }
-
-    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
-        &self.unknown_fields
-    }
-
-    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
-        &mut self.unknown_fields
-    }
-
-    fn as_any(&self) -> &dyn (::std::any::Any) {
-        self as &dyn (::std::any::Any)
-    }
-    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
-        self as &mut dyn (::std::any::Any)
-    }
-    fn into_any(self: Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
-        self
-    }
-
-    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
-        Self::descriptor_static()
-    }
-
-    fn new() -> RawImage {
-        RawImage::new()
-    }
-
-    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
-        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
-        };
-        unsafe {
-            descriptor.get(|| {
-                let mut fields = ::std::vec::Vec::new();
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                    "data",
-                    |m: &RawImage| { &m.data },
-                    |m: &mut RawImage| { &mut m.data },
-                ));
-                ::protobuf::reflect::MessageDescriptor::new::<RawImage>(
-                    "RawImage",
-                    fields,
-                    file_descriptor_proto()
-                )
-            })
-        }
-    }
-
-    fn default_instance() -> &'static RawImage {
-        static mut instance: ::protobuf::lazy::Lazy<RawImage> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const RawImage,
-        };
-        unsafe {
-            instance.get(RawImage::new)
-        }
-    }
-}
-
-impl ::protobuf::Clear for RawImage {
-    fn clear(&mut self) {
-        self.data.clear();
-        self.unknown_fields.clear();
-    }
-}
-
-impl ::std::fmt::Debug for RawImage {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for RawImage {
     fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
         ::protobuf::reflect::ProtobufValueRef::Message(self)
     }
@@ -4233,6 +4140,594 @@ impl ::protobuf::reflect::ProtobufValue for Sphere {
     }
 }
 
+#[derive(PartialEq,Clone,Default)]
+pub struct SphereReference {
+    // message oneof groups
+    pub data: ::std::option::Option<SphereReference_oneof_data>,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a SphereReference {
+    fn default() -> &'a SphereReference {
+        <SphereReference as ::protobuf::Message>::default_instance()
+    }
+}
+
+#[derive(Clone,PartialEq,Debug)]
+pub enum SphereReference_oneof_data {
+    artifact_id(ArtifactId),
+    sphere(Sphere),
+}
+
+impl SphereReference {
+    pub fn new() -> SphereReference {
+        ::std::default::Default::default()
+    }
+
+    // .observation_tools.proto.ArtifactId artifact_id = 1;
+
+
+    pub fn get_artifact_id(&self) -> &ArtifactId {
+        match self.data {
+            ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(ref v)) => v,
+            _ => ArtifactId::default_instance(),
+        }
+    }
+    pub fn clear_artifact_id(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_artifact_id(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_artifact_id(&mut self, v: ArtifactId) {
+        self.data = ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_artifact_id(&mut self) -> &mut ArtifactId {
+        if let ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(ArtifactId::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_artifact_id(&mut self) -> ArtifactId {
+        if self.has_artifact_id() {
+            match self.data.take() {
+                ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            ArtifactId::new()
+        }
+    }
+
+    // .observation_tools.proto.Sphere sphere = 2;
+
+
+    pub fn get_sphere(&self) -> &Sphere {
+        match self.data {
+            ::std::option::Option::Some(SphereReference_oneof_data::sphere(ref v)) => v,
+            _ => Sphere::default_instance(),
+        }
+    }
+    pub fn clear_sphere(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_sphere(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(SphereReference_oneof_data::sphere(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_sphere(&mut self, v: Sphere) {
+        self.data = ::std::option::Option::Some(SphereReference_oneof_data::sphere(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_sphere(&mut self) -> &mut Sphere {
+        if let ::std::option::Option::Some(SphereReference_oneof_data::sphere(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(SphereReference_oneof_data::sphere(Sphere::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(SphereReference_oneof_data::sphere(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_sphere(&mut self) -> Sphere {
+        if self.has_sphere() {
+            match self.data.take() {
+                ::std::option::Option::Some(SphereReference_oneof_data::sphere(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Sphere::new()
+        }
+    }
+}
+
+impl ::protobuf::Message for SphereReference {
+    fn is_initialized(&self) -> bool {
+        if let Some(SphereReference_oneof_data::artifact_id(ref v)) = self.data {
+            if !v.is_initialized() {
+                return false;
+            }
+        }
+        if let Some(SphereReference_oneof_data::sphere(ref v)) = self.data {
+            if !v.is_initialized() {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    self.data = ::std::option::Option::Some(SphereReference_oneof_data::artifact_id(is.read_message()?));
+                },
+                2 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    self.data = ::std::option::Option::Some(SphereReference_oneof_data::sphere(is.read_message()?));
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let ::std::option::Option::Some(ref v) = self.data {
+            match v {
+                &SphereReference_oneof_data::artifact_id(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                },
+                &SphereReference_oneof_data::sphere(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                },
+            };
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if let ::std::option::Option::Some(ref v) = self.data {
+            match v {
+                &SphereReference_oneof_data::artifact_id(ref v) => {
+                    os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+                    os.write_raw_varint32(v.get_cached_size())?;
+                    v.write_to_with_cached_sizes(os)?;
+                },
+                &SphereReference_oneof_data::sphere(ref v) => {
+                    os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+                    os.write_raw_varint32(v.get_cached_size())?;
+                    v.write_to_with_cached_sizes(os)?;
+                },
+            };
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> SphereReference {
+        SphereReference::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, ArtifactId>(
+                    "artifact_id",
+                    SphereReference::has_artifact_id,
+                    SphereReference::get_artifact_id,
+                ));
+                fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, Sphere>(
+                    "sphere",
+                    SphereReference::has_sphere,
+                    SphereReference::get_sphere,
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<SphereReference>(
+                    "SphereReference",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static SphereReference {
+        static mut instance: ::protobuf::lazy::Lazy<SphereReference> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const SphereReference,
+        };
+        unsafe {
+            instance.get(SphereReference::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for SphereReference {
+    fn clear(&mut self) {
+        self.data = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for SphereReference {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SphereReference {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct ArtifactUpdate {
+    // message fields
+    pub field_data: ::protobuf::SingularPtrField<::protobuf::well_known_types::Any>,
+    pub field: ::protobuf::SingularPtrField<::protobuf::well_known_types::FieldMask>,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a ArtifactUpdate {
+    fn default() -> &'a ArtifactUpdate {
+        <ArtifactUpdate as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl ArtifactUpdate {
+    pub fn new() -> ArtifactUpdate {
+        ::std::default::Default::default()
+    }
+
+    // .google.protobuf.Any field_data = 1;
+
+
+    pub fn get_field_data(&self) -> &::protobuf::well_known_types::Any {
+        self.field_data.as_ref().unwrap_or_else(|| ::protobuf::well_known_types::Any::default_instance())
+    }
+    pub fn clear_field_data(&mut self) {
+        self.field_data.clear();
+    }
+
+    pub fn has_field_data(&self) -> bool {
+        self.field_data.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_field_data(&mut self, v: ::protobuf::well_known_types::Any) {
+        self.field_data = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_field_data(&mut self) -> &mut ::protobuf::well_known_types::Any {
+        if self.field_data.is_none() {
+            self.field_data.set_default();
+        }
+        self.field_data.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_field_data(&mut self) -> ::protobuf::well_known_types::Any {
+        self.field_data.take().unwrap_or_else(|| ::protobuf::well_known_types::Any::new())
+    }
+
+    // .google.protobuf.FieldMask field = 2;
+
+
+    pub fn get_field(&self) -> &::protobuf::well_known_types::FieldMask {
+        self.field.as_ref().unwrap_or_else(|| ::protobuf::well_known_types::FieldMask::default_instance())
+    }
+    pub fn clear_field(&mut self) {
+        self.field.clear();
+    }
+
+    pub fn has_field(&self) -> bool {
+        self.field.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_field(&mut self, v: ::protobuf::well_known_types::FieldMask) {
+        self.field = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_field(&mut self) -> &mut ::protobuf::well_known_types::FieldMask {
+        if self.field.is_none() {
+            self.field.set_default();
+        }
+        self.field.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_field(&mut self) -> ::protobuf::well_known_types::FieldMask {
+        self.field.take().unwrap_or_else(|| ::protobuf::well_known_types::FieldMask::new())
+    }
+}
+
+impl ::protobuf::Message for ArtifactUpdate {
+    fn is_initialized(&self) -> bool {
+        for v in &self.field_data {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.field {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.field_data)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.field)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let Some(ref v) = self.field_data.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        if let Some(ref v) = self.field.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if let Some(ref v) = self.field_data.as_ref() {
+            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        if let Some(ref v) = self.field.as_ref() {
+            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> ArtifactUpdate {
+        ArtifactUpdate::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<::protobuf::well_known_types::Any>>(
+                    "field_data",
+                    |m: &ArtifactUpdate| { &m.field_data },
+                    |m: &mut ArtifactUpdate| { &mut m.field_data },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<::protobuf::well_known_types::FieldMask>>(
+                    "field",
+                    |m: &ArtifactUpdate| { &m.field },
+                    |m: &mut ArtifactUpdate| { &mut m.field },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<ArtifactUpdate>(
+                    "ArtifactUpdate",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static ArtifactUpdate {
+        static mut instance: ::protobuf::lazy::Lazy<ArtifactUpdate> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ArtifactUpdate,
+        };
+        unsafe {
+            instance.get(ArtifactUpdate::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for ArtifactUpdate {
+    fn clear(&mut self) {
+        self.field_data.clear();
+        self.field.clear();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for ArtifactUpdate {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ArtifactUpdate {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(Clone,PartialEq,Eq,Debug,Hash)]
+pub enum ArtifactUpdate_Operation {
+    OPERATION_UNKNOWN = 0,
+    OPERATION_CREATE = 1,
+}
+
+impl ::protobuf::ProtobufEnum for ArtifactUpdate_Operation {
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<ArtifactUpdate_Operation> {
+        match value {
+            0 => ::std::option::Option::Some(ArtifactUpdate_Operation::OPERATION_UNKNOWN),
+            1 => ::std::option::Option::Some(ArtifactUpdate_Operation::OPERATION_CREATE),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn values() -> &'static [Self] {
+        static values: &'static [ArtifactUpdate_Operation] = &[
+            ArtifactUpdate_Operation::OPERATION_UNKNOWN,
+            ArtifactUpdate_Operation::OPERATION_CREATE,
+        ];
+        values
+    }
+
+    fn enum_descriptor_static() -> &'static ::protobuf::reflect::EnumDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::EnumDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                ::protobuf::reflect::EnumDescriptor::new("ArtifactUpdate_Operation", file_descriptor_proto())
+            })
+        }
+    }
+}
+
+impl ::std::marker::Copy for ArtifactUpdate_Operation {
+}
+
+impl ::std::default::Default for ArtifactUpdate_Operation {
+    fn default() -> Self {
+        ArtifactUpdate_Operation::OPERATION_UNKNOWN
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ArtifactUpdate_Operation {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Enum(self.descriptor())
+    }
+}
+
 #[derive(Clone,PartialEq,Eq,Debug,Hash)]
 pub enum ArtifactType {
     ARTIFACT_TYPE_UNKNOWN = 0,
@@ -4306,7 +4801,8 @@ impl ::protobuf::reflect::ProtobufValue for ArtifactType {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x20src/api/artifacts/artifact.proto\x12\x17observation_tools.proto\
     \x1a\x1csrc/api/artifacts/uuid.proto\x1a\x1csrc/api/artifacts/math.proto\
-    \x1a\x1fgoogle/protobuf/timestamp.proto\"?\n\nArtifactId\x121\n\x04uuid\
+    \x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19google/protobuf/any.proto\
+    \x1a\x20google/protobuf/field_mask.proto\"?\n\nArtifactId\x121\n\x04uuid\
     \x18\x01\x20\x01(\x0b2\x1d.observation_tools.proto.UuidR\x04uuid\"\xbb\
     \x04\n\x0cArtifactData\x12Q\n\x12ancestor_group_ids\x18\x06\x20\x03(\x0b\
     2#.observation_tools.proto.ArtifactIdR\x10ancestorGroupIds\x12R\n\ruser_\
@@ -4318,7 +4814,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     oto.Map2dTo3dDataH\0R\tmap2dTo3d\x12=\n\x08group_3d\x18\x0b\x20\x01(\x0b\
     2\x20.observation_tools.proto.Group3dH\0R\x07group3d\x12L\n\x14client_cr\
     eation_time\x18\x05\x20\x01(\x0b2\x1a.google.protobuf.TimestampR\x12clie\
-    ntCreationTimeB\x0b\n\ttype_dataJ\x04\x08\x01\x10\x04\"\xc0\x01\n\x14Art\
+    ntCreationTimeB\x0b\n\ttype_dataJ\x04\x08\x01\x10\x05\"\xc0\x01\n\x14Art\
     ifactUserMetadata\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04name\x12W\n\
     \x08metadata\x18\x02\x20\x03(\x0b2;.observation_tools.proto.ArtifactUser\
     Metadata.MetadataEntryR\x08metadata\x1a;\n\rMetadataEntry\x12\x10\n\x03k\
@@ -4329,7 +4825,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     (\x0b2#.observation_tools.proto.Transform3R\rto3dTransformJ\x04\x08\x01\
     \x10\x02\"[\n\x07Group3d\x12J\n\x0ebase_transform\x18\x02\x20\x01(\x0b2#\
     .observation_tools.proto.Transform3R\rbaseTransformJ\x04\x08\x01\x10\x02\
-    \"\xc4\x03\n\x0eStructuredData\x12?\n\x08polygon2\x18\x01\x20\x01(\x0b2!\
+    \"\xff\x03\n\x0eStructuredData\x12?\n\x08polygon2\x18\x01\x20\x01(\x0b2!\
     .observation_tools.proto.Polygon2H\0R\x08polygon2\x126\n\x05graph\x18\
     \x02\x20\x01(\x0b2\x1e.observation_tools.proto.GraphH\0R\x05graph\x129\n\
     \x06point2\x18\x03\x20\x01(\x0b2\x1f.observation_tools.proto.Point2H\0R\
@@ -4338,34 +4834,42 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ervation_tools.proto.Segment2H\0R\x08segment2\x12<\n\x07object3\x18\x06\
     \x20\x01(\x0b2\x20.observation_tools.proto.Object3H\0R\x07object3\x12<\n\
     \x07object2\x18\x07\x20\x01(\x0b2\x20.observation_tools.proto.Object2H\0\
-    R\x07object2B\x06\n\x04data\"\x1e\n\x08RawImage\x12\x12\n\x04data\x18\
-    \x01\x20\x01(\x0cR\x04data\"\xf1\x01\n\x06Image2\x12\x12\n\x04data\x18\
-    \x04\x20\x01(\x0cR\x04data\x12\x1b\n\tmime_type\x18\x05\x20\x01(\tR\x08m\
-    imeType\x12[\n\x18pixel_to_world_transform\x18\x02\x20\x01(\x0b2\".obser\
-    vation_tools.proto.Matrix3x3R\x15pixelToWorldTransform\x12S\n\x0fpixel_t\
-    ransform\x18\x03\x20\x01(\x0b2*.observation_tools.proto.PerPixelTransfor\
-    mR\x0epixelTransformJ\x04\x08\x01\x10\x02\"u\n\x11PerPixelTransform\x12`\
-    \n\x15random_distinct_color\x18\x01\x20\x01(\x0b2,.observation_tools.pro\
-    to.RandomDistinctColorR\x13randomDistinctColor\"\x15\n\x13RandomDistinct\
-    Color\"\x8e\x01\n\x07Object2\x12>\n\x08geometry\x18\x01\x20\x01(\x0b2\".\
-    observation_tools.proto.Geometry2R\x08geometry\x12C\n\ntransforms\x18\
-    \x02\x20\x03(\x0b2#.observation_tools.proto.Transform2R\ntransforms\"\
-    \xd0\x01\n\tGeometry2\x129\n\x06point2\x18\x01\x20\x01(\x0b2\x1f.observa\
-    tion_tools.proto.Point2H\0R\x06point2\x12?\n\x08polygon2\x18\x02\x20\x01\
-    (\x0b2!.observation_tools.proto.Polygon2H\0R\x08polygon2\x12?\n\x08segme\
-    nt2\x18\x03\x20\x01(\x0b2!.observation_tools.proto.Segment2H\0R\x08segme\
-    nt2B\x06\n\x04data\"\x94\x01\n\x07Object3\x12>\n\x08geometry\x18\x01\x20\
-    \x01(\x0b2\".observation_tools.proto.Geometry3R\x08geometry\x12C\n\ntran\
-    sforms\x18\x03\x20\x03(\x0b2#.observation_tools.proto.Transform3R\ntrans\
-    formsJ\x04\x08\x02\x10\x03\"N\n\tGeometry3\x129\n\x06sphere\x18\x01\x20\
-    \x01(\x0b2\x1f.observation_tools.proto.SphereH\0R\x06sphereB\x06\n\x04da\
-    ta\"A\n\x06Sphere\x127\n\x06radius\x18\x01\x20\x01(\x0b2\x1f.observation\
-    _tools.proto.NumberR\x06radius*\xd9\x01\n\x0cArtifactType\x12\x19\n\x15A\
-    RTIFACT_TYPE_UNKNOWN\x10\0\x12\x19\n\x15ARTIFACT_TYPE_GENERIC\x10\x01\
-    \x12\x1a\n\x16ARTIFACT_TYPE_2D_GROUP\x10\x02\x12\x1a\n\x16ARTIFACT_TYPE_\
-    3D_GROUP\x10\x03\x12\x20\n\x1cARTIFACT_TYPE_2D_IN_3D_GROUP\x10\x04\x12\
-    \x1b\n\x17ARTIFACT_TYPE_RUN_STAGE\x10\x05\x12\x1c\n\x18ARTIFACT_TYPE_ROO\
-    T_GROUP\x10\x06B\x1b\n\x17observation_tools.protoP\x01b\x06proto3\
+    R\x07object2\x129\n\x06sphere\x18\x08\x20\x01(\x0b2\x1f.observation_tool\
+    s.proto.SphereH\0R\x06sphereB\x06\n\x04data\"\xf1\x01\n\x06Image2\x12\
+    \x12\n\x04data\x18\x04\x20\x01(\x0cR\x04data\x12\x1b\n\tmime_type\x18\
+    \x05\x20\x01(\tR\x08mimeType\x12[\n\x18pixel_to_world_transform\x18\x02\
+    \x20\x01(\x0b2\".observation_tools.proto.Matrix3x3R\x15pixelToWorldTrans\
+    form\x12S\n\x0fpixel_transform\x18\x03\x20\x01(\x0b2*.observation_tools.\
+    proto.PerPixelTransformR\x0epixelTransformJ\x04\x08\x01\x10\x02\"u\n\x11\
+    PerPixelTransform\x12`\n\x15random_distinct_color\x18\x01\x20\x01(\x0b2,\
+    .observation_tools.proto.RandomDistinctColorR\x13randomDistinctColor\"\
+    \x15\n\x13RandomDistinctColor\"\x8e\x01\n\x07Object2\x12>\n\x08geometry\
+    \x18\x01\x20\x01(\x0b2\".observation_tools.proto.Geometry2R\x08geometry\
+    \x12C\n\ntransforms\x18\x02\x20\x03(\x0b2#.observation_tools.proto.Trans\
+    form2R\ntransforms\"\xd0\x01\n\tGeometry2\x129\n\x06point2\x18\x01\x20\
+    \x01(\x0b2\x1f.observation_tools.proto.Point2H\0R\x06point2\x12?\n\x08po\
+    lygon2\x18\x02\x20\x01(\x0b2!.observation_tools.proto.Polygon2H\0R\x08po\
+    lygon2\x12?\n\x08segment2\x18\x03\x20\x01(\x0b2!.observation_tools.proto\
+    .Segment2H\0R\x08segment2B\x06\n\x04data\"\x94\x01\n\x07Object3\x12>\n\
+    \x08geometry\x18\x01\x20\x01(\x0b2\".observation_tools.proto.Geometry3R\
+    \x08geometry\x12C\n\ntransforms\x18\x03\x20\x03(\x0b2#.observation_tools\
+    .proto.Transform3R\ntransformsJ\x04\x08\x02\x10\x03\"N\n\tGeometry3\x129\
+    \n\x06sphere\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.SphereH\0\
+    R\x06sphereB\x06\n\x04data\"A\n\x06Sphere\x127\n\x06radius\x18\x01\x20\
+    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x06radius\"\x9c\x01\n\x0f\
+    SphereReference\x12F\n\x0bartifact_id\x18\x01\x20\x01(\x0b2#.observation\
+    _tools.proto.ArtifactIdH\0R\nartifactId\x129\n\x06sphere\x18\x02\x20\x01\
+    (\x0b2\x1f.observation_tools.proto.SphereH\0R\x06sphereB\x06\n\x04data\"\
+    \xb1\x01\n\x0eArtifactUpdate\x123\n\nfield_data\x18\x01\x20\x01(\x0b2\
+    \x14.google.protobuf.AnyR\tfieldData\x120\n\x05field\x18\x02\x20\x01(\
+    \x0b2\x1a.google.protobuf.FieldMaskR\x05field\"8\n\tOperation\x12\x15\n\
+    \x11OPERATION_UNKNOWN\x10\0\x12\x14\n\x10OPERATION_CREATE\x10\x01*\xd9\
+    \x01\n\x0cArtifactType\x12\x19\n\x15ARTIFACT_TYPE_UNKNOWN\x10\0\x12\x19\
+    \n\x15ARTIFACT_TYPE_GENERIC\x10\x01\x12\x1a\n\x16ARTIFACT_TYPE_2D_GROUP\
+    \x10\x02\x12\x1a\n\x16ARTIFACT_TYPE_3D_GROUP\x10\x03\x12\x20\n\x1cARTIFA\
+    CT_TYPE_2D_IN_3D_GROUP\x10\x04\x12\x1b\n\x17ARTIFACT_TYPE_RUN_STAGE\x10\
+    \x05\x12\x1c\n\x18ARTIFACT_TYPE_ROOT_GROUP\x10\x06B\x1b\n\x17tools.obser\
+    vation.protoP\x01b\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

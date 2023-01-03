@@ -13,6 +13,7 @@ use protobuf::well_known_types::Timestamp;
 use protobuf::Message;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
+use crate::util::{new_uuid_proto, time_now};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) enum ContextBehavior {
@@ -159,7 +160,7 @@ impl BaseArtifactUploader {
 
     pub fn upload_raw_bytes(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
         let request = base_child_group_request(&self.data, metadata.proto.clone());
-        self.client.upload_artifact(&request, Some(data));
+        self.client.upload_artifact_raw_bytes(&request, Some(data));
         bs58::encode(request.get_artifact_id().write_to_bytes().unwrap()).into_string()
     }
 
@@ -168,20 +169,3 @@ impl BaseArtifactUploader {
     }
 }
 
-pub(crate) fn new_uuid_proto() -> artifacts_api_rust_proto::Uuid {
-    let uuid = Uuid::new_v4();
-    let mut proto = artifacts_api_rust_proto::Uuid::new();
-    proto.set_data(uuid.as_bytes().to_vec());
-    proto
-}
-
-pub(crate) fn time_now() -> Timestamp {
-    let mut t = Timestamp::new();
-    let since_the_epoch = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    t.set_seconds(since_the_epoch.as_secs() as i64);
-    let nanos = (since_the_epoch - Duration::from_secs(t.seconds as u64)).as_nanos();
-    t.set_nanos(nanos as i32);
-    t
-}

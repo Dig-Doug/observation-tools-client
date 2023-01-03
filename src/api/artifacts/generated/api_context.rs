@@ -595,7 +595,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x10ancestorGroupIdsJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03\"g\n\x0fR\
     unUploaderData\x12\x1d\n\nproject_id\x18\x01\x20\x01(\tR\tprojectId\x125\
     \n\x06run_id\x18\x02\x20\x01(\x0b2\x1e.observation_tools.proto.RunIdR\
-    \x05runIdB\x1b\n\x17observation_tools.protoP\x01b\x06proto3\
+    \x05runIdB\x1b\n\x17tools.observation.protoP\x01b\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

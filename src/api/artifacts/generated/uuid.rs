@@ -197,8 +197,8 @@ impl ::protobuf::reflect::ProtobufValue for Uuid {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1csrc/api/artifacts/uuid.proto\x12\x17observation_tools.proto\"\x1a\
-    \n\x04Uuid\x12\x12\n\x04data\x18\x01\x20\x01(\x0cR\x04dataB\x1b\n\x17obs\
-    ervation_tools.protoP\x01b\x06proto3\
+    \n\x04Uuid\x12\x12\n\x04data\x18\x01\x20\x01(\x0cR\x04dataB\x1b\n\x17too\
+    ls.observation.protoP\x01b\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

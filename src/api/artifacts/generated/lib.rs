@@ -1,6 +1,10 @@
 extern crate protobuf;
 pub mod timestamp;
 pub use timestamp::*;
+pub mod any;
+pub use any::*;
+pub mod field_mask;
+pub use field_mask::*;
 pub mod api_context;
 pub use api_context::*;
 pub mod artifact;
@@ -15,5 +19,7 @@ pub mod run_data;
 pub use run_data::*;
 pub mod run_id;
 pub use run_id::*;
+pub mod static_source_data_manifest;
+pub use static_source_data_manifest::*;
 pub mod uuid;
 pub use uuid::*;
