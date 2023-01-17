@@ -1,6 +1,6 @@
 {
   "devDependencies": {
     "@bazel/ibazel": "^0.15.10",
-    "get-graphql-schema": "^2.1.2",
+    "get-graphql-schema": "^2.1.2"
   }
 }

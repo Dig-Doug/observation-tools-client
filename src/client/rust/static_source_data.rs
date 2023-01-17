@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io;
-use graphql_client::GraphQLQuery;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use custom_error::custom_error;
@@ -71,14 +70,3 @@ fn apply_update_to_manifest(manifest: &mut StaticSourceDataManifest, update: &St
         }
     }
 }
-
-pub(crate) type ID = String;
-pub(crate) type Upload = String;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-schema_path = "../../../src/api/schema.json",
-query_path = "upload_source_data_mutation.graphql",
-response_derives = "Debug"
-)]
-pub struct UploadSourceDataMutation;

@@ -31,6 +31,7 @@ impl RunUploader {
 }
 
 impl RunUploader {
+    #[cfg(feature = "cpp")]
     pub(crate) fn ffi_create_initial_run_stage(
         &self,
         metadata: &UserMetadataBuilder,

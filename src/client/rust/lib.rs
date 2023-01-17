@@ -7,11 +7,11 @@ mod run_stage_uploader;
 mod run_uploader;
 mod uploader_stack;
 mod user_metadata;
-mod google_token_generator;
 mod api;
-mod aws_sign_in;
 mod static_source_data;
 mod util;
+mod task_handler;
+mod upload_artifact_task;
 
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
@@ -25,12 +25,12 @@ pub use crate::run_stage_uploader::RunStageUploader;
 pub use crate::run_uploader::RunUploader;
 pub use crate::user_metadata::UserMetadataBuilder;
 
-#[cfg(not(feature = "python"))]
+#[cfg(feature = "cpp")]
 use crate::client::ffi_new_client;
 use crate::uploader_stack::ffi_get_current_group;
 use crate::user_metadata::new_user_metadata;
 
-#[cfg(not(feature = "python"))]
+#[cfg(feature = "cpp")]
 #[cxx::bridge]
 mod ffi {
     extern "Rust" {
