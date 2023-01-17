@@ -48,7 +48,7 @@ url = "2.2.2"
 uuid = { version = "1.2.2", features = ["v4"] }
 wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4.28"
-web-sys = { version = "0.3.55", features = ["console"] }
+web-sys = { version = "0.3.55", features = ['Window', 'Performance', 'PerformanceTiming'] }
 
 [build-dependencies]
 protobuf-codegen = "=2.8.2"
