@@ -62,6 +62,7 @@ pub struct Client {
   receive_shutdown_channel: Receiver<()>,
 }
 
+#[cfg(feature = "cpp")]
 fn default_reqwest_client() -> reqwest::Client {
   reqwest::Client::builder()
     .use_rustls_tls()
