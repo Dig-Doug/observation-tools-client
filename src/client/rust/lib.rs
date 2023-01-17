@@ -20,6 +20,8 @@ use crate::api::Image2Builder;
 pub use crate::artifact_uploader_2d::ArtifactUploader2d;
 pub use crate::artifact_uploader_3d::ArtifactUploader3d;
 pub use crate::client::Client;
+pub use crate::client::ClientOptions;
+pub use crate::client::TokenGenerator;
 pub use crate::generic_artifact_uploader::GenericArtifactUploader;
 pub use crate::run_stage_uploader::RunStageUploader;
 pub use crate::run_uploader::RunUploader;

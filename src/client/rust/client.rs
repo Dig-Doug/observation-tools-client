@@ -34,12 +34,14 @@ use crate::util::{ClientError, encode_id_proto, GenericError, new_uuid_proto, ti
 
 #[derive(Clone)]
 pub enum TokenGenerator {
-  Empty,
+  Constant(String),
 }
 
 impl TokenGenerator {
   pub async fn token(&self) -> Result<String, std::io::Error> {
-    Ok("test".to_string())
+    match self {
+      TokenGenerator::Constant(s) => Ok(s.clone())
+    }
   }
 }
 
@@ -50,6 +52,7 @@ pub struct ClientOptions {
   #[cfg(feature = "tokio")]
   pub runtime: Handle,
   pub client: reqwest::Client,
+  pub token_generator: TokenGenerator,
 }
 
 #[derive(Clone)]
@@ -57,7 +60,6 @@ pub struct ClientOptions {
 pub struct Client {
   options: ClientOptions,
   tmp_dir: Arc<TempDir>,
-  token_generator: TokenGenerator,
   send_task_channel: Sender<UploadArtifactTask>,
   receive_shutdown_channel: Receiver<()>,
 }
@@ -118,14 +120,13 @@ impl Client {
   }
    */
 
-  fn new_impl(options: ClientOptions) -> Self {
-    let token_generator = TokenGenerator::Empty;
+  pub fn new_impl(options: ClientOptions) -> Self {
     let (send_task_channel, receive_task_channel) = async_channel::unbounded();
     let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
 
     let task_handler = TaskHandler {
       client: options.client.clone(),
-      token_generator: token_generator.clone(),
+      token_generator: options.token_generator.clone(),
       host: options.host.clone(),
       receive_task_channel,
       send_shutdown_channel,
@@ -140,7 +141,6 @@ impl Client {
           .tempdir()
           .unwrap(),
       ),
-      token_generator,
       send_task_channel,
       receive_shutdown_channel,
     };
@@ -165,7 +165,7 @@ impl Client {
 
     let mut params = HashMap::new();
     params.insert("request", base64::encode(request.write_to_bytes().unwrap()));
-    let token = self.token_generator.token().await?;
+    let token = self.options.token_generator.token().await?;
     let request_builder = self
       .options
       .client
