@@ -34,9 +34,6 @@ derive_builder = "0.12.0"
 env_logger = "=0.8.4"
 form_urlencoded = "1.0.1"
 futures = "0.3"
-google-cloud-auth = { git = "https://github.com/googleapis/google-cloud-rust", branch = "main" }
-graphql_client = "0.11.0"
-hyper = { version = "0.14.17", features = ["server"] }
 itertools = "0.10.3"
 log = "0.4.14"
 protobuf = "=2.8.2"

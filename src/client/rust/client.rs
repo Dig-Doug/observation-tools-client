@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use crate::base_artifact_uploader::ContextBehavior;
 use crate::base_artifact_uploader::{BaseArtifactUploaderBuilder};
-use graphql_client::GraphQLQuery;
 use serde::{Deserialize, Serialize};
 use crate::{RunStageUploader, RunUploader};
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse, StructuredData};
