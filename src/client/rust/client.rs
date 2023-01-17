@@ -10,6 +10,7 @@ use protobuf::{parse_from_bytes, Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::collections::HashMap;
+#[cfg(not(feature = "wasm"))]
 use std::env;
 use std::fs::File;
 use std::io::Write;
