@@ -13,7 +13,7 @@ pub fn new_user_metadata(name: String) -> Box<UserMetadataBuilder> {
 
 fn user_metadata_from_name(name: &str) -> ArtifactUserMetadata {
     let mut metadata = ArtifactUserMetadata::new();
-    metadata.set_name(name.to_string());
+    metadata.name = name.to_string();
     metadata
 }
 
@@ -35,12 +35,12 @@ impl UserMetadataBuilder {
 impl UserMetadataBuilder {
     fn new_impl(name: String) -> UserMetadataBuilder {
         let mut proto = ArtifactUserMetadata::new();
-        proto.set_name(name);
+        proto.name = name;
         UserMetadataBuilder { proto }
     }
 
     pub fn add_metadata(&mut self, key: String, value: String) -> &mut UserMetadataBuilder {
-        self.proto.mut_metadata().insert(key, value);
+        self.proto.metadata.insert(key, value);
         self
     }
 }

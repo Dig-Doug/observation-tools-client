@@ -1,8 +1,8 @@
+use protobuf::Message;
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::user_metadata::UserMetadataBuilder;
 use artifacts_api_rust_proto::{ArtifactType, StructuredData, Transform3};
-use protobuf::parse_from_bytes;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 
@@ -26,10 +26,10 @@ impl ArtifactUploader3d {
     ) -> ArtifactUploader2d {
         let mut request = self.base.create_base_child_group_request(metadata);
         let artifact_data = request.mut_artifact_data();
-        artifact_data.set_artifact_type(ArtifactType::ARTIFACT_TYPE_2D_IN_3D_GROUP);
+        artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_2D_IN_3D_GROUP.into();
         artifact_data
             .mut_map_2d_to_3d()
-            .set_to_3d_transform(to_3d_transform);
+            .to_3d_transform = Some(to_3d_transform).into();
         ArtifactUploader2d {
             base: self.base.create_child_group(request, false),
         }
@@ -40,7 +40,7 @@ impl ArtifactUploader3d {
         metadata: &UserMetadataBuilder,
         to_3d_transform_bytes: &[u8],
     ) -> Box<ArtifactUploader2d> {
-        let to_3d_transform: Transform3 = parse_from_bytes(to_3d_transform_bytes).unwrap();
+        let to_3d_transform= Transform3::parse_from_bytes(to_3d_transform_bytes).unwrap();
         Box::new(self.child_uploader_2d(metadata, to_3d_transform))
     }
 

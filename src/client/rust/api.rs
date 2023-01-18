@@ -11,7 +11,7 @@ pub struct NumberBuilder {
 impl Into<NumberBuilder> for f64 {
     fn into(self) -> NumberBuilder {
         let mut proto = Number::new();
-        proto.set_d(self);
+        proto.d = self;
         NumberBuilder { proto }
     }
 }
@@ -39,7 +39,7 @@ impl Image2Builder {
 impl Image2Builder {
     fn new_impl(data: &[u8]) -> Image2Builder {
         let mut proto = Image2::new();
-        proto.set_data(data.to_vec());
+        proto.data = data.to_vec();
         Image2Builder { proto }
     }
 }
@@ -47,7 +47,7 @@ impl Image2Builder {
 impl Into<StructuredData> for &Image2Builder {
     fn into(self) -> StructuredData {
         let mut s = StructuredData::new();
-        s.set_image2(self.proto.clone());
+        *s.mut_image2() = self.proto.clone();
         s
     }
 }
@@ -59,7 +59,7 @@ pub struct SphereBuilder {
 impl SphereBuilder {
     pub fn new(radius: impl Into<NumberBuilder>) -> SphereBuilder {
         let mut proto = Sphere::new();
-        proto.set_radius(radius.into().proto);
+        proto.radius = Some(radius.into().proto).into();
         SphereBuilder { proto }
     }
 }
@@ -73,7 +73,7 @@ impl Into<Geometry3Builder> for &SphereBuilder {
 impl Into<StructuredData> for &SphereBuilder {
     fn into(self) -> StructuredData {
         let mut s = StructuredData::new();
-        s.set_sphere(self.proto.clone());
+        *s.mut_sphere() = self.proto.clone();
         s
     }
 }
@@ -85,7 +85,7 @@ pub struct Geometry3Builder {
 impl Geometry3Builder {
     pub fn sphere(sphere: &SphereBuilder) -> Geometry3Builder {
         let mut proto = Geometry3::new();
-        proto.set_sphere(sphere.proto.clone());
+        *proto.mut_sphere() = sphere.proto.clone();
         Geometry3Builder { proto }
     }
 }
@@ -100,7 +100,7 @@ impl Type2d for Image2Builder {
 
 pub(crate) fn new_artifact_id() -> ArtifactId {
     let mut id = ArtifactId::new();
-    id.set_uuid(new_uuid_proto());
+    id.uuid = Some(new_uuid_proto()).into();
     id
 }
 

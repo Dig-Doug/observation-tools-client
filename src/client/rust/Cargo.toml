@@ -35,7 +35,7 @@ futures = "0.3"
 image = "0.24.5"
 itertools = "0.10.3"
 log = "0.4.14"
-protobuf = "=2.8.2"
+protobuf = "=3.2.0"
 pyo3 = { version = "0.17.3", features = ["extension-module"], optional = true }
 reqwest = { version = "0.11", disable-default-features = true, features = ["rustls-tls", "stream", "json", "multipart"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -51,7 +51,7 @@ wasm-bindgen-futures = "0.4.28"
 web-sys = { version = "0.3.55", features = ['Window', 'Performance', 'PerformanceTiming'] }
 
 [build-dependencies]
-protobuf-codegen = "=2.8.2"
+protobuf-codegen = "=3.2.0"
 
 [features]
 files = []

@@ -1,5 +1,5 @@
 {
-  "checksum": "1ecfe5dd3ca5d6a9bba10fbf778d10424353586c44dd50348c94c64b1b3a2b5b",
+  "checksum": "0fb22ea449482cb9fe4b9584affe6389e33454faa79ae726d4fbf91f76f20629",
   "crates": {
     "adler 1.0.2": {
       "name": "adler",
@@ -80,6 +80,69 @@
       },
       "license": "Unlicense OR MIT"
     },
+    "anyhow 1.0.68": {
+      "name": "anyhow",
+      "version": "1.0.68",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/anyhow/1.0.68/download",
+          "sha256": "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "anyhow",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "anyhow",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": [
+          "default",
+          "std"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.68",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.0.68"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "artifacts_api_rust_proto 0.0.0": {
       "name": "artifacts_api_rust_proto",
       "version": "0.0.0",
@@ -106,7 +169,7 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf 2.8.2",
+              "id": "protobuf 3.2.0",
               "target": "protobuf"
             }
           ],
@@ -1928,6 +1991,7 @@
           "**"
         ],
         "crate_features": [
+          "default",
           "use_std"
         ],
         "edition": "2018",
@@ -5631,7 +5695,7 @@
               "target": "log"
             },
             {
-              "id": "protobuf 2.8.2",
+              "id": "protobuf 3.2.0",
               "target": "protobuf"
             },
             {
@@ -5661,6 +5725,18 @@
             {
               "id": "uuid 1.2.2",
               "target": "uuid"
+            },
+            {
+              "id": "wasm-bindgen 0.2.83",
+              "target": "wasm_bindgen"
+            },
+            {
+              "id": "wasm-bindgen-futures 0.4.33",
+              "target": "wasm_bindgen_futures"
+            },
+            {
+              "id": "web-sys 0.3.60",
+              "target": "web_sys"
             }
           ],
           "selects": {}
@@ -6344,13 +6420,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "protobuf 2.8.2": {
+    "protobuf 3.2.0": {
       "name": "protobuf",
-      "version": "2.8.2",
+      "version": "3.2.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/protobuf/2.8.2/download",
-          "sha256": "70731852eec72c56d11226c8a5f96ad5058a3dab73647ca5f7ee351e464f2571"
+          "url": "https://crates.io/api/v1/crates/protobuf/3.2.0/download",
+          "sha256": "b55bad9126f378a853655831eb7363b7b01b81d19f8cb1218861086ca4a1a61e"
         }
       },
       "targets": [
@@ -6384,17 +6460,32 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": [
+          "default"
+        ],
         "deps": {
           "common": [
             {
-              "id": "protobuf 2.8.2",
+              "id": "once_cell 1.17.0",
+              "target": "once_cell"
+            },
+            {
+              "id": "protobuf 3.2.0",
               "target": "build_script_build"
+            },
+            {
+              "id": "protobuf-support 3.2.0",
+              "target": "protobuf_support"
+            },
+            {
+              "id": "thiserror 1.0.38",
+              "target": "thiserror"
             }
           ],
           "selects": {}
         },
-        "edition": "2015",
-        "version": "2.8.2"
+        "edition": "2021",
+        "version": "3.2.0"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -6403,13 +6494,13 @@
       },
       "license": "MIT"
     },
-    "protobuf-codegen 2.8.2": {
+    "protobuf-codegen 3.2.0": {
       "name": "protobuf-codegen",
-      "version": "2.8.2",
+      "version": "3.2.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/protobuf-codegen/2.8.2/download",
-          "sha256": "3d74b9cbbf2ac9a7169c85a3714ec16c51ee9ec7cfd511549527e9a7df720795"
+          "url": "https://crates.io/api/v1/crates/protobuf-codegen/3.2.0/download",
+          "sha256": "0dd418ac3c91caa4032d37cb80ff0d44e2ebe637b2fb243b6234bf89cdac4901"
         }
       },
       "targets": [
@@ -6436,18 +6527,6 @@
               "exclude": []
             }
           }
-        },
-        {
-          "Binary": {
-            "crate_name": "protobuf-bin-gen-rust-do-not-use",
-            "crate_root": "src/bin/protobuf-bin-gen-rust-do-not-use.rs",
-            "srcs": {
-              "include": [
-                "**/*.rs"
-              ],
-              "exclude": []
-            }
-          }
         }
       ],
       "library_target_name": "protobuf_codegen",
@@ -6458,14 +6537,162 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf 2.8.2",
+              "id": "anyhow 1.0.68",
+              "target": "anyhow"
+            },
+            {
+              "id": "once_cell 1.17.0",
+              "target": "once_cell"
+            },
+            {
+              "id": "protobuf 3.2.0",
               "target": "protobuf"
+            },
+            {
+              "id": "protobuf-parse 3.2.0",
+              "target": "protobuf_parse"
+            },
+            {
+              "id": "regex 1.7.1",
+              "target": "regex"
+            },
+            {
+              "id": "tempfile 3.3.0",
+              "target": "tempfile"
+            },
+            {
+              "id": "thiserror 1.0.38",
+              "target": "thiserror"
             }
           ],
           "selects": {}
         },
-        "edition": "2015",
-        "version": "2.8.2"
+        "edition": "2021",
+        "version": "3.2.0"
+      },
+      "license": "MIT"
+    },
+    "protobuf-parse 3.2.0": {
+      "name": "protobuf-parse",
+      "version": "3.2.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/protobuf-parse/3.2.0/download",
+          "sha256": "9d39b14605eaa1f6a340aec7f320b34064feb26c93aec35d6a9a2272a8ddfa49"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "protobuf_parse",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        },
+        {
+          "Binary": {
+            "crate_name": "parse-and-typecheck",
+            "crate_root": "src/bin/parse-and-typecheck.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "protobuf_parse",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "anyhow 1.0.68",
+              "target": "anyhow"
+            },
+            {
+              "id": "indexmap 1.9.2",
+              "target": "indexmap"
+            },
+            {
+              "id": "log 0.4.17",
+              "target": "log"
+            },
+            {
+              "id": "protobuf 3.2.0",
+              "target": "protobuf"
+            },
+            {
+              "id": "protobuf-support 3.2.0",
+              "target": "protobuf_support"
+            },
+            {
+              "id": "tempfile 3.3.0",
+              "target": "tempfile"
+            },
+            {
+              "id": "thiserror 1.0.38",
+              "target": "thiserror"
+            },
+            {
+              "id": "which 4.3.0",
+              "target": "which"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "3.2.0"
+      },
+      "license": "MIT"
+    },
+    "protobuf-support 3.2.0": {
+      "name": "protobuf-support",
+      "version": "3.2.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/protobuf-support/3.2.0/download",
+          "sha256": "a5d4d7b8601c814cfb36bcebb79f0e61e45e1e93640cf778837833bbed05c372"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "protobuf_support",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "protobuf_support",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "thiserror 1.0.38",
+              "target": "thiserror"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "3.2.0"
       },
       "license": "MIT"
     },
@@ -6730,13 +6957,22 @@
         ],
         "crate_features": [
           "aho-corasick",
+          "default",
           "memchr",
           "perf",
           "perf-cache",
           "perf-dfa",
           "perf-inline",
           "perf-literal",
-          "std"
+          "std",
+          "unicode",
+          "unicode-age",
+          "unicode-bool",
+          "unicode-case",
+          "unicode-gencat",
+          "unicode-perl",
+          "unicode-script",
+          "unicode-segment"
         ],
         "deps": {
           "common": [
@@ -6787,6 +7023,17 @@
       "common_attrs": {
         "compile_data_glob": [
           "**"
+        ],
+        "crate_features": [
+          "default",
+          "unicode",
+          "unicode-age",
+          "unicode-bool",
+          "unicode-case",
+          "unicode-gencat",
+          "unicode-perl",
+          "unicode-script",
+          "unicode-segment"
         ],
         "edition": "2018",
         "version": "0.6.28"
@@ -8399,6 +8646,124 @@
       },
       "license": "Unlicense OR MIT"
     },
+    "thiserror 1.0.38": {
+      "name": "thiserror",
+      "version": "1.0.38",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/thiserror/1.0.38/download",
+          "sha256": "6a9cd18aa97d5c45c6603caea1da6628790b37f7a34b6ca89522331c5180fed0"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "thiserror",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "thiserror",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "thiserror 1.0.38",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "thiserror-impl 1.0.38",
+              "target": "thiserror_impl"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "1.0.38"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "thiserror-impl 1.0.38": {
+      "name": "thiserror-impl",
+      "version": "1.0.38",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/thiserror-impl/1.0.38/download",
+          "sha256": "1fb327af4685e4d03fa8cbcf1716380da910eeb2bb8be417e7f9fd3fb164f36f"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "thiserror_impl",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "thiserror_impl",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "proc-macro2 1.0.50",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.23",
+              "target": "quote"
+            },
+            {
+              "id": "syn 1.0.107",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.0.38"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "threadpool 1.8.1": {
       "name": "threadpool",
       "version": "1.8.1",
@@ -9600,6 +9965,9 @@
         ],
         "crate_features": [
           "default",
+          "serde",
+          "serde-serialize",
+          "serde_json",
           "spans",
           "std"
         ],
@@ -9608,6 +9976,14 @@
             {
               "id": "cfg-if 1.0.0",
               "target": "cfg_if"
+            },
+            {
+              "id": "serde 1.0.152",
+              "target": "serde"
+            },
+            {
+              "id": "serde_json 1.0.91",
+              "target": "serde_json"
             },
             {
               "id": "wasm-bindgen 0.2.83",
@@ -9969,6 +10345,8 @@
           "FormData",
           "Headers",
           "MessageEvent",
+          "Performance",
+          "PerformanceTiming",
           "Request",
           "RequestCredentials",
           "RequestInit",
@@ -10150,6 +10528,59 @@
         "version": "0.1.7"
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "which 4.3.0": {
+      "name": "which",
+      "version": "4.3.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/which/4.3.0/download",
+          "sha256": "1c831fbbee9e129a8cf93e7747a82da9d95ba8e16621cae60ec2cdc849bacb7b"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "which",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "which",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "either 1.8.0",
+              "target": "either"
+            },
+            {
+              "id": "libc 0.2.139",
+              "target": "libc"
+            }
+          ],
+          "selects": {
+            "cfg(windows)": [
+              {
+                "id": "once_cell 1.17.0",
+                "target": "once_cell"
+              }
+            ]
+          }
+        },
+        "edition": "2018",
+        "version": "4.3.0"
+      },
+      "license": "MIT"
     },
     "winapi 0.3.9": {
       "name": "winapi",
@@ -11017,7 +11448,8 @@
   },
   "binary_crates": [
     "cc 1.0.78",
-    "protobuf-codegen 2.8.2",
+    "protobuf-codegen 3.2.0",
+    "protobuf-parse 3.2.0",
     "webpki-roots 0.22.6",
     "weezl 0.1.7"
   ],

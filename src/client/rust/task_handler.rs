@@ -6,7 +6,7 @@ use crate::{RunStageUploader, RunUploader};
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse, StructuredData};
 use base64::decode;
 use log::{debug, trace};
-use protobuf::{parse_from_bytes, Message};
+use protobuf::{Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::collections::HashMap;

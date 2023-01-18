@@ -10,20 +10,19 @@ use artifacts_api_rust_proto::CreateRunResponse;
 #[cfg_attr(feature = "python", pyclass)]
 pub struct RunUploader {
     pub(crate) base: BaseArtifactUploader,
-    pub(crate) response: CreateRunResponse,
 }
 
 #[cfg_attr(feature = "python", pymethods)]
 impl RunUploader {
-    pub fn viewer_url(&self) -> &str {
-        &self.response.viewer_url
+    pub fn viewer_url(&self) -> String {
+        format!("https://observation.tools/project/{}/run/{}", self.base.client.options.project_id, self.base.id())
     }
 
     pub fn create_initial_run_stage(&self, metadata: &UserMetadataBuilder) -> RunStageUploader {
         let mut request = self.base.create_base_child_group_request(metadata);
         request
             .mut_artifact_data()
-            .set_artifact_type(ARTIFACT_TYPE_RUN_STAGE);
+            .artifact_type = ARTIFACT_TYPE_RUN_STAGE.into();
         RunStageUploader {
             base: self.base.create_child_group(request, true),
         }

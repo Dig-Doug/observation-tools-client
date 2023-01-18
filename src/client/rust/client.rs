@@ -1,12 +1,12 @@
 use std::cell::RefCell;
-use crate::base_artifact_uploader::ContextBehavior;
+use crate::base_artifact_uploader::{artifact_group_uploader_data_from_request, ContextBehavior};
 use crate::base_artifact_uploader::{BaseArtifactUploaderBuilder};
 use serde::{Deserialize, Serialize};
 use crate::{RunStageUploader, RunUploader};
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse, StructuredData};
 use base64::decode;
 use log::{debug, trace};
-use protobuf::{parse_from_bytes, Message};
+use protobuf::{Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::collections::HashMap;
@@ -28,6 +28,7 @@ use tokio::{
 };
 #[cfg(feature = "tokio")]
 use tokio_util::codec::{BytesCodec, FramedRead};
+use crate::api::new_artifact_id;
 use crate::task_handler::TaskHandler;
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
 use crate::util::{ClientError, encode_id_proto, GenericError, new_uuid_proto, time_now};
@@ -59,7 +60,7 @@ pub struct ClientOptions {
 #[derive(Clone)]
 #[cfg_attr(feature = "python", pyclass)]
 pub struct Client {
-  options: ClientOptions,
+  pub(crate) options: ClientOptions,
   tmp_dir: Arc<TempDir>,
   send_task_channel: Sender<UploadArtifactTask>,
   receive_shutdown_channel: Receiver<()>,
@@ -155,61 +156,38 @@ impl Client {
   }
 
   pub async fn create_run(&self) -> Result<RunUploader, GenericError> {
-    let response = self.create_run_request().await?.send().await?;
-    self.parse_create_run_response(response).await
-  }
+    let mut request = CreateArtifactRequest::new();
+    request.project_id = self.options.project_id.clone();
+    request.artifact_id = Some(new_artifact_id()).into();
+    //request.run_id = request.artifact_id.clone();
+    let group_data = request.mut_artifact_data();
+    //group_data.user_metadata = Some(metadata).into();
+    group_data.client_creation_time = Some(time_now()).into();
 
-  pub async fn create_run_request(&self) -> Result<RequestBuilder, GenericError> {
-    let mut request = CreateRunRequest::new();
-    request.set_project_id(self.options.project_id.clone());
-    request.mut_run_data().set_client_creation_time(time_now());
+    self.upload_artifact(&request, None);
 
-    let mut params = HashMap::new();
-    params.insert("request", base64::encode(request.write_to_bytes().unwrap()));
-    let token = self.options.token_generator.token().await?;
-    let request_builder = self
-      .options
-      .client
-      .post(format!("{}/create-run", self.options.host))
-      .bearer_auth(token)
-      .form(&params);
-    Ok(request_builder)
-  }
-
-  pub async fn parse_create_run_response(&self, response: Response) -> Result<RunUploader, GenericError> {
-    if response.status().is_server_error() {
-      debug!("{:?}", response);
-      panic!("Server error {:?}", response)
-    }
-
-    let response_body = response.text().await?;
-    let response: CreateRunResponse =
-      parse_from_bytes(&decode(response_body).unwrap()).unwrap();
-    let mut new_data = ArtifactGroupUploaderData::new();
-    new_data.set_project_id(self.options.project_id.clone());
-    new_data.set_run_id(response.get_run_id().clone());
-    new_data.set_id(response.get_root_stage_id().clone());
     Ok(RunUploader {
       base: BaseArtifactUploaderBuilder::default()
         .client(self.clone())
-        .data(new_data)
+        .data(artifact_group_uploader_data_from_request(&request))
         .context_behavior(ContextBehavior::Init)
         .init(),
-      response,
     })
   }
 
+  /*
   #[cfg(feature = "cpp")]
   pub(crate) fn ffi_create_run(&self) -> Box<RunUploader> {
     let uploader = self.runtime.block_on(self.create_run()).unwrap();
     Box::new(uploader)
   }
+   */
 
   fn deserialize_run_stage(&self, serialized: String) -> RunStageUploader {
     RunStageUploader {
       base: BaseArtifactUploaderBuilder::default()
         .client(self.clone())
-        .data(parse_from_bytes(&base64::decode(serialized).unwrap()).unwrap())
+        .data(ArtifactGroupUploaderData::parse_from_bytes(&base64::decode(serialized).unwrap()).unwrap())
         .context_behavior(ContextBehavior::Init)
         .init(),
     }
@@ -320,12 +298,12 @@ mod tests {
     let metadata = ArtifactUserMetadata::new();
 
     let mut request = CreateArtifactRequest::new();
-    request.set_project_id(project_id.clone());
-    //request.set_run_id(parent_data.get_run_id().clone());
-    request.mut_artifact_id().set_uuid(new_uuid_proto());
+    request.project_id = Some(project_id.clone()).into();
+    //request.run_id = Some(parent_data.get_run_id().clone()).into();
+    request.mut_artifact_id().uuid = Some(new_uuid_proto()).into();
     let artifact_data = request.mut_artifact_data();
-    artifact_data.set_user_metadata(metadata);
-    artifact_data.set_client_creation_time(time_now());
+    artifact_data.user_metadata = Some(metadata).into();
+    artifact_data.client_creation_time = Some(time_now()).into();
 
     let source_data_id = client.upload_artifact(&request, Some((&sphere).into()));
 
