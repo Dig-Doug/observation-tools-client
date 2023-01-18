@@ -23,11 +23,11 @@ pub(crate) fn new_uuid_proto() -> artifacts_api_rust_proto::Uuid {
 }
 
 pub(crate) fn time_now() -> Timestamp {
-  let since_the_epoch = since_epoch();
+  //let since_the_epoch = since_epoch();
   let mut t = Timestamp::new();
-  t.seconds = since_the_epoch.as_secs() as i64;
-  let nanos = (since_the_epoch - Duration::from_secs(t.seconds as u64)).as_nanos();
-  t.nanos = nanos as i32;
+  //t.seconds = since_the_epoch.as_secs() as i64;
+  //let nanos = (since_the_epoch - Duration::from_secs(t.seconds as u64)).as_nanos();
+  //t.nanos = nanos as i32;
   t
 }
 
