@@ -29,6 +29,7 @@ pub use crate::user_metadata::UserMetadataBuilder;
 
 #[cfg(feature = "cpp")]
 use crate::client::ffi_new_client;
+#[cfg(feature = "cpp")]
 use crate::uploader_stack::ffi_get_current_group;
 use crate::user_metadata::new_user_metadata;
 

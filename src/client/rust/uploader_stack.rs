@@ -22,6 +22,7 @@ impl UploaderStack {
 }
 
 pub(crate) fn init_uploader_stack(base: &BaseArtifactUploader) {
+    /*
     info!("Initializing context with: {:?}", base.id());
     LOCAL_UPLOADER_STACK.with(|f| {
         assert!(f.borrow().is_none(), "Context has already been initialized");
@@ -30,9 +31,11 @@ pub(crate) fn init_uploader_stack(base: &BaseArtifactUploader) {
             group_stack: vec![base.clone()],
         })
     });
+     */
 }
 
 pub(crate) fn push_uploader(base: &BaseArtifactUploader) {
+    /*
     LOCAL_UPLOADER_STACK.with(|f| {
         let mut r = f.borrow_mut();
         assert!(r.is_some(), "Context has not been initialized");
@@ -42,9 +45,11 @@ pub(crate) fn push_uploader(base: &BaseArtifactUploader) {
         context.log_stack();
     });
     info!("Finished pushing");
+    */
 }
 
 pub(crate) fn pop_uploader(base: &BaseArtifactUploader) {
+    /*
     LOCAL_UPLOADER_STACK.with(|f| {
         let mut r = f.borrow_mut();
         assert!(r.is_some(), "Context has not been initialized");
@@ -54,8 +59,10 @@ pub(crate) fn pop_uploader(base: &BaseArtifactUploader) {
         context.log_stack();
     });
     info!("Finished popping");
+     */
 }
 
+#[cfg(feature = "cpp")]
 pub(crate) fn get_current_group() -> GenericArtifactUploader {
     LOCAL_UPLOADER_STACK.with(|f| {
         let r = f.borrow();
@@ -68,6 +75,7 @@ pub(crate) fn get_current_group() -> GenericArtifactUploader {
     })
 }
 
+#[cfg(feature = "cpp")]
 pub(crate) fn ffi_get_current_group() -> Box<GenericArtifactUploader> {
     Box::new(get_current_group())
 }

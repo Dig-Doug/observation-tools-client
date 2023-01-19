@@ -1,3 +1,4 @@
+#[cfg(feature = "files")]
 use tempfile::NamedTempFile;
 use artifacts_api_rust_proto::CreateArtifactRequest;
 

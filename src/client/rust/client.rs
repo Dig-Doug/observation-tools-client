@@ -19,6 +19,7 @@ use async_channel::{Receiver, RecvError, Sender};
 use futures::TryFutureExt;
 use reqwest::multipart::Part;
 use reqwest::{RequestBuilder, Response};
+#[cfg(feature = "files")]
 use tempfile::{NamedTempFile, TempDir};
 #[cfg(feature = "tokio")]
 use tokio::{
@@ -28,6 +29,7 @@ use tokio::{
 };
 #[cfg(feature = "tokio")]
 use tokio_util::codec::{BytesCodec, FramedRead};
+use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use crate::api::new_artifact_id;
 use crate::task_handler::TaskHandler;
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
@@ -61,6 +63,7 @@ pub struct ClientOptions {
 #[cfg_attr(feature = "python", pyclass)]
 pub struct Client {
   pub(crate) options: ClientOptions,
+  #[cfg(feature = "files")]
   tmp_dir: Arc<TempDir>,
   send_task_channel: Sender<UploadArtifactTask>,
   receive_shutdown_channel: Receiver<()>,
@@ -137,6 +140,7 @@ impl Client {
     options.runtime.spawn(task_handler.run());
     let client = Client {
       options,
+      #[cfg(feature = "files")]
       tmp_dir: Arc::new(
         tempfile::Builder::new()
           .prefix("observation_tools_")
@@ -162,6 +166,7 @@ impl Client {
     //request.run_id = request.artifact_id.clone();
     let group_data = request.mut_artifact_data();
     //group_data.user_metadata = Some(metadata).into();
+    group_data.artifact_type = ARTIFACT_TYPE_ROOT_GROUP.into();
     group_data.client_creation_time = Some(time_now()).into();
 
     self.upload_artifact(&request, None);
