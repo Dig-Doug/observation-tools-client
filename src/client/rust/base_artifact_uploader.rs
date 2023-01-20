@@ -9,12 +9,9 @@ use artifacts_api_rust_proto::{
   StructuredData, Transform3,
 };
 use derive_builder::Builder;
-use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use uuid::Uuid;
 use crate::api::new_artifact_id;
-use crate::util::{new_uuid_proto, time_now};
+use crate::util::{time_now};
 
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) enum ContextBehavior {

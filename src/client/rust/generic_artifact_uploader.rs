@@ -7,7 +7,7 @@ use crate::user_metadata::UserMetadataBuilder;
 use artifacts_api_rust_proto::{StructuredData, Transform3};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
-use crate::Image2Builder;
+use crate::api::Image2Builder;
 
 #[cfg_attr(feature = "python", pyclass)]
 pub struct GenericArtifactUploader {

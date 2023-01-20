@@ -1,7 +1,6 @@
 use artifacts_api_rust_proto::{StructuredData, Image2, Sphere, Geometry3, Number, ArtifactId, Object3};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
-use crate::artifact_uploader_2d::Type2d;
 use crate::util::{encode_id_proto, new_uuid_proto};
 
 pub struct NumberBuilder {

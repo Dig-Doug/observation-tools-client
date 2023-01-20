@@ -1,5 +1,5 @@
 {
-  "checksum": "0fb22ea449482cb9fe4b9584affe6389e33454faa79ae726d4fbf91f76f20629",
+  "checksum": "5b4a6195e18052acbf580865d2b944c88362376e4139c5d644f1bc5dc4e00f2b",
   "crates": {
     "adler 1.0.2": {
       "name": "adler",
@@ -390,43 +390,6 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "base64 0.13.1": {
-      "name": "base64",
-      "version": "0.13.1",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/base64/0.13.1/download",
-          "sha256": "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "base64",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "include": [
-                "**/*.rs"
-              ],
-              "exclude": []
-            }
-          }
-        }
-      ],
-      "library_target_name": "base64",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": [
-          "default",
-          "std"
-        ],
-        "edition": "2018",
-        "version": "0.13.1"
-      },
-      "license": "MIT/Apache-2.0"
-    },
     "base64 0.20.0": {
       "name": "base64",
       "version": "0.20.0",
@@ -650,13 +613,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "bumpalo 3.11.1": {
+    "bumpalo 3.12.0": {
       "name": "bumpalo",
-      "version": "3.11.1",
+      "version": "3.12.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/bumpalo/3.11.1/download",
-          "sha256": "572f695136211188308f16ad2ca5c851a712c464060ae6974944458eb83880ba"
+          "url": "https://crates.io/api/v1/crates/bumpalo/3.12.0/download",
+          "sha256": "0d261e256854913907f67ed06efbc3338dfe6179796deefc1ff763fc1aee5535"
         }
       },
       "targets": [
@@ -682,7 +645,7 @@
           "default"
         ],
         "edition": "2021",
-        "version": "3.11.1"
+        "version": "3.12.0"
       },
       "license": "MIT/Apache-2.0"
     },
@@ -3052,6 +3015,7 @@
           "async-await",
           "async-await-macro",
           "channel",
+          "default",
           "futures-channel",
           "futures-io",
           "futures-macro",
@@ -3386,7 +3350,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "tokio"
             },
             {
@@ -3897,7 +3861,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "tokio"
             },
             {
@@ -3963,7 +3927,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "tokio"
             },
             {
@@ -4021,7 +3985,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "tokio"
             },
             {
@@ -4100,7 +4064,7 @@
         "deps": {
           "common": [
             {
-              "id": "unicode-bidi 0.3.8",
+              "id": "unicode-bidi 0.3.9",
               "target": "unicode_bidi"
             },
             {
@@ -5275,11 +5239,11 @@
                 "target": "libc"
               },
               {
-                "id": "security-framework 2.7.0",
+                "id": "security-framework 2.8.0",
                 "target": "security_framework"
               },
               {
-                "id": "security-framework-sys 2.6.1",
+                "id": "security-framework-sys 2.8.0",
                 "target": "security_framework_sys"
               },
               {
@@ -5699,7 +5663,7 @@
               "target": "protobuf"
             },
             {
-              "id": "reqwest 0.11.13",
+              "id": "reqwest 0.11.14",
               "target": "reqwest"
             },
             {
@@ -5733,6 +5697,10 @@
             {
               "id": "wasm-bindgen-futures 0.4.33",
               "target": "wasm_bindgen_futures"
+            },
+            {
+              "id": "wasm-streams 0.3.0",
+              "target": "wasm_streams"
             },
             {
               "id": "web-sys 0.3.60",
@@ -7084,13 +7052,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "reqwest 0.11.13": {
+    "reqwest 0.11.14": {
       "name": "reqwest",
-      "version": "0.11.13",
+      "version": "0.11.14",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/reqwest/0.11.13/download",
-          "sha256": "68cc60575865c7831548863cc02356512e3f1dc2f3f82cb837d7fc4cc8f3c97c"
+          "url": "https://crates.io/api/v1/crates/reqwest/0.11.14/download",
+          "sha256": "21eed90ec8570952d53b772ecf8f206aa1ec9a3d76b2521c56c42973f2d91ee9"
         }
       },
       "targets": [
@@ -7128,21 +7096,27 @@
           "rustls-tls",
           "rustls-tls-webpki-roots",
           "serde_json",
-          "stream",
           "tokio-native-tls",
           "tokio-rustls",
-          "tokio-util",
           "webpki-roots"
         ],
         "deps": {
           "common": [
             {
-              "id": "base64 0.13.1",
+              "id": "base64 0.21.0",
               "target": "base64"
             },
             {
               "id": "bytes 1.3.0",
               "target": "bytes"
+            },
+            {
+              "id": "futures-core 0.3.25",
+              "target": "futures_core"
+            },
+            {
+              "id": "futures-util 0.3.25",
+              "target": "futures_util"
             },
             {
               "id": "http 0.2.8",
@@ -7178,14 +7152,6 @@
               {
                 "id": "encoding_rs 0.8.31",
                 "target": "encoding_rs"
-              },
-              {
-                "id": "futures-core 0.3.25",
-                "target": "futures_core"
-              },
-              {
-                "id": "futures-util 0.3.25",
-                "target": "futures_util"
               },
               {
                 "id": "h2 0.3.15",
@@ -7245,7 +7211,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "tokio 1.24.1",
+                "id": "tokio 1.24.2",
                 "target": "tokio"
               },
               {
@@ -7255,10 +7221,6 @@
               {
                 "id": "tokio-rustls 0.23.4",
                 "target": "tokio_rustls"
-              },
-              {
-                "id": "tokio-util 0.7.4",
-                "target": "tokio_util"
               },
               {
                 "id": "webpki-roots 0.22.6",
@@ -7296,9 +7258,9 @@
           }
         },
         "edition": "2018",
-        "version": "0.11.13"
+        "version": "0.11.14"
       },
-      "license": "MIT/Apache-2.0"
+      "license": "MIT OR Apache-2.0"
     },
     "ring 0.16.20": {
       "name": "ring",
@@ -7725,13 +7687,13 @@
       },
       "license": "Apache-2.0/ISC/MIT"
     },
-    "security-framework 2.7.0": {
+    "security-framework 2.8.0": {
       "name": "security-framework",
-      "version": "2.7.0",
+      "version": "2.8.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/security-framework/2.7.0/download",
-          "sha256": "2bc1bb97804af6631813c55739f771071e0f2ed33ee20b68c86ec505d906356c"
+          "url": "https://crates.io/api/v1/crates/security-framework/2.8.0/download",
+          "sha256": "645926f31b250a2dca3c232496c2d898d91036e45ca0e97e0e2390c54e11be36"
         }
       },
       "targets": [
@@ -7776,24 +7738,24 @@
               "target": "libc"
             },
             {
-              "id": "security-framework-sys 2.6.1",
+              "id": "security-framework-sys 2.8.0",
               "target": "security_framework_sys"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.7.0"
+        "version": "2.8.0"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "security-framework-sys 2.6.1": {
+    "security-framework-sys 2.8.0": {
       "name": "security-framework-sys",
-      "version": "2.6.1",
+      "version": "2.8.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/security-framework-sys/2.6.1/download",
-          "sha256": "0160a13a177a45bfb43ce71c01580998474f556ad854dcbca936dd2841a5c556"
+          "url": "https://crates.io/api/v1/crates/security-framework-sys/2.8.0/download",
+          "sha256": "31c9bb296072e961fcbd8853511dd39c2d8be2deb1e17c6860b1d30732b323b4"
         }
       },
       "targets": [
@@ -7833,7 +7795,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "2.6.1"
+        "version": "2.8.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -8937,13 +8899,13 @@
       },
       "license": "MIT OR Apache-2.0 OR Zlib"
     },
-    "tokio 1.24.1": {
+    "tokio 1.24.2": {
       "name": "tokio",
-      "version": "1.24.1",
+      "version": "1.24.2",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/tokio/1.24.1/download",
-          "sha256": "1d9f76183f91ecfb55e1d7d5602bd1d979e38a3a522fe900241cf195624d67ae"
+          "url": "https://crates.io/api/v1/crates/tokio/1.24.2/download",
+          "sha256": "597a12a59981d9e3c38d216785b0c37399f6e415e8d0712047620f189371b0bb"
         }
       },
       "targets": [
@@ -8980,7 +8942,6 @@
         "crate_features": [
           "bytes",
           "default",
-          "fs",
           "io-util",
           "libc",
           "memchr",
@@ -9011,7 +8972,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "build_script_build"
             }
           ],
@@ -9043,7 +9004,7 @@
           }
         },
         "edition": "2018",
-        "version": "1.24.1"
+        "version": "1.24.2"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -9096,7 +9057,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "tokio"
             }
           ],
@@ -9147,7 +9108,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "tokio"
             },
             {
@@ -9193,7 +9154,6 @@
         "crate_features": [
           "codec",
           "default",
-          "io",
           "tracing"
         ],
         "deps": {
@@ -9215,7 +9175,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.24.1",
+              "id": "tokio 1.24.2",
               "target": "tokio"
             },
             {
@@ -9522,13 +9482,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "unicode-bidi 0.3.8": {
+    "unicode-bidi 0.3.9": {
       "name": "unicode-bidi",
-      "version": "0.3.8",
+      "version": "0.3.9",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/unicode-bidi/0.3.8/download",
-          "sha256": "099b7128301d285f79ddd55b9a83d5e6b9e97c92e0ea0daebee7263e932de992"
+          "url": "https://crates.io/api/v1/crates/unicode-bidi/0.3.9/download",
+          "sha256": "0046be40136ef78dc325e0edefccf84ccddacd0afcc1ca54103fa3c61bbdab1d"
         }
       },
       "targets": [
@@ -9556,7 +9516,7 @@
           "std"
         ],
         "edition": "2018",
-        "version": "0.3.8"
+        "version": "0.3.9"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -10045,7 +10005,7 @@
         "deps": {
           "common": [
             {
-              "id": "bumpalo 3.11.1",
+              "id": "bumpalo 3.12.0",
               "target": "bumpalo"
             },
             {
@@ -10307,6 +10267,64 @@
       },
       "license": "MIT/Apache-2.0"
     },
+    "wasm-streams 0.3.0": {
+      "name": "wasm-streams",
+      "version": "0.3.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/wasm-streams/0.3.0/download",
+          "sha256": "b4609d447824375f43e1ffbc051b50ad8f4b3ae8219680c94452ea05eb240ac7"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "wasm_streams",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "wasm_streams",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "futures-util 0.3.25",
+              "target": "futures_util"
+            },
+            {
+              "id": "js-sys 0.3.60",
+              "target": "js_sys"
+            },
+            {
+              "id": "wasm-bindgen 0.2.83",
+              "target": "wasm_bindgen"
+            },
+            {
+              "id": "wasm-bindgen-futures 0.4.33",
+              "target": "wasm_bindgen_futures"
+            },
+            {
+              "id": "web-sys 0.3.60",
+              "target": "web_sys"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.3.0"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "web-sys 0.3.60": {
       "name": "web-sys",
       "version": "0.3.60",
@@ -10336,6 +10354,7 @@
           "**"
         ],
         "crate_features": [
+          "AbortSignal",
           "Blob",
           "BlobPropertyBag",
           "Crypto",
@@ -10347,6 +10366,7 @@
           "MessageEvent",
           "Performance",
           "PerformanceTiming",
+          "ReadableStream",
           "Request",
           "RequestCredentials",
           "RequestInit",

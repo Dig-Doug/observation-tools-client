@@ -1,53 +1,32 @@
-use std::cell::RefCell;
 use crate::base_artifact_uploader::{artifact_group_uploader_data_from_request, ContextBehavior};
 use crate::base_artifact_uploader::{BaseArtifactUploaderBuilder};
 use serde::{Deserialize, Serialize};
-use crate::{RunStageUploader, RunUploader};
-use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse, StructuredData};
-use base64::decode;
-use log::{debug, trace};
+use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, StructuredData};
+use log::{trace};
 use protobuf::{Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
-use std::collections::HashMap;
 #[cfg(not(feature = "wasm"))]
 use std::env;
-use std::fs::File;
 use std::io::Write;
 use std::sync::Arc;
-use async_channel::{Receiver, RecvError, Sender};
+use async_channel::{Receiver, Sender};
 use futures::TryFutureExt;
-use reqwest::multipart::Part;
-use reqwest::{RequestBuilder, Response};
 #[cfg(feature = "files")]
 use tempfile::{NamedTempFile, TempDir};
 #[cfg(feature = "tokio")]
 use tokio::{
-  runtime::{Handle, Runtime},
-  sync::mpsc,
-  task::JoinHandle,
+  runtime::{Handle},
 };
-#[cfg(feature = "tokio")]
-use tokio_util::codec::{BytesCodec, FramedRead};
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use crate::api::new_artifact_id;
+use crate::run_stage_uploader::RunStageUploader;
+use crate::run_uploader::RunUploader;
 use crate::task_handler::TaskHandler;
+use crate::TokenGenerator;
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
-use crate::util::{ClientError, encode_id_proto, GenericError, new_uuid_proto, time_now};
+use crate::util::{GenericError, time_now};
 
-
-#[derive(Clone)]
-pub enum TokenGenerator {
-  Constant(String),
-}
-
-impl TokenGenerator {
-  pub async fn token(&self) -> Result<String, std::io::Error> {
-    match self {
-      TokenGenerator::Constant(s) => Ok(s.clone())
-    }
-  }
-}
 
 #[derive(Clone)]
 pub struct ClientOptions {

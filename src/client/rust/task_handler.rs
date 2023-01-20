@@ -1,33 +1,11 @@
-use std::cell::RefCell;
-use crate::base_artifact_uploader::ContextBehavior;
-use crate::base_artifact_uploader::{BaseArtifactUploaderBuilder};
-use serde::{Deserialize, Serialize};
-use crate::{RunStageUploader, RunUploader};
-use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, CreateRunRequest, CreateRunResponse, StructuredData};
-use base64::decode;
 use log::{debug, trace};
 use protobuf::{Message};
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
-use std::collections::HashMap;
-use std::env;
-use std::fs::File;
-use std::io::Write;
-use std::sync::Arc;
 use async_channel::{Receiver, RecvError, Sender};
 use futures::TryFutureExt;
 use reqwest::multipart::Part;
-use reqwest::{RequestBuilder, Response};
-use tempfile::{NamedTempFile, TempDir};
-#[cfg(feature = "tokio")]
-use tokio::{
-  runtime::{Handle, Runtime},
-  sync::mpsc,
-  task::JoinHandle
-};
 #[cfg(feature = "tokio")]
 use tokio_util::codec::{BytesCodec, FramedRead};
-use crate::client::{TokenGenerator, };
+use crate::token_generator::{TokenGenerator, };
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
 use crate::util::{ClientError, encode_id_proto, GenericError, new_uuid_proto, time_now};
 
@@ -102,4 +80,3 @@ impl TaskHandler {
     }
   }
 }
-
