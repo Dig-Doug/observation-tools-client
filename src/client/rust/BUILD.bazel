@@ -96,11 +96,3 @@ cc_library(
         "//src/client/rust:client_static",
     ],
 )
-
-js_binary(
-    name = "wasm_test",
-    data = [
-        ":client_bundler_wasm_bindgen",
-    ],
-    entry_point = "wasm_test.js",
-)

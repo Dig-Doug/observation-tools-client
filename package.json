@@ -1,6 +1,8 @@
 {
   "devDependencies": {
-    "@bazel/ibazel": "^0.15.10",
+    "@bazel/ibazel": "^0.16.2",
+    "node-fetch": "^2.3.0",
+    "form-data": "^4.0.0",
     "get-graphql-schema": "^2.1.2"
   }
 }

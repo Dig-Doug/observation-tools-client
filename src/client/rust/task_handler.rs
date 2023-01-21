@@ -1,10 +1,10 @@
-use log::{debug, trace};
 use protobuf::{Message};
 use async_channel::{Receiver, RecvError, Sender};
 use futures::TryFutureExt;
 use reqwest::multipart::Part;
 #[cfg(feature = "tokio")]
 use tokio_util::codec::{BytesCodec, FramedRead};
+use tracing::{debug, error, trace};
 use crate::token_generator::{TokenGenerator, };
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
 use crate::util::{ClientError, encode_id_proto, GenericError, new_uuid_proto, time_now};
@@ -19,7 +19,7 @@ pub(crate) struct TaskHandler {
 }
 
 impl TaskHandler {
-  pub async fn run(self) {
+  pub async fn run(&self) {
     trace!("Starting receive task");
 
     while !self.receive_task_channel.is_closed() || !self.receive_task_channel.is_empty() {
@@ -28,7 +28,7 @@ impl TaskHandler {
         Ok(t) => {
           let result = self.handle_upload_artifact_task(&t).await;
           if let Err(e) = result {
-            debug!("Failed to upload artifact: {}", e);
+            error!("Failed to upload artifact: {}", e);
           }
         }
         Err(_) => {
@@ -40,7 +40,7 @@ impl TaskHandler {
     trace!("Receive task stopped");
   }
 
-  async fn handle_upload_artifact_task(&self, task: &UploadArtifactTask) -> Result<(), GenericError> {
+  pub(crate) async fn handle_upload_artifact_task(&self, task: &UploadArtifactTask) -> Result<(), GenericError> {
     trace!("Handling artifact: {:?}", task);
 
     let req_b64 = base64::encode(task.request.write_to_bytes().unwrap());
@@ -78,5 +78,11 @@ impl TaskHandler {
     } else {
       Ok(())
     }
+  }
+}
+
+impl Drop for TaskHandler {
+  fn drop(&mut self) {
+    trace!("Task handler dropped");
   }
 }

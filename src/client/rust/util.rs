@@ -4,11 +4,18 @@ use custom_error::custom_error;
 use protobuf::Message;
 use protobuf::well_known_types::timestamp::Timestamp;
 use uuid::Uuid;
+use wasm_bindgen::JsValue;
 
 pub type GenericError = Box<dyn Error + Send + Sync>;
 
 custom_error! {#[derive(Clone)] pub ClientError
     ServerError{status_code: u16, response: String} = "Server error {status_code}: {response}"
+}
+
+impl Into<JsValue> for ClientError {
+    fn into(self) -> JsValue {
+        JsValue::from_str(&self.to_string())
+    }
 }
 
 pub(crate) fn encode_id_proto(msg: &impl Message) -> String {

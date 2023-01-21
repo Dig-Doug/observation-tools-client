@@ -34,7 +34,6 @@ form_urlencoded = "1.0.1"
 futures = "0.3"
 image = "0.24.5"
 itertools = "0.10.3"
-log = "0.4.14"
 protobuf = "=3.2.0"
 pyo3 = { version = "0.17.3", features = ["extension-module"], optional = true }
 reqwest = { version = "0.11", disable-default-features = true, features = ["rustls-tls", "json", "multipart"] }
@@ -49,10 +48,9 @@ uuid = { version = "1.2.2", features = ["v4"] }
 wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4.28"
 web-sys = { version = "0.3.55", features = ['Window', 'Performance', 'PerformanceTiming'] }
-#tracing-wasm = "0.2.1"
-#tracing = "0.1.35"
-#console_error_panic_hook = "0.1.7"
-wasm-streams = "=0.3.0"
+tracing-wasm = "0.2.1"
+tracing = "0.1.35"
+console_error_panic_hook = "0.1.7"
 
 [build-dependencies]
 protobuf-codegen = "=3.2.0"

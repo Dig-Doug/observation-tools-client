@@ -1,4 +1,3 @@
-use wasm_bindgen::prelude::*;
 mod user_metadata;
 mod util;
 mod upload_artifact_task;
@@ -18,6 +17,7 @@ mod static_source_data;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use crate::api::Image2Builder;
+use wasm_bindgen::prelude::*;
 
 pub use crate::artifact_uploader_2d::ArtifactUploader2d;
 pub use crate::artifact_uploader_3d::ArtifactUploader3d;
@@ -114,6 +114,18 @@ fn observation_tools_client(_py: Python, m: &PyModule) -> PyResult<()> {
   Ok(())
 }
 
+#[wasm_bindgen(start)]
+pub fn start() -> Result<(), JsValue> {
+  // print pretty errors in wasm https://github.com/rustwasm/console_error_panic_hook
+  // This is not needed for tracing_wasm to work, but it is a common tool for getting proper error line numbers for panics.
+  console_error_panic_hook::set_once();
+
+  // Add this line:
+  tracing_wasm::set_as_global_default();
+
+  Ok(())
+}
+
 #[wasm_bindgen]
 pub async fn create_runs(
   api_host: String,
@@ -130,15 +142,17 @@ pub async fn create_runs(
     .create_run()
     .await
     .map_err(|e| JsValue::from(e.to_string()))?;
+  /*
   let run_stage_uploader =
       run_uploader.create_initial_run_stage(&UserMetadataBuilder::new("User".to_string()));
+   */
 
-  let url = run_uploader.viewer_url();
+  //let url = run_uploader.viewer_url();
 
   client
     .shutdown()
     .await
     .map_err(|e| JsValue::from(e.to_string()))?;
   
-  Ok(JsValue::from(url))
+  Ok(JsValue::from("test"))
 }

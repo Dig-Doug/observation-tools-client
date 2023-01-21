@@ -1,7 +1,7 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::generic_artifact_uploader::GenericArtifactUploader;
 use itertools::Itertools;
-use log::info;
+use tracing::info;
 use std::cell::RefCell;
 
 thread_local! {

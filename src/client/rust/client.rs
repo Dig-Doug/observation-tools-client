@@ -1,8 +1,8 @@
 use crate::base_artifact_uploader::{artifact_group_uploader_data_from_request, ContextBehavior};
+use wasm_bindgen::prelude::*;
 use crate::base_artifact_uploader::{BaseArtifactUploaderBuilder};
 use serde::{Deserialize, Serialize};
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, StructuredData};
-use log::{trace};
 use protobuf::{Message};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
@@ -18,6 +18,7 @@ use tempfile::{NamedTempFile, TempDir};
 use tokio::{
   runtime::{Handle},
 };
+use tracing::{error, trace};
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use crate::api::new_artifact_id;
 use crate::run_stage_uploader::RunStageUploader;
@@ -25,7 +26,7 @@ use crate::run_uploader::RunUploader;
 use crate::task_handler::TaskHandler;
 use crate::TokenGenerator;
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
-use crate::util::{GenericError, time_now};
+use crate::util::{ClientError, GenericError, time_now};
 
 
 #[derive(Clone)]
@@ -38,12 +39,14 @@ pub struct ClientOptions {
   pub token_generator: TokenGenerator,
 }
 
+#[wasm_bindgen]
 #[derive(Clone)]
 #[cfg_attr(feature = "python", pyclass)]
 pub struct Client {
   pub(crate) options: ClientOptions,
   #[cfg(feature = "files")]
   tmp_dir: Arc<TempDir>,
+  task_handler: Arc<TaskHandler>,
   send_task_channel: Sender<UploadArtifactTask>,
   receive_shutdown_channel: Receiver<()>,
 }
@@ -91,6 +94,54 @@ pub fn new(project_id: String) -> Self {
    */
 }
 
+#[wasm_bindgen]
+impl Client {
+  #[wasm_bindgen(constructor)]
+  pub fn new_wasm(
+    api_host: String,
+    token: String,
+    project_id: String,
+  ) -> Self {
+    Client::new_impl(ClientOptions {
+      project_id,
+      host: api_host,
+      token_generator: TokenGenerator::Constant(token),
+      client: reqwest::Client::new(),
+    })
+  }
+
+  pub async fn shutdown(self) -> Result<(), ClientError> {
+    trace!("Shutting down client");
+    self.send_task_channel.close();
+    let _ = self.receive_shutdown_channel.recv().await;
+    Ok(())
+  }
+
+  pub async fn create_run(&self) -> Result<(), ClientError> {
+    let mut request = CreateArtifactRequest::new();
+    request.project_id = self.options.project_id.clone();
+    request.artifact_id = Some(new_artifact_id()).into();
+    //request.run_id = request.artifact_id.clone();
+    let group_data = request.mut_artifact_data();
+    //group_data.user_metadata = Some(metadata).into();
+    group_data.artifact_type = ARTIFACT_TYPE_ROOT_GROUP.into();
+    group_data.client_creation_time = Some(time_now()).into();
+
+    self.upload_artifact(&request, None).await;
+
+    let todo = RunUploader {
+      base: BaseArtifactUploaderBuilder::default()
+        .client(self.clone())
+        .data(artifact_group_uploader_data_from_request(&request))
+        .context_behavior(ContextBehavior::Init)
+        .init(),
+    };
+
+    Ok(())
+  }
+}
+
+
 impl Client {
   /*
   #[cfg(not(feature = "python"))]
@@ -108,13 +159,13 @@ impl Client {
     let (send_task_channel, receive_task_channel) = async_channel::unbounded();
     let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
 
-    let task_handler = TaskHandler {
+    let task_handler = Arc::new(TaskHandler {
       client: options.client.clone(),
       token_generator: options.token_generator.clone(),
       host: options.host.clone(),
       receive_task_channel,
       send_shutdown_channel,
-    };
+    });
     #[cfg(feature = "tokio")]
     options.runtime.spawn(task_handler.run());
     let client = Client {
@@ -126,37 +177,11 @@ impl Client {
           .tempdir()
           .unwrap(),
       ),
+      task_handler,
       send_task_channel,
       receive_shutdown_channel,
     };
     client
-  }
-
-  pub async fn shutdown(self) -> Result<(), GenericError> {
-    self.send_task_channel.close();
-    let _ = self.receive_shutdown_channel.recv().await;
-    Ok(())
-  }
-
-  pub async fn create_run(&self) -> Result<RunUploader, GenericError> {
-    let mut request = CreateArtifactRequest::new();
-    request.project_id = self.options.project_id.clone();
-    request.artifact_id = Some(new_artifact_id()).into();
-    //request.run_id = request.artifact_id.clone();
-    let group_data = request.mut_artifact_data();
-    //group_data.user_metadata = Some(metadata).into();
-    group_data.artifact_type = ARTIFACT_TYPE_ROOT_GROUP.into();
-    group_data.client_creation_time = Some(time_now()).into();
-
-    self.upload_artifact(&request, None);
-
-    Ok(RunUploader {
-      base: BaseArtifactUploaderBuilder::default()
-        .client(self.clone())
-        .data(artifact_group_uploader_data_from_request(&request))
-        .context_behavior(ContextBehavior::Init)
-        .init(),
-    })
   }
 
   /*
@@ -182,19 +207,25 @@ impl Client {
     Box::new(self.deserialize_run_stage(serialized))
   }
 
-  pub(crate) fn upload_artifact(&self, request: &CreateArtifactRequest,
-                                structured_data: Option<StructuredData>) {
+  pub(crate) async fn upload_artifact(&self, request: &CreateArtifactRequest,
+                                      structured_data: Option<StructuredData>) {
     let bytes = structured_data.and_then(|s| s.write_to_bytes().ok());
-    self.upload_artifact_raw_bytes(request, bytes.as_ref().map(|b| b.as_slice()))
+    self.upload_artifact_raw_bytes(request, bytes.as_ref().map(|b| b.as_slice())).await
   }
 
-  pub(crate) fn upload_artifact_raw_bytes(&self, request: &CreateArtifactRequest, raw_data: Option<&[u8]>) {
+  pub(crate) async fn upload_artifact_raw_bytes(&self, request: &CreateArtifactRequest, raw_data: Option<&[u8]>) {
     let task = self.new_task(request, raw_data);
     trace!("Enqueueing task: {:?}", task);
-    let result = self.send_task_channel.send_blocking(task);
-    if result.is_err() {
-      panic!("Failed to send task to channel")
+    let result = self.task_handler.handle_upload_artifact_task(&task).await;
+    if let Err(e) = result {
+      error!("Failed to upload artifact: {}", e);
     }
+    /*
+    let result = self.send_task_channel.send_blocking(task);
+    if let Err(e) = result {
+      error!("Failed to enqueue task: {}", e.to_string());
+    }
+     */
   }
 
   #[cfg(feature = "files")]
@@ -228,7 +259,7 @@ impl Client {
 mod tests {
   use std::env;
   use std::path::{Path, PathBuf};
-  use log::trace;
+  use tracing::trace;
   use tokio::runtime::Handle;
   use artifacts_api_rust_proto::{ArtifactUserMetadata, CreateArtifactRequest};
   use crate::Client;
