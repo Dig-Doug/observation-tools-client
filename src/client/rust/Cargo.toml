@@ -50,6 +50,7 @@ wasm-bindgen-futures = "0.4.28"
 web-sys = { version = "0.3.55", features = ['Window', 'Performance', 'PerformanceTiming'] }
 tracing-wasm = "0.2.1"
 tracing = "0.1.35"
+js-sys = "0.3.60"
 console_error_panic_hook = "0.1.7"
 
 [build-dependencies]

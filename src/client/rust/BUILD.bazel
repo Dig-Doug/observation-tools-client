@@ -30,7 +30,7 @@ rust_library(
     data = CLIENT_DATA,
     proc_macro_deps = PROC_MACRO_DEPS,
     deps = DEPS,
-    features = ["rust"],
+    crate_features = ["rust"],
 )
 
 rust_static_library(
@@ -40,7 +40,7 @@ rust_static_library(
     data = CLIENT_DATA,
     proc_macro_deps = PROC_MACRO_DEPS,
     deps = DEPS,
-    features = ["cpp"],
+    crate_features = ["cpp"],
 )
 
 rust_shared_library(
@@ -50,7 +50,7 @@ rust_shared_library(
     data = CLIENT_DATA,
     proc_macro_deps = PROC_MACRO_DEPS,
     deps = DEPS,
-    features = ["wasm"],
+    crate_features = ["wasm"],
 )
 
 rust_wasm_bindgen(

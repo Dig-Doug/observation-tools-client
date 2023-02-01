@@ -13,6 +13,7 @@ mod generic_artifact_uploader;
 mod run_uploader;
 mod uploader_stack;
 mod static_source_data;
+mod run_id;
 
 #[cfg(feature = "python")]
 use pyo3::prelude::*;

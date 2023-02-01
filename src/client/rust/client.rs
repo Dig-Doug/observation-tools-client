@@ -21,12 +21,13 @@ use tokio::{
 use tracing::{error, trace};
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use crate::api::new_artifact_id;
+use crate::run_id::RunId;
 use crate::run_stage_uploader::RunStageUploader;
 use crate::run_uploader::RunUploader;
 use crate::task_handler::TaskHandler;
 use crate::TokenGenerator;
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
-use crate::util::{ClientError, GenericError, time_now};
+use crate::util::{ClientError, encode_id_proto, GenericError, time_now};
 
 
 #[derive(Clone)]
@@ -117,11 +118,11 @@ impl Client {
     Ok(())
   }
 
-  pub async fn create_run(&self) -> Result<(), ClientError> {
+  pub async fn create_run(&self) -> Result<RunId, ClientError> {
     let mut request = CreateArtifactRequest::new();
     request.project_id = self.options.project_id.clone();
     request.artifact_id = Some(new_artifact_id()).into();
-    //request.run_id = request.artifact_id.clone();
+    request.run_id.mut_or_insert_default().id = request.artifact_id.clone();
     let group_data = request.mut_artifact_data();
     //group_data.user_metadata = Some(metadata).into();
     group_data.artifact_type = ARTIFACT_TYPE_ROOT_GROUP.into();
@@ -137,7 +138,9 @@ impl Client {
         .init(),
     };
 
-    Ok(())
+    Ok(RunId {
+      id: encode_id_proto(&request.artifact_id.unwrap_or_default())
+    })
   }
 }
 

@@ -3,6 +3,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use custom_error::custom_error;
 use protobuf::Message;
 use protobuf::well_known_types::timestamp::Timestamp;
+use tracing::trace;
 use uuid::Uuid;
 use wasm_bindgen::JsValue;
 
@@ -30,23 +31,17 @@ pub(crate) fn new_uuid_proto() -> artifacts_api_rust_proto::Uuid {
 }
 
 pub(crate) fn time_now() -> Timestamp {
-  //let since_the_epoch = since_epoch();
+  let since_the_epoch = since_epoch();
   let mut t = Timestamp::new();
-  //t.seconds = since_the_epoch.as_secs() as i64;
-  //let nanos = (since_the_epoch - Duration::from_secs(t.seconds as u64)).as_nanos();
-  //t.nanos = nanos as i32;
+  t.seconds = since_the_epoch.as_secs() as i64;
+  let nanos = (since_the_epoch - Duration::from_secs(t.seconds as u64)).as_nanos();
+  t.nanos = nanos as i32;
   t
 }
 
 #[cfg(feature = "wasm")]
 fn since_epoch() -> Duration {
-  let window = web_sys::window().expect("should have a window in this context");
-  let performance = window
-    .performance()
-    .expect("performance should be available");
-  perf_to_system(performance.now())
-    .duration_since(UNIX_EPOCH)
-    .expect("Time went backwards")
+  Duration::from_millis(js_sys::Date::now() as u64)
 }
 
 fn perf_to_system(amt: f64) -> SystemTime {
