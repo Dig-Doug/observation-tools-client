@@ -1,8 +1,8 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::generic_artifact_uploader::GenericArtifactUploader;
 use itertools::Itertools;
-use tracing::info;
 use std::cell::RefCell;
+use tracing::info;
 
 thread_local! {
     static LOCAL_UPLOADER_STACK: RefCell<Option<UploaderStack >> = RefCell::new(None);

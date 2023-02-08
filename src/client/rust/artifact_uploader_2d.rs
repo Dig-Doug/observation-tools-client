@@ -3,12 +3,14 @@ use crate::user_metadata::UserMetadataBuilder;
 use artifacts_api_rust_proto::StructuredData;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
+use wasm_bindgen::prelude::*;
 
 pub trait Type2d {
     fn convert_2d_to_raw(&self) -> StructuredData;
 }
 
 #[cfg_attr(feature = "python", pyclass)]
+#[wasm_bindgen]
 pub struct ArtifactUploader2d {
     pub(crate) base: BaseArtifactUploader,
 }

@@ -6,13 +6,16 @@ use crate::user_metadata::UserMetadataBuilder;
 use artifacts_api_rust_proto::{StructuredData, Transform3};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
+use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "python", pyclass)]
+#[wasm_bindgen]
 pub struct RunStageUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
 #[cfg_attr(feature = "python", pymethods)]
+#[wasm_bindgen]
 impl RunStageUploader {
     pub fn child_uploader(&self, metadata: &UserMetadataBuilder) -> GenericArtifactUploader {
         self.base.child_uploader(metadata)

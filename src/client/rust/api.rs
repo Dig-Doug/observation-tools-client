@@ -1,7 +1,10 @@
-use artifacts_api_rust_proto::{StructuredData, Image2, Sphere, Geometry3, Number, ArtifactId, Object3};
+use crate::util::{encode_id_proto, new_uuid_proto};
+use artifacts_api_rust_proto::{
+    ArtifactId, Geometry3, Image2, Number, Object3, Sphere, StructuredData,
+};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
-use crate::util::{encode_id_proto, new_uuid_proto};
+use wasm_bindgen::prelude::*;
 
 pub struct NumberBuilder {
     pub(crate) proto: Number,
@@ -16,11 +19,13 @@ impl Into<NumberBuilder> for f64 {
 }
 
 #[cfg_attr(feature = "python", pyclass)]
+#[wasm_bindgen]
 pub struct Image2Builder {
     pub(crate) proto: Image2,
 }
 
 #[cfg_attr(feature = "python", pymethods)]
+#[wasm_bindgen]
 impl Image2Builder {
     #[cfg(not(feature = "python"))]
     pub fn new(data: &[u8]) -> Self {

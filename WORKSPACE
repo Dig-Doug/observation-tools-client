@@ -64,10 +64,10 @@ http_archive(
 
 http_archive(
     name = "rules_rust",
-    sha256 = "0b1774c1cf637a8a5321a2726d736d9fb315a1770bcb1e5074b9517a0857d289",
-    strip_prefix = "rules_rust-1357b85b1b53f811ca5e372f1d10e3001a5de501",
+    sha256 = "39e6950feb4272418e9cfb846d24382c10a2cd6f4176768489faf2cc8d4d7bb2",
+    strip_prefix = "rules_rust-92834930f979ac132ed89c5f98ebe7c310e5a96a",
     urls = [
-        "https://github.com/bazelbuild/rules_rust/archive/1357b85b1b53f811ca5e372f1d10e3001a5de501.tar.gz",
+        "https://github.com/bazelbuild/rules_rust/archive/92834930f979ac132ed89c5f98ebe7c310e5a96a.tar.gz",
     ],
 )
 
@@ -160,11 +160,11 @@ bind(
 
 load("@rules_rust//rust:repositories.bzl", "rust_repositories")
 
-RUST_VERSION = "1.65.0"
+RUST_VERSION = "1.67.0"
 
 rust_repositories(
     edition = "2021",
-    version = RUST_VERSION,
+    versions = [RUST_VERSION],
 )
 
 load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
@@ -179,6 +179,7 @@ crates_repository(
     cargo_lockfile = "//:Cargo.lock",
     generator = "@cargo_bazel_bootstrap//:cargo-bazel",
     lockfile = "//:cargo-bazel-lock.json",
+    generate_binaries = True,
     manifests = [
         "//:Cargo.toml",
         "//src/api/artifacts:Cargo.toml",
