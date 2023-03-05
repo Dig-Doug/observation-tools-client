@@ -6,7 +6,7 @@ use crate::generic_artifact_uploader::GenericArtifactUploader;
 use crate::run_id::RunId;
 use crate::uploader_stack::{init_uploader_stack, pop_uploader, push_uploader};
 use crate::user_metadata::UserMetadataBuilder;
-use crate::util::{encode_id_proto, time_now};
+use crate::util::{encode_id_proto, time_now, ClientError};
 use artifacts_api_rust_proto::{
     ArtifactGroupUploaderData, ArtifactType, ArtifactUserMetadata, CreateArtifactRequest,
     StructuredData, Transform3,
@@ -107,7 +107,24 @@ impl BaseArtifactUploader {
         base_child_group_request(&self.data, metadata.proto.clone())
     }
 
-    pub fn create_child_group(
+    pub async fn create_child_group_async(
+        &self,
+        request: CreateArtifactRequest,
+        use_context: bool,
+    ) -> Result<BaseArtifactUploader, ClientError> {
+        self.client.upload_artifact(&request, None).await?;
+        Ok(BaseArtifactUploaderBuilder::default()
+            .client(self.client.clone())
+            .data(artifact_group_uploader_data_from_request(&request))
+            .context_behavior(if use_context {
+                ContextBehavior::PushPop
+            } else {
+                ContextBehavior::Disabled
+            })
+            .init())
+    }
+
+    pub fn create_child_group_old(
         &self,
         request: CreateArtifactRequest,
         use_context: bool,
@@ -128,19 +145,30 @@ impl BaseArtifactUploader {
         let mut request = self.create_base_child_group_request(metadata);
         request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_GENERIC.into();
         GenericArtifactUploader {
-            base: self.create_child_group(request, true),
+            base: self.create_child_group_old(request, true),
         }
     }
 
-    pub fn child_uploader_2d(&self, metadata: &UserMetadataBuilder) -> ArtifactUploader2d {
+    pub async fn child_uploader_async(
+        &self,
+        metadata: &UserMetadataBuilder,
+    ) -> Result<GenericArtifactUploader, ClientError> {
+        let mut request = self.create_base_child_group_request(metadata);
+        request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_GENERIC.into();
+        Ok(GenericArtifactUploader {
+            base: self.create_child_group_async(request, true).await?,
+        })
+    }
+
+    pub fn child_uploader_2d_old(&self, metadata: &UserMetadataBuilder) -> ArtifactUploader2d {
         let mut request = self.create_base_child_group_request(metadata);
         request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_2D_GROUP.into();
         ArtifactUploader2d {
-            base: self.create_child_group(request, false),
+            base: self.create_child_group_old(request, false),
         }
     }
 
-    pub fn child_uploader_3d(
+    pub fn child_uploader_3d_old(
         &self,
         metadata: &UserMetadataBuilder,
         base_transform: Transform3,
@@ -150,18 +178,42 @@ impl BaseArtifactUploader {
         artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_3D_GROUP.into();
         artifact_data.mut_group_3d().base_transform = Some(base_transform).into();
         ArtifactUploader3d {
-            base: self.create_child_group(request, false),
+            base: self.create_child_group_old(request, false),
         }
     }
 
-    pub fn upload_raw(&self, metadata: &UserMetadataBuilder, data: StructuredData) -> String {
-        self.upload_raw_bytes(metadata, data.write_to_bytes().unwrap().as_slice())
+    pub async fn child_uploader_3d(
+        &self,
+        metadata: &UserMetadataBuilder,
+        base_transform: Transform3,
+    ) -> Result<ArtifactUploader3d, ClientError> {
+        let mut request = self.create_base_child_group_request(metadata);
+        let artifact_data = request.mut_artifact_data();
+        artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_3D_GROUP.into();
+        artifact_data.mut_group_3d().base_transform = Some(base_transform).into();
+        Ok(ArtifactUploader3d {
+            base: self.create_child_group_async(request, false).await?,
+        })
     }
 
-    pub fn upload_raw_bytes(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
+    pub async fn upload_raw(
+        &self,
+        metadata: &UserMetadataBuilder,
+        data: StructuredData,
+    ) -> Result<(), ClientError> {
+        self.upload_raw_bytes(metadata, data.write_to_bytes().unwrap().as_slice())
+            .await
+    }
+
+    pub async fn upload_raw_bytes(
+        &self,
+        metadata: &UserMetadataBuilder,
+        data: &[u8],
+    ) -> Result<(), ClientError> {
         let request = base_child_group_request(&self.data, metadata.proto.clone());
-        self.client.upload_artifact_raw_bytes(&request, Some(data));
-        bs58::encode(request.artifact_id.write_to_bytes().unwrap()).into_string()
+        self.client
+            .upload_artifact_raw_bytes(&request, Some(data))
+            .await
     }
 
     pub fn id(&self) -> String {

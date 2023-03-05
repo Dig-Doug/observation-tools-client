@@ -1,7 +1,10 @@
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
+use crate::geometry3_builder::Geometry3Builder;
+use crate::object3_builder::Object3Builder;
 use crate::user_metadata::UserMetadataBuilder;
-use artifacts_api_rust_proto::{ArtifactType, StructuredData, Transform3};
+use crate::util::ClientError;
+use artifacts_api_rust_proto::{ArtifactType, Geometry3, StructuredData, Transform3};
 use protobuf::Message;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
@@ -18,9 +21,28 @@ pub struct ArtifactUploader3d {
 }
 
 #[cfg_attr(feature = "python", pymethods)]
-impl ArtifactUploader3d {}
+#[wasm_bindgen]
+impl ArtifactUploader3d {
+    pub async fn upload_object3(
+        &self,
+        metadata: &UserMetadataBuilder,
+        data: Object3Builder,
+    ) -> Result<(), ClientError> {
+        self.upload(metadata, data).await
+    }
+}
 
 impl ArtifactUploader3d {
+    pub async fn upload(
+        &self,
+        metadata: &UserMetadataBuilder,
+        data: impl Type3d,
+    ) -> Result<(), ClientError> {
+        self.base
+            .upload_raw(metadata, data.convert_3d_to_raw())
+            .await
+    }
+
     pub fn child_uploader_2d(
         &self,
         metadata: &UserMetadataBuilder,
@@ -31,10 +53,11 @@ impl ArtifactUploader3d {
         artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_2D_IN_3D_GROUP.into();
         artifact_data.mut_map_2d_to_3d().to_3d_transform = Some(to_3d_transform).into();
         ArtifactUploader2d {
-            base: self.base.create_child_group(request, false),
+            base: self.base.create_child_group_old(request, false),
         }
     }
 
+    /*
     pub(crate) fn ffi_child_uploader_2d(
         &self,
         metadata: &UserMetadataBuilder,
@@ -44,11 +67,8 @@ impl ArtifactUploader3d {
         Box::new(self.child_uploader_2d(metadata, to_3d_transform))
     }
 
-    pub fn upload(&self, metadata: &UserMetadataBuilder, data: impl Type3d) -> String {
-        self.base.upload_raw(metadata, data.convert_3d_to_raw())
-    }
-
     pub(crate) fn ffi_upload(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
         self.base.upload_raw_bytes(metadata, data)
     }
+     */
 }

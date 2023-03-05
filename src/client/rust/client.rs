@@ -53,6 +53,7 @@ pub struct Client {
 #[cfg(feature = "cpp")]
 fn default_reqwest_client() -> reqwest::Client {
     reqwest::Client::builder()
+        .cookie_store(true)
         .use_rustls_tls()
         .build()
         .expect("Failed to build reqwest client")
@@ -107,7 +108,10 @@ impl Client {
             ui_host,
             api_host,
             token_generator: TokenGenerator::Constant(token),
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                .cookie_store(true)
+                .build()
+                .expect("Failed to build reqwest client"),
         })
     }
 

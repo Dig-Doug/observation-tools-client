@@ -1,3 +1,4 @@
+use crate::sphere_builder::SphereBuilder;
 use crate::util::{encode_id_proto, new_uuid_proto};
 use artifacts_api_rust_proto::{
     ArtifactId, Geometry3, Image2, Number, Object3, Sphere, StructuredData,
@@ -5,18 +6,6 @@ use artifacts_api_rust_proto::{
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
-
-pub struct NumberBuilder {
-    pub(crate) proto: Number,
-}
-
-impl Into<NumberBuilder> for f64 {
-    fn into(self) -> NumberBuilder {
-        let mut proto = Number::new();
-        proto.d = self;
-        NumberBuilder { proto }
-    }
-}
 
 #[cfg_attr(feature = "python", pyclass)]
 #[wasm_bindgen]
@@ -53,44 +42,6 @@ impl Into<StructuredData> for &Image2Builder {
         let mut s = StructuredData::new();
         *s.mut_image2() = self.proto.clone();
         s
-    }
-}
-
-pub struct SphereBuilder {
-    pub(crate) proto: Sphere,
-}
-
-impl SphereBuilder {
-    pub fn new(radius: impl Into<NumberBuilder>) -> SphereBuilder {
-        let mut proto = Sphere::new();
-        proto.radius = Some(radius.into().proto).into();
-        SphereBuilder { proto }
-    }
-}
-
-impl Into<Geometry3Builder> for &SphereBuilder {
-    fn into(self) -> Geometry3Builder {
-        Geometry3Builder::sphere(self)
-    }
-}
-
-impl Into<StructuredData> for &SphereBuilder {
-    fn into(self) -> StructuredData {
-        let mut s = StructuredData::new();
-        *s.mut_sphere() = self.proto.clone();
-        s
-    }
-}
-
-pub struct Geometry3Builder {
-    pub(crate) proto: Geometry3,
-}
-
-impl Geometry3Builder {
-    pub fn sphere(sphere: &SphereBuilder) -> Geometry3Builder {
-        let mut proto = Geometry3::new();
-        *proto.mut_sphere() = sphere.proto.clone();
-        Geometry3Builder { proto }
     }
 }
 

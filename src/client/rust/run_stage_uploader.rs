@@ -22,11 +22,12 @@ impl RunStageUploader {
     }
 
     pub fn child_uploader_2d(&self, metadata: &UserMetadataBuilder) -> ArtifactUploader2d {
-        self.base.child_uploader_2d(metadata)
+        self.base.child_uploader_2d_old(metadata)
     }
 }
 
 impl RunStageUploader {
+    /*
     pub(crate) fn ffi_child_uploader(
         &self,
         metadata: &UserMetadataBuilder,
@@ -46,7 +47,7 @@ impl RunStageUploader {
         metadata: &UserMetadataBuilder,
         base_transform: Transform3,
     ) -> ArtifactUploader3d {
-        self.base.child_uploader_3d(metadata, base_transform)
+        self.base.child_uploader_3d_old(metadata, base_transform)
     }
 
     pub fn upload(&self, metadata: &UserMetadataBuilder, data: StructuredData) -> String {
@@ -56,4 +57,5 @@ impl RunStageUploader {
     pub(crate) fn ffi_upload(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
         self.base.upload_raw_bytes(metadata, data)
     }
+     */
 }

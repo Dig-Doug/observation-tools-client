@@ -7,6 +7,8 @@ use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
 
 use crate::run_id::RunId;
+use crate::util::ClientError;
+use crate::GenericArtifactUploader;
 use artifacts_api_rust_proto::CreateRunResponse;
 
 #[cfg_attr(feature = "python", pyclass)]
@@ -25,18 +27,25 @@ impl RunUploader {
 
     pub fn viewer_url(&self) -> String {
         format!(
-            "{}/project/{}/run/{}",
+            "{}/project/{}/artifact/{}",
             self.base.client.options.ui_host,
             self.base.client.options.project_id,
             self.base.id()
         )
     }
 
+    pub async fn child_uploader(
+        &self,
+        metadata: &UserMetadataBuilder,
+    ) -> Result<GenericArtifactUploader, ClientError> {
+        self.base.child_uploader_async(metadata).await
+    }
+
     pub fn create_initial_run_stage(&self, metadata: &UserMetadataBuilder) -> RunStageUploader {
         let mut request = self.base.create_base_child_group_request(metadata);
         request.mut_artifact_data().artifact_type = ARTIFACT_TYPE_RUN_STAGE.into();
         RunStageUploader {
-            base: self.base.create_child_group(request, true),
+            base: self.base.create_child_group_old(request, true),
         }
     }
 }

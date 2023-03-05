@@ -19,6 +19,7 @@ pub struct ArtifactUploader2d {
 impl ArtifactUploader2d {}
 
 impl ArtifactUploader2d {
+    /*
     pub fn upload(&self, metadata: &UserMetadataBuilder, data: impl Type2d) -> String {
         self.base.upload_raw(metadata, data.convert_2d_to_raw())
     }
@@ -26,4 +27,5 @@ impl ArtifactUploader2d {
     pub(crate) fn ffi_upload(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
         self.base.upload_raw_bytes(metadata, data)
     }
+     */
 }
