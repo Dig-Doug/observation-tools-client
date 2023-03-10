@@ -1,4 +1,3 @@
-use crate::sphere_builder::SphereBuilder;
 use crate::util::{encode_id_proto, new_uuid_proto};
 use artifacts_api_rust_proto::{
     ArtifactId, Geometry3, Image2, Number, Object3, Sphere, StructuredData,

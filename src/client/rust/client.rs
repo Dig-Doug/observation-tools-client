@@ -7,7 +7,7 @@ use crate::run_uploader::RunUploader;
 use crate::task_handler::TaskHandler;
 use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
 use crate::util::{encode_id_proto, time_now, ClientError, GenericError};
-use crate::{TokenGenerator, UserMetadataBuilder};
+use crate::{PublicArtifactId, TokenGenerator, UserMetadataBuilder};
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, StructuredData};
 use async_channel::{Receiver, Sender};
@@ -224,7 +224,7 @@ impl Client {
         &self,
         request: &CreateArtifactRequest,
         structured_data: Option<StructuredData>,
-    ) -> Result<(), ClientError> {
+    ) -> Result<PublicArtifactId, ClientError> {
         let bytes = structured_data.and_then(|s| s.write_to_bytes().ok());
         self.upload_artifact_raw_bytes(request, bytes.as_ref().map(|b| b.as_slice()))
             .await
@@ -234,7 +234,7 @@ impl Client {
         &self,
         request: &CreateArtifactRequest,
         raw_data: Option<&[u8]>,
-    ) -> Result<(), ClientError> {
+    ) -> Result<PublicArtifactId, ClientError> {
         let task = self.new_task(request, raw_data);
         trace!("Enqueueing task: {:?}", task);
         self.task_handler.handle_upload_artifact_task(&task).await

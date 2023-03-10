@@ -2,7 +2,7 @@ use crate::api::Image2Builder;
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::transform3_builder::Transform3Builder;
+use crate::builders::{Transform2Builder, Transform3Builder};
 use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
 use artifacts_api_rust_proto::{StructuredData, Transform3};
@@ -26,6 +26,15 @@ impl GenericArtifactUploader {
         metadata: &UserMetadataBuilder,
     ) -> Result<GenericArtifactUploader, ClientError> {
         self.base.child_uploader_async(metadata).await
+    }
+    
+    pub async fn child_uploader_2d(
+        &self,
+        metadata: &UserMetadataBuilder
+    ) -> Result<ArtifactUploader2d, ClientError> {
+        self.base
+          .child_uploader_2d(metadata)
+          .await
     }
 
     pub async fn child_uploader_3d(

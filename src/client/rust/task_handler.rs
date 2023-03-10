@@ -8,6 +8,7 @@ use reqwest::multipart::Part;
 #[cfg(feature = "tokio")]
 use tokio_util::codec::{BytesCodec, FramedRead};
 use tracing::{debug, error, trace};
+use crate::PublicArtifactId;
 
 #[derive(Clone)]
 pub(crate) struct TaskHandler {
@@ -43,7 +44,7 @@ impl TaskHandler {
     pub(crate) async fn handle_upload_artifact_task(
         &self,
         task: &UploadArtifactTask,
-    ) -> Result<(), ClientError> {
+    ) -> Result<PublicArtifactId, ClientError> {
         trace!("Handling artifact: {:?}", task);
 
         let req_b64 = base64::encode(task.request.write_to_bytes().unwrap());

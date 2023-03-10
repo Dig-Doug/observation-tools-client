@@ -4,21 +4,17 @@ mod artifact_uploader_3d;
 mod base_artifact_uploader;
 mod client;
 mod generic_artifact_uploader;
-mod geometry3_builder;
-mod number_builder;
-mod object3_builder;
 mod run_id;
 mod run_stage_uploader;
 mod run_uploader;
-mod sphere_builder;
 mod static_source_data;
 mod task_handler;
 mod token_generator;
-mod transform3_builder;
 mod upload_artifact_task;
 mod uploader_stack;
 mod user_metadata;
 mod util;
+mod builders;
 
 use crate::api::Image2Builder;
 #[cfg(feature = "python")]
@@ -34,6 +30,8 @@ pub use crate::run_stage_uploader::RunStageUploader;
 pub use crate::run_uploader::RunUploader;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::user_metadata::UserMetadataBuilder;
+
+pub type PublicArtifactId = ();
 
 #[cfg(feature = "cpp")]
 use crate::client::ffi_new_client;

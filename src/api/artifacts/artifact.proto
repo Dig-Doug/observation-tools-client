@@ -70,14 +70,14 @@ message Group3d {
 
 message StructuredData {
   oneof data {
-    Polygon2 polygon2 = 1;
+    Polygon2 polygon2 = 1 [deprecated = true];
     Graph graph = 2;
-    Point2 point2 = 3;
+    Point2 point2 = 3 [deprecated = true];
     Image2 image2 = 4;
-    Segment2 segment2 = 5;
+    Segment2 segment2 = 5 [deprecated = true];
     Object3 object3 = 6;
     Object2 object2 = 7;
-    Sphere sphere = 8;
+    Sphere sphere = 8 [deprecated = true];
   }
 }
 
@@ -131,13 +131,6 @@ message Geometry3 {
 
 message Sphere {
   Number radius = 1;
-}
-
-message SphereReference {
-  oneof data {
-    ArtifactId artifact_id = 1;
-    Sphere sphere = 2;
-  }
 }
 
 message ArtifactUpdate {

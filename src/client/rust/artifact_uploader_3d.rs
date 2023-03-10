@@ -1,7 +1,6 @@
-use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::geometry3_builder::Geometry3Builder;
-use crate::object3_builder::Object3Builder;
+use crate::builders::Geometry3Builder;
+use crate::builders::Object3Builder;
 use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
 use artifacts_api_rust_proto::{ArtifactType, Geometry3, StructuredData, Transform3};
@@ -9,6 +8,7 @@ use protobuf::Message;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
+use crate::{ArtifactUploader2d, PublicArtifactId};
 
 pub trait Type3d {
     fn convert_3d_to_raw(&self) -> StructuredData;
@@ -27,7 +27,7 @@ impl ArtifactUploader3d {
         &self,
         metadata: &UserMetadataBuilder,
         data: Object3Builder,
-    ) -> Result<(), ClientError> {
+    ) -> Result<PublicArtifactId, ClientError> {
         self.upload(metadata, data).await
     }
 }
@@ -37,7 +37,7 @@ impl ArtifactUploader3d {
         &self,
         metadata: &UserMetadataBuilder,
         data: impl Type3d,
-    ) -> Result<(), ClientError> {
+    ) -> Result<PublicArtifactId, ClientError> {
         self.base
             .upload_raw(metadata, data.convert_3d_to_raw())
             .await

@@ -1,6 +1,6 @@
 use crate::artifact_uploader_3d::Type3d;
-use crate::geometry3_builder::Geometry3Builder;
-use crate::number_builder::NumberBuilder;
+use crate::builders::Geometry3Builder;
+use crate::builders::NumberBuilder;
 use artifacts_api_rust_proto::{Sphere, StructuredData};
 use wasm_bindgen::prelude::*;
 
@@ -27,19 +27,5 @@ impl SphereBuilder {
 impl Into<Geometry3Builder> for &SphereBuilder {
     fn into(self) -> Geometry3Builder {
         Geometry3Builder::sphere(self)
-    }
-}
-
-impl Into<StructuredData> for &SphereBuilder {
-    fn into(self) -> StructuredData {
-        let mut s = StructuredData::new();
-        *s.mut_sphere() = self.proto.clone();
-        s
-    }
-}
-
-impl Type3d for SphereBuilder {
-    fn convert_3d_to_raw(&self) -> StructuredData {
-        self.into()
     }
 }
