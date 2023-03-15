@@ -27,14 +27,12 @@ impl GenericArtifactUploader {
     ) -> Result<GenericArtifactUploader, ClientError> {
         self.base.child_uploader_async(metadata).await
     }
-    
+
     pub async fn child_uploader_2d(
         &self,
-        metadata: &UserMetadataBuilder
+        metadata: &UserMetadataBuilder,
     ) -> Result<ArtifactUploader2d, ClientError> {
-        self.base
-          .child_uploader_2d(metadata)
-          .await
+        self.base.child_uploader_2d(metadata).await
     }
 
     pub async fn child_uploader_3d(

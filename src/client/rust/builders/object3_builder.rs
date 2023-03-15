@@ -1,8 +1,8 @@
 use crate::artifact_uploader_3d::Type3d;
+use crate::builders::Geometry3Builder;
 use crate::builders::Transform3Builder;
 use artifacts_api_rust_proto::{Object3, StructuredData};
 use wasm_bindgen::prelude::*;
-use crate::builders::Geometry3Builder;
 
 #[wasm_bindgen]
 pub struct Object3Builder {

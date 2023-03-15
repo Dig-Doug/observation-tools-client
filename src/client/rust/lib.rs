@@ -2,6 +2,7 @@ mod api;
 mod artifact_uploader_2d;
 mod artifact_uploader_3d;
 mod base_artifact_uploader;
+mod builders;
 mod client;
 mod generic_artifact_uploader;
 mod run_id;
@@ -14,7 +15,6 @@ mod upload_artifact_task;
 mod uploader_stack;
 mod user_metadata;
 mod util;
-mod builders;
 
 use crate::api::Image2Builder;
 #[cfg(feature = "python")]

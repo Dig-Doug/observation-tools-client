@@ -1,6 +1,6 @@
+use crate::builders::Point2Builder;
 use artifacts_api_rust_proto::{Geometry2, StructuredData};
 use wasm_bindgen::prelude::*;
-use crate::builders::Point2Builder;
 
 #[wasm_bindgen]
 pub struct Geometry2Builder {

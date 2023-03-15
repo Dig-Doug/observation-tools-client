@@ -1,8 +1,8 @@
-use crate::builders::{Geometry2Builder};
+use crate::artifact_uploader_2d::Type2d;
+use crate::builders::Geometry2Builder;
 use crate::builders::NumberBuilder;
 use artifacts_api_rust_proto::{Point2, StructuredData};
 use wasm_bindgen::prelude::*;
-use crate::artifact_uploader_2d::Type2d;
 
 #[wasm_bindgen]
 pub struct Point2Builder {

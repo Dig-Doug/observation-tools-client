@@ -3,12 +3,12 @@ use crate::builders::Geometry3Builder;
 use crate::builders::Object3Builder;
 use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
+use crate::{ArtifactUploader2d, PublicArtifactId};
 use artifacts_api_rust_proto::{ArtifactType, Geometry3, StructuredData, Transform3};
 use protobuf::Message;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
-use crate::{ArtifactUploader2d, PublicArtifactId};
 
 pub trait Type3d {
     fn convert_3d_to_raw(&self) -> StructuredData;
