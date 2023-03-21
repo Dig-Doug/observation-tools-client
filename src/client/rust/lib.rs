@@ -16,7 +16,6 @@ mod uploader_stack;
 mod user_metadata;
 mod util;
 
-use crate::api::Image2Builder;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
@@ -114,7 +113,6 @@ mod ffi {
 fn observation_tools_client(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Client>()?;
     m.add_class::<UserMetadataBuilder>()?;
-    m.add_class::<Image2Builder>()?;
     Ok(())
 }
 

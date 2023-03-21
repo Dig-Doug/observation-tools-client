@@ -1,4 +1,3 @@
-use crate::api::Image2Builder;
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::base_artifact_uploader::BaseArtifactUploader;

@@ -7,6 +7,10 @@ mod point2_builder;
 mod sphere_builder;
 mod transform2_builder;
 mod transform3_builder;
+mod image2_builder;
+mod polygon2_builder;
+mod segment2_builder;
+mod polygon_edge2_builder;
 
 pub use geometry2_builder::Geometry2Builder;
 pub use geometry3_builder::Geometry3Builder;
@@ -17,3 +21,7 @@ pub use point2_builder::Point2Builder;
 pub use sphere_builder::SphereBuilder;
 pub use transform2_builder::Transform2Builder;
 pub use transform3_builder::Transform3Builder;
+pub use image2_builder::Image2Builder;
+pub use segment2_builder::Segment2Builder;
+pub use polygon2_builder::Polygon2Builder;
+pub use polygon_edge2_builder::PolygonEdge2Builder;

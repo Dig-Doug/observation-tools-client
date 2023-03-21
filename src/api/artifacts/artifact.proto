@@ -86,7 +86,8 @@ message Image2 {
 
   string mime_type = 5;
 
-  Matrix3x3 pixel_to_world_transform = 2;
+  // Maybe deprecated
+  Matrix3x3 pixel_to_world_transform = 2 [deprecated = true];
 
   PerPixelTransform pixel_transform = 3;
 
@@ -112,6 +113,7 @@ message Geometry2 {
     Point2 point2 = 1;
     Polygon2 polygon2 = 2;
     Segment2 segment2 = 3;
+    Image2 image2 = 4;
   }
 }
 
