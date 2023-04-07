@@ -9,9 +9,10 @@ pub struct Image2Builder {
 
 #[wasm_bindgen]
 impl Image2Builder {
-    pub fn new(data: &[u8]) -> Self {
+    pub fn new(data: &[u8], mime_type: &str) -> Self {
         let mut proto = Image2::new();
         proto.data = data.to_vec();
+        proto.mime_type = mime_type.to_string();
         Image2Builder { proto }
     }
 }
