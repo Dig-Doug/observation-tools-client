@@ -6,3 +6,4 @@ members = [
 
 [patch.crates-io]
 reqwest = { git = "https://github.com/Dig-Doug/reqwest", branch = "wasm-cookies" }
+wasm-bindgen-derive = { path = "/home/doug/Development/thirdparty/wasm-bindgen-derive" }

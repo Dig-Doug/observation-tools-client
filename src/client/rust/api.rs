@@ -1,10 +1,8 @@
-use crate::util::{encode_id_proto, new_uuid_proto};
-use artifacts_api_rust_proto::{
-    ArtifactId, Geometry3, Image2, Number, Object3, Sphere, StructuredData,
-};
+use crate::util::encode_id_proto;
+use crate::util::new_uuid_proto;
+use artifacts_api_rust_proto::ArtifactId;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
-use wasm_bindgen::prelude::*;
 
 /*
 impl Type2d for Image2Builder {

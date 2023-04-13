@@ -128,11 +128,26 @@ message Object3 {
 message Geometry3 {
   oneof data {
     Sphere sphere = 1;
+    Mesh mesh = 2;
   }
 }
 
 message Sphere {
   Number radius = 1;
+}
+
+message Mesh {
+  repeated Vertex vertices = 1;
+
+  repeated uint32 indices = 2;
+  
+  // TODO(doug): repeated Mesh sub_meshes = 6;
+}
+
+message Vertex {
+  Point3 position = 1;
+  
+  Vector3 normal = 2;
 }
 
 message ArtifactUpdate {

@@ -1,6 +1,7 @@
-use artifacts_api_rust_proto::{StructuredData, Image2};
-use wasm_bindgen::prelude::*;
 use crate::builders::Geometry2Builder;
+use artifacts_api_rust_proto::Image2;
+use artifacts_api_rust_proto::StructuredData;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Image2Builder {

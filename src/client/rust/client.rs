@@ -1,30 +1,35 @@
 use crate::api::new_artifact_id;
+use crate::base_artifact_uploader::artifact_group_uploader_data_from_request;
 use crate::base_artifact_uploader::BaseArtifactUploaderBuilder;
-use crate::base_artifact_uploader::{artifact_group_uploader_data_from_request, ContextBehavior};
-use crate::run_id::RunId;
+use crate::base_artifact_uploader::ContextBehavior;
 use crate::run_stage_uploader::RunStageUploader;
 use crate::run_uploader::RunUploader;
 use crate::task_handler::TaskHandler;
-use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
-use crate::util::{encode_id_proto, time_now, ClientError, GenericError};
-use crate::{PublicArtifactId, TokenGenerator, UserMetadataBuilder};
+use crate::upload_artifact_task::UploadArtifactTask;
+use crate::upload_artifact_task::UploadArtifactTaskPayload;
+use crate::util::time_now;
+use crate::util::ClientError;
+use crate::PublicArtifactId;
+use crate::TokenGenerator;
+use crate::UserMetadataBuilder;
+use artifacts_api_rust_proto::ArtifactGroupUploaderData;
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
-use artifacts_api_rust_proto::{ArtifactGroupUploaderData, CreateArtifactRequest, StructuredData};
-use async_channel::{Receiver, Sender};
-use futures::TryFutureExt;
+use artifacts_api_rust_proto::CreateArtifactRequest;
+use artifacts_api_rust_proto::StructuredData;
+use async_channel::Receiver;
+use async_channel::Sender;
 use protobuf::Message;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
-use serde::{Deserialize, Serialize};
-#[cfg(not(feature = "wasm"))]
-use std::env;
-use std::io::Write;
 use std::sync::Arc;
 #[cfg(feature = "files")]
-use tempfile::{NamedTempFile, TempDir};
+use tempfile::NamedTempFile;
+#[cfg(feature = "files")]
+use tempfile::TempDir;
 #[cfg(feature = "tokio")]
 use tokio::runtime::Handle;
-use tracing::{error, trace};
+use tracing::error;
+use tracing::trace;
 use wasm_bindgen::prelude::*;
 
 #[derive(Clone)]
@@ -277,17 +282,18 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
-    use crate::api::SphereBuilder;
     use crate::client::default_reqwest_client;
-    use crate::util::{new_uuid_proto, time_now, GenericError};
+    use crate::util::new_uuid_proto;
+    use crate::util::time_now;
+    use crate::util::GenericError;
     use crate::Client;
-    use artifacts_api_rust_proto::{ArtifactUserMetadata, CreateArtifactRequest};
+    use artifacts_api_rust_proto::ArtifactUserMetadata;
+    use artifacts_api_rust_proto::CreateArtifactRequest;
     #[cfg(feature = "bazel")]
     use runfiles::Runfiles;
     use std::env;
-    use std::path::{Path, PathBuf};
-    use tokio::runtime::Handle;
-    use tracing::trace;
+    use std::path::Path;
+    use std::path::PathBuf;
 
     fn init() {
         let _ = env_logger::builder().is_test(true).try_init();

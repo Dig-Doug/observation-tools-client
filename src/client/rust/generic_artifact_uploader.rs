@@ -1,14 +1,11 @@
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::builders::{Transform2Builder, Transform3Builder};
+use crate::builders::Transform3Builder;
 use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::{StructuredData, Transform3};
-use protobuf::Message;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
-use tracing::trace;
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "python", pyclass)]

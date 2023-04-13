@@ -1,14 +1,18 @@
 use crate::token_generator::TokenGenerator;
-use crate::upload_artifact_task::{UploadArtifactTask, UploadArtifactTaskPayload};
-use crate::util::{encode_id_proto, new_uuid_proto, time_now, ClientError, GenericError};
+use crate::upload_artifact_task::UploadArtifactTask;
+use crate::upload_artifact_task::UploadArtifactTaskPayload;
+use crate::util::ClientError;
 use crate::PublicArtifactId;
-use async_channel::{Receiver, RecvError, Sender};
-use futures::TryFutureExt;
+use async_channel::Receiver;
+use async_channel::Sender;
 use protobuf::Message;
 use reqwest::multipart::Part;
 #[cfg(feature = "tokio")]
-use tokio_util::codec::{BytesCodec, FramedRead};
-use tracing::{debug, error, trace};
+use tokio_util::codec::BytesCodec;
+#[cfg(feature = "tokio")]
+use tokio_util::codec::FramedRead;
+use tracing::error;
+use tracing::trace;
 
 #[derive(Clone)]
 pub(crate) struct TaskHandler {

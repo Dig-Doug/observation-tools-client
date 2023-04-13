@@ -1,7 +1,6 @@
-use crate::artifact_uploader_3d::Type3d;
 use crate::builders::Geometry3Builder;
 use crate::builders::NumberBuilder;
-use artifacts_api_rust_proto::{Sphere, StructuredData};
+use artifacts_api_rust_proto::Sphere;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

@@ -2,8 +2,9 @@ use custom_error::custom_error;
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
 use std::error::Error;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tracing::trace;
+use std::time::Duration;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 use uuid::Uuid;
 use wasm_bindgen::JsValue;
 
@@ -12,6 +13,7 @@ pub type GenericError = Box<dyn Error + Send + Sync>;
 custom_error! {#[derive(Clone)] pub ClientError
     ServerError{status_code: u16, response: String} = "Server error {status_code}: {response}",
     GenericError{message: String} = "Generic error: {message}",
+    FailedToConvertJsValueToNumber{value: String} = "Failed to convert {value} into a number",
 }
 
 impl Into<JsValue> for ClientError {

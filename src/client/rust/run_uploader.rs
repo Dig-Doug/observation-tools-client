@@ -1,15 +1,13 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
+use crate::run_id::RunId;
 use crate::run_stage_uploader::RunStageUploader;
 use crate::user_metadata::UserMetadataBuilder;
+use crate::util::ClientError;
+use crate::GenericArtifactUploader;
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_RUN_STAGE;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
-
-use crate::run_id::RunId;
-use crate::util::ClientError;
-use crate::GenericArtifactUploader;
-use artifacts_api_rust_proto::CreateRunResponse;
 
 #[cfg_attr(feature = "python", pyclass)]
 #[wasm_bindgen]

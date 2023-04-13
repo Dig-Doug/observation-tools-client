@@ -1,9 +1,7 @@
 use crate::artifact_uploader_2d::ArtifactUploader2d;
-use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::generic_artifact_uploader::GenericArtifactUploader;
 use crate::user_metadata::UserMetadataBuilder;
-use artifacts_api_rust_proto::{StructuredData, Transform3};
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;

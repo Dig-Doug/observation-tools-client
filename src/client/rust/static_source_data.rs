@@ -1,15 +1,13 @@
-use crate::util::{encode_id_proto, new_uuid_proto, GenericError};
-use artifacts_api_rust_proto::StaticSourceDataManifestEntry;
+use crate::util::GenericError;
+use artifacts_api_rust_proto::StaticSourceDataManifest;
 use artifacts_api_rust_proto::StaticSourceDataSourceReference;
 use artifacts_api_rust_proto::StaticSourceDataVersionEntry;
-use artifacts_api_rust_proto::{StaticSourceDataManifest, StaticSourceDataManifestEntryId};
 use custom_error::custom_error;
 use sha2::Digest;
 use sha2::Sha256;
 use std::fs::File;
 use std::io;
-use std::io::BufReader;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 custom_error! {#[derive(Clone)] pub StaticSourceDataError
     SourceFileNotFound { file_name: String } = "Source file not found: {}",

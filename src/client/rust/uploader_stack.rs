@@ -1,5 +1,4 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::generic_artifact_uploader::GenericArtifactUploader;
 use itertools::Itertools;
 use std::cell::RefCell;
 use tracing::info;
@@ -21,7 +20,7 @@ impl UploaderStack {
     }
 }
 
-pub(crate) fn init_uploader_stack(base: &BaseArtifactUploader) {
+pub(crate) fn init_uploader_stack(_base: &BaseArtifactUploader) {
     /*
     info!("Initializing context with: {:?}", base.id());
     LOCAL_UPLOADER_STACK.with(|f| {
@@ -34,7 +33,7 @@ pub(crate) fn init_uploader_stack(base: &BaseArtifactUploader) {
      */
 }
 
-pub(crate) fn push_uploader(base: &BaseArtifactUploader) {
+pub(crate) fn push_uploader(_base: &BaseArtifactUploader) {
     /*
     LOCAL_UPLOADER_STACK.with(|f| {
         let mut r = f.borrow_mut();
@@ -48,7 +47,7 @@ pub(crate) fn push_uploader(base: &BaseArtifactUploader) {
     */
 }
 
-pub(crate) fn pop_uploader(base: &BaseArtifactUploader) {
+pub(crate) fn pop_uploader(_base: &BaseArtifactUploader) {
     /*
     LOCAL_UPLOADER_STACK.with(|f| {
         let mut r = f.borrow_mut();

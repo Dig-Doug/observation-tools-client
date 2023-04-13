@@ -4,14 +4,20 @@ use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::client::Client;
 use crate::generic_artifact_uploader::GenericArtifactUploader;
 use crate::run_id::RunId;
-use crate::uploader_stack::{init_uploader_stack, pop_uploader, push_uploader};
+use crate::uploader_stack::init_uploader_stack;
+use crate::uploader_stack::pop_uploader;
+use crate::uploader_stack::push_uploader;
 use crate::user_metadata::UserMetadataBuilder;
-use crate::util::{encode_id_proto, time_now, ClientError};
+use crate::util::encode_id_proto;
+use crate::util::time_now;
+use crate::util::ClientError;
 use crate::PublicArtifactId;
-use artifacts_api_rust_proto::{
-    ArtifactGroupUploaderData, ArtifactType, ArtifactUserMetadata, CreateArtifactRequest,
-    StructuredData, Transform3,
-};
+use artifacts_api_rust_proto::ArtifactGroupUploaderData;
+use artifacts_api_rust_proto::ArtifactType;
+use artifacts_api_rust_proto::ArtifactUserMetadata;
+use artifacts_api_rust_proto::CreateArtifactRequest;
+use artifacts_api_rust_proto::StructuredData;
+use artifacts_api_rust_proto::Transform3;
 use derive_builder::Builder;
 use protobuf::Message;
 

@@ -1,5 +1,8 @@
-use crate::builders::{Image2Builder, Point2Builder, Polygon2Builder, Segment2Builder};
-use artifacts_api_rust_proto::{Geometry2, Image2, StructuredData};
+use crate::builders::Image2Builder;
+use crate::builders::Point2Builder;
+use crate::builders::Polygon2Builder;
+use crate::builders::Segment2Builder;
+use artifacts_api_rust_proto::Geometry2;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

@@ -16,10 +16,6 @@ mod uploader_stack;
 mod user_metadata;
 mod util;
 
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
-use wasm_bindgen::prelude::*;
-
 pub use crate::artifact_uploader_2d::ArtifactUploader2d;
 pub use crate::artifact_uploader_3d::ArtifactUploader3d;
 pub use crate::client::Client;
@@ -29,6 +25,9 @@ pub use crate::run_stage_uploader::RunStageUploader;
 pub use crate::run_uploader::RunUploader;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::user_metadata::UserMetadataBuilder;
+#[cfg(feature = "python")]
+use pyo3::prelude::*;
+use wasm_bindgen::prelude::*;
 
 pub type PublicArtifactId = ();
 
@@ -36,7 +35,6 @@ pub type PublicArtifactId = ();
 use crate::client::ffi_new_client;
 #[cfg(feature = "cpp")]
 use crate::uploader_stack::ffi_get_current_group;
-use crate::user_metadata::new_user_metadata;
 
 #[cfg(feature = "cpp")]
 #[cxx::bridge]

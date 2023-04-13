@@ -1,7 +1,5 @@
-use crate::artifact_uploader_2d::Type2d;
-use crate::builders::{Geometry2Builder, Point2Builder};
-use crate::builders::NumberBuilder;
-use artifacts_api_rust_proto::{PolygonEdge2, StructuredData};
+use crate::builders::Point2Builder;
+use artifacts_api_rust_proto::PolygonEdge2;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

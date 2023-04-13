@@ -2966,8 +2966,57 @@ impl Geometry3 {
         }
     }
 
+    // .observation_tools.proto.Mesh mesh = 2;
+
+    pub fn mesh(&self) -> &Mesh {
+        match self.data {
+            ::std::option::Option::Some(geometry3::Data::Mesh(ref v)) => v,
+            _ => <Mesh as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_mesh(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_mesh(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(geometry3::Data::Mesh(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mesh(&mut self, v: Mesh) {
+        self.data = ::std::option::Option::Some(geometry3::Data::Mesh(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_mesh(&mut self) -> &mut Mesh {
+        if let ::std::option::Option::Some(geometry3::Data::Mesh(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(geometry3::Data::Mesh(Mesh::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(geometry3::Data::Mesh(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_mesh(&mut self) -> Mesh {
+        if self.has_mesh() {
+            match self.data.take() {
+                ::std::option::Option::Some(geometry3::Data::Mesh(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Mesh::new()
+        }
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(1);
         fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, Sphere>(
             "sphere",
@@ -2975,6 +3024,13 @@ impl Geometry3 {
             Geometry3::sphere,
             Geometry3::mut_sphere,
             Geometry3::set_sphere,
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, Mesh>(
+            "mesh",
+            Geometry3::has_mesh,
+            Geometry3::mesh,
+            Geometry3::mut_mesh,
+            Geometry3::set_mesh,
         ));
         oneofs.push(geometry3::Data::generated_oneof_descriptor_data());
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Geometry3>(
@@ -2998,6 +3054,9 @@ impl ::protobuf::Message for Geometry3 {
                 10 => {
                     self.data = ::std::option::Option::Some(geometry3::Data::Sphere(is.read_message()?));
                 },
+                18 => {
+                    self.data = ::std::option::Option::Some(geometry3::Data::Mesh(is.read_message()?));
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3016,6 +3075,10 @@ impl ::protobuf::Message for Geometry3 {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
                 },
+                &geometry3::Data::Mesh(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
             };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -3028,6 +3091,9 @@ impl ::protobuf::Message for Geometry3 {
             match v {
                 &geometry3::Data::Sphere(ref v) => {
                     ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+                },
+                &geometry3::Data::Mesh(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
                 },
             };
         }
@@ -3048,6 +3114,7 @@ impl ::protobuf::Message for Geometry3 {
     }
 
     fn clear(&mut self) {
+        self.data = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
         self.special_fields.clear();
     }
@@ -3087,6 +3154,8 @@ pub mod geometry3 {
     pub enum Data {
         // @@protoc_insertion_point(oneof_field:observation_tools.proto.Geometry3.sphere)
         Sphere(super::Sphere),
+        // @@protoc_insertion_point(oneof_field:observation_tools.proto.Geometry3.mesh)
+        Mesh(super::Mesh),
     }
 
     impl ::protobuf::Oneof for Data {
@@ -3226,6 +3295,292 @@ impl ::std::fmt::Display for Sphere {
 }
 
 impl ::protobuf::reflect::ProtobufValue for Sphere {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.Mesh)
+pub struct Mesh {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.Mesh.vertices)
+    pub vertices: ::std::vec::Vec<Vertex>,
+    // @@protoc_insertion_point(field:observation_tools.proto.Mesh.indices)
+    pub indices: ::std::vec::Vec<u32>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.Mesh.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Mesh {
+    fn default() -> &'a Mesh {
+        <Mesh as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Mesh {
+    pub fn new() -> Mesh {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "vertices",
+            |m: &Mesh| { &m.vertices },
+            |m: &mut Mesh| { &mut m.vertices },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "indices",
+            |m: &Mesh| { &m.indices },
+            |m: &mut Mesh| { &mut m.indices },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Mesh>(
+            "Mesh",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Mesh {
+    const NAME: &'static str = "Mesh";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.vertices.push(is.read_message()?);
+                },
+                18 => {
+                    is.read_repeated_packed_uint32_into(&mut self.indices)?;
+                },
+                16 => {
+                    self.indices.push(is.read_uint32()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.vertices {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        for value in &self.indices {
+            my_size += ::protobuf::rt::uint32_size(2, *value);
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.vertices {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        };
+        for v in &self.indices {
+            os.write_uint32(2, *v)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Mesh {
+        Mesh::new()
+    }
+
+    fn clear(&mut self) {
+        self.vertices.clear();
+        self.indices.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Mesh {
+        static instance: Mesh = Mesh {
+            vertices: ::std::vec::Vec::new(),
+            indices: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Mesh {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Mesh").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Mesh {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Mesh {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.Vertex)
+pub struct Vertex {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.Vertex.position)
+    pub position: ::protobuf::MessageField<super::math::Point3>,
+    // @@protoc_insertion_point(field:observation_tools.proto.Vertex.normal)
+    pub normal: ::protobuf::MessageField<super::math::Vector3>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.Vertex.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Vertex {
+    fn default() -> &'a Vertex {
+        <Vertex as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Vertex {
+    pub fn new() -> Vertex {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::math::Point3>(
+            "position",
+            |m: &Vertex| { &m.position },
+            |m: &mut Vertex| { &mut m.position },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::math::Vector3>(
+            "normal",
+            |m: &Vertex| { &m.normal },
+            |m: &mut Vertex| { &mut m.normal },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Vertex>(
+            "Vertex",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Vertex {
+    const NAME: &'static str = "Vertex";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.position)?;
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.normal)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.position.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.normal.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.position.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.normal.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Vertex {
+        Vertex::new()
+    }
+
+    fn clear(&mut self) {
+        self.position.clear();
+        self.normal.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Vertex {
+        static instance: Vertex = Vertex {
+            position: ::protobuf::MessageField::none(),
+            normal: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Vertex {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Vertex").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Vertex {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Vertex {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -3559,20 +3914,26 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     s.proto.Image2H\0R\x06image2B\x06\n\x04data\"\x94\x01\n\x07Object3\x12>\
     \n\x08geometry\x18\x01\x20\x01(\x0b2\".observation_tools.proto.Geometry3\
     R\x08geometry\x12C\n\ntransforms\x18\x03\x20\x03(\x0b2#.observation_tool\
-    s.proto.Transform3R\ntransformsJ\x04\x08\x02\x10\x03\"N\n\tGeometry3\x12\
-    9\n\x06sphere\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.SphereH\
-    \0R\x06sphereB\x06\n\x04data\"A\n\x06Sphere\x127\n\x06radius\x18\x01\x20\
-    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x06radius\"\xb1\x01\n\x0e\
-    ArtifactUpdate\x123\n\nfield_data\x18\x01\x20\x01(\x0b2\x14.google.proto\
-    buf.AnyR\tfieldData\x120\n\x05field\x18\x02\x20\x01(\x0b2\x1a.google.pro\
-    tobuf.FieldMaskR\x05field\"8\n\tOperation\x12\x15\n\x11OPERATION_UNKNOWN\
-    \x10\0\x12\x14\n\x10OPERATION_CREATE\x10\x01*\xd9\x01\n\x0cArtifactType\
-    \x12\x19\n\x15ARTIFACT_TYPE_UNKNOWN\x10\0\x12\x19\n\x15ARTIFACT_TYPE_GEN\
-    ERIC\x10\x01\x12\x1a\n\x16ARTIFACT_TYPE_2D_GROUP\x10\x02\x12\x1a\n\x16AR\
-    TIFACT_TYPE_3D_GROUP\x10\x03\x12\x20\n\x1cARTIFACT_TYPE_2D_IN_3D_GROUP\
-    \x10\x04\x12\x1b\n\x17ARTIFACT_TYPE_RUN_STAGE\x10\x05\x12\x1c\n\x18ARTIF\
-    ACT_TYPE_ROOT_GROUP\x10\x06B\x1b\n\x17tools.observation.protoP\x01b\x06p\
-    roto3\
+    s.proto.Transform3R\ntransformsJ\x04\x08\x02\x10\x03\"\x83\x01\n\tGeomet\
+    ry3\x129\n\x06sphere\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.S\
+    phereH\0R\x06sphere\x123\n\x04mesh\x18\x02\x20\x01(\x0b2\x1d.observation\
+    _tools.proto.MeshH\0R\x04meshB\x06\n\x04data\"A\n\x06Sphere\x127\n\x06ra\
+    dius\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x06radius\
+    \"]\n\x04Mesh\x12;\n\x08vertices\x18\x01\x20\x03(\x0b2\x1f.observation_t\
+    ools.proto.VertexR\x08vertices\x12\x18\n\x07indices\x18\x02\x20\x03(\rR\
+    \x07indices\"\x7f\n\x06Vertex\x12;\n\x08position\x18\x01\x20\x01(\x0b2\
+    \x1f.observation_tools.proto.Point3R\x08position\x128\n\x06normal\x18\
+    \x02\x20\x01(\x0b2\x20.observation_tools.proto.Vector3R\x06normal\"\xb1\
+    \x01\n\x0eArtifactUpdate\x123\n\nfield_data\x18\x01\x20\x01(\x0b2\x14.go\
+    ogle.protobuf.AnyR\tfieldData\x120\n\x05field\x18\x02\x20\x01(\x0b2\x1a.\
+    google.protobuf.FieldMaskR\x05field\"8\n\tOperation\x12\x15\n\x11OPERATI\
+    ON_UNKNOWN\x10\0\x12\x14\n\x10OPERATION_CREATE\x10\x01*\xd9\x01\n\x0cArt\
+    ifactType\x12\x19\n\x15ARTIFACT_TYPE_UNKNOWN\x10\0\x12\x19\n\x15ARTIFACT\
+    _TYPE_GENERIC\x10\x01\x12\x1a\n\x16ARTIFACT_TYPE_2D_GROUP\x10\x02\x12\
+    \x1a\n\x16ARTIFACT_TYPE_3D_GROUP\x10\x03\x12\x20\n\x1cARTIFACT_TYPE_2D_I\
+    N_3D_GROUP\x10\x04\x12\x1b\n\x17ARTIFACT_TYPE_RUN_STAGE\x10\x05\x12\x1c\
+    \n\x18ARTIFACT_TYPE_ROOT_GROUP\x10\x06B\x1b\n\x17tools.observation.proto\
+    P\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3595,7 +3956,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(::protobuf::well_known_types::timestamp::file_descriptor().clone());
             deps.push(::protobuf::well_known_types::any::file_descriptor().clone());
             deps.push(::protobuf::well_known_types::field_mask::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(16);
+            let mut messages = ::std::vec::Vec::with_capacity(18);
             messages.push(ArtifactId::generated_message_descriptor_data());
             messages.push(ArtifactData::generated_message_descriptor_data());
             messages.push(ArtifactUserMetadata::generated_message_descriptor_data());
@@ -3611,6 +3972,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(Object3::generated_message_descriptor_data());
             messages.push(Geometry3::generated_message_descriptor_data());
             messages.push(Sphere::generated_message_descriptor_data());
+            messages.push(Mesh::generated_message_descriptor_data());
+            messages.push(Vertex::generated_message_descriptor_data());
             messages.push(ArtifactUpdate::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(2);
             enums.push(ArtifactType::generated_enum_descriptor_data());
