@@ -1,5 +1,7 @@
+extern crate alloc;
 use crate::util::{ClientError, GenericError};
 use artifacts_api_rust_proto::Number;
+use js_sys::Error;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 

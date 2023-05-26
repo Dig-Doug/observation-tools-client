@@ -12,6 +12,7 @@ message CreateArtifactRequest {
   string project_id = 3;
   RunId run_id = 4;
   ArtifactId artifact_id = 5;
+  SeriesPoint series_point = 7;
 
   oneof data {
     ArtifactData artifact_data = 2;

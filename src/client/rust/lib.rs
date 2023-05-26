@@ -1,3 +1,5 @@
+extern crate alloc;
+
 mod api;
 mod artifact_uploader_2d;
 mod artifact_uploader_3d;
@@ -25,11 +27,15 @@ pub use crate::run_stage_uploader::RunStageUploader;
 pub use crate::run_uploader::RunUploader;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::user_metadata::UserMetadataBuilder;
+use artifacts_api_rust_proto::ArtifactId;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
 
-pub type PublicArtifactId = ();
+#[wasm_bindgen]
+pub struct PublicArtifactId {
+    pub(crate) id: ArtifactId,
+}
 
 #[cfg(feature = "cpp")]
 use crate::client::ffi_new_client;

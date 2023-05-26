@@ -14,6 +14,7 @@ custom_error! {#[derive(Clone)] pub ClientError
     ServerError{status_code: u16, response: String} = "Server error {status_code}: {response}",
     GenericError{message: String} = "Generic error: {message}",
     FailedToConvertJsValueToNumber{value: String} = "Failed to convert {value} into a number",
+    FailedToCreateImage = "Failed to create image",
 }
 
 impl Into<JsValue> for ClientError {

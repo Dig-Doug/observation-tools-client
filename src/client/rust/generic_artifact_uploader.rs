@@ -1,34 +1,32 @@
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::builders::Transform3Builder;
+use crate::builders::{PublicSeriesId, SeriesBuilder, SeriesPointBuilder, Transform3Builder};
 use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "python", pyclass)]
 #[wasm_bindgen]
 pub struct GenericArtifactUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[cfg_attr(feature = "python", pymethods)]
 #[wasm_bindgen]
 impl GenericArtifactUploader {
     pub async fn child_uploader(
         &self,
         metadata: &UserMetadataBuilder,
     ) -> Result<GenericArtifactUploader, ClientError> {
-        self.base.child_uploader_async(metadata).await
+        self.base.child_uploader_async(metadata, None).await
     }
 
     pub async fn child_uploader_2d(
         &self,
         metadata: &UserMetadataBuilder,
     ) -> Result<ArtifactUploader2d, ClientError> {
-        self.base.child_uploader_2d(metadata).await
+        self.base.child_uploader_2d(metadata, None).await
     }
 
     pub async fn child_uploader_3d(
@@ -37,8 +35,17 @@ impl GenericArtifactUploader {
         base_transform: Transform3Builder,
     ) -> Result<ArtifactUploader3d, ClientError> {
         self.base
-            .child_uploader_3d(metadata, base_transform.proto)
+            .child_uploader_3d(metadata, base_transform.proto, None)
             .await
+    }
+
+    // TODO(doug): Where in the artifact hierarchy should series be defined?
+    pub async fn series(
+        &self,
+        metadata: &UserMetadataBuilder,
+        series: &SeriesBuilder,
+    ) -> Result<PublicSeriesId, ClientError> {
+        self.base.series(metadata, series).await
     }
 }
 

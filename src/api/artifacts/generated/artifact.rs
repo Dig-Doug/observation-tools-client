@@ -325,8 +325,57 @@ impl ArtifactData {
         }
     }
 
+    // .observation_tools.proto.SeriesData series = 12;
+
+    pub fn series(&self) -> &SeriesData {
+        match self.type_data {
+            ::std::option::Option::Some(artifact_data::Type_data::Series(ref v)) => v,
+            _ => <SeriesData as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_series(&mut self) {
+        self.type_data = ::std::option::Option::None;
+    }
+
+    pub fn has_series(&self) -> bool {
+        match self.type_data {
+            ::std::option::Option::Some(artifact_data::Type_data::Series(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_series(&mut self, v: SeriesData) {
+        self.type_data = ::std::option::Option::Some(artifact_data::Type_data::Series(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_series(&mut self) -> &mut SeriesData {
+        if let ::std::option::Option::Some(artifact_data::Type_data::Series(_)) = self.type_data {
+        } else {
+            self.type_data = ::std::option::Option::Some(artifact_data::Type_data::Series(SeriesData::new()));
+        }
+        match self.type_data {
+            ::std::option::Option::Some(artifact_data::Type_data::Series(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_series(&mut self) -> SeriesData {
+        if self.has_series() {
+            match self.type_data.take() {
+                ::std::option::Option::Some(artifact_data::Type_data::Series(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            SeriesData::new()
+        }
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(1);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "ancestor_group_ids",
@@ -363,6 +412,13 @@ impl ArtifactData {
             ArtifactData::group_3d,
             ArtifactData::mut_group_3d,
             ArtifactData::set_group_3d,
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, SeriesData>(
+            "series",
+            ArtifactData::has_series,
+            ArtifactData::series,
+            ArtifactData::mut_series,
+            ArtifactData::set_series,
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ::protobuf::well_known_types::timestamp::Timestamp>(
             "client_creation_time",
@@ -405,6 +461,9 @@ impl ::protobuf::Message for ArtifactData {
                 },
                 90 => {
                     self.type_data = ::std::option::Option::Some(artifact_data::Type_data::Group3d(is.read_message()?));
+                },
+                98 => {
+                    self.type_data = ::std::option::Option::Some(artifact_data::Type_data::Series(is.read_message()?));
                 },
                 42 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.client_creation_time)?;
@@ -450,6 +509,10 @@ impl ::protobuf::Message for ArtifactData {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
                 },
+                &artifact_data::Type_data::Series(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
             };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -481,6 +544,9 @@ impl ::protobuf::Message for ArtifactData {
                 &artifact_data::Type_data::Group3d(ref v) => {
                     ::protobuf::rt::write_message_field_with_cached_size(11, v, os)?;
                 },
+                &artifact_data::Type_data::Series(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(12, v, os)?;
+                },
             };
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -503,6 +569,7 @@ impl ::protobuf::Message for ArtifactData {
         self.ancestor_group_ids.clear();
         self.user_metadata.clear();
         self.artifact_type = ::protobuf::EnumOrUnknown::new(ArtifactType::ARTIFACT_TYPE_UNKNOWN);
+        self.type_data = ::std::option::Option::None;
         self.type_data = ::std::option::Option::None;
         self.type_data = ::std::option::Option::None;
         self.type_data = ::std::option::Option::None;
@@ -553,6 +620,8 @@ pub mod artifact_data {
         Map2dTo3d(super::Map2dTo3dData),
         // @@protoc_insertion_point(oneof_field:observation_tools.proto.ArtifactData.group_3d)
         Group3d(super::Group3d),
+        // @@protoc_insertion_point(oneof_field:observation_tools.proto.ArtifactData.series)
+        Series(super::SeriesData),
     }
 
     impl ::protobuf::Oneof for Type_data {
@@ -3588,10 +3657,8 @@ impl ::protobuf::reflect::ProtobufValue for Vertex {
 // @@protoc_insertion_point(message:observation_tools.proto.ArtifactUpdate)
 pub struct ArtifactUpdate {
     // message fields
-    // @@protoc_insertion_point(field:observation_tools.proto.ArtifactUpdate.field_data)
-    pub field_data: ::protobuf::MessageField<::protobuf::well_known_types::any::Any>,
-    // @@protoc_insertion_point(field:observation_tools.proto.ArtifactUpdate.field)
-    pub field: ::protobuf::MessageField<::protobuf::well_known_types::field_mask::FieldMask>,
+    // @@protoc_insertion_point(field:observation_tools.proto.ArtifactUpdate.operation)
+    pub operation: ::protobuf::EnumOrUnknown<artifact_update::Operation>,
     // special fields
     // @@protoc_insertion_point(special_field:observation_tools.proto.ArtifactUpdate.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3609,17 +3676,12 @@ impl ArtifactUpdate {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ::protobuf::well_known_types::any::Any>(
-            "field_data",
-            |m: &ArtifactUpdate| { &m.field_data },
-            |m: &mut ArtifactUpdate| { &mut m.field_data },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ::protobuf::well_known_types::field_mask::FieldMask>(
-            "field",
-            |m: &ArtifactUpdate| { &m.field },
-            |m: &mut ArtifactUpdate| { &mut m.field },
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "operation",
+            |m: &ArtifactUpdate| { &m.operation },
+            |m: &mut ArtifactUpdate| { &mut m.operation },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ArtifactUpdate>(
             "ArtifactUpdate",
@@ -3639,11 +3701,8 @@ impl ::protobuf::Message for ArtifactUpdate {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                10 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.field_data)?;
-                },
-                18 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.field)?;
+                24 => {
+                    self.operation = is.read_enum_or_unknown()?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -3657,13 +3716,8 @@ impl ::protobuf::Message for ArtifactUpdate {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.field_data.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
-        }
-        if let Some(v) = self.field.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        if self.operation != ::protobuf::EnumOrUnknown::new(artifact_update::Operation::OPERATION_UNKNOWN) {
+            my_size += ::protobuf::rt::int32_size(3, self.operation.value());
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -3671,11 +3725,8 @@ impl ::protobuf::Message for ArtifactUpdate {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.field_data.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
-        }
-        if let Some(v) = self.field.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        if self.operation != ::protobuf::EnumOrUnknown::new(artifact_update::Operation::OPERATION_UNKNOWN) {
+            os.write_enum(3, ::protobuf::EnumOrUnknown::value(&self.operation))?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -3694,15 +3745,13 @@ impl ::protobuf::Message for ArtifactUpdate {
     }
 
     fn clear(&mut self) {
-        self.field_data.clear();
-        self.field.clear();
+        self.operation = ::protobuf::EnumOrUnknown::new(artifact_update::Operation::OPERATION_UNKNOWN);
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static ArtifactUpdate {
         static instance: ArtifactUpdate = ArtifactUpdate {
-            field_data: ::protobuf::MessageField::none(),
-            field: ::protobuf::MessageField::none(),
+            operation: ::protobuf::EnumOrUnknown::from_i32(0),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3735,6 +3784,8 @@ pub mod artifact_update {
         OPERATION_UNKNOWN = 0,
         // @@protoc_insertion_point(enum_value:observation_tools.proto.ArtifactUpdate.Operation.OPERATION_CREATE)
         OPERATION_CREATE = 1,
+        // @@protoc_insertion_point(enum_value:observation_tools.proto.ArtifactUpdate.Operation.OPERATION_UPDATE)
+        OPERATION_UPDATE = 2,
     }
 
     impl ::protobuf::Enum for Operation {
@@ -3748,6 +3799,7 @@ pub mod artifact_update {
             match value {
                 0 => ::std::option::Option::Some(Operation::OPERATION_UNKNOWN),
                 1 => ::std::option::Option::Some(Operation::OPERATION_CREATE),
+                2 => ::std::option::Option::Some(Operation::OPERATION_UPDATE),
                 _ => ::std::option::Option::None
             }
         }
@@ -3755,6 +3807,7 @@ pub mod artifact_update {
         const VALUES: &'static [Operation] = &[
             Operation::OPERATION_UNKNOWN,
             Operation::OPERATION_CREATE,
+            Operation::OPERATION_UPDATE,
         ];
     }
 
@@ -3783,6 +3836,800 @@ pub mod artifact_update {
     }
 }
 
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.SeriesId)
+pub struct SeriesId {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesId.artifact_id)
+    pub artifact_id: ::protobuf::MessageField<ArtifactId>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.SeriesId.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SeriesId {
+    fn default() -> &'a SeriesId {
+        <SeriesId as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SeriesId {
+    pub fn new() -> SeriesId {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ArtifactId>(
+            "artifact_id",
+            |m: &SeriesId| { &m.artifact_id },
+            |m: &mut SeriesId| { &mut m.artifact_id },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SeriesId>(
+            "SeriesId",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SeriesId {
+    const NAME: &'static str = "SeriesId";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.artifact_id)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.artifact_id.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.artifact_id.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SeriesId {
+        SeriesId::new()
+    }
+
+    fn clear(&mut self) {
+        self.artifact_id.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SeriesId {
+        static instance: SeriesId = SeriesId {
+            artifact_id: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SeriesId {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SeriesId").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SeriesId {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SeriesId {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.SeriesDimensionId)
+pub struct SeriesDimensionId {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesDimensionId.artifact_id)
+    pub artifact_id: ::protobuf::MessageField<ArtifactId>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.SeriesDimensionId.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SeriesDimensionId {
+    fn default() -> &'a SeriesDimensionId {
+        <SeriesDimensionId as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SeriesDimensionId {
+    pub fn new() -> SeriesDimensionId {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ArtifactId>(
+            "artifact_id",
+            |m: &SeriesDimensionId| { &m.artifact_id },
+            |m: &mut SeriesDimensionId| { &mut m.artifact_id },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SeriesDimensionId>(
+            "SeriesDimensionId",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SeriesDimensionId {
+    const NAME: &'static str = "SeriesDimensionId";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.artifact_id)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.artifact_id.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.artifact_id.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SeriesDimensionId {
+        SeriesDimensionId::new()
+    }
+
+    fn clear(&mut self) {
+        self.artifact_id.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SeriesDimensionId {
+        static instance: SeriesDimensionId = SeriesDimensionId {
+            artifact_id: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SeriesDimensionId {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SeriesDimensionId").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SeriesDimensionId {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SeriesDimensionId {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.SeriesPoint)
+pub struct SeriesPoint {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesPoint.series_id)
+    pub series_id: ::protobuf::MessageField<SeriesId>,
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesPoint.values)
+    pub values: ::std::vec::Vec<SeriesDimensionValue>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.SeriesPoint.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SeriesPoint {
+    fn default() -> &'a SeriesPoint {
+        <SeriesPoint as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SeriesPoint {
+    pub fn new() -> SeriesPoint {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, SeriesId>(
+            "series_id",
+            |m: &SeriesPoint| { &m.series_id },
+            |m: &mut SeriesPoint| { &mut m.series_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "values",
+            |m: &SeriesPoint| { &m.values },
+            |m: &mut SeriesPoint| { &mut m.values },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SeriesPoint>(
+            "SeriesPoint",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SeriesPoint {
+    const NAME: &'static str = "SeriesPoint";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.series_id)?;
+                },
+                18 => {
+                    self.values.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.series_id.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        for value in &self.values {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.series_id.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        for v in &self.values {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SeriesPoint {
+        SeriesPoint::new()
+    }
+
+    fn clear(&mut self) {
+        self.series_id.clear();
+        self.values.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SeriesPoint {
+        static instance: SeriesPoint = SeriesPoint {
+            series_id: ::protobuf::MessageField::none(),
+            values: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SeriesPoint {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SeriesPoint").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SeriesPoint {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SeriesPoint {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.SeriesData)
+pub struct SeriesData {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesData.dimensions)
+    pub dimensions: ::std::vec::Vec<SeriesDimensionData>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.SeriesData.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SeriesData {
+    fn default() -> &'a SeriesData {
+        <SeriesData as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SeriesData {
+    pub fn new() -> SeriesData {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "dimensions",
+            |m: &SeriesData| { &m.dimensions },
+            |m: &mut SeriesData| { &mut m.dimensions },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SeriesData>(
+            "SeriesData",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SeriesData {
+    const NAME: &'static str = "SeriesData";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.dimensions.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.dimensions {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.dimensions {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SeriesData {
+        SeriesData::new()
+    }
+
+    fn clear(&mut self) {
+        self.dimensions.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SeriesData {
+        static instance: SeriesData = SeriesData {
+            dimensions: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SeriesData {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SeriesData").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SeriesData {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SeriesData {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.SeriesDimensionData)
+pub struct SeriesDimensionData {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesDimensionData.id)
+    pub id: ::protobuf::MessageField<SeriesDimensionId>,
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesDimensionData.name)
+    pub name: ::std::string::String,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.SeriesDimensionData.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SeriesDimensionData {
+    fn default() -> &'a SeriesDimensionData {
+        <SeriesDimensionData as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SeriesDimensionData {
+    pub fn new() -> SeriesDimensionData {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, SeriesDimensionId>(
+            "id",
+            |m: &SeriesDimensionData| { &m.id },
+            |m: &mut SeriesDimensionData| { &mut m.id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "name",
+            |m: &SeriesDimensionData| { &m.name },
+            |m: &mut SeriesDimensionData| { &mut m.name },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SeriesDimensionData>(
+            "SeriesDimensionData",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SeriesDimensionData {
+    const NAME: &'static str = "SeriesDimensionData";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.id)?;
+                },
+                18 => {
+                    self.name = is.read_string()?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.id.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if !self.name.is_empty() {
+            my_size += ::protobuf::rt::string_size(2, &self.name);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.id.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if !self.name.is_empty() {
+            os.write_string(2, &self.name)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SeriesDimensionData {
+        SeriesDimensionData::new()
+    }
+
+    fn clear(&mut self) {
+        self.id.clear();
+        self.name.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SeriesDimensionData {
+        static instance: SeriesDimensionData = SeriesDimensionData {
+            id: ::protobuf::MessageField::none(),
+            name: ::std::string::String::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SeriesDimensionData {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SeriesDimensionData").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SeriesDimensionData {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SeriesDimensionData {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.SeriesDimensionValue)
+pub struct SeriesDimensionValue {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesDimensionValue.dimension_id)
+    pub dimension_id: ::protobuf::MessageField<SeriesDimensionId>,
+    // @@protoc_insertion_point(field:observation_tools.proto.SeriesDimensionValue.value)
+    pub value: ::protobuf::MessageField<super::math::Number>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.SeriesDimensionValue.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SeriesDimensionValue {
+    fn default() -> &'a SeriesDimensionValue {
+        <SeriesDimensionValue as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SeriesDimensionValue {
+    pub fn new() -> SeriesDimensionValue {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, SeriesDimensionId>(
+            "dimension_id",
+            |m: &SeriesDimensionValue| { &m.dimension_id },
+            |m: &mut SeriesDimensionValue| { &mut m.dimension_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::math::Number>(
+            "value",
+            |m: &SeriesDimensionValue| { &m.value },
+            |m: &mut SeriesDimensionValue| { &mut m.value },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SeriesDimensionValue>(
+            "SeriesDimensionValue",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SeriesDimensionValue {
+    const NAME: &'static str = "SeriesDimensionValue";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.dimension_id)?;
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.value)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.dimension_id.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.value.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.dimension_id.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.value.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SeriesDimensionValue {
+        SeriesDimensionValue::new()
+    }
+
+    fn clear(&mut self) {
+        self.dimension_id.clear();
+        self.value.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SeriesDimensionValue {
+        static instance: SeriesDimensionValue = SeriesDimensionValue {
+            dimension_id: ::protobuf::MessageField::none(),
+            value: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SeriesDimensionValue {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SeriesDimensionValue").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SeriesDimensionValue {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SeriesDimensionValue {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:observation_tools.proto.ArtifactType)
 pub enum ArtifactType {
@@ -3800,6 +4647,8 @@ pub enum ArtifactType {
     ARTIFACT_TYPE_RUN_STAGE = 5,
     // @@protoc_insertion_point(enum_value:observation_tools.proto.ArtifactType.ARTIFACT_TYPE_ROOT_GROUP)
     ARTIFACT_TYPE_ROOT_GROUP = 6,
+    // @@protoc_insertion_point(enum_value:observation_tools.proto.ArtifactType.ARTIFACT_TYPE_SERIES)
+    ARTIFACT_TYPE_SERIES = 7,
 }
 
 impl ::protobuf::Enum for ArtifactType {
@@ -3818,6 +4667,7 @@ impl ::protobuf::Enum for ArtifactType {
             4 => ::std::option::Option::Some(ArtifactType::ARTIFACT_TYPE_2D_IN_3D_GROUP),
             5 => ::std::option::Option::Some(ArtifactType::ARTIFACT_TYPE_RUN_STAGE),
             6 => ::std::option::Option::Some(ArtifactType::ARTIFACT_TYPE_ROOT_GROUP),
+            7 => ::std::option::Option::Some(ArtifactType::ARTIFACT_TYPE_SERIES),
             _ => ::std::option::Option::None
         }
     }
@@ -3830,6 +4680,7 @@ impl ::protobuf::Enum for ArtifactType {
         ArtifactType::ARTIFACT_TYPE_2D_IN_3D_GROUP,
         ArtifactType::ARTIFACT_TYPE_RUN_STAGE,
         ArtifactType::ARTIFACT_TYPE_ROOT_GROUP,
+        ArtifactType::ARTIFACT_TYPE_SERIES,
     ];
 }
 
@@ -3862,7 +4713,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1a\x1csrc/api/artifacts/uuid.proto\x1a\x1csrc/api/artifacts/math.proto\
     \x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19google/protobuf/any.proto\
     \x1a\x20google/protobuf/field_mask.proto\"?\n\nArtifactId\x121\n\x04uuid\
-    \x18\x01\x20\x01(\x0b2\x1d.observation_tools.proto.UuidR\x04uuid\"\xbb\
+    \x18\x01\x20\x01(\x0b2\x1d.observation_tools.proto.UuidR\x04uuid\"\xfa\
     \x04\n\x0cArtifactData\x12Q\n\x12ancestor_group_ids\x18\x06\x20\x03(\x0b\
     2#.observation_tools.proto.ArtifactIdR\x10ancestorGroupIds\x12R\n\ruser_\
     metadata\x18\x07\x20\x01(\x0b2-.observation_tools.proto.ArtifactUserMeta\
@@ -3871,68 +4722,83 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     a\x18\t\x20\x01(\x0b2%.observation_tools.proto.RunStageDataH\0R\x0crunSt\
     ageData\x12I\n\x0cmap_2d_to_3d\x18\n\x20\x01(\x0b2&.observation_tools.pr\
     oto.Map2dTo3dDataH\0R\tmap2dTo3d\x12=\n\x08group_3d\x18\x0b\x20\x01(\x0b\
-    2\x20.observation_tools.proto.Group3dH\0R\x07group3d\x12L\n\x14client_cr\
-    eation_time\x18\x05\x20\x01(\x0b2\x1a.google.protobuf.TimestampR\x12clie\
-    ntCreationTimeB\x0b\n\ttype_dataJ\x04\x08\x01\x10\x05\"\xc0\x01\n\x14Art\
-    ifactUserMetadata\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04name\x12W\n\
-    \x08metadata\x18\x02\x20\x03(\x0b2;.observation_tools.proto.ArtifactUser\
-    Metadata.MetadataEntryR\x08metadata\x1a;\n\rMetadataEntry\x12\x10\n\x03k\
-    ey\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\tR\x05\
-    value:\x028\x01\"h\n\x0cRunStageData\x12X\n\x16previous_run_stage_ids\
-    \x18\x01\x20\x03(\x0b2#.observation_tools.proto.ArtifactIdR\x13previousR\
-    unStageIds\"b\n\rMap2dTo3dData\x12K\n\x0fto_3d_transform\x18\x02\x20\x01\
-    (\x0b2#.observation_tools.proto.Transform3R\rto3dTransformJ\x04\x08\x01\
-    \x10\x02\"[\n\x07Group3d\x12J\n\x0ebase_transform\x18\x02\x20\x01(\x0b2#\
-    .observation_tools.proto.Transform3R\rbaseTransformJ\x04\x08\x01\x10\x02\
-    \"\x8f\x04\n\x0eStructuredData\x12C\n\x08polygon2\x18\x01\x20\x01(\x0b2!\
-    .observation_tools.proto.Polygon2H\0R\x08polygon2B\x02\x18\x01\x126\n\
-    \x05graph\x18\x02\x20\x01(\x0b2\x1e.observation_tools.proto.GraphH\0R\
-    \x05graph\x12=\n\x06point2\x18\x03\x20\x01(\x0b2\x1f.observation_tools.p\
-    roto.Point2H\0R\x06point2B\x02\x18\x01\x129\n\x06image2\x18\x04\x20\x01(\
-    \x0b2\x1f.observation_tools.proto.Image2H\0R\x06image2\x12C\n\x08segment\
-    2\x18\x05\x20\x01(\x0b2!.observation_tools.proto.Segment2H\0R\x08segment\
-    2B\x02\x18\x01\x12<\n\x07object3\x18\x06\x20\x01(\x0b2\x20.observation_t\
-    ools.proto.Object3H\0R\x07object3\x12<\n\x07object2\x18\x07\x20\x01(\x0b\
-    2\x20.observation_tools.proto.Object2H\0R\x07object2\x12=\n\x06sphere\
-    \x18\x08\x20\x01(\x0b2\x1f.observation_tools.proto.SphereH\0R\x06sphereB\
-    \x02\x18\x01B\x06\n\x04data\"\xf5\x01\n\x06Image2\x12\x12\n\x04data\x18\
-    \x04\x20\x01(\x0cR\x04data\x12\x1b\n\tmime_type\x18\x05\x20\x01(\tR\x08m\
-    imeType\x12_\n\x18pixel_to_world_transform\x18\x02\x20\x01(\x0b2\".obser\
-    vation_tools.proto.Matrix3x3R\x15pixelToWorldTransformB\x02\x18\x01\x12S\
-    \n\x0fpixel_transform\x18\x03\x20\x01(\x0b2*.observation_tools.proto.Per\
-    PixelTransformR\x0epixelTransformJ\x04\x08\x01\x10\x02\"u\n\x11PerPixelT\
-    ransform\x12`\n\x15random_distinct_color\x18\x01\x20\x01(\x0b2,.observat\
-    ion_tools.proto.RandomDistinctColorR\x13randomDistinctColor\"\x15\n\x13R\
-    andomDistinctColor\"\x8e\x01\n\x07Object2\x12>\n\x08geometry\x18\x01\x20\
-    \x01(\x0b2\".observation_tools.proto.Geometry2R\x08geometry\x12C\n\ntran\
-    sforms\x18\x02\x20\x03(\x0b2#.observation_tools.proto.Transform2R\ntrans\
-    forms\"\x8b\x02\n\tGeometry2\x129\n\x06point2\x18\x01\x20\x01(\x0b2\x1f.\
-    observation_tools.proto.Point2H\0R\x06point2\x12?\n\x08polygon2\x18\x02\
-    \x20\x01(\x0b2!.observation_tools.proto.Polygon2H\0R\x08polygon2\x12?\n\
-    \x08segment2\x18\x03\x20\x01(\x0b2!.observation_tools.proto.Segment2H\0R\
-    \x08segment2\x129\n\x06image2\x18\x04\x20\x01(\x0b2\x1f.observation_tool\
-    s.proto.Image2H\0R\x06image2B\x06\n\x04data\"\x94\x01\n\x07Object3\x12>\
-    \n\x08geometry\x18\x01\x20\x01(\x0b2\".observation_tools.proto.Geometry3\
-    R\x08geometry\x12C\n\ntransforms\x18\x03\x20\x03(\x0b2#.observation_tool\
-    s.proto.Transform3R\ntransformsJ\x04\x08\x02\x10\x03\"\x83\x01\n\tGeomet\
-    ry3\x129\n\x06sphere\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.S\
-    phereH\0R\x06sphere\x123\n\x04mesh\x18\x02\x20\x01(\x0b2\x1d.observation\
-    _tools.proto.MeshH\0R\x04meshB\x06\n\x04data\"A\n\x06Sphere\x127\n\x06ra\
-    dius\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x06radius\
-    \"]\n\x04Mesh\x12;\n\x08vertices\x18\x01\x20\x03(\x0b2\x1f.observation_t\
-    ools.proto.VertexR\x08vertices\x12\x18\n\x07indices\x18\x02\x20\x03(\rR\
-    \x07indices\"\x7f\n\x06Vertex\x12;\n\x08position\x18\x01\x20\x01(\x0b2\
-    \x1f.observation_tools.proto.Point3R\x08position\x128\n\x06normal\x18\
-    \x02\x20\x01(\x0b2\x20.observation_tools.proto.Vector3R\x06normal\"\xb1\
-    \x01\n\x0eArtifactUpdate\x123\n\nfield_data\x18\x01\x20\x01(\x0b2\x14.go\
-    ogle.protobuf.AnyR\tfieldData\x120\n\x05field\x18\x02\x20\x01(\x0b2\x1a.\
-    google.protobuf.FieldMaskR\x05field\"8\n\tOperation\x12\x15\n\x11OPERATI\
-    ON_UNKNOWN\x10\0\x12\x14\n\x10OPERATION_CREATE\x10\x01*\xd9\x01\n\x0cArt\
-    ifactType\x12\x19\n\x15ARTIFACT_TYPE_UNKNOWN\x10\0\x12\x19\n\x15ARTIFACT\
-    _TYPE_GENERIC\x10\x01\x12\x1a\n\x16ARTIFACT_TYPE_2D_GROUP\x10\x02\x12\
-    \x1a\n\x16ARTIFACT_TYPE_3D_GROUP\x10\x03\x12\x20\n\x1cARTIFACT_TYPE_2D_I\
-    N_3D_GROUP\x10\x04\x12\x1b\n\x17ARTIFACT_TYPE_RUN_STAGE\x10\x05\x12\x1c\
-    \n\x18ARTIFACT_TYPE_ROOT_GROUP\x10\x06B\x1b\n\x17tools.observation.proto\
+    2\x20.observation_tools.proto.Group3dH\0R\x07group3d\x12=\n\x06series\
+    \x18\x0c\x20\x01(\x0b2#.observation_tools.proto.SeriesDataH\0R\x06series\
+    \x12L\n\x14client_creation_time\x18\x05\x20\x01(\x0b2\x1a.google.protobu\
+    f.TimestampR\x12clientCreationTimeB\x0b\n\ttype_dataJ\x04\x08\x01\x10\
+    \x05\"\xc0\x01\n\x14ArtifactUserMetadata\x12\x12\n\x04name\x18\x01\x20\
+    \x01(\tR\x04name\x12W\n\x08metadata\x18\x02\x20\x03(\x0b2;.observation_t\
+    ools.proto.ArtifactUserMetadata.MetadataEntryR\x08metadata\x1a;\n\rMetad\
+    ataEntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05value\
+    \x18\x02\x20\x01(\tR\x05value:\x028\x01\"h\n\x0cRunStageData\x12X\n\x16p\
+    revious_run_stage_ids\x18\x01\x20\x03(\x0b2#.observation_tools.proto.Art\
+    ifactIdR\x13previousRunStageIds\"b\n\rMap2dTo3dData\x12K\n\x0fto_3d_tran\
+    sform\x18\x02\x20\x01(\x0b2#.observation_tools.proto.Transform3R\rto3dTr\
+    ansformJ\x04\x08\x01\x10\x02\"[\n\x07Group3d\x12J\n\x0ebase_transform\
+    \x18\x02\x20\x01(\x0b2#.observation_tools.proto.Transform3R\rbaseTransfo\
+    rmJ\x04\x08\x01\x10\x02\"\x8f\x04\n\x0eStructuredData\x12C\n\x08polygon2\
+    \x18\x01\x20\x01(\x0b2!.observation_tools.proto.Polygon2H\0R\x08polygon2\
+    B\x02\x18\x01\x126\n\x05graph\x18\x02\x20\x01(\x0b2\x1e.observation_tool\
+    s.proto.GraphH\0R\x05graph\x12=\n\x06point2\x18\x03\x20\x01(\x0b2\x1f.ob\
+    servation_tools.proto.Point2H\0R\x06point2B\x02\x18\x01\x129\n\x06image2\
+    \x18\x04\x20\x01(\x0b2\x1f.observation_tools.proto.Image2H\0R\x06image2\
+    \x12C\n\x08segment2\x18\x05\x20\x01(\x0b2!.observation_tools.proto.Segme\
+    nt2H\0R\x08segment2B\x02\x18\x01\x12<\n\x07object3\x18\x06\x20\x01(\x0b2\
+    \x20.observation_tools.proto.Object3H\0R\x07object3\x12<\n\x07object2\
+    \x18\x07\x20\x01(\x0b2\x20.observation_tools.proto.Object2H\0R\x07object\
+    2\x12=\n\x06sphere\x18\x08\x20\x01(\x0b2\x1f.observation_tools.proto.Sph\
+    ereH\0R\x06sphereB\x02\x18\x01B\x06\n\x04data\"\xf5\x01\n\x06Image2\x12\
+    \x12\n\x04data\x18\x04\x20\x01(\x0cR\x04data\x12\x1b\n\tmime_type\x18\
+    \x05\x20\x01(\tR\x08mimeType\x12_\n\x18pixel_to_world_transform\x18\x02\
+    \x20\x01(\x0b2\".observation_tools.proto.Matrix3x3R\x15pixelToWorldTrans\
+    formB\x02\x18\x01\x12S\n\x0fpixel_transform\x18\x03\x20\x01(\x0b2*.obser\
+    vation_tools.proto.PerPixelTransformR\x0epixelTransformJ\x04\x08\x01\x10\
+    \x02\"u\n\x11PerPixelTransform\x12`\n\x15random_distinct_color\x18\x01\
+    \x20\x01(\x0b2,.observation_tools.proto.RandomDistinctColorR\x13randomDi\
+    stinctColor\"\x15\n\x13RandomDistinctColor\"\x8e\x01\n\x07Object2\x12>\n\
+    \x08geometry\x18\x01\x20\x01(\x0b2\".observation_tools.proto.Geometry2R\
+    \x08geometry\x12C\n\ntransforms\x18\x02\x20\x03(\x0b2#.observation_tools\
+    .proto.Transform2R\ntransforms\"\x8b\x02\n\tGeometry2\x129\n\x06point2\
+    \x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.Point2H\0R\x06point2\
+    \x12?\n\x08polygon2\x18\x02\x20\x01(\x0b2!.observation_tools.proto.Polyg\
+    on2H\0R\x08polygon2\x12?\n\x08segment2\x18\x03\x20\x01(\x0b2!.observatio\
+    n_tools.proto.Segment2H\0R\x08segment2\x129\n\x06image2\x18\x04\x20\x01(\
+    \x0b2\x1f.observation_tools.proto.Image2H\0R\x06image2B\x06\n\x04data\"\
+    \x94\x01\n\x07Object3\x12>\n\x08geometry\x18\x01\x20\x01(\x0b2\".observa\
+    tion_tools.proto.Geometry3R\x08geometry\x12C\n\ntransforms\x18\x03\x20\
+    \x03(\x0b2#.observation_tools.proto.Transform3R\ntransformsJ\x04\x08\x02\
+    \x10\x03\"\x83\x01\n\tGeometry3\x129\n\x06sphere\x18\x01\x20\x01(\x0b2\
+    \x1f.observation_tools.proto.SphereH\0R\x06sphere\x123\n\x04mesh\x18\x02\
+    \x20\x01(\x0b2\x1d.observation_tools.proto.MeshH\0R\x04meshB\x06\n\x04da\
+    ta\"A\n\x06Sphere\x127\n\x06radius\x18\x01\x20\x01(\x0b2\x1f.observation\
+    _tools.proto.NumberR\x06radius\"]\n\x04Mesh\x12;\n\x08vertices\x18\x01\
+    \x20\x03(\x0b2\x1f.observation_tools.proto.VertexR\x08vertices\x12\x18\n\
+    \x07indices\x18\x02\x20\x03(\rR\x07indices\"\x7f\n\x06Vertex\x12;\n\x08p\
+    osition\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.Point3R\x08pos\
+    ition\x128\n\x06normal\x18\x02\x20\x01(\x0b2\x20.observation_tools.proto\
+    .Vector3R\x06normal\"\xb1\x01\n\x0eArtifactUpdate\x12O\n\toperation\x18\
+    \x03\x20\x01(\x0e21.observation_tools.proto.ArtifactUpdate.OperationR\to\
+    peration\"N\n\tOperation\x12\x15\n\x11OPERATION_UNKNOWN\x10\0\x12\x14\n\
+    \x10OPERATION_CREATE\x10\x01\x12\x14\n\x10OPERATION_UPDATE\x10\x02\"P\n\
+    \x08SeriesId\x12D\n\x0bartifact_id\x18\x01\x20\x01(\x0b2#.observation_to\
+    ols.proto.ArtifactIdR\nartifactId\"Y\n\x11SeriesDimensionId\x12D\n\x0bar\
+    tifact_id\x18\x01\x20\x01(\x0b2#.observation_tools.proto.ArtifactIdR\nar\
+    tifactId\"\x94\x01\n\x0bSeriesPoint\x12>\n\tseries_id\x18\x01\x20\x01(\
+    \x0b2!.observation_tools.proto.SeriesIdR\x08seriesId\x12E\n\x06values\
+    \x18\x02\x20\x03(\x0b2-.observation_tools.proto.SeriesDimensionValueR\
+    \x06values\"Z\n\nSeriesData\x12L\n\ndimensions\x18\x01\x20\x03(\x0b2,.ob\
+    servation_tools.proto.SeriesDimensionDataR\ndimensions\"e\n\x13SeriesDim\
+    ensionData\x12:\n\x02id\x18\x01\x20\x01(\x0b2*.observation_tools.proto.S\
+    eriesDimensionIdR\x02id\x12\x12\n\x04name\x18\x02\x20\x01(\tR\x04name\"\
+    \x9c\x01\n\x14SeriesDimensionValue\x12M\n\x0cdimension_id\x18\x01\x20\
+    \x01(\x0b2*.observation_tools.proto.SeriesDimensionIdR\x0bdimensionId\
+    \x125\n\x05value\x18\x02\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
+    rR\x05value*\xf3\x01\n\x0cArtifactType\x12\x19\n\x15ARTIFACT_TYPE_UNKNOW\
+    N\x10\0\x12\x19\n\x15ARTIFACT_TYPE_GENERIC\x10\x01\x12\x1a\n\x16ARTIFACT\
+    _TYPE_2D_GROUP\x10\x02\x12\x1a\n\x16ARTIFACT_TYPE_3D_GROUP\x10\x03\x12\
+    \x20\n\x1cARTIFACT_TYPE_2D_IN_3D_GROUP\x10\x04\x12\x1b\n\x17ARTIFACT_TYP\
+    E_RUN_STAGE\x10\x05\x12\x1c\n\x18ARTIFACT_TYPE_ROOT_GROUP\x10\x06\x12\
+    \x18\n\x14ARTIFACT_TYPE_SERIES\x10\x07B\x1b\n\x17tools.observation.proto\
     P\x01b\x06proto3\
 ";
 
@@ -3956,7 +4822,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(::protobuf::well_known_types::timestamp::file_descriptor().clone());
             deps.push(::protobuf::well_known_types::any::file_descriptor().clone());
             deps.push(::protobuf::well_known_types::field_mask::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(18);
+            let mut messages = ::std::vec::Vec::with_capacity(24);
             messages.push(ArtifactId::generated_message_descriptor_data());
             messages.push(ArtifactData::generated_message_descriptor_data());
             messages.push(ArtifactUserMetadata::generated_message_descriptor_data());
@@ -3975,6 +4841,12 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(Mesh::generated_message_descriptor_data());
             messages.push(Vertex::generated_message_descriptor_data());
             messages.push(ArtifactUpdate::generated_message_descriptor_data());
+            messages.push(SeriesId::generated_message_descriptor_data());
+            messages.push(SeriesDimensionId::generated_message_descriptor_data());
+            messages.push(SeriesPoint::generated_message_descriptor_data());
+            messages.push(SeriesData::generated_message_descriptor_data());
+            messages.push(SeriesDimensionData::generated_message_descriptor_data());
+            messages.push(SeriesDimensionValue::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(2);
             enums.push(ArtifactType::generated_enum_descriptor_data());
             enums.push(artifact_update::Operation::generated_enum_descriptor_data());

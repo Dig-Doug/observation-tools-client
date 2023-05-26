@@ -26,6 +26,7 @@ message ArtifactData {
     RunStageData run_stage_data = 9;
     Map2dTo3dData map_2d_to_3d = 10;
     Group3d group_3d = 11;
+    SeriesData series = 12;
   }
 
   .google.protobuf.Timestamp client_creation_time = 5;
@@ -50,6 +51,7 @@ enum ArtifactType {
   ARTIFACT_TYPE_2D_IN_3D_GROUP = 4;
   ARTIFACT_TYPE_RUN_STAGE = 5;
   ARTIFACT_TYPE_ROOT_GROUP = 6;
+  ARTIFACT_TYPE_SERIES = 7;
 }
 
 message RunStageData {
@@ -154,9 +156,43 @@ message ArtifactUpdate {
   enum Operation {
     OPERATION_UNKNOWN = 0;
     OPERATION_CREATE = 1;
+    OPERATION_UPDATE = 2;
   }
 
-  .google.protobuf.Any field_data = 1;
+  //.google.protobuf.Any field_data = 1;
 
-  .google.protobuf.FieldMask field = 2;
+  //.google.protobuf.FieldMask field = 2;
+  
+  Operation operation = 3;
+}
+
+message SeriesId {
+  ArtifactId artifact_id = 1;
+}
+
+// TODO(doug): Overkill? In practice, users will probably just want to use a string identifier and hard code it?
+message SeriesDimensionId {
+  ArtifactId artifact_id = 1;
+}
+
+message SeriesPoint {
+  SeriesId series_id = 1;
+
+  repeated SeriesDimensionValue values = 2;
+}
+
+message SeriesData {
+  repeated SeriesDimensionData dimensions = 1;
+}
+
+message SeriesDimensionData {
+  SeriesDimensionId id = 1;
+  
+  string name = 2;
+}
+
+message SeriesDimensionValue {
+  SeriesDimensionId dimension_id = 1;
+
+  Number value = 2;
 }

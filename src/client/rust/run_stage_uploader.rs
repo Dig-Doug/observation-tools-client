@@ -16,7 +16,7 @@ pub struct RunStageUploader {
 #[wasm_bindgen]
 impl RunStageUploader {
     pub fn child_uploader(&self, metadata: &UserMetadataBuilder) -> GenericArtifactUploader {
-        self.base.child_uploader(metadata)
+        self.base.child_uploader_old(metadata)
     }
 
     pub fn child_uploader_2d(&self, metadata: &UserMetadataBuilder) -> ArtifactUploader2d {

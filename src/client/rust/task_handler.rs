@@ -91,7 +91,14 @@ impl TaskHandler {
                 response: response_body,
             })
         } else {
-            Ok(())
+            Ok(PublicArtifactId {
+                id: task
+                    .request
+                    .artifact_id
+                    .as_ref()
+                    .expect("ArtifactId missing on upload task")
+                    .clone(),
+            })
         }
     }
 }

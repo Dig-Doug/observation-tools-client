@@ -35,6 +35,8 @@ pub struct CreateArtifactRequest {
     pub run_id: ::protobuf::MessageField<super::run_id::RunId>,
     // @@protoc_insertion_point(field:observation_tools.proto.CreateArtifactRequest.artifact_id)
     pub artifact_id: ::protobuf::MessageField<super::artifact::ArtifactId>,
+    // @@protoc_insertion_point(field:observation_tools.proto.CreateArtifactRequest.series_point)
+    pub series_point: ::protobuf::MessageField<super::artifact::SeriesPoint>,
     // message oneof groups
     pub data: ::std::option::Option<create_artifact_request::Data>,
     // special fields
@@ -152,7 +154,7 @@ impl CreateArtifactRequest {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(1);
         fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
             "project_id",
@@ -168,6 +170,11 @@ impl CreateArtifactRequest {
             "artifact_id",
             |m: &CreateArtifactRequest| { &m.artifact_id },
             |m: &mut CreateArtifactRequest| { &mut m.artifact_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::artifact::SeriesPoint>(
+            "series_point",
+            |m: &CreateArtifactRequest| { &m.series_point },
+            |m: &mut CreateArtifactRequest| { &mut m.series_point },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, super::artifact::ArtifactData>(
             "artifact_data",
@@ -211,6 +218,9 @@ impl ::protobuf::Message for CreateArtifactRequest {
                 42 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.artifact_id)?;
                 },
+                58 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.series_point)?;
+                },
                 18 => {
                     self.data = ::std::option::Option::Some(create_artifact_request::Data::ArtifactData(is.read_message()?));
                 },
@@ -240,6 +250,10 @@ impl ::protobuf::Message for CreateArtifactRequest {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.series_point.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         if let ::std::option::Option::Some(ref v) = self.data {
             match v {
                 &create_artifact_request::Data::ArtifactData(ref v) => {
@@ -266,6 +280,9 @@ impl ::protobuf::Message for CreateArtifactRequest {
         }
         if let Some(v) = self.artifact_id.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(5, v, os)?;
+        }
+        if let Some(v) = self.series_point.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(7, v, os)?;
         }
         if let ::std::option::Option::Some(ref v) = self.data {
             match v {
@@ -297,6 +314,7 @@ impl ::protobuf::Message for CreateArtifactRequest {
         self.project_id.clear();
         self.run_id.clear();
         self.artifact_id.clear();
+        self.series_point.clear();
         self.data = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
         self.special_fields.clear();
@@ -307,6 +325,7 @@ impl ::protobuf::Message for CreateArtifactRequest {
             project_id: ::std::string::String::new(),
             run_id: ::protobuf::MessageField::none(),
             artifact_id: ::protobuf::MessageField::none(),
+            series_point: ::protobuf::MessageField::none(),
             data: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -467,15 +486,16 @@ impl ::protobuf::reflect::ProtobufValue for CreateArtifactResponse {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n'src/api/artifacts/create_artifact.proto\x12\x17observation_tools.prot\
     o\x1a\x20src/api/artifacts/artifact.proto\x1a\x1esrc/api/artifacts/run_i\
-    d.proto\"\xe3\x02\n\x15CreateArtifactRequest\x12\x1d\n\nproject_id\x18\
+    d.proto\"\xac\x03\n\x15CreateArtifactRequest\x12\x1d\n\nproject_id\x18\
     \x03\x20\x01(\tR\tprojectId\x125\n\x06run_id\x18\x04\x20\x01(\x0b2\x1e.o\
     bservation_tools.proto.RunIdR\x05runId\x12D\n\x0bartifact_id\x18\x05\x20\
-    \x01(\x0b2#.observation_tools.proto.ArtifactIdR\nartifactId\x12L\n\rarti\
-    fact_data\x18\x02\x20\x01(\x0b2%.observation_tools.proto.ArtifactDataH\0\
-    R\x0cartifactData\x12R\n\x0fartifact_update\x18\x06\x20\x01(\x0b2'.obser\
-    vation_tools.proto.ArtifactUpdateH\0R\x0eartifactUpdateB\x06\n\x04dataJ\
-    \x04\x08\x01\x10\x02\"\x18\n\x16CreateArtifactResponseB\x1b\n\x17tools.o\
-    bservation.protoP\x01b\x06proto3\
+    \x01(\x0b2#.observation_tools.proto.ArtifactIdR\nartifactId\x12G\n\x0cse\
+    ries_point\x18\x07\x20\x01(\x0b2$.observation_tools.proto.SeriesPointR\
+    \x0bseriesPoint\x12L\n\rartifact_data\x18\x02\x20\x01(\x0b2%.observation\
+    _tools.proto.ArtifactDataH\0R\x0cartifactData\x12R\n\x0fartifact_update\
+    \x18\x06\x20\x01(\x0b2'.observation_tools.proto.ArtifactUpdateH\0R\x0ear\
+    tifactUpdateB\x06\n\x04dataJ\x04\x08\x01\x10\x02\"\x18\n\x16CreateArtifa\
+    ctResponseB\x1b\n\x17tools.observation.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
