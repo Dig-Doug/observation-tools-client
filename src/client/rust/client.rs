@@ -7,15 +7,16 @@ use crate::run_uploader::RunUploader;
 use crate::task_handler::TaskHandler;
 use crate::upload_artifact_task::UploadArtifactTask;
 use crate::upload_artifact_task::UploadArtifactTaskPayload;
-use crate::util::time_now;
-use crate::util::ClientError;
+use crate::util::{decode_id_proto, time_now};
+use crate::util::{ClientError, GenericError};
 use crate::PublicArtifactId;
 use crate::TokenGenerator;
 use crate::UserMetadataBuilder;
-use artifacts_api_rust_proto::ArtifactGroupUploaderData;
+use anyhow::anyhow;
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
-use artifacts_api_rust_proto::CreateArtifactRequest;
-use artifacts_api_rust_proto::StructuredData;
+use artifacts_api_rust_proto::{public_global_id, StructuredData};
+use artifacts_api_rust_proto::{ArtifactGroupUploaderData, ProjectId};
+use artifacts_api_rust_proto::{CreateArtifactRequest, PublicGlobalId};
 use async_channel::Receiver;
 use async_channel::Sender;
 use protobuf::Message;
@@ -48,6 +49,7 @@ pub struct ClientOptions {
 #[cfg_attr(feature = "python", pyclass)]
 pub struct Client {
     pub(crate) options: ClientOptions,
+    pub(crate) project_id: ProjectId,
     #[cfg(feature = "files")]
     tmp_dir: Arc<TempDir>,
     task_handler: Arc<TaskHandler>,
@@ -107,7 +109,12 @@ impl Client {
 #[wasm_bindgen]
 impl Client {
     #[wasm_bindgen(constructor)]
-    pub fn new_wasm(ui_host: String, api_host: String, token: String, project_id: String) -> Self {
+    pub fn new_wasm(
+        ui_host: String,
+        api_host: String,
+        token: String,
+        project_id: String,
+    ) -> Result<Client, JsValue> {
         Client::new_impl(ClientOptions {
             project_id,
             ui_host,
@@ -118,6 +125,7 @@ impl Client {
                 .build()
                 .expect("Failed to build reqwest client"),
         })
+        .map_err(|e| JsValue::from_str(&format!("{}", e)))
     }
 
     pub async fn shutdown(self) -> Result<(), ClientError> {
@@ -132,7 +140,7 @@ impl Client {
         metadata: &UserMetadataBuilder,
     ) -> Result<RunUploader, ClientError> {
         let mut request = CreateArtifactRequest::new();
-        request.project_id = self.options.project_id.clone();
+        request.project_id = Some(self.project_id.clone()).into();
         request.artifact_id = Some(new_artifact_id()).into();
         request.run_id.mut_or_insert_default().id = request.artifact_id.clone();
         let group_data = request.mut_artifact_data();
@@ -168,7 +176,7 @@ impl Client {
     }
      */
 
-    pub fn new_impl(options: ClientOptions) -> Self {
+    pub fn new_impl(options: ClientOptions) -> Result<Self, GenericError> {
         let (send_task_channel, receive_task_channel) = async_channel::unbounded();
         let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
 
@@ -179,10 +187,18 @@ impl Client {
             receive_task_channel,
             send_shutdown_channel,
         });
+
+        let proto: PublicGlobalId = decode_id_proto(&options.project_id)?;
+        let project_id = match proto.data {
+            Some(public_global_id::Data::ProjectId(project_id)) => project_id,
+            _ => Err(anyhow!("Invalid project id: {}", options.project_id))?,
+        };
+
         #[cfg(feature = "tokio")]
         options.runtime.spawn(task_handler.run());
         let client = Client {
             options,
+            project_id,
             #[cfg(feature = "files")]
             tmp_dir: Arc::new(
                 tempfile::Builder::new()
@@ -194,7 +210,7 @@ impl Client {
             send_task_channel,
             receive_shutdown_channel,
         };
-        client
+        Ok(client)
     }
 
     /*
@@ -241,7 +257,7 @@ impl Client {
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactId, ClientError> {
         let task = self.new_task(request, raw_data);
-        trace!("Enqueueing task: {:?}", task);
+        trace!("Enqueueing task: {:#?}", task);
         self.task_handler.handle_upload_artifact_task(&task).await
     }
 

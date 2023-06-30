@@ -1,5 +1,5 @@
 {
-  "checksum": "95dbde21483c10ef96f3c6c7a83a81b339234e04741be6d35de66206a6f6b777",
+  "checksum": "f778988c1a1fe50e10f67d16b2da3df5de2e54465b673b17504b1bda6d43b151",
   "crates": {
     "adler 1.0.2": {
       "name": "adler",
@@ -5361,6 +5361,10 @@
         ],
         "deps": {
           "common": [
+            {
+              "id": "anyhow 1.0.69",
+              "target": "anyhow"
+            },
             {
               "id": "async-channel 1.8.0",
               "target": "async_channel"

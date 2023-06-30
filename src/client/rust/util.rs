@@ -27,6 +27,11 @@ pub(crate) fn encode_id_proto(msg: &impl Message) -> String {
     bs58::encode(msg.write_to_bytes().unwrap()).into_string()
 }
 
+pub fn decode_id_proto<M: Message>(encoded: &str) -> Result<M, GenericError> {
+    let proto_bytes = bs58::decode(encoded).into_vec()?;
+    Ok(M::parse_from_bytes(&proto_bytes)?)
+}
+
 pub(crate) fn new_uuid_proto() -> artifacts_api_rust_proto::Uuid {
     let uuid = Uuid::new_v4();
     let mut proto = artifacts_api_rust_proto::Uuid::new();

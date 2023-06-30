@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "src/api/artifacts/project_id.proto";
+import "src/api/artifacts/artifact.proto";
+import "src/api/artifacts/uuid.proto";
+
+package observation_tools.proto;
+
+option java_multiple_files = true;
+option java_package = "tools.observation.proto";
+
+message PublicGlobalId {
+  oneof data {
+    ProjectId project_id = 1;
+    CanonicalArtifactId canonical_artifact_id = 3;
+  }
+  reserved 2;
+}
+
+message CanonicalArtifactId {
+  ProjectId project_id = 1;
+  ArtifactId artifact_id = 2;
+}

@@ -14,12 +14,12 @@ use crate::util::time_now;
 use crate::util::ClientError;
 use crate::PublicArtifactId;
 use artifacts_api_rust_proto::create_artifact_request::Data::ArtifactUpdate;
-use artifacts_api_rust_proto::CreateArtifactRequest;
-use artifacts_api_rust_proto::StructuredData;
 use artifacts_api_rust_proto::Transform3;
 use artifacts_api_rust_proto::{artifact_update, ArtifactType};
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, SeriesId};
 use artifacts_api_rust_proto::{ArtifactId, ArtifactUserMetadata};
+use artifacts_api_rust_proto::{CanonicalArtifactId, CreateArtifactRequest};
+use artifacts_api_rust_proto::{PublicGlobalId, StructuredData};
 use derive_builder::Builder;
 use protobuf::well_known_types::field_mask::FieldMask;
 use protobuf::Message;
@@ -74,7 +74,7 @@ pub(crate) fn artifact_group_uploader_data_from_request(
     request: &CreateArtifactRequest,
 ) -> ArtifactGroupUploaderData {
     let mut new_data = ArtifactGroupUploaderData::new();
-    new_data.project_id = request.project_id.to_string();
+    new_data.project_id = request.project_id.clone();
     new_data.run_id = request.run_id.clone();
     new_data.id = request.artifact_id.clone();
     new_data.ancestor_group_ids = request.artifact_data().ancestor_group_ids.clone();
@@ -83,8 +83,12 @@ pub(crate) fn artifact_group_uploader_data_from_request(
 
 impl BaseArtifactUploader {
     pub fn run_id(&self) -> RunId {
+        let mut proto = PublicGlobalId::new();
+        let mut id = proto.mut_canonical_artifact_id();
+        id.project_id = self.data.project_id.clone();
+        id.artifact_id = self.data.run_id.id.clone();
         RunId {
-            id: encode_id_proto(&self.data.run_id.clone().unwrap_or_default()),
+            id: encode_id_proto(&proto),
         }
     }
 

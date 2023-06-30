@@ -30,7 +30,7 @@ const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_2_0;
 pub struct CreateArtifactRequest {
     // message fields
     // @@protoc_insertion_point(field:observation_tools.proto.CreateArtifactRequest.project_id)
-    pub project_id: ::std::string::String,
+    pub project_id: ::protobuf::MessageField<super::project_id::ProjectId>,
     // @@protoc_insertion_point(field:observation_tools.proto.CreateArtifactRequest.run_id)
     pub run_id: ::protobuf::MessageField<super::run_id::RunId>,
     // @@protoc_insertion_point(field:observation_tools.proto.CreateArtifactRequest.artifact_id)
@@ -156,7 +156,7 @@ impl CreateArtifactRequest {
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(6);
         let mut oneofs = ::std::vec::Vec::with_capacity(1);
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::project_id::ProjectId>(
             "project_id",
             |m: &CreateArtifactRequest| { &m.project_id },
             |m: &mut CreateArtifactRequest| { &mut m.project_id },
@@ -209,8 +209,8 @@ impl ::protobuf::Message for CreateArtifactRequest {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
-                26 => {
-                    self.project_id = is.read_string()?;
+                66 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.project_id)?;
                 },
                 34 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.run_id)?;
@@ -239,8 +239,9 @@ impl ::protobuf::Message for CreateArtifactRequest {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if !self.project_id.is_empty() {
-            my_size += ::protobuf::rt::string_size(3, &self.project_id);
+        if let Some(v) = self.project_id.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         if let Some(v) = self.run_id.as_ref() {
             let len = v.compute_size();
@@ -272,8 +273,8 @@ impl ::protobuf::Message for CreateArtifactRequest {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if !self.project_id.is_empty() {
-            os.write_string(3, &self.project_id)?;
+        if let Some(v) = self.project_id.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(8, v, os)?;
         }
         if let Some(v) = self.run_id.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
@@ -322,7 +323,7 @@ impl ::protobuf::Message for CreateArtifactRequest {
 
     fn default_instance() -> &'static CreateArtifactRequest {
         static instance: CreateArtifactRequest = CreateArtifactRequest {
-            project_id: ::std::string::String::new(),
+            project_id: ::protobuf::MessageField::none(),
             run_id: ::protobuf::MessageField::none(),
             artifact_id: ::protobuf::MessageField::none(),
             series_point: ::protobuf::MessageField::none(),
@@ -486,16 +487,18 @@ impl ::protobuf::reflect::ProtobufValue for CreateArtifactResponse {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n'src/api/artifacts/create_artifact.proto\x12\x17observation_tools.prot\
     o\x1a\x20src/api/artifacts/artifact.proto\x1a\x1esrc/api/artifacts/run_i\
-    d.proto\"\xac\x03\n\x15CreateArtifactRequest\x12\x1d\n\nproject_id\x18\
-    \x03\x20\x01(\tR\tprojectId\x125\n\x06run_id\x18\x04\x20\x01(\x0b2\x1e.o\
-    bservation_tools.proto.RunIdR\x05runId\x12D\n\x0bartifact_id\x18\x05\x20\
-    \x01(\x0b2#.observation_tools.proto.ArtifactIdR\nartifactId\x12G\n\x0cse\
-    ries_point\x18\x07\x20\x01(\x0b2$.observation_tools.proto.SeriesPointR\
-    \x0bseriesPoint\x12L\n\rartifact_data\x18\x02\x20\x01(\x0b2%.observation\
-    _tools.proto.ArtifactDataH\0R\x0cartifactData\x12R\n\x0fartifact_update\
-    \x18\x06\x20\x01(\x0b2'.observation_tools.proto.ArtifactUpdateH\0R\x0ear\
-    tifactUpdateB\x06\n\x04dataJ\x04\x08\x01\x10\x02\"\x18\n\x16CreateArtifa\
-    ctResponseB\x1b\n\x17tools.observation.protoP\x01b\x06proto3\
+    d.proto\x1a\"src/api/artifacts/project_id.proto\"\xd6\x03\n\x15CreateArt\
+    ifactRequest\x12A\n\nproject_id\x18\x08\x20\x01(\x0b2\".observation_tool\
+    s.proto.ProjectIdR\tprojectId\x125\n\x06run_id\x18\x04\x20\x01(\x0b2\x1e\
+    .observation_tools.proto.RunIdR\x05runId\x12D\n\x0bartifact_id\x18\x05\
+    \x20\x01(\x0b2#.observation_tools.proto.ArtifactIdR\nartifactId\x12G\n\
+    \x0cseries_point\x18\x07\x20\x01(\x0b2$.observation_tools.proto.SeriesPo\
+    intR\x0bseriesPoint\x12L\n\rartifact_data\x18\x02\x20\x01(\x0b2%.observa\
+    tion_tools.proto.ArtifactDataH\0R\x0cartifactData\x12R\n\x0fartifact_upd\
+    ate\x18\x06\x20\x01(\x0b2'.observation_tools.proto.ArtifactUpdateH\0R\
+    \x0eartifactUpdateB\x06\n\x04dataJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\
+    \x04\"\x18\n\x16CreateArtifactResponseB\x1b\n\x17tools.observation.proto\
+    P\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -512,9 +515,10 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(2);
+            let mut deps = ::std::vec::Vec::with_capacity(3);
             deps.push(super::artifact::file_descriptor().clone());
             deps.push(super::run_id::file_descriptor().clone());
+            deps.push(super::project_id::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(2);
             messages.push(CreateArtifactRequest::generated_message_descriptor_data());
             messages.push(CreateArtifactResponse::generated_message_descriptor_data());
