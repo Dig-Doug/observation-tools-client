@@ -2,6 +2,7 @@
 members = [
     "src/api/artifacts",
     "src/client/rust",
+    "examples",
 ]
 
 [patch.crates-io]

@@ -3084,8 +3084,57 @@ impl Geometry3 {
         }
     }
 
+    // .observation_tools.proto.Polygon3 polygon = 3;
+
+    pub fn polygon(&self) -> &super::math::Polygon3 {
+        match self.data {
+            ::std::option::Option::Some(geometry3::Data::Polygon(ref v)) => v,
+            _ => <super::math::Polygon3 as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_polygon(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_polygon(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(geometry3::Data::Polygon(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_polygon(&mut self, v: super::math::Polygon3) {
+        self.data = ::std::option::Option::Some(geometry3::Data::Polygon(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_polygon(&mut self) -> &mut super::math::Polygon3 {
+        if let ::std::option::Option::Some(geometry3::Data::Polygon(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(geometry3::Data::Polygon(super::math::Polygon3::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(geometry3::Data::Polygon(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_polygon(&mut self) -> super::math::Polygon3 {
+        if self.has_polygon() {
+            match self.data.take() {
+                ::std::option::Option::Some(geometry3::Data::Polygon(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            super::math::Polygon3::new()
+        }
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(1);
         fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, Sphere>(
             "sphere",
@@ -3100,6 +3149,13 @@ impl Geometry3 {
             Geometry3::mesh,
             Geometry3::mut_mesh,
             Geometry3::set_mesh,
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, super::math::Polygon3>(
+            "polygon",
+            Geometry3::has_polygon,
+            Geometry3::polygon,
+            Geometry3::mut_polygon,
+            Geometry3::set_polygon,
         ));
         oneofs.push(geometry3::Data::generated_oneof_descriptor_data());
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Geometry3>(
@@ -3126,6 +3182,9 @@ impl ::protobuf::Message for Geometry3 {
                 18 => {
                     self.data = ::std::option::Option::Some(geometry3::Data::Mesh(is.read_message()?));
                 },
+                26 => {
+                    self.data = ::std::option::Option::Some(geometry3::Data::Polygon(is.read_message()?));
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3148,6 +3207,10 @@ impl ::protobuf::Message for Geometry3 {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
                 },
+                &geometry3::Data::Polygon(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
             };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -3163,6 +3226,9 @@ impl ::protobuf::Message for Geometry3 {
                 },
                 &geometry3::Data::Mesh(ref v) => {
                     ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+                },
+                &geometry3::Data::Polygon(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
                 },
             };
         }
@@ -3183,6 +3249,7 @@ impl ::protobuf::Message for Geometry3 {
     }
 
     fn clear(&mut self) {
+        self.data = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
         self.data = ::std::option::Option::None;
         self.special_fields.clear();
@@ -3225,6 +3292,8 @@ pub mod geometry3 {
         Sphere(super::Sphere),
         // @@protoc_insertion_point(oneof_field:observation_tools.proto.Geometry3.mesh)
         Mesh(super::Mesh),
+        // @@protoc_insertion_point(oneof_field:observation_tools.proto.Geometry3.polygon)
+        Polygon(super::super::math::Polygon3),
     }
 
     impl ::protobuf::Oneof for Data {
@@ -4767,39 +4836,40 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x94\x01\n\x07Object3\x12>\n\x08geometry\x18\x01\x20\x01(\x0b2\".observa\
     tion_tools.proto.Geometry3R\x08geometry\x12C\n\ntransforms\x18\x03\x20\
     \x03(\x0b2#.observation_tools.proto.Transform3R\ntransformsJ\x04\x08\x02\
-    \x10\x03\"\x83\x01\n\tGeometry3\x129\n\x06sphere\x18\x01\x20\x01(\x0b2\
+    \x10\x03\"\xc2\x01\n\tGeometry3\x129\n\x06sphere\x18\x01\x20\x01(\x0b2\
     \x1f.observation_tools.proto.SphereH\0R\x06sphere\x123\n\x04mesh\x18\x02\
-    \x20\x01(\x0b2\x1d.observation_tools.proto.MeshH\0R\x04meshB\x06\n\x04da\
-    ta\"A\n\x06Sphere\x127\n\x06radius\x18\x01\x20\x01(\x0b2\x1f.observation\
-    _tools.proto.NumberR\x06radius\"]\n\x04Mesh\x12;\n\x08vertices\x18\x01\
-    \x20\x03(\x0b2\x1f.observation_tools.proto.VertexR\x08vertices\x12\x18\n\
-    \x07indices\x18\x02\x20\x03(\rR\x07indices\"\x7f\n\x06Vertex\x12;\n\x08p\
-    osition\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.Point3R\x08pos\
-    ition\x128\n\x06normal\x18\x02\x20\x01(\x0b2\x20.observation_tools.proto\
-    .Vector3R\x06normal\"\xb1\x01\n\x0eArtifactUpdate\x12O\n\toperation\x18\
-    \x03\x20\x01(\x0e21.observation_tools.proto.ArtifactUpdate.OperationR\to\
-    peration\"N\n\tOperation\x12\x15\n\x11OPERATION_UNKNOWN\x10\0\x12\x14\n\
-    \x10OPERATION_CREATE\x10\x01\x12\x14\n\x10OPERATION_UPDATE\x10\x02\"P\n\
-    \x08SeriesId\x12D\n\x0bartifact_id\x18\x01\x20\x01(\x0b2#.observation_to\
-    ols.proto.ArtifactIdR\nartifactId\"Y\n\x11SeriesDimensionId\x12D\n\x0bar\
-    tifact_id\x18\x01\x20\x01(\x0b2#.observation_tools.proto.ArtifactIdR\nar\
-    tifactId\"\x94\x01\n\x0bSeriesPoint\x12>\n\tseries_id\x18\x01\x20\x01(\
-    \x0b2!.observation_tools.proto.SeriesIdR\x08seriesId\x12E\n\x06values\
-    \x18\x02\x20\x03(\x0b2-.observation_tools.proto.SeriesDimensionValueR\
-    \x06values\"Z\n\nSeriesData\x12L\n\ndimensions\x18\x01\x20\x03(\x0b2,.ob\
-    servation_tools.proto.SeriesDimensionDataR\ndimensions\"e\n\x13SeriesDim\
-    ensionData\x12:\n\x02id\x18\x01\x20\x01(\x0b2*.observation_tools.proto.S\
-    eriesDimensionIdR\x02id\x12\x12\n\x04name\x18\x02\x20\x01(\tR\x04name\"\
-    \x9c\x01\n\x14SeriesDimensionValue\x12M\n\x0cdimension_id\x18\x01\x20\
-    \x01(\x0b2*.observation_tools.proto.SeriesDimensionIdR\x0bdimensionId\
-    \x125\n\x05value\x18\x02\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
-    rR\x05value*\xf3\x01\n\x0cArtifactType\x12\x19\n\x15ARTIFACT_TYPE_UNKNOW\
-    N\x10\0\x12\x19\n\x15ARTIFACT_TYPE_GENERIC\x10\x01\x12\x1a\n\x16ARTIFACT\
-    _TYPE_2D_GROUP\x10\x02\x12\x1a\n\x16ARTIFACT_TYPE_3D_GROUP\x10\x03\x12\
-    \x20\n\x1cARTIFACT_TYPE_2D_IN_3D_GROUP\x10\x04\x12\x1b\n\x17ARTIFACT_TYP\
-    E_RUN_STAGE\x10\x05\x12\x1c\n\x18ARTIFACT_TYPE_ROOT_GROUP\x10\x06\x12\
-    \x18\n\x14ARTIFACT_TYPE_SERIES\x10\x07B\x1b\n\x17tools.observation.proto\
-    P\x01b\x06proto3\
+    \x20\x01(\x0b2\x1d.observation_tools.proto.MeshH\0R\x04mesh\x12=\n\x07po\
+    lygon\x18\x03\x20\x01(\x0b2!.observation_tools.proto.Polygon3H\0R\x07pol\
+    ygonB\x06\n\x04data\"A\n\x06Sphere\x127\n\x06radius\x18\x01\x20\x01(\x0b\
+    2\x1f.observation_tools.proto.NumberR\x06radius\"]\n\x04Mesh\x12;\n\x08v\
+    ertices\x18\x01\x20\x03(\x0b2\x1f.observation_tools.proto.VertexR\x08ver\
+    tices\x12\x18\n\x07indices\x18\x02\x20\x03(\rR\x07indices\"\x7f\n\x06Ver\
+    tex\x12;\n\x08position\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto\
+    .Point3R\x08position\x128\n\x06normal\x18\x02\x20\x01(\x0b2\x20.observat\
+    ion_tools.proto.Vector3R\x06normal\"\xb1\x01\n\x0eArtifactUpdate\x12O\n\
+    \toperation\x18\x03\x20\x01(\x0e21.observation_tools.proto.ArtifactUpdat\
+    e.OperationR\toperation\"N\n\tOperation\x12\x15\n\x11OPERATION_UNKNOWN\
+    \x10\0\x12\x14\n\x10OPERATION_CREATE\x10\x01\x12\x14\n\x10OPERATION_UPDA\
+    TE\x10\x02\"P\n\x08SeriesId\x12D\n\x0bartifact_id\x18\x01\x20\x01(\x0b2#\
+    .observation_tools.proto.ArtifactIdR\nartifactId\"Y\n\x11SeriesDimension\
+    Id\x12D\n\x0bartifact_id\x18\x01\x20\x01(\x0b2#.observation_tools.proto.\
+    ArtifactIdR\nartifactId\"\x94\x01\n\x0bSeriesPoint\x12>\n\tseries_id\x18\
+    \x01\x20\x01(\x0b2!.observation_tools.proto.SeriesIdR\x08seriesId\x12E\n\
+    \x06values\x18\x02\x20\x03(\x0b2-.observation_tools.proto.SeriesDimensio\
+    nValueR\x06values\"Z\n\nSeriesData\x12L\n\ndimensions\x18\x01\x20\x03(\
+    \x0b2,.observation_tools.proto.SeriesDimensionDataR\ndimensions\"e\n\x13\
+    SeriesDimensionData\x12:\n\x02id\x18\x01\x20\x01(\x0b2*.observation_tool\
+    s.proto.SeriesDimensionIdR\x02id\x12\x12\n\x04name\x18\x02\x20\x01(\tR\
+    \x04name\"\x9c\x01\n\x14SeriesDimensionValue\x12M\n\x0cdimension_id\x18\
+    \x01\x20\x01(\x0b2*.observation_tools.proto.SeriesDimensionIdR\x0bdimens\
+    ionId\x125\n\x05value\x18\x02\x20\x01(\x0b2\x1f.observation_tools.proto.\
+    NumberR\x05value*\xf3\x01\n\x0cArtifactType\x12\x19\n\x15ARTIFACT_TYPE_U\
+    NKNOWN\x10\0\x12\x19\n\x15ARTIFACT_TYPE_GENERIC\x10\x01\x12\x1a\n\x16ART\
+    IFACT_TYPE_2D_GROUP\x10\x02\x12\x1a\n\x16ARTIFACT_TYPE_3D_GROUP\x10\x03\
+    \x12\x20\n\x1cARTIFACT_TYPE_2D_IN_3D_GROUP\x10\x04\x12\x1b\n\x17ARTIFACT\
+    _TYPE_RUN_STAGE\x10\x05\x12\x1c\n\x18ARTIFACT_TYPE_ROOT_GROUP\x10\x06\
+    \x12\x18\n\x14ARTIFACT_TYPE_SERIES\x10\x07B\x1b\n\x17tools.observation.p\
+    rotoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

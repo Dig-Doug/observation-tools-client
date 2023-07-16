@@ -33,14 +33,15 @@ use tracing::error;
 use tracing::trace;
 use wasm_bindgen::prelude::*;
 
+pub(crate) const UI_HOST: &str = "https://app.observation.tools";
+pub(crate) const API_HOST: &str = "https://api.observation.tools";
+
 #[derive(Clone)]
 pub struct ClientOptions {
-    pub ui_host: String,
-    pub api_host: String,
+    pub ui_host: Option<String>,
+    pub api_host: Option<String>,
     pub project_id: String,
-    #[cfg(feature = "tokio")]
-    pub runtime: Handle,
-    pub client: reqwest::Client,
+    pub client: Option<reqwest::Client>,
     pub token_generator: TokenGenerator,
 }
 
@@ -57,17 +58,17 @@ pub struct Client {
     receive_shutdown_channel: Receiver<()>,
 }
 
-#[cfg(feature = "cpp")]
-fn default_reqwest_client() -> reqwest::Client {
-    reqwest::Client::builder()
-        .cookie_store(true)
-        .use_rustls_tls()
-        .build()
-        .expect("Failed to build reqwest client")
+pub fn default_reqwest_client() -> reqwest::Client {
+    let mut builder = reqwest::Client::builder().cookie_store(true);
+    #[cfg(feature = "cpp")]
+    {
+        builder = builder.use_rustls_tls();
+    }
+    builder.build().expect("Failed to build reqwest client")
 }
 
 #[cfg(feature = "tokio")]
-fn create_tokio_runtime() -> Result<Handle, GenericError> {
+pub fn create_tokio_runtime() -> Result<Handle, GenericError> {
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;
@@ -117,13 +118,10 @@ impl Client {
     ) -> Result<Client, JsValue> {
         Client::new_impl(ClientOptions {
             project_id,
-            ui_host,
-            api_host,
+            ui_host: Some(ui_host),
+            api_host: Some(api_host),
             token_generator: TokenGenerator::Constant(token),
-            client: reqwest::Client::builder()
-                .cookie_store(true)
-                .build()
-                .expect("Failed to build reqwest client"),
+            client: None,
         })
         .map_err(|e| JsValue::from_str(&format!("{}", e)))
     }
@@ -181,9 +179,12 @@ impl Client {
         let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
 
         let task_handler = Arc::new(TaskHandler {
-            client: options.client.clone(),
+            client: options
+                .client
+                .clone()
+                .unwrap_or_else(default_reqwest_client),
             token_generator: options.token_generator.clone(),
-            host: options.api_host.clone(),
+            host: options.api_host.clone().unwrap_or(API_HOST.to_string()),
             receive_task_channel,
             send_shutdown_channel,
         });
@@ -194,8 +195,6 @@ impl Client {
             _ => Err(anyhow!("Invalid project id: {}", options.project_id))?,
         };
 
-        #[cfg(feature = "tokio")]
-        options.runtime.spawn(task_handler.run());
         let client = Client {
             options,
             project_id,

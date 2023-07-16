@@ -1142,6 +1142,252 @@ impl ::protobuf::reflect::ProtobufValue for Polygon2 {
 }
 
 #[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.PolygonEdge3)
+pub struct PolygonEdge3 {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.PolygonEdge3.vertex)
+    pub vertex: ::protobuf::MessageField<Point3>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.PolygonEdge3.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a PolygonEdge3 {
+    fn default() -> &'a PolygonEdge3 {
+        <PolygonEdge3 as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl PolygonEdge3 {
+    pub fn new() -> PolygonEdge3 {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Point3>(
+            "vertex",
+            |m: &PolygonEdge3| { &m.vertex },
+            |m: &mut PolygonEdge3| { &mut m.vertex },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<PolygonEdge3>(
+            "PolygonEdge3",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for PolygonEdge3 {
+    const NAME: &'static str = "PolygonEdge3";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.vertex)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.vertex.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.vertex.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> PolygonEdge3 {
+        PolygonEdge3::new()
+    }
+
+    fn clear(&mut self) {
+        self.vertex.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static PolygonEdge3 {
+        static instance: PolygonEdge3 = PolygonEdge3 {
+            vertex: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for PolygonEdge3 {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("PolygonEdge3").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for PolygonEdge3 {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for PolygonEdge3 {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.Polygon3)
+pub struct Polygon3 {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.Polygon3.edges)
+    pub edges: ::std::vec::Vec<PolygonEdge3>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.Polygon3.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Polygon3 {
+    fn default() -> &'a Polygon3 {
+        <Polygon3 as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Polygon3 {
+    pub fn new() -> Polygon3 {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "edges",
+            |m: &Polygon3| { &m.edges },
+            |m: &mut Polygon3| { &mut m.edges },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Polygon3>(
+            "Polygon3",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Polygon3 {
+    const NAME: &'static str = "Polygon3";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.edges.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.edges {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.edges {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Polygon3 {
+        Polygon3::new()
+    }
+
+    fn clear(&mut self) {
+        self.edges.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Polygon3 {
+        static instance: Polygon3 = Polygon3 {
+            edges: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Polygon3 {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Polygon3").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Polygon3 {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Polygon3 {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
 // @@protoc_insertion_point(message:observation_tools.proto.Graph)
 pub struct Graph {
     // message fields
@@ -3147,59 +3393,62 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x03\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x01z\"G\n\x0c\
     PolygonEdge2\x127\n\x06vertex\x18\x01\x20\x01(\x0b2\x1f.observation_tool\
     s.proto.Point2R\x06vertex\"G\n\x08Polygon2\x12;\n\x05edges\x18\x01\x20\
-    \x03(\x0b2%.observation_tools.proto.PolygonEdge2R\x05edges\"\xc5\x02\n\
-    \x05Graph\x12?\n\x05nodes\x18\x01\x20\x03(\x0b2).observation_tools.proto\
-    .Graph.NodesEntryR\x05nodes\x12?\n\x05edges\x18\x02\x20\x03(\x0b2).obser\
-    vation_tools.proto.Graph.EdgesEntryR\x05edges\x1a\\\n\nNodesEntry\x12\
-    \x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x128\n\x05value\x18\x02\x20\x01\
-    (\x0b2\".observation_tools.proto.GraphNodeR\x05value:\x028\x01\x1a\\\n\n\
-    EdgesEntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x128\n\x05value\
-    \x18\x02\x20\x01(\x0b2\".observation_tools.proto.GraphEdgeR\x05value:\
-    \x028\x01\"H\n\tGraphNode\x12;\n\x08position\x18\x01\x20\x01(\x0b2\x1f.o\
-    bservation_tools.proto.Point3R\x08position\"O\n\tGraphEdge\x12\"\n\rstar\
-    t_node_id\x18\x01\x20\x01(\tR\x0bstartNodeId\x12\x1e\n\x0bend_node_id\
-    \x18\x02\x20\x01(\tR\tendNodeId\"\xdf\x03\n\tMatrix3x3\x122\n\x04m0_0\
-    \x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m00\x122\n\
-    \x04m0_1\x18\x02\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m0\
-    1\x122\n\x04m0_2\x18\x03\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
-    rR\x03m02\x122\n\x04m1_0\x18\x04\x20\x01(\x0b2\x1f.observation_tools.pro\
-    to.NumberR\x03m10\x122\n\x04m1_1\x18\x05\x20\x01(\x0b2\x1f.observation_t\
-    ools.proto.NumberR\x03m11\x122\n\x04m1_2\x18\x06\x20\x01(\x0b2\x1f.obser\
-    vation_tools.proto.NumberR\x03m12\x122\n\x04m2_0\x18\x07\x20\x01(\x0b2\
-    \x1f.observation_tools.proto.NumberR\x03m20\x122\n\x04m2_1\x18\x08\x20\
-    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m21\x122\n\x04m2_2\x18\
-    \t\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m22\"\xcb\x06\n\
-    \tMatrix4x4\x122\n\x04m0_0\x18\x01\x20\x01(\x0b2\x1f.observation_tools.p\
-    roto.NumberR\x03m00\x122\n\x04m0_1\x18\x02\x20\x01(\x0b2\x1f.observation\
-    _tools.proto.NumberR\x03m01\x122\n\x04m0_2\x18\x03\x20\x01(\x0b2\x1f.obs\
-    ervation_tools.proto.NumberR\x03m02\x122\n\x04m0_3\x18\x04\x20\x01(\x0b2\
-    \x1f.observation_tools.proto.NumberR\x03m03\x122\n\x04m1_0\x18\x05\x20\
-    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m10\x122\n\x04m1_1\x18\
-    \x06\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m11\x122\n\x04\
-    m1_2\x18\x07\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m12\
-    \x122\n\x04m1_3\x18\x08\x20\x01(\x0b2\x1f.observation_tools.proto.Number\
-    R\x03m13\x122\n\x04m2_0\x18\t\x20\x01(\x0b2\x1f.observation_tools.proto.\
-    NumberR\x03m20\x122\n\x04m2_1\x18\n\x20\x01(\x0b2\x1f.observation_tools.\
-    proto.NumberR\x03m21\x122\n\x04m2_2\x18\x0b\x20\x01(\x0b2\x1f.observatio\
-    n_tools.proto.NumberR\x03m22\x122\n\x04m2_3\x18\x0c\x20\x01(\x0b2\x1f.ob\
-    servation_tools.proto.NumberR\x03m23\x122\n\x04m3_0\x18\r\x20\x01(\x0b2\
-    \x1f.observation_tools.proto.NumberR\x03m30\x122\n\x04m3_1\x18\x0e\x20\
-    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m31\x122\n\x04m3_2\x18\
-    \x0f\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m32\x122\n\x04\
-    m3_3\x18\x10\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m33\"e\
-    \n\nTransform2\x121\n\x03trs\x18\x01\x20\x01(\x0b2\x1d.observation_tools\
-    .proto.TRS2H\0R\x03trs\x12\x1c\n\x08identity\x18\x02\x20\x01(\x08H\0R\
-    \x08identityB\x06\n\x04data\"\xa3\x01\n\nTransform3\x121\n\x03trs\x18\
-    \x01\x20\x01(\x0b2\x1d.observation_tools.proto.TRS3H\0R\x03trs\x12<\n\
-    \x06matrix\x18\x02\x20\x01(\x0b2\".observation_tools.proto.Matrix4x4H\0R\
-    \x06matrix\x12\x1c\n\x08identity\x18\x03\x20\x01(\x08H\0R\x08identityB\
-    \x06\n\x04data\"\x82\x01\n\x04TRS2\x12B\n\x0btranslation\x18\x01\x20\x01\
-    (\x0b2\x20.observation_tools.proto.Vector2R\x0btranslation\x126\n\x05sca\
-    le\x18\x03\x20\x01(\x0b2\x20.observation_tools.proto.Vector2R\x05scale\"\
-    \x82\x01\n\x04TRS3\x12B\n\x0btranslation\x18\x01\x20\x01(\x0b2\x20.obser\
-    vation_tools.proto.Vector3R\x0btranslation\x126\n\x05scale\x18\x03\x20\
-    \x01(\x0b2\x20.observation_tools.proto.Vector3R\x05scaleB\x1b\n\x17tools\
-    .observation.protoP\x01b\x06proto3\
+    \x03(\x0b2%.observation_tools.proto.PolygonEdge2R\x05edges\"G\n\x0cPolyg\
+    onEdge3\x127\n\x06vertex\x18\x01\x20\x01(\x0b2\x1f.observation_tools.pro\
+    to.Point3R\x06vertex\"G\n\x08Polygon3\x12;\n\x05edges\x18\x01\x20\x03(\
+    \x0b2%.observation_tools.proto.PolygonEdge3R\x05edges\"\xc5\x02\n\x05Gra\
+    ph\x12?\n\x05nodes\x18\x01\x20\x03(\x0b2).observation_tools.proto.Graph.\
+    NodesEntryR\x05nodes\x12?\n\x05edges\x18\x02\x20\x03(\x0b2).observation_\
+    tools.proto.Graph.EdgesEntryR\x05edges\x1a\\\n\nNodesEntry\x12\x10\n\x03\
+    key\x18\x01\x20\x01(\tR\x03key\x128\n\x05value\x18\x02\x20\x01(\x0b2\".o\
+    bservation_tools.proto.GraphNodeR\x05value:\x028\x01\x1a\\\n\nEdgesEntry\
+    \x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x128\n\x05value\x18\x02\x20\
+    \x01(\x0b2\".observation_tools.proto.GraphEdgeR\x05value:\x028\x01\"H\n\
+    \tGraphNode\x12;\n\x08position\x18\x01\x20\x01(\x0b2\x1f.observation_too\
+    ls.proto.Point3R\x08position\"O\n\tGraphEdge\x12\"\n\rstart_node_id\x18\
+    \x01\x20\x01(\tR\x0bstartNodeId\x12\x1e\n\x0bend_node_id\x18\x02\x20\x01\
+    (\tR\tendNodeId\"\xdf\x03\n\tMatrix3x3\x122\n\x04m0_0\x18\x01\x20\x01(\
+    \x0b2\x1f.observation_tools.proto.NumberR\x03m00\x122\n\x04m0_1\x18\x02\
+    \x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m01\x122\n\x04m0_2\
+    \x18\x03\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m02\x122\n\
+    \x04m1_0\x18\x04\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m1\
+    0\x122\n\x04m1_1\x18\x05\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
+    rR\x03m11\x122\n\x04m1_2\x18\x06\x20\x01(\x0b2\x1f.observation_tools.pro\
+    to.NumberR\x03m12\x122\n\x04m2_0\x18\x07\x20\x01(\x0b2\x1f.observation_t\
+    ools.proto.NumberR\x03m20\x122\n\x04m2_1\x18\x08\x20\x01(\x0b2\x1f.obser\
+    vation_tools.proto.NumberR\x03m21\x122\n\x04m2_2\x18\t\x20\x01(\x0b2\x1f\
+    .observation_tools.proto.NumberR\x03m22\"\xcb\x06\n\tMatrix4x4\x122\n\
+    \x04m0_0\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m0\
+    0\x122\n\x04m0_1\x18\x02\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
+    rR\x03m01\x122\n\x04m0_2\x18\x03\x20\x01(\x0b2\x1f.observation_tools.pro\
+    to.NumberR\x03m02\x122\n\x04m0_3\x18\x04\x20\x01(\x0b2\x1f.observation_t\
+    ools.proto.NumberR\x03m03\x122\n\x04m1_0\x18\x05\x20\x01(\x0b2\x1f.obser\
+    vation_tools.proto.NumberR\x03m10\x122\n\x04m1_1\x18\x06\x20\x01(\x0b2\
+    \x1f.observation_tools.proto.NumberR\x03m11\x122\n\x04m1_2\x18\x07\x20\
+    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m12\x122\n\x04m1_3\x18\
+    \x08\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m13\x122\n\x04\
+    m2_0\x18\t\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m20\x122\
+    \n\x04m2_1\x18\n\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m2\
+    1\x122\n\x04m2_2\x18\x0b\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
+    rR\x03m22\x122\n\x04m2_3\x18\x0c\x20\x01(\x0b2\x1f.observation_tools.pro\
+    to.NumberR\x03m23\x122\n\x04m3_0\x18\r\x20\x01(\x0b2\x1f.observation_too\
+    ls.proto.NumberR\x03m30\x122\n\x04m3_1\x18\x0e\x20\x01(\x0b2\x1f.observa\
+    tion_tools.proto.NumberR\x03m31\x122\n\x04m3_2\x18\x0f\x20\x01(\x0b2\x1f\
+    .observation_tools.proto.NumberR\x03m32\x122\n\x04m3_3\x18\x10\x20\x01(\
+    \x0b2\x1f.observation_tools.proto.NumberR\x03m33\"e\n\nTransform2\x121\n\
+    \x03trs\x18\x01\x20\x01(\x0b2\x1d.observation_tools.proto.TRS2H\0R\x03tr\
+    s\x12\x1c\n\x08identity\x18\x02\x20\x01(\x08H\0R\x08identityB\x06\n\x04d\
+    ata\"\xa3\x01\n\nTransform3\x121\n\x03trs\x18\x01\x20\x01(\x0b2\x1d.obse\
+    rvation_tools.proto.TRS3H\0R\x03trs\x12<\n\x06matrix\x18\x02\x20\x01(\
+    \x0b2\".observation_tools.proto.Matrix4x4H\0R\x06matrix\x12\x1c\n\x08ide\
+    ntity\x18\x03\x20\x01(\x08H\0R\x08identityB\x06\n\x04data\"\x82\x01\n\
+    \x04TRS2\x12B\n\x0btranslation\x18\x01\x20\x01(\x0b2\x20.observation_too\
+    ls.proto.Vector2R\x0btranslation\x126\n\x05scale\x18\x03\x20\x01(\x0b2\
+    \x20.observation_tools.proto.Vector2R\x05scale\"\x82\x01\n\x04TRS3\x12B\
+    \n\x0btranslation\x18\x01\x20\x01(\x0b2\x20.observation_tools.proto.Vect\
+    or3R\x0btranslation\x126\n\x05scale\x18\x03\x20\x01(\x0b2\x20.observatio\
+    n_tools.proto.Vector3R\x05scaleB\x1b\n\x17tools.observation.protoP\x01b\
+    \x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3217,7 +3466,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(17);
+            let mut messages = ::std::vec::Vec::with_capacity(19);
             messages.push(Number::generated_message_descriptor_data());
             messages.push(Point2::generated_message_descriptor_data());
             messages.push(Segment2::generated_message_descriptor_data());
@@ -3226,6 +3475,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(Vector3::generated_message_descriptor_data());
             messages.push(PolygonEdge2::generated_message_descriptor_data());
             messages.push(Polygon2::generated_message_descriptor_data());
+            messages.push(PolygonEdge3::generated_message_descriptor_data());
+            messages.push(Polygon3::generated_message_descriptor_data());
             messages.push(Graph::generated_message_descriptor_data());
             messages.push(GraphNode::generated_message_descriptor_data());
             messages.push(GraphEdge::generated_message_descriptor_data());

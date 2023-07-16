@@ -1,4 +1,5 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
+use crate::client::UI_HOST;
 use crate::run_id::RunId;
 use crate::run_stage_uploader::RunStageUploader;
 use crate::user_metadata::UserMetadataBuilder;
@@ -26,7 +27,12 @@ impl RunUploader {
     pub fn viewer_url(&self) -> String {
         format!(
             "{}/project/{}/artifact/{}",
-            self.base.client.options.ui_host,
+            self.base
+                .client
+                .options
+                .ui_host
+                .clone()
+                .unwrap_or(UI_HOST.to_string()),
             self.base.client.options.project_id,
             self.base.id()
         )

@@ -5,6 +5,7 @@ use artifacts_api_rust_proto::Point3;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct Point3Builder {
     pub(crate) proto: Point3,
 }

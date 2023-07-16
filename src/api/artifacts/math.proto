@@ -44,6 +44,14 @@ message Polygon2 {
   repeated PolygonEdge2 edges = 1;
 }
 
+message PolygonEdge3 {
+  Point3 vertex = 1;
+}
+
+message Polygon3 {
+  repeated PolygonEdge3 edges = 1;
+}
+
 message Graph {
   map<string, GraphNode> nodes = 1;
 

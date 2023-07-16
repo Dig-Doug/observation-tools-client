@@ -4,7 +4,7 @@ mod api;
 mod artifact_uploader_2d;
 mod artifact_uploader_3d;
 mod base_artifact_uploader;
-mod builders;
+pub mod builders;
 mod client;
 mod generic_artifact_uploader;
 mod run_id;

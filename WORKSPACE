@@ -180,11 +180,12 @@ crates_repository(
     name = "crate_index",
     cargo_config = "//:.cargo/config.toml",
     cargo_lockfile = "//:Cargo.lock",
+    generate_binaries = True,
     generator = "@cargo_bazel_bootstrap//:cargo-bazel",
     lockfile = "//:cargo-bazel-lock.json",
-    generate_binaries = True,
     manifests = [
         "//:Cargo.toml",
+        "//:examples/Cargo.toml",
         "//src/api/artifacts:Cargo.toml",
         "//src/client/rust:Cargo.toml",
     ],

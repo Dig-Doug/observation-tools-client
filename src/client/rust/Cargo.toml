@@ -54,6 +54,7 @@ wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4.28"
 web-sys = { version = "0.3.55", features = ['Window', 'Performance', 'PerformanceTiming'] }
 wasm-bindgen-derive = "0.1.1"
+nalgebra = { version = "^0.32" }
 
 [build-dependencies]
 protobuf-codegen = "=3.2.0"

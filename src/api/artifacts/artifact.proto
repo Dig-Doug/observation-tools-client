@@ -131,6 +131,7 @@ message Geometry3 {
   oneof data {
     Sphere sphere = 1;
     Mesh mesh = 2;
+    Polygon3 polygon = 3;
   }
 }
 

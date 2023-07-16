@@ -1,5 +1,5 @@
-use crate::builders::MeshBuilder;
-use crate::builders::SphereBuilder;
+use crate::builders::{MeshBuilder, Polygon3Builder, Transform3Builder};
+use crate::builders::{Object3Builder, SphereBuilder};
 use artifacts_api_rust_proto::Geometry3;
 use wasm_bindgen::prelude::*;
 
@@ -13,6 +13,12 @@ impl Geometry3Builder {
     pub fn sphere(sphere: &SphereBuilder) -> Geometry3Builder {
         let mut proto = Geometry3::new();
         *proto.mut_sphere() = sphere.proto.clone();
+        Geometry3Builder { proto }
+    }
+
+    pub fn polygon(polygon: &Polygon3Builder) -> Geometry3Builder {
+        let mut proto = Geometry3::new();
+        *proto.mut_polygon() = polygon.proto.clone();
         Geometry3Builder { proto }
     }
 

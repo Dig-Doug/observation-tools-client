@@ -1,5 +1,7 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::builders::{Object3Builder, PublicSeriesId, SeriesBuilder, SeriesPointBuilder};
+use crate::builders::{
+    Object3Builder, PublicSeriesId, SeriesBuilder, SeriesPointBuilder, Transform3Builder,
+};
 use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
 use crate::ArtifactUploader2d;
@@ -24,7 +26,7 @@ pub struct ArtifactUploader3d {
 #[cfg_attr(feature = "python", pymethods)]
 #[wasm_bindgen]
 impl ArtifactUploader3d {
-    pub async fn upload_object3(
+    pub async fn upload_object3_js(
         &self,
         metadata: &UserMetadataBuilder,
         data: Object3Builder,
@@ -42,9 +44,29 @@ impl ArtifactUploader3d {
     ) -> Result<PublicSeriesId, ClientError> {
         self.base.series(metadata, series).await
     }
+
+    pub async fn child_uploader_3d(
+        &self,
+        metadata: &UserMetadataBuilder,
+        base_transform: Transform3Builder,
+    ) -> Result<ArtifactUploader3d, ClientError> {
+        self.base
+            .child_uploader_3d(metadata, base_transform.proto, None)
+            .await
+    }
 }
 
 impl ArtifactUploader3d {
+    pub async fn upload_object3<M: Into<UserMetadataBuilder>, D: Into<Object3Builder>>(
+        &self,
+        metadata: M,
+        data: D,
+    ) -> Result<PublicArtifactId, ClientError> {
+        self.base
+            .upload_raw(&(metadata.into()), data.into().convert_3d_to_raw(), None)
+            .await
+    }
+
     pub fn child_uploader_2d(
         &self,
         metadata: &UserMetadataBuilder,
