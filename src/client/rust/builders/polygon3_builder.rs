@@ -1,4 +1,4 @@
-use crate::builders::{Geometry3Builder, Point3Builder};
+use crate::builders::{Geometry3Builder, Point3Builder, Transform3Builder};
 use crate::builders::{Object3Builder, PolygonEdge3Builder};
 use artifacts_api_rust_proto::Polygon3;
 use itertools::Itertools;
@@ -54,6 +54,8 @@ impl Into<Geometry3Builder> for &Polygon3Builder {
 
 impl Into<Object3Builder> for Polygon3Builder {
     fn into(self) -> Object3Builder {
-        Object3Builder::new(self.into())
+        let mut builder = Object3Builder::new(self.into());
+        builder.add_transform(&Transform3Builder::identity());
+        builder
     }
 }
