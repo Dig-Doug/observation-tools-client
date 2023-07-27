@@ -55,6 +55,7 @@ impl Into<Geometry3Builder> for &Polygon3Builder {
 impl Into<Object3Builder> for Polygon3Builder {
     fn into(self) -> Object3Builder {
         let mut builder = Object3Builder::new(self.into());
+        // TODO(doug): #default-transform
         builder.add_transform(&Transform3Builder::identity());
         builder
     }

@@ -1,4 +1,4 @@
-use crate::builders::Geometry2Builder;
+use crate::builders::{Geometry2Builder, Object2Builder, Transform2Builder};
 use crate::util::ClientError;
 use artifacts_api_rust_proto::{Image2, PerPixelTransform};
 use artifacts_api_rust_proto::{RandomDistinctColor, StructuredData};
@@ -50,9 +50,17 @@ impl Into<StructuredData> for &Image2Builder {
     }
 }
 
-impl Into<Geometry2Builder> for &Image2Builder {
+impl Into<Geometry2Builder> for Image2Builder {
     fn into(self) -> Geometry2Builder {
-        Geometry2Builder::image(self)
+        Geometry2Builder::image(&self)
+    }
+}
+
+impl Into<Object2Builder> for Image2Builder {
+    fn into(self) -> Object2Builder {
+        let mut builder = Object2Builder::new(self.into());
+        // TODO(doug): no #default-transform
+        builder
     }
 }
 

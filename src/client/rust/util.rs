@@ -10,11 +10,16 @@ use wasm_bindgen::JsValue;
 
 pub type GenericError = Box<dyn Error + Send + Sync>;
 
-custom_error! {#[derive(Clone)] pub ClientError
-    ServerError{status_code: u16, response: String} = "Server error {status_code}: {response}",
-    GenericError{message: String} = "Generic error: {message}",
-    FailedToConvertJsValueToNumber{value: String} = "Failed to convert {value} into a number",
-    FailedToCreateImage = "Failed to create image",
+#[derive(thiserror::Error, Debug)]
+pub enum ClientError {
+    #[error("Server error {status_code}: {response}")]
+    ServerError { status_code: u16, response: String },
+    #[error("Generic error: {message}")]
+    GenericError { message: String },
+    #[error("Failed to convert {value} into a number")]
+    FailedToConvertJsValueToNumber { value: String },
+    #[error("Failed to create image")]
+    FailedToCreateImage,
 }
 
 impl Into<JsValue> for ClientError {

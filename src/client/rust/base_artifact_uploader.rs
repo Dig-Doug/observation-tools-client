@@ -82,13 +82,23 @@ pub(crate) fn artifact_group_uploader_data_from_request(
 }
 
 impl BaseArtifactUploader {
-    pub fn run_id(&self) -> RunId {
+    pub(crate) fn project_global_id(&self) -> PublicGlobalId {
+        let mut proto = PublicGlobalId::new();
+        *proto.mut_project_id() = self.data.project_id.clone().unwrap_or_default();
+        proto
+    }
+
+    pub(crate) fn global_id(&self) -> PublicGlobalId {
         let mut proto = PublicGlobalId::new();
         let mut id = proto.mut_canonical_artifact_id();
         id.project_id = self.data.project_id.clone();
         id.artifact_id = self.data.run_id.id.clone();
+        proto
+    }
+
+    pub fn run_id(&self) -> RunId {
         RunId {
-            id: encode_id_proto(&proto),
+            id: encode_id_proto(&self.global_id()),
         }
     }
 

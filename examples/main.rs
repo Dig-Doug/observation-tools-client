@@ -1,7 +1,8 @@
 use clap::Parser;
 use observation_tools_client::builders::Transform3Builder;
 use observation_tools_client::{ClientOptions, TokenGenerator, UserMetadataBuilder};
-use observation_tools_client_examples::{generate_barn_wall, GenericError};
+use observation_tools_client_examples::{generate_stone_wall, GenericError};
+use tracing::info;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -45,7 +46,9 @@ async fn main() -> Result<(), GenericError> {
             Transform3Builder::identity(),
         )
         .await?;
-    generate_barn_wall(uploader_3d).await?;
+    generate_stone_wall(uploader_3d).await?;
+
+    println!("See the output at: {}", run_uploader.viewer_url());
 
     Ok(())
 }

@@ -16,6 +16,7 @@ message ArtifactId {
 }
 
 message ArtifactData {
+  // Ordered from root -> leaf.
   repeated ArtifactId ancestor_group_ids = 6;
 
   ArtifactUserMetadata user_metadata = 7;

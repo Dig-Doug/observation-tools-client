@@ -1,4 +1,4 @@
-use crate::builders::{NumberBuilder, Point3Builder, Transform3Builder};
+use crate::builders::{NumberBuilder, Point2Builder, Point3Builder, Transform3Builder};
 use nalgebra::Matrix4;
 use nalgebra::Point2;
 use nalgebra::Point3;
@@ -10,6 +10,12 @@ use nalgebra::Translation;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
 use nalgebra::{Matrix3, RealField};
+
+impl<T: Scalar + Into<NumberBuilder>> Into<Point2Builder> for Point2<T> {
+    fn into(self) -> Point2Builder {
+        Point2Builder::new(self.x.clone().into(), self.y.clone().into())
+    }
+}
 
 impl<T: Scalar + Into<NumberBuilder>> Into<Point3Builder> for Point3<T> {
     fn into(self) -> Point3Builder {

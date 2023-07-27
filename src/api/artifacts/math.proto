@@ -101,6 +101,15 @@ message Matrix4x4 {
   Number m3_3 = 16;
 }
 
+message Transform {
+  oneof data {
+    Transform2 transform2 = 1;
+    Transform3 transform3 = 2;
+    // TODO(doug): Consider making 2d to 3d a different type
+    Transform3 transform2_to_3 = 3;
+  }
+}
+
 message Transform2 {
   oneof data {
     TRS2 trs = 1;

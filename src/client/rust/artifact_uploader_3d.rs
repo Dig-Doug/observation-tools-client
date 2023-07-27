@@ -9,21 +9,17 @@ use crate::PublicArtifactId;
 use artifacts_api_rust_proto::ArtifactType;
 use artifacts_api_rust_proto::StructuredData;
 use artifacts_api_rust_proto::Transform3;
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
 
 pub trait Type3d {
     fn convert_3d_to_raw(&self) -> StructuredData;
 }
 
-#[cfg_attr(feature = "python", pyclass)]
 #[wasm_bindgen]
 pub struct ArtifactUploader3d {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[cfg_attr(feature = "python", pymethods)]
 #[wasm_bindgen]
 impl ArtifactUploader3d {
     pub async fn upload_object3_js(
@@ -67,21 +63,21 @@ impl ArtifactUploader3d {
             .await
     }
 
-    pub fn child_uploader_2d(
+    pub async fn child_uploader_2d<M: Into<UserMetadataBuilder>, T: Into<Transform3Builder>>(
         &self,
-        metadata: &UserMetadataBuilder,
-        to_3d_transform: Transform3,
-        series_point: Option<&SeriesPointBuilder>,
-    ) -> ArtifactUploader2d {
+        metadata: M,
+        to_3d_transform: T,
+    ) -> Result<ArtifactUploader2d, ClientError> {
         let mut request = self
             .base
-            .base_create_artifact_request(metadata, series_point);
+            .base_create_artifact_request(&metadata.into(), None);
         let artifact_data = request.mut_artifact_data();
         artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_2D_IN_3D_GROUP.into();
-        artifact_data.mut_map_2d_to_3d().to_3d_transform = Some(to_3d_transform).into();
-        ArtifactUploader2d {
-            base: self.base.create_child_group_old(request, false),
-        }
+        let transform: Transform3Builder = to_3d_transform.into();
+        artifact_data.mut_map_2d_to_3d().to_3d_transform = Some(transform.proto).into();
+        Ok(ArtifactUploader2d {
+            base: self.base.create_child_group_async(request, false).await?,
+        })
     }
 
     /*

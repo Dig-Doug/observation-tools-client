@@ -1,9 +1,6 @@
 use artifacts_api_rust_proto::ArtifactUserMetadata;
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "python", pyclass)]
 #[wasm_bindgen]
 pub struct UserMetadataBuilder {
     pub(crate) proto: ArtifactUserMetadata,
@@ -11,7 +8,6 @@ pub struct UserMetadataBuilder {
 
 #[wasm_bindgen]
 impl UserMetadataBuilder {
-    #[cfg(not(feature = "python"))]
     #[wasm_bindgen(constructor)]
     pub fn new_js(name: String) -> Self {
         Self::new_impl(&name)

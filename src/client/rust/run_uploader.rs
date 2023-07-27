@@ -6,18 +6,16 @@ use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
 use crate::GenericArtifactUploader;
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_RUN_STAGE;
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
+use artifacts_api_rust_proto::PublicGlobalId;
+use protobuf::Message;
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "python", pyclass)]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct RunUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[cfg_attr(feature = "python", pymethods)]
 #[wasm_bindgen]
 impl RunUploader {
     pub fn run_id(&self) -> RunId {
@@ -33,8 +31,8 @@ impl RunUploader {
                 .ui_host
                 .clone()
                 .unwrap_or(UI_HOST.to_string()),
-            self.base.client.options.project_id,
-            self.base.id()
+            bs58::encode(self.base.project_global_id().write_to_bytes().unwrap()).into_string(),
+            bs58::encode(self.base.global_id().write_to_bytes().unwrap()).into_string(),
         )
     }
 
