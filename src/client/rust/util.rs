@@ -1,4 +1,3 @@
-
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
 use std::error::Error;
@@ -37,7 +36,7 @@ pub(crate) fn encode_id_proto(msg: &impl Message) -> String {
     bs58::encode(msg.write_to_bytes().unwrap()).into_string()
 }
 
-pub fn decode_id_proto<M: Message>(encoded: &str) -> Result<M, GenericError> {
+pub(crate) fn decode_id_proto<M: Message>(encoded: &str) -> Result<M, GenericError> {
     let proto_bytes = bs58::decode(encoded).into_vec()?;
     Ok(M::parse_from_bytes(&proto_bytes)?)
 }
@@ -61,12 +60,6 @@ pub(crate) fn time_now() -> Timestamp {
 #[cfg(feature = "wasm")]
 fn since_epoch() -> Duration {
     Duration::from_millis(js_sys::Date::now() as u64)
-}
-
-fn perf_to_system(amt: f64) -> SystemTime {
-    let secs = (amt as u64) / 1_000;
-    let nanos = (((amt as u64) % 1_000) as u32) * 1_000_000;
-    UNIX_EPOCH + Duration::new(secs, nanos)
 }
 
 #[cfg(not(feature = "wasm"))]
