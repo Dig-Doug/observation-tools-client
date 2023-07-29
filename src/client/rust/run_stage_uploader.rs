@@ -1,7 +1,7 @@
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
+use crate::builders::UserMetadataBuilder;
 use crate::generic_artifact_uploader::GenericArtifactUploader;
-use crate::user_metadata::UserMetadataBuilder;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;

@@ -1,6 +1,7 @@
 use crate::api::new_artifact_id;
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::artifact_uploader_3d::ArtifactUploader3d;
+use crate::builders::UserMetadataBuilder;
 use crate::builders::{PublicSeriesId, SeriesBuilder, SeriesPointBuilder};
 use crate::client::Client;
 use crate::generic_artifact_uploader::GenericArtifactUploader;
@@ -8,20 +9,19 @@ use crate::run_id::RunId;
 use crate::uploader_stack::init_uploader_stack;
 use crate::uploader_stack::pop_uploader;
 use crate::uploader_stack::push_uploader;
-use crate::user_metadata::UserMetadataBuilder;
 use crate::util::encode_id_proto;
 use crate::util::time_now;
 use crate::util::ClientError;
 use crate::PublicArtifactId;
-use artifacts_api_rust_proto::create_artifact_request::Data::ArtifactUpdate;
+
+use artifacts_api_rust_proto::ArtifactId;
+use artifacts_api_rust_proto::CreateArtifactRequest;
 use artifacts_api_rust_proto::Transform3;
 use artifacts_api_rust_proto::{artifact_update, ArtifactType};
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, SeriesId};
-use artifacts_api_rust_proto::{ArtifactId, ArtifactUserMetadata};
-use artifacts_api_rust_proto::{CanonicalArtifactId, CreateArtifactRequest};
 use artifacts_api_rust_proto::{PublicGlobalId, StructuredData};
 use derive_builder::Builder;
-use protobuf::well_known_types::field_mask::FieldMask;
+
 use protobuf::Message;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -90,7 +90,7 @@ impl BaseArtifactUploader {
 
     pub(crate) fn global_id(&self) -> PublicGlobalId {
         let mut proto = PublicGlobalId::new();
-        let mut id = proto.mut_canonical_artifact_id();
+        let id = proto.mut_canonical_artifact_id();
         id.project_id = self.data.project_id.clone();
         id.artifact_id = self.data.run_id.id.clone();
         proto
@@ -301,7 +301,7 @@ impl BaseArtifactUploader {
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<PublicArtifactId, ClientError> {
         let mut request = self.base_artifact_request(artifact_id.id.clone(), series_point);
-        let mut artifact_update = request.mut_artifact_update();
+        let artifact_update = request.mut_artifact_update();
         artifact_update.operation = artifact_update::Operation::OPERATION_UPDATE.into();
         self.client
             .upload_artifact_raw_bytes(&request, Some(data))

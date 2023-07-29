@@ -23,7 +23,7 @@ pub struct SeriesBuilder {
 impl SeriesBuilder {
     #[wasm_bindgen(constructor)]
     pub fn new() -> SeriesBuilder {
-        let mut proto = SeriesData::new();
+        let proto = SeriesData::new();
         SeriesBuilder { proto }
     }
 

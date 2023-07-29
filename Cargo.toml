@@ -4,6 +4,7 @@ members = [
     "src/client/rust",
     "examples",
 ]
+resolver = "2"
 
 [patch.crates-io]
 reqwest = { git = "https://github.com/Dig-Doug/reqwest",  rev = "412f200"}

@@ -4,7 +4,7 @@ use crate::base_artifact_uploader::BaseArtifactUploaderBuilder;
 use crate::base_artifact_uploader::ContextBehavior;
 use crate::run_stage_uploader::RunStageUploader;
 use crate::run_uploader::RunUploader;
-use crate::task_handler::TaskHandler;
+use crate::task_handler::{TaskHandler, TaskLoop};
 use crate::upload_artifact_task::UploadArtifactTask;
 use crate::upload_artifact_task::UploadArtifactTaskPayload;
 use crate::util::{decode_id_proto, time_now};
@@ -17,12 +17,13 @@ use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use artifacts_api_rust_proto::{public_global_id, StructuredData};
 use artifacts_api_rust_proto::{ArtifactGroupUploaderData, ProjectId};
 use artifacts_api_rust_proto::{CreateArtifactRequest, PublicGlobalId};
-use async_channel::Receiver;
-use async_channel::Sender;
+
 use protobuf::Message;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
+use std::io::Write;
 use std::sync::Arc;
+
 #[cfg(feature = "files")]
 use tempfile::NamedTempFile;
 #[cfg(feature = "files")]
@@ -47,19 +48,17 @@ pub struct ClientOptions {
 
 #[wasm_bindgen]
 #[derive(Clone)]
-#[cfg_attr(feature = "python", pyclass)]
 pub struct Client {
     pub(crate) options: ClientOptions,
     pub(crate) project_id: ProjectId,
     #[cfg(feature = "files")]
     tmp_dir: Arc<TempDir>,
     task_handler: Arc<TaskHandler>,
-    send_task_channel: Sender<UploadArtifactTask>,
-    receive_shutdown_channel: Receiver<()>,
+    task_loop: Arc<TaskLoop>,
 }
 
 pub fn default_reqwest_client() -> reqwest::Client {
-    let mut builder = reqwest::Client::builder().cookie_store(true);
+    let builder = reqwest::Client::builder().cookie_store(true);
     #[cfg(feature = "cpp")]
     {
         builder = builder.use_rustls_tls();
@@ -128,8 +127,7 @@ impl Client {
 
     pub async fn shutdown(self) -> Result<(), ClientError> {
         trace!("Shutting down client");
-        self.send_task_channel.close();
-        let _ = self.receive_shutdown_channel.recv().await;
+        self.task_loop.shutdown().await;
         Ok(())
     }
 
@@ -175,9 +173,6 @@ impl Client {
      */
 
     pub fn new_impl(options: ClientOptions) -> Result<Self, GenericError> {
-        let (send_task_channel, receive_task_channel) = async_channel::unbounded();
-        let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
-
         let task_handler = Arc::new(TaskHandler {
             client: options
                 .client
@@ -185,9 +180,9 @@ impl Client {
                 .unwrap_or_else(default_reqwest_client),
             token_generator: options.token_generator.clone(),
             host: options.api_host.clone().unwrap_or(API_HOST.to_string()),
-            receive_task_channel,
-            send_shutdown_channel,
         });
+
+        let task_loop = Arc::new(Self::create_taskloop(task_handler.clone())?);
 
         let proto: PublicGlobalId = decode_id_proto(&options.project_id)?;
         let project_id = match proto.data {
@@ -206,10 +201,84 @@ impl Client {
                     .unwrap(),
             ),
             task_handler,
-            send_task_channel,
-            receive_shutdown_channel,
+            task_loop,
         };
         Ok(client)
+    }
+
+    #[cfg(feature = "tokio")]
+    fn create_taskloop(task_handler: Arc<TaskHandler>) -> Result<TaskLoop, GenericError> {
+        let (send_task_channel, receive_task_channel) = async_channel::unbounded();
+        let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
+        let runtime = create_tokio_runtime()?;
+        runtime.spawn(async move {
+            while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
+                let task = receive_task_channel.recv().await;
+                match task {
+                    Ok(t) => {
+                        let result = task_handler.handle_upload_artifact_task(&t).await;
+                        if let Err(e) = result {
+                            error!("Failed to upload artifact: {}", e);
+                        }
+                    }
+                    Err(_) => {
+                        error!("Failed to receive task");
+                    }
+                }
+            }
+
+            if let Err(e) = send_shutdown_channel.send(()).await {
+                error!("Error shutting down: {}", e);
+            }
+        });
+
+        Ok(TaskLoop::TokioRuntime {
+            send_task_channel,
+            receive_shutdown_channel,
+            runtime,
+        })
+    }
+
+    #[cfg(not(feature = "tokio"))]
+    fn create_taskloop(task_handler: Arc<TaskHandler>) -> Result<TaskLoop, GenericError> {
+        let (send_task_channel, receive_task_channel) = crossbeam_channel::unbounded();
+        let (send_shutdown_channel, receive_shutdown_channel) = crossbeam_channel::bounded(1);
+        let run_closure = {
+            let receive_task_channel = receive_task_channel.clone();
+            Closure::new(move || {
+                while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
+                    let task = receive_task_channel.try_recv();
+                    match task {
+                        Ok(t) => {
+                            wasm_bindgen_futures::spawn_local(async move {
+                                let result = task_handler.handle_upload_artifact_task(&t).await;
+                                if let Err(e) = result {
+                                    error!("Failed to upload artifact: {}", e);
+                                }
+                            });
+                        }
+                        Err(_) => {
+                            error!("Failed task");
+                            panic!("Failed to receive task");
+                        }
+                    }
+                }
+            })
+        };
+        let window = web_sys::window().unwrap();
+        let run_interval_id = window
+            .set_interval_with_callback_and_timeout_and_arguments_0(
+                run_closure.as_ref().unchecked_ref(),
+                Duration::from_millis(10).as_millis() as i32,
+            )
+            .expect("Should register `setTimeout`.");
+
+        Ok(TaskLoop::WindowEventLoop {
+            closure: run_closure,
+            interval_id: run_interval_id,
+            receive_shutdown_channel,
+            send_task_channel,
+        })
     }
 
     /*
@@ -297,6 +366,7 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
+    use crate::builders::SphereBuilder;
     use crate::client::default_reqwest_client;
     use crate::util::new_uuid_proto;
     use crate::util::time_now;
@@ -309,6 +379,7 @@ mod tests {
     use std::env;
     use std::path::Path;
     use std::path::PathBuf;
+    use tokio::runtime::Handle;
 
     fn init() {
         let _ = env_logger::builder().is_test(true).try_init();

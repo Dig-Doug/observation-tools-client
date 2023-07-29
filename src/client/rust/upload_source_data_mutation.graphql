@@ -1,3 +1,0 @@
-mutation UploadSourceDataMutation($projectId: String!, $sourceDataId: String!, $file: Upload!) {
-    uploadSourceData(projectId: $projectId, sourceDataId: $sourceDataId, file: $file)
-}

@@ -1,12 +1,12 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
+use crate::builders::UserMetadataBuilder;
 use crate::client::UI_HOST;
 use crate::run_id::RunId;
 use crate::run_stage_uploader::RunStageUploader;
-use crate::user_metadata::UserMetadataBuilder;
 use crate::util::ClientError;
 use crate::GenericArtifactUploader;
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_RUN_STAGE;
-use artifacts_api_rust_proto::PublicGlobalId;
+
 use protobuf::Message;
 use wasm_bindgen::prelude::*;
 

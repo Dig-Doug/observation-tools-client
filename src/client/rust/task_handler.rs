@@ -3,48 +3,61 @@ use crate::upload_artifact_task::UploadArtifactTask;
 use crate::upload_artifact_task::UploadArtifactTaskPayload;
 use crate::util::ClientError;
 use crate::PublicArtifactId;
-use async_channel::Receiver;
-use async_channel::Sender;
+
+
+use futures::AsyncWriteExt;
 use protobuf::Message;
 use reqwest::multipart::Part;
 #[cfg(feature = "tokio")]
 use tokio_util::codec::BytesCodec;
 #[cfg(feature = "tokio")]
 use tokio_util::codec::FramedRead;
-use tracing::error;
 use tracing::trace;
+
+use wasm_bindgen::closure::Closure;
+
+
+pub enum TaskLoop {
+    #[cfg(feature = "tokio")]
+    TokioRuntime {
+        runtime: tokio::runtime::Handle,
+        send_task_channel: async_channel::Sender<UploadArtifactTask>,
+        receive_shutdown_channel: async_channel::Receiver<()>,
+    },
+    WindowEventLoop {
+        send_task_channel: crossbeam_channel::Sender<UploadArtifactTask>,
+        receive_shutdown_channel: crossbeam_channel::Receiver<()>,
+        closure: Closure<dyn FnMut()>,
+        interval_id: i32,
+    },
+}
+
+impl TaskLoop {
+    pub async fn shutdown(&self) {
+        match self {
+            #[cfg(feature = "tokio")]
+            TaskLoop::TokioRuntime {
+                send_task_channel,
+                receive_shutdown_channel,
+                ..
+            } => {
+                send_task_channel.close();
+                let _ = receive_shutdown_channel.recv().await;
+                // TODO(doug): Eval runtime
+            }
+            TaskLoop::WindowEventLoop { .. } => {}
+        }
+    }
+}
 
 #[derive(Clone)]
 pub(crate) struct TaskHandler {
     pub host: String,
     pub token_generator: TokenGenerator,
     pub client: reqwest::Client,
-    pub receive_task_channel: Receiver<UploadArtifactTask>,
-    pub send_shutdown_channel: Sender<()>,
 }
 
 impl TaskHandler {
-    pub async fn run(&self) {
-        trace!("Starting receive task");
-
-        while !self.receive_task_channel.is_closed() || !self.receive_task_channel.is_empty() {
-            let task = self.receive_task_channel.recv().await;
-            match task {
-                Ok(t) => {
-                    let result = self.handle_upload_artifact_task(&t).await;
-                    if let Err(e) = result {
-                        error!("Failed to upload artifact: {}", e);
-                    }
-                }
-                Err(_) => {
-                    panic!("Failed to receive task");
-                }
-            }
-        }
-
-        trace!("Receive task stopped");
-    }
-
     pub(crate) async fn handle_upload_artifact_task(
         &self,
         task: &UploadArtifactTask,

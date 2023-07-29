@@ -1,10 +1,8 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::builders::{
-    Object2Builder, Object2Updater, PublicSeriesId, SeriesBuilder, SeriesPointBuilder,
-};
-use crate::user_metadata::UserMetadataBuilder;
+use crate::builders::UserMetadataBuilder;
+use crate::builders::{Object2Builder, Object2Updater, PublicSeriesId, SeriesBuilder};
 use crate::util::ClientError;
-use crate::PublicArtifactId;
+
 use artifacts_api_rust_proto::StructuredData;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;

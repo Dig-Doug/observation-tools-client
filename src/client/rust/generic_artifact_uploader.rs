@@ -1,8 +1,8 @@
 use crate::artifact_uploader_2d::ArtifactUploader2d;
 use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::builders::{PublicSeriesId, SeriesBuilder, SeriesPointBuilder, Transform3Builder};
-use crate::user_metadata::UserMetadataBuilder;
+use crate::builders::UserMetadataBuilder;
+use crate::builders::{PublicSeriesId, SeriesBuilder, Transform3Builder};
 use crate::util::ClientError;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;

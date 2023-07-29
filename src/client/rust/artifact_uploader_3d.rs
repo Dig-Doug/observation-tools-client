@@ -1,14 +1,12 @@
 use crate::base_artifact_uploader::BaseArtifactUploader;
-use crate::builders::{
-    Object3Builder, PublicSeriesId, SeriesBuilder, SeriesPointBuilder, Transform3Builder,
-};
-use crate::user_metadata::UserMetadataBuilder;
+use crate::builders::UserMetadataBuilder;
+use crate::builders::{Object3Builder, PublicSeriesId, SeriesBuilder, Transform3Builder};
 use crate::util::ClientError;
 use crate::ArtifactUploader2d;
 use crate::PublicArtifactId;
 use artifacts_api_rust_proto::ArtifactType;
 use artifacts_api_rust_proto::StructuredData;
-use artifacts_api_rust_proto::Transform3;
+
 use wasm_bindgen::prelude::*;
 
 pub trait Type3d {

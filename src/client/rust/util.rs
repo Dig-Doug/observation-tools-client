@@ -1,4 +1,4 @@
-use custom_error::custom_error;
+
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
 use std::error::Error;
@@ -20,6 +20,11 @@ pub enum ClientError {
     FailedToConvertJsValueToNumber { value: String },
     #[error("Failed to create image")]
     FailedToCreateImage,
+    #[error("IO Error: {source}")]
+    IoError {
+        #[from]
+        source: std::io::Error,
+    },
 }
 
 impl Into<JsValue> for ClientError {

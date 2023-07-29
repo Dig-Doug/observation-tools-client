@@ -1,5 +1,5 @@
-use crate::builders::{NumberBuilder, Vector2Builder};
-use artifacts_api_rust_proto::{Transform2, Vector2, TRS2};
+use crate::builders::{Vector2Builder};
+use artifacts_api_rust_proto::{Transform2, TRS2};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

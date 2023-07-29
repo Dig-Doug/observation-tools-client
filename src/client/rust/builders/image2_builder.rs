@@ -1,9 +1,9 @@
-use crate::builders::{Geometry2Builder, Object2Builder, Transform2Builder};
+use crate::builders::{Geometry2Builder, Object2Builder};
 use crate::util::ClientError;
 use artifacts_api_rust_proto::{Image2, PerPixelTransform};
 use artifacts_api_rust_proto::{RandomDistinctColor, StructuredData};
 use image::{GrayImage, ImageBuffer, ImageOutputFormat};
-use std::io::{BufWriter, Cursor};
+use std::io::{Cursor};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -58,7 +58,7 @@ impl Into<Geometry2Builder> for Image2Builder {
 
 impl Into<Object2Builder> for Image2Builder {
     fn into(self) -> Object2Builder {
-        let mut builder = Object2Builder::new(self.into());
+        let builder = Object2Builder::new(self.into());
         // TODO(doug): no #default-transform
         builder
     }
