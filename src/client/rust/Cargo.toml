@@ -40,7 +40,6 @@ image = "0.24.5"
 itertools = "0.10.3"
 js-sys = "0.3.60"
 protobuf = "=3.2.0"
-pyo3 = { version = "0.17.3", features = ["extension-module"], optional = true }
 reqwest = { version = "0.11.14", disable-default-features = true, features = ["rustls-tls", "json", "multipart", "cookies", "stream"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.79"
@@ -65,6 +64,5 @@ protobuf-codegen = "=3.2.0"
 files = []
 rust = ["tokio", "tokio-util", "files"]
 wasm = []
-python = ["pyo3", "files"]
 cpp = ["rust", "cxx", "files"]
 loadtest = []

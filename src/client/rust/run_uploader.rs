@@ -47,7 +47,7 @@ impl RunUploader {
         let mut request = self.base.base_create_artifact_request(metadata, None);
         request.mut_artifact_data().artifact_type = ARTIFACT_TYPE_RUN_STAGE.into();
         RunStageUploader {
-            base: self.base.create_child_group_old(request, true),
+            base: self.base.create_child_group_old(request),
         }
     }
 }

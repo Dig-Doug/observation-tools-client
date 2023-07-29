@@ -74,22 +74,7 @@ impl ArtifactUploader3d {
         let transform: Transform3Builder = to_3d_transform.into();
         artifact_data.mut_map_2d_to_3d().to_3d_transform = Some(transform.proto).into();
         Ok(ArtifactUploader2d {
-            base: self.base.create_child_group_async(request, false).await?,
+            base: self.base.create_child_group_async(request).await?,
         })
     }
-
-    /*
-    pub(crate) fn ffi_child_uploader_2d(
-        &self,
-        metadata: &UserMetadataBuilder,
-        to_3d_transform_bytes: &[u8],
-    ) -> Box<ArtifactUploader2d> {
-        let to_3d_transform = Transform3::parse_from_bytes(to_3d_transform_bytes).unwrap();
-        Box::new(self.child_uploader_2d(metadata, to_3d_transform))
-    }
-
-    pub(crate) fn ffi_upload(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
-        self.base.upload_raw_bytes(metadata, data)
-    }
-     */
 }

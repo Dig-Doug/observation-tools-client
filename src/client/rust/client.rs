@@ -19,8 +19,6 @@ use artifacts_api_rust_proto::{ArtifactGroupUploaderData, ProjectId};
 use artifacts_api_rust_proto::{CreateArtifactRequest, PublicGlobalId};
 
 use protobuf::Message;
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
 use std::io::Write;
 use std::sync::Arc;
 
@@ -74,38 +72,6 @@ pub fn create_tokio_runtime() -> Result<Handle, GenericError> {
     Ok(runtime.handle().clone())
 }
 
-#[cfg(feature = "cpp")]
-pub(crate) fn ffi_new_client(project_id: String) -> Box<Client> {
-    env_logger::init();
-    Box::new(Client::new(
-        project_id,
-        create_tokio_runtime().unwrap(),
-        default_reqwest_client(),
-    ))
-}
-
-#[cfg_attr(feature = "python", pymethods)]
-impl Client {
-    /*
-    // TODO(doug): Figure out why this doesn't work: #[cfg_attr(feature = "python", new)]
-    #[cfg(feature = "python")]
-    #[new]
-    pub fn new(project_id: String) -> Self {
-      env_logger::init();
-      Self::new_impl(project_id,
-                     create_tokio_runtime().unwrap(),
-                     default_reqwest_client())
-    }
-       */
-
-    /*
-    pub fn create_run_blocking(&self) -> RunUploader {
-        #[cfg(feature = "tokio")]
-        self.options.runtime.block_on(self.create_run()).unwrap()
-    }
-     */
-}
-
 #[wasm_bindgen]
 impl Client {
     #[wasm_bindgen(constructor)]
@@ -153,25 +119,12 @@ impl Client {
             base: BaseArtifactUploaderBuilder::default()
                 .client(self.clone())
                 .data(artifact_group_uploader_data_from_request(&request))
-                .context_behavior(ContextBehavior::Init)
                 .init(),
         })
     }
 }
 
 impl Client {
-    /*
-    #[cfg(not(feature = "python"))]
-    pub fn new(project_id: String, runtime: Handle, client: reqwest::Client) -> Self {
-        Self::new_impl(ClientOptions{
-            host: env::var("OBS_HOST").unwrap_or("https://api.observation.tools".to_string()),
-            project_id,
-            runtime,
-            client
-        })
-    }
-     */
-
     pub fn new_impl(options: ClientOptions) -> Result<Self, GenericError> {
         let task_handler = Arc::new(TaskHandler {
             client: options
@@ -279,34 +232,6 @@ impl Client {
             receive_shutdown_channel,
             send_task_channel,
         })
-    }
-
-    /*
-    #[cfg(feature = "cpp")]
-    pub(crate) fn ffi_create_run(&self) -> Box<RunUploader> {
-      let uploader = self.runtime.block_on(self.create_run()).unwrap();
-      Box::new(uploader)
-    }
-     */
-
-    fn deserialize_run_stage(&self, serialized: String) -> RunStageUploader {
-        RunStageUploader {
-            base: BaseArtifactUploaderBuilder::default()
-                .client(self.clone())
-                .data(
-                    ArtifactGroupUploaderData::parse_from_bytes(
-                        &base64::decode(serialized).unwrap(),
-                    )
-                    .unwrap(),
-                )
-                .context_behavior(ContextBehavior::Init)
-                .init(),
-        }
-    }
-
-    #[cfg(feature = "cpp")]
-    pub(crate) fn ffi_deserialize_run_stage(&self, serialized: String) -> Box<RunStageUploader> {
-        Box::new(self.deserialize_run_stage(serialized))
     }
 
     pub(crate) async fn upload_artifact(

@@ -4,8 +4,6 @@ use crate::builders::{Object2Builder, Object2Updater, PublicSeriesId, SeriesBuil
 use crate::util::ClientError;
 
 use artifacts_api_rust_proto::StructuredData;
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
 use wasm_bindgen::prelude::*;
 
 pub trait Type2d {
@@ -90,10 +88,4 @@ impl ArtifactUploader2d {
         let data = series.into();
         self.series_js(&metadata, &data).await
     }
-
-    /*
-    pub(crate) fn ffi_upload(&self, metadata: &UserMetadataBuilder, data: &[u8]) -> String {
-        self.base.upload_raw_bytes(metadata, data)
-    }
-     */
 }
