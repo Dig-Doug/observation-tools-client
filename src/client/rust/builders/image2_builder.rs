@@ -1,9 +1,14 @@
-use crate::builders::{Geometry2Builder, Object2Builder};
+use crate::builders::Geometry2Builder;
+use crate::builders::Object2Builder;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::{Image2, PerPixelTransform};
-use artifacts_api_rust_proto::{RandomDistinctColor, StructuredData};
-use image::{GrayImage, ImageBuffer, ImageOutputFormat};
-use std::io::{Cursor};
+use artifacts_api_rust_proto::Image2;
+use artifacts_api_rust_proto::PerPixelTransform;
+use artifacts_api_rust_proto::RandomDistinctColor;
+use artifacts_api_rust_proto::StructuredData;
+use image::GrayImage;
+use image::ImageBuffer;
+use image::ImageOutputFormat;
+use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

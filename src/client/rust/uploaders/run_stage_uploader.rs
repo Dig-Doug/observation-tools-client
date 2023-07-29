@@ -1,6 +1,4 @@
-
 use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
-
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

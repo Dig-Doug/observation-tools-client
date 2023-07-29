@@ -1,7 +1,10 @@
+use crate::builders::PublicSeriesId;
+use crate::builders::SeriesBuilder;
+use crate::builders::Transform3Builder;
 use crate::builders::UserMetadataBuilder;
-use crate::builders::{PublicSeriesId, SeriesBuilder, Transform3Builder};
 use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
-use crate::uploaders::{ArtifactUploader2d, ArtifactUploader3d};
+use crate::uploaders::ArtifactUploader2d;
+use crate::uploaders::ArtifactUploader3d;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 

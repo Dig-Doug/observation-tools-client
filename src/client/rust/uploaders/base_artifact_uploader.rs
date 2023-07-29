@@ -1,21 +1,27 @@
+use crate::builders::PublicSeriesId;
+use crate::builders::SeriesBuilder;
+use crate::builders::SeriesPointBuilder;
 use crate::builders::UserMetadataBuilder;
-use crate::builders::{PublicSeriesId, SeriesBuilder, SeriesPointBuilder};
 use crate::client::Client;
 use crate::run_id::RunId;
+use crate::uploaders::ArtifactUploader2d;
+use crate::uploaders::ArtifactUploader3d;
+use crate::uploaders::GenericArtifactUploader;
+use crate::util::encode_id_proto;
+use crate::util::new_artifact_id;
 use crate::util::time_now;
 use crate::util::ClientError;
-use crate::util::{encode_id_proto, new_artifact_id};
 use crate::PublicArtifactId;
-
+use artifacts_api_rust_proto::artifact_update;
+use artifacts_api_rust_proto::ArtifactGroupUploaderData;
 use artifacts_api_rust_proto::ArtifactId;
+use artifacts_api_rust_proto::ArtifactType;
 use artifacts_api_rust_proto::CreateArtifactRequest;
+use artifacts_api_rust_proto::PublicGlobalId;
+use artifacts_api_rust_proto::SeriesId;
+use artifacts_api_rust_proto::StructuredData;
 use artifacts_api_rust_proto::Transform3;
-use artifacts_api_rust_proto::{artifact_update, ArtifactType};
-use artifacts_api_rust_proto::{ArtifactGroupUploaderData, SeriesId};
-use artifacts_api_rust_proto::{PublicGlobalId, StructuredData};
 use derive_builder::Builder;
-
-use crate::uploaders::{ArtifactUploader2d, ArtifactUploader3d, GenericArtifactUploader};
 use protobuf::Message;
 
 #[derive(Builder)]

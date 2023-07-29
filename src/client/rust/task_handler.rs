@@ -1,20 +1,19 @@
 use crate::token_generator::TokenGenerator;
 use crate::upload_artifact_task::UploadArtifactTask;
 use crate::upload_artifact_task::UploadArtifactTaskPayload;
-use crate::util::{ClientError, GenericError};
+use crate::util::ClientError;
+use crate::util::GenericError;
 use crate::PublicArtifactId;
-use std::sync::Arc;
-
 use futures::AsyncWriteExt;
 use protobuf::Message;
 use reqwest::multipart::Part;
+use std::sync::Arc;
 #[cfg(feature = "tokio")]
 use tokio_util::codec::BytesCodec;
 #[cfg(feature = "tokio")]
 use tokio_util::codec::FramedRead;
-use tracing::{error, trace};
-
-use crate::client::create_tokio_runtime;
+use tracing::error;
+use tracing::trace;
 use wasm_bindgen::closure::Closure;
 
 pub enum TaskLoop {
@@ -64,7 +63,10 @@ impl TaskHandler {
     ) -> Result<TaskLoop, GenericError> {
         let (send_task_channel, receive_task_channel) = async_channel::unbounded();
         let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
-        let runtime = create_tokio_runtime()?;
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()?;
+        let runtime = runtime.handle().clone();
         runtime.spawn(async move {
             while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
                 let task = receive_task_channel.recv().await;

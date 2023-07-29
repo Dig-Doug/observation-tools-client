@@ -1,16 +1,34 @@
-use nalgebra::{
-    Affine3, Isometry3, Matrix3, Point2, Point3, Quaternion, Rotation3, Transform, Transform3,
-    Translation3, Vector2, Vector3,
-};
-use observation_tools_client::builders::{
-    Image2Builder, Object2Builder, Object2Updater, Object3Builder, PerPixelTransformBuilder,
-    Polygon2Builder, Polygon3Builder, PolygonEdge3Builder, SeriesBuilder, SeriesPointBuilder,
-    Transform2Builder, Transform3Builder, Vector2Builder,
-};
-use observation_tools_client::{
-    ArtifactUploader2d, ArtifactUploader3d, GenericArtifactUploader, UserMetadataBuilder,
-};
-use rand::{Rng, SeedableRng};
+use nalgebra::Affine3;
+use nalgebra::Isometry3;
+use nalgebra::Matrix3;
+use nalgebra::Point2;
+use nalgebra::Point3;
+use nalgebra::Quaternion;
+use nalgebra::Rotation3;
+use nalgebra::Transform;
+use nalgebra::Transform3;
+use nalgebra::Translation3;
+use nalgebra::Vector2;
+use nalgebra::Vector3;
+use observation_tools_client::builders::Image2Builder;
+use observation_tools_client::builders::Object2Builder;
+use observation_tools_client::builders::Object2Updater;
+use observation_tools_client::builders::Object3Builder;
+use observation_tools_client::builders::PerPixelTransformBuilder;
+use observation_tools_client::builders::Polygon2Builder;
+use observation_tools_client::builders::Polygon3Builder;
+use observation_tools_client::builders::PolygonEdge3Builder;
+use observation_tools_client::builders::SeriesBuilder;
+use observation_tools_client::builders::SeriesPointBuilder;
+use observation_tools_client::builders::Transform2Builder;
+use observation_tools_client::builders::Transform3Builder;
+use observation_tools_client::builders::Vector2Builder;
+use observation_tools_client::ArtifactUploader2d;
+use observation_tools_client::ArtifactUploader3d;
+use observation_tools_client::GenericArtifactUploader;
+use observation_tools_client::UserMetadataBuilder;
+use rand::Rng;
+use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use std::error::Error;
 use std::sync::Arc;

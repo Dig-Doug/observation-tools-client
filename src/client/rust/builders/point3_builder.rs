@@ -1,6 +1,6 @@
 use crate::builders::number_builder::NumberOrNumberBuilder;
 use crate::builders::NumberBuilder;
-use crate::util::{ClientError};
+use crate::util::ClientError;
 use artifacts_api_rust_proto::Point3;
 use wasm_bindgen::prelude::*;
 

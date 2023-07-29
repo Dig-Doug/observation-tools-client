@@ -1,5 +1,6 @@
-use crate::builders::{MeshBuilder, Polygon3Builder};
-use crate::builders::{SphereBuilder};
+use crate::builders::MeshBuilder;
+use crate::builders::Polygon3Builder;
+use crate::builders::SphereBuilder;
 use artifacts_api_rust_proto::Geometry3;
 use wasm_bindgen::prelude::*;
 

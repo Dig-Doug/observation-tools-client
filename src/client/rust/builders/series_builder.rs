@@ -2,9 +2,10 @@ use crate::builders::number_builder::NumberOrNumberBuilder;
 use crate::builders::NumberBuilder;
 use crate::util::new_artifact_id;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::{
-    SeriesData, SeriesDimensionData, SeriesDimensionValue, SeriesPoint,
-};
+use artifacts_api_rust_proto::SeriesData;
+use artifacts_api_rust_proto::SeriesDimensionData;
+use artifacts_api_rust_proto::SeriesDimensionValue;
+use artifacts_api_rust_proto::SeriesPoint;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

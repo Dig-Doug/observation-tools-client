@@ -1,5 +1,6 @@
+use crate::builders::Geometry2Builder;
+use crate::builders::SeriesPointBuilder;
 use crate::builders::Transform2Builder;
-use crate::builders::{Geometry2Builder, SeriesPointBuilder};
 use crate::PublicArtifactId;
 use artifacts_api_rust_proto::Object2;
 use artifacts_api_rust_proto::StructuredData;

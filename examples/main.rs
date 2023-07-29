@@ -1,7 +1,10 @@
 use clap::Parser;
 use observation_tools_client::builders::Transform3Builder;
-use observation_tools_client::{ClientOptions, TokenGenerator, UserMetadataBuilder};
-use observation_tools_client_examples::{generate_stone_wall, GenericError};
+use observation_tools_client::ClientOptions;
+use observation_tools_client::TokenGenerator;
+use observation_tools_client::UserMetadataBuilder;
+use observation_tools_client_examples::generate_stone_wall;
+use observation_tools_client_examples::GenericError;
 use tracing::info;
 
 #[derive(Parser, Debug, Clone)]
@@ -23,7 +26,7 @@ async fn main() -> Result<(), GenericError> {
 
     let args = Args::parse();
 
-    let client = observation_tools_client::Client::new_impl(ClientOptions {
+    let client = observation_tools_client::Client::new(ClientOptions {
         ui_host: args.ui_host,
         api_host: args.api_host,
         project_id: args.project_id,

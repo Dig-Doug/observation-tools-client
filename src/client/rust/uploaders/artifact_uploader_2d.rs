@@ -1,9 +1,10 @@
+use crate::builders::Object2Builder;
+use crate::builders::Object2Updater;
+use crate::builders::PublicSeriesId;
+use crate::builders::SeriesBuilder;
 use crate::builders::UserMetadataBuilder;
-use crate::builders::{Object2Builder, Object2Updater, PublicSeriesId, SeriesBuilder};
-use crate::util::ClientError;
-
 use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
-
+use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

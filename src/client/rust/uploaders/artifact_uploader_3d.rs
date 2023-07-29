@@ -1,12 +1,13 @@
+use crate::builders::Object3Builder;
+use crate::builders::PublicSeriesId;
+use crate::builders::SeriesBuilder;
+use crate::builders::Transform3Builder;
 use crate::builders::UserMetadataBuilder;
-use crate::builders::{Object3Builder, PublicSeriesId, SeriesBuilder, Transform3Builder};
+use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
+use crate::uploaders::ArtifactUploader2d;
 use crate::util::ClientError;
 use crate::PublicArtifactId;
 use artifacts_api_rust_proto::ArtifactType;
-
-
-use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
-use crate::uploaders::ArtifactUploader2d;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

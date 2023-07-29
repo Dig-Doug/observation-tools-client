@@ -1,31 +1,32 @@
-use crate::task_handler::{TaskHandler, TaskLoop};
+use crate::task_handler::TaskHandler;
+use crate::task_handler::TaskLoop;
 use crate::upload_artifact_task::UploadArtifactTask;
 use crate::upload_artifact_task::UploadArtifactTaskPayload;
 use crate::uploaders::base_artifact_uploader::artifact_group_uploader_data_from_request;
 use crate::uploaders::base_artifact_uploader::BaseArtifactUploaderBuilder;
-
-use crate::util::{decode_id_proto, new_artifact_id, time_now};
-use crate::util::{ClientError, GenericError};
+use crate::uploaders::RunUploader;
+use crate::util::decode_id_proto;
+use crate::util::new_artifact_id;
+use crate::util::time_now;
+use crate::util::ClientError;
+use crate::util::GenericError;
 use crate::PublicArtifactId;
 use crate::TokenGenerator;
 use crate::UserMetadataBuilder;
 use anyhow::anyhow;
+use artifacts_api_rust_proto::public_global_id;
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
-use artifacts_api_rust_proto::{public_global_id, StructuredData};
-use artifacts_api_rust_proto::{ProjectId};
-use artifacts_api_rust_proto::{CreateArtifactRequest, PublicGlobalId};
-
+use artifacts_api_rust_proto::CreateArtifactRequest;
+use artifacts_api_rust_proto::ProjectId;
+use artifacts_api_rust_proto::PublicGlobalId;
+use artifacts_api_rust_proto::StructuredData;
 use protobuf::Message;
 use std::io::Write;
 use std::sync::Arc;
-
-use crate::uploaders::RunUploader;
 #[cfg(feature = "files")]
 use tempfile::NamedTempFile;
 #[cfg(feature = "files")]
 use tempfile::TempDir;
-#[cfg(feature = "tokio")]
-use tokio::runtime::Handle;
 use tracing::error;
 use tracing::trace;
 use wasm_bindgen::prelude::*;
@@ -53,19 +54,6 @@ pub struct Client {
     task_loop: Arc<TaskLoop>,
 }
 
-pub fn default_reqwest_client() -> reqwest::Client {
-    let builder = reqwest::Client::builder().cookie_store(true);
-    builder.build().expect("Failed to build reqwest client")
-}
-
-#[cfg(feature = "tokio")]
-pub fn create_tokio_runtime() -> Result<Handle, GenericError> {
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?;
-    Ok(runtime.handle().clone())
-}
-
 #[wasm_bindgen]
 impl Client {
     #[wasm_bindgen(constructor)]
@@ -75,7 +63,7 @@ impl Client {
         token: String,
         project_id: String,
     ) -> Result<Client, JsValue> {
-        Client::new_impl(ClientOptions {
+        Client::new(ClientOptions {
             project_id,
             ui_host: Some(ui_host),
             api_host: Some(api_host),
@@ -119,12 +107,12 @@ impl Client {
 }
 
 impl Client {
-    pub fn new_impl(options: ClientOptions) -> Result<Self, GenericError> {
+    pub fn new(options: ClientOptions) -> Result<Self, GenericError> {
         let task_handler = Arc::new(TaskHandler {
-            client: options
-                .client
-                .clone()
-                .unwrap_or_else(default_reqwest_client),
+            client: options.client.clone().unwrap_or_else(|| {
+                let builder = reqwest::Client::builder().cookie_store(true);
+                builder.build().expect("Failed to build reqwest client")
+            }),
             token_generator: options.token_generator.clone(),
             host: options.api_host.clone().unwrap_or(API_HOST.to_string()),
         });
@@ -205,82 +193,5 @@ impl Client {
             // TODO(doug): Do we need to make a copy of the raw data here?
             payload: raw_data.map(|bytes| UploadArtifactTaskPayload::Bytes(bytes.to_vec())),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::builders::SphereBuilder;
-    use crate::client::default_reqwest_client;
-    use crate::util::new_uuid_proto;
-    use crate::util::time_now;
-    use crate::util::GenericError;
-    use crate::Client;
-    use artifacts_api_rust_proto::ArtifactUserMetadata;
-    use artifacts_api_rust_proto::CreateArtifactRequest;
-    #[cfg(feature = "bazel")]
-    use runfiles::Runfiles;
-    use std::env;
-    use std::path::Path;
-    use std::path::PathBuf;
-    use tokio::runtime::Handle;
-
-    fn init() {
-        let _ = env_logger::builder().is_test(true).try_init();
-    }
-
-    #[cfg(feature = "bazel")]
-    fn get_test_data_path(filename: &str) -> String {
-        let r = Runfiles::create().unwrap();
-        r.rlocation(format!(
-            "observation_tools_client/src/client/rust/{}",
-            filename
-        ))
-        .into_os_string()
-        .into_string()
-        .unwrap()
-    }
-
-    #[cfg(not(feature = "bazel"))]
-    fn get_test_data_path(filename: &str) -> String {
-        filename.to_string()
-    }
-
-    fn get_test_output_dir() -> PathBuf {
-        env::var("TEST_UNDECLARED_OUTPUTS_DIR")
-            .map(|p| Path::new(&p).to_path_buf())
-            .unwrap_or(env::current_dir().expect("Failed to get working dir"))
-    }
-
-    fn project_id() -> String {
-        env::var("OBS_PROJECT_ID").unwrap()
-    }
-
-    fn create_client() -> Client {
-        Client::new(project_id(), Handle::current(), default_reqwest_client())
-    }
-
-    #[tokio::test]
-    async fn upload_shared_artifact() -> Result<(), GenericError> {
-        init();
-        let client = create_client();
-
-        let sphere = SphereBuilder::new(64.0);
-
-        let project_id = project_id();
-        let metadata = ArtifactUserMetadata::new();
-
-        let mut request = CreateArtifactRequest::new();
-        request.project_id = Some(project_id.clone()).into();
-        //request.run_id = Some(parent_data.get_run_id().clone()).into();
-        request.mut_artifact_id().uuid = Some(new_uuid_proto()).into();
-        let artifact_data = request.mut_artifact_data();
-        artifact_data.user_metadata = Some(metadata).into();
-        artifact_data.client_creation_time = Some(time_now()).into();
-
-        let source_data_id = client.upload_artifact(&request, Some((&sphere).into()));
-
-        client.shutdown().await?;
-        Ok(())
     }
 }
