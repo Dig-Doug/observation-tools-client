@@ -1,13 +1,10 @@
-use crate::api::new_artifact_id;
-use crate::base_artifact_uploader::artifact_group_uploader_data_from_request;
-use crate::base_artifact_uploader::BaseArtifactUploaderBuilder;
-use crate::base_artifact_uploader::ContextBehavior;
-use crate::run_stage_uploader::RunStageUploader;
-use crate::run_uploader::RunUploader;
 use crate::task_handler::{TaskHandler, TaskLoop};
 use crate::upload_artifact_task::UploadArtifactTask;
 use crate::upload_artifact_task::UploadArtifactTaskPayload;
-use crate::util::{decode_id_proto, time_now};
+use crate::uploaders::base_artifact_uploader::artifact_group_uploader_data_from_request;
+use crate::uploaders::base_artifact_uploader::BaseArtifactUploaderBuilder;
+
+use crate::util::{decode_id_proto, new_artifact_id, time_now};
 use crate::util::{ClientError, GenericError};
 use crate::PublicArtifactId;
 use crate::TokenGenerator;
@@ -15,13 +12,14 @@ use crate::UserMetadataBuilder;
 use anyhow::anyhow;
 use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use artifacts_api_rust_proto::{public_global_id, StructuredData};
-use artifacts_api_rust_proto::{ArtifactGroupUploaderData, ProjectId};
+use artifacts_api_rust_proto::{ProjectId};
 use artifacts_api_rust_proto::{CreateArtifactRequest, PublicGlobalId};
 
 use protobuf::Message;
 use std::io::Write;
 use std::sync::Arc;
 
+use crate::uploaders::RunUploader;
 #[cfg(feature = "files")]
 use tempfile::NamedTempFile;
 #[cfg(feature = "files")]
@@ -57,10 +55,6 @@ pub struct Client {
 
 pub fn default_reqwest_client() -> reqwest::Client {
     let builder = reqwest::Client::builder().cookie_store(true);
-    #[cfg(feature = "cpp")]
-    {
-        builder = builder.use_rustls_tls();
-    }
     builder.build().expect("Failed to build reqwest client")
 }
 
@@ -135,7 +129,7 @@ impl Client {
             host: options.api_host.clone().unwrap_or(API_HOST.to_string()),
         });
 
-        let task_loop = Arc::new(Self::create_taskloop(task_handler.clone())?);
+        let task_loop = Arc::new(TaskHandler::create_taskloop(task_handler.clone())?);
 
         let proto: PublicGlobalId = decode_id_proto(&options.project_id)?;
         let project_id = match proto.data {
@@ -157,81 +151,6 @@ impl Client {
             task_loop,
         };
         Ok(client)
-    }
-
-    #[cfg(feature = "tokio")]
-    fn create_taskloop(task_handler: Arc<TaskHandler>) -> Result<TaskLoop, GenericError> {
-        let (send_task_channel, receive_task_channel) = async_channel::unbounded();
-        let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
-        let runtime = create_tokio_runtime()?;
-        runtime.spawn(async move {
-            while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
-                let task = receive_task_channel.recv().await;
-                match task {
-                    Ok(t) => {
-                        let result = task_handler.handle_upload_artifact_task(&t).await;
-                        if let Err(e) = result {
-                            error!("Failed to upload artifact: {}", e);
-                        }
-                    }
-                    Err(_) => {
-                        error!("Failed to receive task");
-                    }
-                }
-            }
-
-            if let Err(e) = send_shutdown_channel.send(()).await {
-                error!("Error shutting down: {}", e);
-            }
-        });
-
-        Ok(TaskLoop::TokioRuntime {
-            send_task_channel,
-            receive_shutdown_channel,
-            runtime,
-        })
-    }
-
-    #[cfg(not(feature = "tokio"))]
-    fn create_taskloop(task_handler: Arc<TaskHandler>) -> Result<TaskLoop, GenericError> {
-        let (send_task_channel, receive_task_channel) = crossbeam_channel::unbounded();
-        let (send_shutdown_channel, receive_shutdown_channel) = crossbeam_channel::bounded(1);
-        let run_closure = {
-            let receive_task_channel = receive_task_channel.clone();
-            Closure::new(move || {
-                while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
-                    let task = receive_task_channel.try_recv();
-                    match task {
-                        Ok(t) => {
-                            wasm_bindgen_futures::spawn_local(async move {
-                                let result = task_handler.handle_upload_artifact_task(&t).await;
-                                if let Err(e) = result {
-                                    error!("Failed to upload artifact: {}", e);
-                                }
-                            });
-                        }
-                        Err(_) => {
-                            error!("Failed task");
-                            panic!("Failed to receive task");
-                        }
-                    }
-                }
-            })
-        };
-        let window = web_sys::window().unwrap();
-        let run_interval_id = window
-            .set_interval_with_callback_and_timeout_and_arguments_0(
-                run_closure.as_ref().unchecked_ref(),
-                Duration::from_millis(10).as_millis() as i32,
-            )
-            .expect("Should register `setTimeout`.");
-
-        Ok(TaskLoop::WindowEventLoop {
-            closure: run_closure,
-            interval_id: run_interval_id,
-            receive_shutdown_channel,
-            send_task_channel,
-        })
     }
 
     pub(crate) async fn upload_artifact(

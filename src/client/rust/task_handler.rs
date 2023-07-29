@@ -1,9 +1,9 @@
 use crate::token_generator::TokenGenerator;
 use crate::upload_artifact_task::UploadArtifactTask;
 use crate::upload_artifact_task::UploadArtifactTaskPayload;
-use crate::util::ClientError;
+use crate::util::{ClientError, GenericError};
 use crate::PublicArtifactId;
-
+use std::sync::Arc;
 
 use futures::AsyncWriteExt;
 use protobuf::Message;
@@ -12,10 +12,10 @@ use reqwest::multipart::Part;
 use tokio_util::codec::BytesCodec;
 #[cfg(feature = "tokio")]
 use tokio_util::codec::FramedRead;
-use tracing::trace;
+use tracing::{error, trace};
 
+use crate::client::create_tokio_runtime;
 use wasm_bindgen::closure::Closure;
-
 
 pub enum TaskLoop {
     #[cfg(feature = "tokio")]
@@ -58,6 +58,85 @@ pub(crate) struct TaskHandler {
 }
 
 impl TaskHandler {
+    #[cfg(feature = "tokio")]
+    pub(crate) fn create_taskloop(
+        task_handler: Arc<TaskHandler>,
+    ) -> Result<TaskLoop, GenericError> {
+        let (send_task_channel, receive_task_channel) = async_channel::unbounded();
+        let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
+        let runtime = create_tokio_runtime()?;
+        runtime.spawn(async move {
+            while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
+                let task = receive_task_channel.recv().await;
+                match task {
+                    Ok(t) => {
+                        let result = task_handler.handle_upload_artifact_task(&t).await;
+                        if let Err(e) = result {
+                            error!("Failed to upload artifact: {}", e);
+                        }
+                    }
+                    Err(_) => {
+                        error!("Failed to receive task");
+                    }
+                }
+            }
+
+            if let Err(e) = send_shutdown_channel.send(()).await {
+                error!("Error shutting down: {}", e);
+            }
+        });
+
+        Ok(TaskLoop::TokioRuntime {
+            send_task_channel,
+            receive_shutdown_channel,
+            runtime,
+        })
+    }
+
+    #[cfg(not(feature = "tokio"))]
+    pub(crate) fn create_taskloop(
+        task_handler: Arc<TaskHandler>,
+    ) -> Result<TaskLoop, GenericError> {
+        let (send_task_channel, receive_task_channel) = crossbeam_channel::unbounded();
+        let (send_shutdown_channel, receive_shutdown_channel) = crossbeam_channel::bounded(1);
+        let run_closure = {
+            let receive_task_channel = receive_task_channel.clone();
+            Closure::new(move || {
+                while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
+                    let task = receive_task_channel.try_recv();
+                    match task {
+                        Ok(t) => {
+                            wasm_bindgen_futures::spawn_local(async move {
+                                let result = task_handler.handle_upload_artifact_task(&t).await;
+                                if let Err(e) = result {
+                                    error!("Failed to upload artifact: {}", e);
+                                }
+                            });
+                        }
+                        Err(_) => {
+                            error!("Failed task");
+                            panic!("Failed to receive task");
+                        }
+                    }
+                }
+            })
+        };
+        let window = web_sys::window().unwrap();
+        let run_interval_id = window
+            .set_interval_with_callback_and_timeout_and_arguments_0(
+                run_closure.as_ref().unchecked_ref(),
+                Duration::from_millis(10).as_millis() as i32,
+            )
+            .expect("Should register `setTimeout`.");
+
+        Ok(TaskLoop::WindowEventLoop {
+            closure: run_closure,
+            interval_id: run_interval_id,
+            receive_shutdown_channel,
+            send_task_channel,
+        })
+    }
+
     pub(crate) async fn handle_upload_artifact_task(
         &self,
         task: &UploadArtifactTask,

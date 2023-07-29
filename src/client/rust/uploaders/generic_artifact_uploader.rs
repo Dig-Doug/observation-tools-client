@@ -1,8 +1,7 @@
-use crate::artifact_uploader_2d::ArtifactUploader2d;
-use crate::artifact_uploader_3d::ArtifactUploader3d;
-use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::builders::UserMetadataBuilder;
 use crate::builders::{PublicSeriesId, SeriesBuilder, Transform3Builder};
+use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
+use crate::uploaders::{ArtifactUploader2d, ArtifactUploader3d};
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
@@ -17,7 +16,7 @@ impl GenericArtifactUploader {
         &self,
         metadata: &UserMetadataBuilder,
     ) -> Result<GenericArtifactUploader, ClientError> {
-        self.base.child_uploader_async(metadata, None).await
+        self.base.child_uploader(metadata, None).await
     }
 
     pub async fn child_uploader_2d(

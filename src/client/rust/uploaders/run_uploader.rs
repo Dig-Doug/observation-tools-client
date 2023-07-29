@@ -1,12 +1,11 @@
-use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::builders::UserMetadataBuilder;
 use crate::client::UI_HOST;
 use crate::run_id::RunId;
-use crate::run_stage_uploader::RunStageUploader;
 use crate::util::ClientError;
-use crate::GenericArtifactUploader;
-use artifacts_api_rust_proto::ArtifactType::ARTIFACT_TYPE_RUN_STAGE;
 
+
+use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
+use crate::uploaders::{GenericArtifactUploader};
 use protobuf::Message;
 use wasm_bindgen::prelude::*;
 
@@ -40,9 +39,10 @@ impl RunUploader {
         &self,
         metadata: &UserMetadataBuilder,
     ) -> Result<GenericArtifactUploader, ClientError> {
-        self.base.child_uploader_async(metadata, None).await
+        self.base.child_uploader(metadata, None).await
     }
 
+    /*
     pub fn create_initial_run_stage(&self, metadata: &UserMetadataBuilder) -> RunStageUploader {
         let mut request = self.base.base_create_artifact_request(metadata, None);
         request.mut_artifact_data().artifact_type = ARTIFACT_TYPE_RUN_STAGE.into();
@@ -50,14 +50,5 @@ impl RunUploader {
             base: self.base.create_child_group_old(request),
         }
     }
-}
-
-impl RunUploader {
-    #[cfg(feature = "cpp")]
-    pub(crate) fn ffi_create_initial_run_stage(
-        &self,
-        metadata: &UserMetadataBuilder,
-    ) -> Box<RunStageUploader> {
-        Box::new(self.create_initial_run_stage(metadata))
-    }
+     */
 }

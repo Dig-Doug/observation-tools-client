@@ -1,17 +1,13 @@
-use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::builders::UserMetadataBuilder;
 use crate::builders::{Object3Builder, PublicSeriesId, SeriesBuilder, Transform3Builder};
 use crate::util::ClientError;
-use crate::ArtifactUploader2d;
 use crate::PublicArtifactId;
 use artifacts_api_rust_proto::ArtifactType;
-use artifacts_api_rust_proto::StructuredData;
 
+
+use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
+use crate::uploaders::ArtifactUploader2d;
 use wasm_bindgen::prelude::*;
-
-pub trait Type3d {
-    fn convert_3d_to_raw(&self) -> StructuredData;
-}
 
 #[wasm_bindgen]
 pub struct ArtifactUploader3d {
@@ -25,9 +21,7 @@ impl ArtifactUploader3d {
         metadata: &UserMetadataBuilder,
         data: Object3Builder,
     ) -> Result<PublicArtifactId, ClientError> {
-        self.base
-            .upload_raw(metadata, data.convert_3d_to_raw(), None)
-            .await
+        self.base.upload_raw(metadata, (&data).into(), None).await
     }
 
     // TODO(doug): Where in the artifact hierarchy should series be defined?
@@ -57,7 +51,7 @@ impl ArtifactUploader3d {
         data: D,
     ) -> Result<PublicArtifactId, ClientError> {
         self.base
-            .upload_raw(&(metadata.into()), data.into().convert_3d_to_raw(), None)
+            .upload_raw(&(metadata.into()), (&data.into()).into(), None)
             .await
     }
 
@@ -74,7 +68,7 @@ impl ArtifactUploader3d {
         let transform: Transform3Builder = to_3d_transform.into();
         artifact_data.mut_map_2d_to_3d().to_3d_transform = Some(transform.proto).into();
         Ok(ArtifactUploader2d {
-            base: self.base.create_child_group_async(request).await?,
+            base: self.base.create_child_group(request).await?,
         })
     }
 }

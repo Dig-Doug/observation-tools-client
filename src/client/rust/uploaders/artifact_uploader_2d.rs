@@ -1,14 +1,10 @@
-use crate::base_artifact_uploader::BaseArtifactUploader;
 use crate::builders::UserMetadataBuilder;
 use crate::builders::{Object2Builder, Object2Updater, PublicSeriesId, SeriesBuilder};
 use crate::util::ClientError;
 
-use artifacts_api_rust_proto::StructuredData;
-use wasm_bindgen::prelude::*;
+use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
 
-pub trait Type2d {
-    fn convert_2d_to_raw(&self) -> StructuredData;
-}
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct ArtifactUploader2d {
@@ -25,11 +21,7 @@ impl ArtifactUploader2d {
         Ok(Object2Updater {
             id: self
                 .base
-                .upload_raw(
-                    metadata,
-                    data.convert_2d_to_raw(),
-                    data.series_point.as_ref(),
-                )
+                .upload_raw(metadata, data.into(), data.series_point.as_ref())
                 .await?,
         })
     }
@@ -40,11 +32,7 @@ impl ArtifactUploader2d {
         data: &Object2Builder,
     ) -> Result<(), ClientError> {
         self.base
-            .update_raw(
-                &artifact.id,
-                data.convert_2d_to_raw(),
-                data.series_point.as_ref(),
-            )
+            .update_raw(&artifact.id, data.into(), data.series_point.as_ref())
             .await?;
         Ok(())
     }

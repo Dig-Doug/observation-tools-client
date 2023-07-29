@@ -1,6 +1,6 @@
-use crate::api::new_artifact_id;
 use crate::builders::number_builder::NumberOrNumberBuilder;
 use crate::builders::NumberBuilder;
+use crate::util::new_artifact_id;
 use crate::util::ClientError;
 use artifacts_api_rust_proto::{
     SeriesData, SeriesDimensionData, SeriesDimensionValue, SeriesPoint,

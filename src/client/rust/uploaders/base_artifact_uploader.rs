@@ -1,14 +1,10 @@
-use crate::api::new_artifact_id;
-use crate::artifact_uploader_2d::ArtifactUploader2d;
-use crate::artifact_uploader_3d::ArtifactUploader3d;
 use crate::builders::UserMetadataBuilder;
 use crate::builders::{PublicSeriesId, SeriesBuilder, SeriesPointBuilder};
 use crate::client::Client;
-use crate::generic_artifact_uploader::GenericArtifactUploader;
 use crate::run_id::RunId;
-use crate::util::encode_id_proto;
 use crate::util::time_now;
 use crate::util::ClientError;
+use crate::util::{encode_id_proto, new_artifact_id};
 use crate::PublicArtifactId;
 
 use artifacts_api_rust_proto::ArtifactId;
@@ -19,14 +15,8 @@ use artifacts_api_rust_proto::{ArtifactGroupUploaderData, SeriesId};
 use artifacts_api_rust_proto::{PublicGlobalId, StructuredData};
 use derive_builder::Builder;
 
+use crate::uploaders::{ArtifactUploader2d, ArtifactUploader3d, GenericArtifactUploader};
 use protobuf::Message;
-
-#[derive(Clone, PartialEq, Eq)]
-pub(crate) enum ContextBehavior {
-    Disabled,
-    Init,
-    PushPop,
-}
 
 #[derive(Builder)]
 pub(crate) struct BaseArtifactUploader {
@@ -116,7 +106,7 @@ impl BaseArtifactUploader {
         request
     }
 
-    pub async fn create_child_group_async(
+    pub async fn create_child_group(
         &self,
         request: CreateArtifactRequest,
     ) -> Result<BaseArtifactUploader, ClientError> {
@@ -127,23 +117,7 @@ impl BaseArtifactUploader {
             .init())
     }
 
-    pub fn create_child_group_old(&self, request: CreateArtifactRequest) -> BaseArtifactUploader {
-        self.client.upload_artifact(&request, None);
-        BaseArtifactUploaderBuilder::default()
-            .client(self.client.clone())
-            .data(artifact_group_uploader_data_from_request(&request))
-            .init()
-    }
-
-    pub fn child_uploader_old(&self, metadata: &UserMetadataBuilder) -> GenericArtifactUploader {
-        let mut request = self.base_create_artifact_request(metadata, None);
-        request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_GENERIC.into();
-        GenericArtifactUploader {
-            base: self.create_child_group_old(request),
-        }
-    }
-
-    pub async fn child_uploader_async(
+    pub async fn child_uploader(
         &self,
         metadata: &UserMetadataBuilder,
         series_point: Option<&SeriesPointBuilder>,
@@ -151,16 +125,8 @@ impl BaseArtifactUploader {
         let mut request = self.base_create_artifact_request(metadata, series_point);
         request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_GENERIC.into();
         Ok(GenericArtifactUploader {
-            base: self.create_child_group_async(request).await?,
+            base: self.create_child_group(request).await?,
         })
-    }
-
-    pub fn child_uploader_2d_old(&self, metadata: &UserMetadataBuilder) -> ArtifactUploader2d {
-        let mut request = self.base_create_artifact_request(metadata, None);
-        request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_2D_GROUP.into();
-        ArtifactUploader2d {
-            base: self.create_child_group_old(request),
-        }
     }
 
     pub async fn child_uploader_2d(
@@ -171,22 +137,8 @@ impl BaseArtifactUploader {
         let mut request = self.base_create_artifact_request(metadata, series_point);
         request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_2D_GROUP.into();
         Ok(ArtifactUploader2d {
-            base: self.create_child_group_async(request).await?,
+            base: self.create_child_group(request).await?,
         })
-    }
-
-    pub fn child_uploader_3d_old(
-        &self,
-        metadata: &UserMetadataBuilder,
-        base_transform: Transform3,
-    ) -> ArtifactUploader3d {
-        let mut request = self.base_create_artifact_request(metadata, None);
-        let artifact_data = request.mut_artifact_data();
-        artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_3D_GROUP.into();
-        artifact_data.mut_group_3d().base_transform = Some(base_transform).into();
-        ArtifactUploader3d {
-            base: self.create_child_group_old(request),
-        }
     }
 
     pub async fn child_uploader_3d(
@@ -200,7 +152,7 @@ impl BaseArtifactUploader {
         artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_3D_GROUP.into();
         artifact_data.mut_group_3d().base_transform = Some(base_transform).into();
         Ok(ArtifactUploader3d {
-            base: self.create_child_group_async(request).await?,
+            base: self.create_child_group(request).await?,
         })
     }
 

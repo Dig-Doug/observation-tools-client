@@ -1,4 +1,3 @@
-use crate::artifact_uploader_2d::Type2d;
 use crate::builders::Transform2Builder;
 use crate::builders::{Geometry2Builder, SeriesPointBuilder};
 use crate::PublicArtifactId;
@@ -39,12 +38,6 @@ impl Into<StructuredData> for &Object2Builder {
         let mut s = StructuredData::new();
         *s.mut_object2() = self.proto.clone();
         s
-    }
-}
-
-impl Type2d for Object2Builder {
-    fn convert_2d_to_raw(&self) -> StructuredData {
-        self.into()
     }
 }
 
