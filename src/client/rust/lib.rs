@@ -1,34 +1,46 @@
+extern crate alloc;
+
+mod api;
 mod artifact_uploader_2d;
 mod artifact_uploader_3d;
 mod base_artifact_uploader;
+pub mod builders;
 mod client;
 mod generic_artifact_uploader;
+mod run_id;
 mod run_stage_uploader;
 mod run_uploader;
+mod task_handler;
+mod token_generator;
+mod upload_artifact_task;
 mod uploader_stack;
-mod user_metadata;
-mod google_token_generator;
-mod api;
-mod aws_sign_in;
-
-#[cfg(feature = "python")]
-use pyo3::prelude::*;
-use crate::api::Image2Builder;
+mod util;
 
 pub use crate::artifact_uploader_2d::ArtifactUploader2d;
 pub use crate::artifact_uploader_3d::ArtifactUploader3d;
+pub use crate::builders::UserMetadataBuilder;
 pub use crate::client::Client;
+pub use crate::client::ClientOptions;
 pub use crate::generic_artifact_uploader::GenericArtifactUploader;
 pub use crate::run_stage_uploader::RunStageUploader;
 pub use crate::run_uploader::RunUploader;
-pub use crate::user_metadata::UserMetadataBuilder;
+pub use crate::token_generator::TokenGenerator;
+use artifacts_api_rust_proto::ArtifactId;
+#[cfg(feature = "python")]
+use pyo3::prelude::*;
+use wasm_bindgen::prelude::*;
 
-#[cfg(not(feature = "python"))]
+#[wasm_bindgen]
+pub struct PublicArtifactId {
+    pub(crate) id: ArtifactId,
+}
+
+#[cfg(feature = "cpp")]
 use crate::client::ffi_new_client;
+#[cfg(feature = "cpp")]
 use crate::uploader_stack::ffi_get_current_group;
-use crate::user_metadata::new_user_metadata;
 
-#[cfg(not(feature = "python"))]
+#[cfg(feature = "cpp")]
 #[cxx::bridge]
 mod ffi {
     extern "Rust" {
@@ -103,6 +115,17 @@ mod ffi {
 fn observation_tools_client(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Client>()?;
     m.add_class::<UserMetadataBuilder>()?;
-    m.add_class::<Image2Builder>()?;
+    Ok(())
+}
+
+#[wasm_bindgen(start)]
+pub fn start() -> Result<(), JsValue> {
+    // print pretty errors in wasm https://github.com/rustwasm/console_error_panic_hook
+    // This is not needed for tracing_wasm to work, but it is a common tool for getting proper error line numbers for panics.
+    console_error_panic_hook::set_once();
+
+    // Add this line:
+    tracing_wasm::set_as_global_default();
+
     Ok(())
 }

@@ -44,6 +44,14 @@ message Polygon2 {
   repeated PolygonEdge2 edges = 1;
 }
 
+message PolygonEdge3 {
+  Point3 vertex = 1;
+}
+
+message Polygon3 {
+  repeated PolygonEdge3 edges = 1;
+}
+
 message Graph {
   map<string, GraphNode> nodes = 1;
 
@@ -91,6 +99,15 @@ message Matrix4x4 {
   Number m3_1 = 14;
   Number m3_2 = 15;
   Number m3_3 = 16;
+}
+
+message Transform {
+  oneof data {
+    Transform2 transform2 = 1;
+    Transform3 transform3 = 2;
+    // TODO(doug): Consider making 2d to 3d a different type
+    Transform3 transform2_to_3 = 3;
+  }
 }
 
 message Transform2 {

@@ -5,6 +5,13 @@ workspace(
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
+    name = "aspect_rules_js",
+    sha256 = "928ba25fa82cfe7983f89118677413dc74dbc5d0360fa969da07ff22a9306052",
+    strip_prefix = "rules_js-1.15.1",
+    url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.15.1.tar.gz",
+)
+
+http_archive(
     name = "com_google_protobuf",
     sha256 = "48d510f3e7ba3a9a4bb70dc304b5bee76f5d9501efed03261f93246dfc7149b3",
     strip_prefix = "protobuf-7c40b2df1fdf6f414c1c18c789715a9c948a0725",
@@ -57,10 +64,13 @@ http_archive(
 
 http_archive(
     name = "rules_rust",
-    sha256 = "0b1774c1cf637a8a5321a2726d736d9fb315a1770bcb1e5074b9517a0857d289",
-    strip_prefix = "rules_rust-1357b85b1b53f811ca5e372f1d10e3001a5de501",
+    sha256 = "04c45f756b9c7bc9295200cf86b3d5151a5b18f3b8eca9509452de79d6156a4c",
+    #sha256 = "981933c494648b834d4410890687164454c7634e99f71dd35d859ca6f0f9161b",
+    strip_prefix = "rules_rust-a5853fd37053b65ee30ba4f8064b9db67c90d53f",
+    #strip_prefix = "rules_rust-c8fcf45e71b89516674edc91cc81f0f739cdb0c0",
     urls = [
-        "https://github.com/bazelbuild/rules_rust/archive/1357b85b1b53f811ca5e372f1d10e3001a5de501.tar.gz",
+        "https://github.com/bazelbuild/rules_rust/archive/a5853fd37053b65ee30ba4f8064b9db67c90d53f.tar.gz",
+        #"https://github.com/Dig-Doug/rules_rust/archive/c8fcf45e71b89516674edc91cc81f0f739cdb0c0.tar.gz",
     ],
 )
 
@@ -153,11 +163,11 @@ bind(
 
 load("@rules_rust//rust:repositories.bzl", "rust_repositories")
 
-RUST_VERSION = "1.65.0"
+RUST_VERSION = "1.67.0"
 
 rust_repositories(
     edition = "2021",
-    version = RUST_VERSION,
+    versions = [RUST_VERSION],
 )
 
 load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
@@ -170,10 +180,12 @@ crates_repository(
     name = "crate_index",
     cargo_config = "//:.cargo/config.toml",
     cargo_lockfile = "//:Cargo.lock",
+    generate_binaries = True,
     generator = "@cargo_bazel_bootstrap//:cargo-bazel",
     lockfile = "//:cargo-bazel-lock.json",
     manifests = [
         "//:Cargo.toml",
+        "//:examples/Cargo.toml",
         "//src/api/artifacts:Cargo.toml",
         "//src/client/rust:Cargo.toml",
     ],
@@ -204,3 +216,26 @@ observation_tools_cpp_deps()
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 
 boost_deps()
+
+load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
+
+rules_js_dependencies()
+
+load("@rules_nodejs//nodejs:repositories.bzl", "DEFAULT_NODE_VERSION", "nodejs_register_toolchains")
+
+nodejs_register_toolchains(
+    name = "nodejs",
+    node_version = DEFAULT_NODE_VERSION,
+)
+
+load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")
+
+npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+
+load("@npm//:repositories.bzl", "npm_repositories")
+
+npm_repositories()

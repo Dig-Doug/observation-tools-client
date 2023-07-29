@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "src/api/artifacts/project_id.proto";
 import "src/api/artifacts/artifact.proto";
 import "src/api/artifacts/run_id.proto";
 
@@ -9,13 +10,13 @@ option java_multiple_files = true;
 option java_package = "tools.observation.proto";
 
 message ArtifactGroupUploaderData {
-  string project_id = 4;
+  ProjectId project_id = 7;
   RunId run_id = 5;
   ArtifactId id = 3;
 
   repeated ArtifactId ancestor_group_ids = 6;
 
-  reserved 1, 2;
+  reserved 1, 2, 4;
 }
 
 message RunUploaderData {

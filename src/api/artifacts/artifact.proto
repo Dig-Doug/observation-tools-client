@@ -3,6 +3,8 @@ syntax = "proto3";
 import "src/api/artifacts/uuid.proto";
 import "src/api/artifacts/math.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/field_mask.proto";
 
 package observation_tools.proto;
 
@@ -14,6 +16,7 @@ message ArtifactId {
 }
 
 message ArtifactData {
+  // Ordered from root -> leaf.
   repeated ArtifactId ancestor_group_ids = 6;
 
   ArtifactUserMetadata user_metadata = 7;
@@ -24,6 +27,7 @@ message ArtifactData {
     RunStageData run_stage_data = 9;
     Map2dTo3dData map_2d_to_3d = 10;
     Group3d group_3d = 11;
+    SeriesData series = 12;
   }
 
   .google.protobuf.Timestamp client_creation_time = 5;
@@ -48,6 +52,7 @@ enum ArtifactType {
   ARTIFACT_TYPE_2D_IN_3D_GROUP = 4;
   ARTIFACT_TYPE_RUN_STAGE = 5;
   ARTIFACT_TYPE_ROOT_GROUP = 6;
+  ARTIFACT_TYPE_SERIES = 7;
 }
 
 message RunStageData {
@@ -68,13 +73,14 @@ message Group3d {
 
 message StructuredData {
   oneof data {
-    Polygon2 polygon2 = 1;
+    Polygon2 polygon2 = 1 [deprecated = true];
     Graph graph = 2;
-    Point2 point2 = 3;
+    Point2 point2 = 3 [deprecated = true];
     Image2 image2 = 4;
-    Segment2 segment2 = 5;
+    Segment2 segment2 = 5 [deprecated = true];
     Object3 object3 = 6;
     Object2 object2 = 7;
+    Sphere sphere = 8 [deprecated = true];
   }
 }
 
@@ -83,7 +89,8 @@ message Image2 {
 
   string mime_type = 5;
 
-  Matrix3x3 pixel_to_world_transform = 2;
+  // Maybe deprecated
+  Matrix3x3 pixel_to_world_transform = 2 [deprecated = true];
 
   PerPixelTransform pixel_transform = 3;
 
@@ -109,6 +116,7 @@ message Geometry2 {
     Point2 point2 = 1;
     Polygon2 polygon2 = 2;
     Segment2 segment2 = 3;
+    Image2 image2 = 4;
   }
 }
 
@@ -123,9 +131,70 @@ message Object3 {
 message Geometry3 {
   oneof data {
     Sphere sphere = 1;
+    Mesh mesh = 2;
+    Polygon3 polygon = 3;
   }
 }
 
 message Sphere {
   Number radius = 1;
+}
+
+message Mesh {
+  repeated Vertex vertices = 1;
+
+  repeated uint32 indices = 2;
+  
+  // TODO(doug): repeated Mesh sub_meshes = 6;
+}
+
+message Vertex {
+  Point3 position = 1;
+  
+  Vector3 normal = 2;
+}
+
+message ArtifactUpdate {
+  enum Operation {
+    OPERATION_UNKNOWN = 0;
+    OPERATION_CREATE = 1;
+    OPERATION_UPDATE = 2;
+  }
+
+  //.google.protobuf.Any field_data = 1;
+
+  //.google.protobuf.FieldMask field = 2;
+  
+  Operation operation = 3;
+}
+
+message SeriesId {
+  ArtifactId artifact_id = 1;
+}
+
+// TODO(doug): Overkill? In practice, users will probably just want to use a string identifier and hard code it?
+message SeriesDimensionId {
+  ArtifactId artifact_id = 1;
+}
+
+message SeriesPoint {
+  SeriesId series_id = 1;
+
+  repeated SeriesDimensionValue values = 2;
+}
+
+message SeriesData {
+  repeated SeriesDimensionData dimensions = 1;
+}
+
+message SeriesDimensionData {
+  SeriesDimensionId id = 1;
+  
+  string name = 2;
+}
+
+message SeriesDimensionValue {
+  SeriesDimensionId dimension_id = 1;
+
+  Number value = 2;
 }
