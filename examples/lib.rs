@@ -1,3 +1,4 @@
+use clap::Parser;
 use nalgebra::Affine3;
 use nalgebra::Isometry3;
 use nalgebra::Matrix3;
@@ -26,15 +27,48 @@ use observation_tools_client::builders::UserMetadataBuilder;
 use observation_tools_client::builders::Vector2Builder;
 use observation_tools_client::uploaders::ArtifactUploader2d;
 use observation_tools_client::uploaders::ArtifactUploader3d;
-use observation_tools_client::uploaders::GenericArtifactUploader;
+use observation_tools_client::ClientError;
+use observation_tools_client::ClientOptions;
+use observation_tools_client::TokenGenerator;
 use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use std::error::Error;
-use std::sync::Arc;
-use tracing::info;
+use wasm_bindgen::prelude::*;
 
-pub type GenericError = Box<dyn Error + Send + Sync>;
+#[wasm_bindgen]
+pub async fn run_examples(
+    project_id: String,
+    auth_token: String,
+    ui_host: Option<String>,
+    api_host: Option<String>,
+) -> Result<(), ClientError> {
+    let client = observation_tools_client::Client::new(ClientOptions {
+        ui_host,
+        api_host,
+        project_id,
+        client: None,
+        token_generator: TokenGenerator::Constant(auth_token),
+    })
+    .expect("Failed to create client");
+
+    let run_uploader = client.create_run(&UserMetadataBuilder::new("examples"))?;
+
+    /*
+    let uploader = run_uploader.child_uploader(&UserMetadataBuilder::new("generic"))?;
+    // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
+    let uploader_3d = uploader.child_uploader_3d(
+        &UserMetadataBuilder::new("generate_barn_wall"),
+        Transform3Builder::identity(),
+    )?;
+    generate_stone_wall(&uploader_3d)?;
+     */
+
+    println!("See the output at: {}", run_uploader.viewer_url());
+
+    client.shutdown().await?;
+
+    Ok(())
+}
 
 struct Stone {
     id: u8,
@@ -53,7 +87,7 @@ struct AlgorithmParameters {
 //
 // NOTE:
 // - The algorithm assumes that the input wall profile is perpendicular to the ground plane.
-pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), GenericError> {
+pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), ClientError> {
     let wall_profile_world = vec![
         Point3::new(108.0, 64.0, 13.0),
         Point3::new(108.0, 64.0, 15.0),
@@ -99,7 +133,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), Gener
 
 fn calculate_world_to_local_space_transforms(
     wall_profile_world: &Vec<Point3<f64>>,
-) -> Result<(Transform3<f64>, Transform3<f64>), GenericError> {
+) -> Result<(Transform3<f64>, Transform3<f64>), ClientError> {
     // Calculate the normal of the wall
     let side1 = wall_profile_world[2] - wall_profile_world[1];
     let side2 = wall_profile_world[0] - wall_profile_world[1];
@@ -127,7 +161,7 @@ fn calculate_world_to_local_space_transforms(
 fn generate_stone_locations(
     parameters: &AlgorithmParameters,
     wall_2d_uploader: &ArtifactUploader2d,
-) -> Result<Vec<Stone>, GenericError> {
+) -> Result<Vec<Stone>, ClientError> {
     let mut series_builder = SeriesBuilder::new();
     let algorithm_step_dimension_id = series_builder.add_dimension("algorithm_step");
     let algorithm_series_id = wall_2d_uploader.series("grid_algorithm", series_builder)?;

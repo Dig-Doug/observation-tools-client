@@ -8,16 +8,6 @@ use protobuf::Message;
 use reqwest::multipart::Part;
 use std::io::Write;
 use std::sync::Arc;
-#[cfg(feature = "files")]
-use tempfile::NamedTempFile;
-#[cfg(feature = "files")]
-use tempfile::TempDir;
-use tokio::runtime::Handle;
-use tokio::runtime::TryCurrentError;
-#[cfg(feature = "tokio")]
-use tokio_util::codec::BytesCodec;
-#[cfg(feature = "tokio")]
-use tokio_util::codec::FramedRead;
 use tracing::error;
 use tracing::trace;
 use wasm_bindgen::closure::Closure;
@@ -26,8 +16,10 @@ use wasm_bindgen::closure::Closure;
 pub struct TaskLoop {
     task_handler: Arc<TaskHandler>,
     params: TaskLoopParams,
+    send_task_channel: async_channel::Sender<UploadArtifactTask>,
+    receive_shutdown_channel: async_channel::Receiver<()>,
     #[cfg(feature = "files")]
-    tmp_dir: Arc<TempDir>,
+    tmp_dir: Arc<tempfile::TempDir>,
 }
 
 #[derive(Debug)]
@@ -35,15 +27,8 @@ pub enum TaskLoopParams {
     #[cfg(feature = "tokio")]
     TokioRuntime {
         runtime: tokio::runtime::Handle,
-        send_task_channel: async_channel::Sender<UploadArtifactTask>,
-        receive_shutdown_channel: async_channel::Receiver<()>,
     },
-    WindowEventLoop {
-        send_task_channel: async_channel::Sender<UploadArtifactTask>,
-        receive_shutdown_channel: crossbeam_channel::Receiver<()>,
-        closure: Closure<dyn FnMut()>,
-        interval_id: i32,
-    },
+    WindowEventLoop {},
 }
 
 #[derive(Debug)]
@@ -56,17 +41,44 @@ pub struct UploadArtifactTask {
 #[derive(Debug)]
 pub enum UploadArtifactTaskPayload {
     #[cfg(feature = "files")]
-    File(NamedTempFile),
+    File(tempfile::NamedTempFile),
     Bytes(Vec<u8>),
 }
 
 impl TaskLoop {
-    #[cfg(feature = "tokio")]
     pub(crate) fn new(task_handler: Arc<TaskHandler>) -> Result<TaskLoop, GenericError> {
-        let params = if cfg!(feature = "tokio") {
-            let (send_task_channel, receive_task_channel) = async_channel::unbounded();
-            let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
-            let runtime = match Handle::try_current() {
+        let (send_task_channel, receive_task_channel) = async_channel::unbounded();
+        let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
+        let task_loop = {
+            let task_handler = task_handler.clone();
+            async move {
+                trace!("Taskloop started");
+
+                while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
+                    let task = receive_task_channel.recv().await;
+                    match task {
+                        Ok(t) => {
+                            let result = task_handler.handle_upload_artifact_task(&t).await;
+                            if let Err(e) = result {
+                                error!("Failed to upload artifact: {}", e);
+                            }
+                        }
+                        Err(_) => {
+                            error!("Failed to receive task");
+                        }
+                    }
+                }
+
+                trace!("Shutting down task loop");
+                if let Err(e) = send_shutdown_channel.send(()).await {
+                    error!("Error shutting down: {}", e);
+                }
+            }
+        };
+
+        #[cfg(feature = "rust")]
+        let params = {
+            let runtime = match tokio::runtime::Handle::try_current() {
                 Ok(handle) => handle,
                 Err(_e) => {
                     let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -75,83 +87,21 @@ impl TaskLoop {
                     runtime.handle().clone()
                 }
             };
-            let task_loop = {
-                let task_handler = task_handler.clone();
-                async move {
-                    while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
-                        let task = receive_task_channel.recv().await;
-                        match task {
-                            Ok(t) => {
-                                let result = task_handler.handle_upload_artifact_task(&t).await;
-                                if let Err(e) = result {
-                                    error!("Failed to upload artifact: {}", e);
-                                }
-                            }
-                            Err(_) => {
-                                error!("Failed to receive task");
-                            }
-                        }
-                    }
-
-                    if let Err(e) = send_shutdown_channel.send(()).await {
-                        error!("Error shutting down: {}", e);
-                    }
-                }
-            };
             runtime.spawn(task_loop);
-            TaskLoopParams::TokioRuntime {
-                send_task_channel,
-                receive_shutdown_channel,
-                runtime,
-            }
-        } else {
-            use std::time::Duration;
-            use wasm_bindgen::JsCast;
+            TaskLoopParams::TokioRuntime { runtime }
+        };
+        #[cfg(feature = "wasm")]
+        let params = {
+            wasm_bindgen_futures::spawn_local(task_loop);
 
-            let (send_task_channel, receive_task_channel) = async_channel::unbounded();
-            let (send_shutdown_channel, receive_shutdown_channel) = crossbeam_channel::bounded(1);
-            let run_closure = {
-                let task_handler = task_handler.clone();
-                let receive_task_channel = receive_task_channel.clone();
-                Closure::new(move || {
-                    while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
-                        let task = receive_task_channel.try_recv();
-                        let task_handler = task_handler.clone();
-                        match task {
-                            Ok(t) => {
-                                wasm_bindgen_futures::spawn_local(async move {
-                                    let result = task_handler.handle_upload_artifact_task(&t).await;
-                                    if let Err(e) = result {
-                                        error!("Failed to upload artifact: {}", e);
-                                    }
-                                });
-                            }
-                            Err(_) => {
-                                error!("Failed task");
-                                panic!("Failed to receive task");
-                            }
-                        }
-                    }
-                })
-            };
-            let window = web_sys::window().unwrap();
-            let run_interval_id = window
-                .set_interval_with_callback_and_timeout_and_arguments_0(
-                    run_closure.as_ref().unchecked_ref(),
-                    Duration::from_millis(10).as_millis() as i32,
-                )
-                .expect("Should register `setTimeout`.");
-            TaskLoopParams::WindowEventLoop {
-                closure: run_closure,
-                interval_id: run_interval_id,
-                receive_shutdown_channel,
-                send_task_channel,
-            }
+            TaskLoopParams::WindowEventLoop {}
         };
 
         Ok(TaskLoop {
             task_handler,
             params,
+            receive_shutdown_channel,
+            send_task_channel,
             #[cfg(feature = "files")]
             tmp_dir: Self::create_tmp_dir(),
         })
@@ -162,20 +112,20 @@ impl TaskLoop {
         request: &CreateArtifactRequest,
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        let payload = if cfg!(feature = "files") {
+        #[cfg(feature = "tokio")]
+        let payload = {
             let tmp_file = if let Some(raw_data_slice) = raw_data {
                 // TODO(doug): Consider using a spooled tempfile
-                let mut tmp_file = NamedTempFile::new_in(&*self.tmp_dir).unwrap();
+                let mut tmp_file = tempfile::NamedTempFile::new_in(&*self.tmp_dir).unwrap();
                 tmp_file.write_all(raw_data_slice).unwrap();
                 Some(tmp_file)
             } else {
                 None
             };
-
             tmp_file.map(|f| UploadArtifactTaskPayload::File(f))
-        } else {
-            raw_data.map(|bytes| UploadArtifactTaskPayload::Bytes(bytes.to_vec()))
         };
+        #[cfg(not(feature = "tokio"))]
+        let payload = raw_data.map(|bytes| UploadArtifactTaskPayload::Bytes(bytes.to_vec()));
         // TODO(doug): Do we need to make a copy of the raw data here?
 
         let (send_completion_channel, receive_completion_channel) = async_channel::unbounded();
@@ -191,23 +141,9 @@ impl TaskLoop {
             .as_ref()
             .expect("ArtifactId missing on upload task")
             .clone();
-        match &self.params {
-            #[cfg(feature = "tokio")]
-            TaskLoopParams::TokioRuntime {
-                send_task_channel, ..
-            } => {
-                send_task_channel
-                    .try_send(task)
-                    .map_err(ClientError::from_string)?;
-            }
-            TaskLoopParams::WindowEventLoop {
-                send_task_channel, ..
-            } => {
-                send_task_channel
-                    .try_send(task)
-                    .map_err(ClientError::from_string)?;
-            }
-        }
+        self.send_task_channel
+            .try_send(task)
+            .map_err(ClientError::from_string)?;
         Ok(PublicArtifactIdTaskHandle {
             result: PublicArtifactId { id },
             channel: receive_completion_channel,
@@ -215,7 +151,7 @@ impl TaskLoop {
     }
 
     #[cfg(feature = "files")]
-    fn create_tmp_dir() -> Arc<TempDir> {
+    fn create_tmp_dir() -> Arc<tempfile::TempDir> {
         Arc::new(
             tempfile::Builder::new()
                 .prefix("observation_tools_")
@@ -227,17 +163,13 @@ impl TaskLoop {
     pub async fn shutdown(&self) {
         match &self.params {
             #[cfg(feature = "tokio")]
-            TaskLoopParams::TokioRuntime {
-                send_task_channel,
-                receive_shutdown_channel,
-                ..
-            } => {
-                send_task_channel.close();
-                let _ = receive_shutdown_channel.recv().await;
+            TaskLoopParams::TokioRuntime { runtime } => {
                 // TODO(doug): Eval runtime
             }
             TaskLoopParams::WindowEventLoop { .. } => {}
         }
+        self.send_task_channel.close();
+        let _ = self.receive_shutdown_channel.recv().await;
     }
 }
 
@@ -261,6 +193,9 @@ impl TaskHandler {
             let part = match payload {
                 #[cfg(feature = "files")]
                 UploadArtifactTaskPayload::File(f) => {
+                    use tokio_util::codec::BytesCodec;
+                    use tokio_util::codec::FramedRead;
+
                     let file = tokio::fs::File::open(f).await?;
                     Part::stream(reqwest::Body::wrap_stream(FramedRead::new(
                         file,
@@ -293,7 +228,7 @@ impl TaskHandler {
             Err(ClientError::ServerError {
                 status_code: status.as_u16(),
                 response: response_body,
-            }?)
+            })?
         } else {
             Ok(())
         }

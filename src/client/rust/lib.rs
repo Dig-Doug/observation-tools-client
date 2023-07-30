@@ -20,6 +20,7 @@ pub use crate::task_handle::PublicArtifactIdTaskHandle;
 pub use crate::task_handle::PublicSeriesIdTaskHandle;
 pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
+pub use crate::util::ClientError;
 use artifacts_api_rust_proto::ArtifactId;
 use wasm_bindgen::prelude::*;
 

@@ -29,7 +29,7 @@ pub enum ClientError {
 }
 
 impl ClientError {
-    pub fn from_string(message: impl Debug) -> ClientError {
+    pub(crate) fn from_string(message: impl Debug) -> ClientError {
         ClientError::GenericError {
             message: format!("Error: {:?}", message),
         }

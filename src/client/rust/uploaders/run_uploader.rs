@@ -39,14 +39,4 @@ impl RunUploader {
     ) -> Result<GenericArtifactUploaderTaskHandle, ClientError> {
         self.base.child_uploader(metadata, None)
     }
-
-    /*
-    pub fn create_initial_run_stage(&self, metadata: &UserMetadataBuilder) -> RunStageUploader {
-        let mut request = self.base.base_create_artifact_request(metadata, None);
-        request.mut_artifact_data().artifact_type = ARTIFACT_TYPE_RUN_STAGE.into();
-        RunStageUploader {
-            base: self.base.create_child_group_old(request),
-        }
-    }
-     */
 }

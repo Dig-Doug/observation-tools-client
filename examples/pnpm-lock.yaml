@@ -1,0 +1,21 @@
+lockfileVersion: '6.0'
+
+dependencies:
+  minimist:
+    specifier: ^1.2.8
+    version: 1.2.8
+
+devDependencies:
+  '@types/minimist':
+    specifier: ^1.2.2
+    version: 1.2.2
+
+packages:
+
+  /@types/minimist@1.2.2:
+    resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
+    dev: true
+
+  /minimist@1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+    dev: false

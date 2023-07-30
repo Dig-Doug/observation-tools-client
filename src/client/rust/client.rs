@@ -67,6 +67,7 @@ impl Client {
     pub async fn shutdown(self) -> Result<(), ClientError> {
         trace!("Shutting down client");
         self.task_loop.shutdown().await;
+        trace!("Finished shutting down client");
         Ok(())
     }
 
@@ -95,6 +96,7 @@ impl Client {
 
 impl Client {
     pub fn new(options: ClientOptions) -> Result<Self, GenericError> {
+        trace!("Creating client");
         let task_handler = Arc::new(TaskHandler {
             client: options.client.clone().unwrap_or_else(|| {
                 let builder = reqwest::Client::builder().cookie_store(true);
@@ -134,6 +136,7 @@ impl Client {
         request: &CreateArtifactRequest,
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
+        trace!("Uploading artifact");
         self.task_loop.submit_task(request, raw_data)
     }
 }
