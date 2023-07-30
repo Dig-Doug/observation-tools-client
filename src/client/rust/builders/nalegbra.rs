@@ -1,7 +1,12 @@
-use crate::builders::{NumberBuilder, Point2Builder, Point3Builder, Transform3Builder};
+use crate::builders::NumberBuilder;
+use crate::builders::Point2Builder;
+use crate::builders::Point3Builder;
+use crate::builders::Transform3Builder;
+use nalgebra::Matrix3;
 use nalgebra::Matrix4;
 use nalgebra::Point2;
 use nalgebra::Point3;
+use nalgebra::RealField;
 use nalgebra::Rotation;
 use nalgebra::Scalar;
 use nalgebra::Similarity;
@@ -9,7 +14,6 @@ use nalgebra::Transform3;
 use nalgebra::Translation;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
-use nalgebra::{Matrix3, RealField};
 
 impl<T: Scalar + Into<NumberBuilder>> Into<Point2Builder> for Point2<T> {
     fn into(self) -> Point2Builder {

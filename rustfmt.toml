@@ -1,2 +1,5 @@
 group_imports = "One"
 imports_granularity = "Item"
+ignore = [
+    "src/api/artifacts/generated"
+]

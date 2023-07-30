@@ -1,5 +1,8 @@
-use crate::builders::{Geometry3Builder, Point3Builder, Transform3Builder};
-use crate::builders::{Object3Builder, PolygonEdge3Builder};
+use crate::builders::Geometry3Builder;
+use crate::builders::Object3Builder;
+use crate::builders::Point3Builder;
+use crate::builders::PolygonEdge3Builder;
+use crate::builders::Transform3Builder;
 use artifacts_api_rust_proto::Polygon3;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;

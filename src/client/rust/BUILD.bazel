@@ -1,7 +1,6 @@
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_static_library", "rust_shared_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_shared_library", "rust_static_library", "rust_test")
 load("@rules_rust//wasm_bindgen:wasm_bindgen.bzl", "rust_wasm_bindgen")
 load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
-load("@aspect_rules_js//js:defs.bzl", "js_binary")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -27,35 +26,35 @@ rust_library(
     name = "client",
     srcs = SRCS,
     aliases = aliases(),
+    crate_features = ["rust"],
     data = CLIENT_DATA,
     proc_macro_deps = PROC_MACRO_DEPS,
     deps = DEPS,
-    crate_features = ["rust"],
 )
 
 rust_static_library(
     name = "client_static",
     srcs = SRCS,
     aliases = aliases(),
+    crate_features = ["cpp"],
     data = CLIENT_DATA,
     proc_macro_deps = PROC_MACRO_DEPS,
     deps = DEPS,
-    crate_features = ["cpp"],
 )
 
 rust_shared_library(
     name = "client_wasm",
     srcs = SRCS,
     aliases = aliases(),
+    crate_features = ["wasm"],
     data = CLIENT_DATA,
     proc_macro_deps = PROC_MACRO_DEPS,
     deps = DEPS,
-    crate_features = ["wasm"],
 )
 
 rust_wasm_bindgen(
     name = "client_bundler_wasm_bindgen",
-    target ="nodejs",
+    target = "nodejs",
     wasm_file = ":client_wasm",
 )
 

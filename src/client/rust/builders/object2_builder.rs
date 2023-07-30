@@ -1,6 +1,6 @@
-use crate::artifact_uploader_2d::Type2d;
+use crate::builders::Geometry2Builder;
+use crate::builders::SeriesPointBuilder;
 use crate::builders::Transform2Builder;
-use crate::builders::{Geometry2Builder, SeriesPointBuilder};
 use crate::PublicArtifactId;
 use artifacts_api_rust_proto::Object2;
 use artifacts_api_rust_proto::StructuredData;
@@ -42,13 +42,8 @@ impl Into<StructuredData> for &Object2Builder {
     }
 }
 
-impl Type2d for Object2Builder {
-    fn convert_2d_to_raw(&self) -> StructuredData {
-        self.into()
-    }
-}
-
 #[wasm_bindgen]
+#[derive(Debug, Clone)]
 pub struct Object2Updater {
     pub(crate) id: PublicArtifactId,
 }

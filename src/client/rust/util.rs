@@ -1,3 +1,5 @@
+use artifacts_api_rust_proto::ArtifactId;
+use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
 use std::error::Error;
@@ -26,10 +28,24 @@ pub enum ClientError {
     },
 }
 
+impl ClientError {
+    pub(crate) fn from_string(message: impl Debug) -> ClientError {
+        ClientError::GenericError {
+            message: format!("Error: {:?}", message),
+        }
+    }
+}
+
 impl Into<JsValue> for ClientError {
     fn into(self) -> JsValue {
         JsValue::from_str(&self.to_string())
     }
+}
+
+pub(crate) fn new_artifact_id() -> ArtifactId {
+    let mut id = ArtifactId::new();
+    id.uuid = Some(new_uuid_proto()).into();
+    id
 }
 
 pub(crate) fn encode_id_proto(msg: &impl Message) -> String {
