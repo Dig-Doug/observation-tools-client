@@ -93,7 +93,6 @@ impl TaskLoop {
         #[cfg(feature = "wasm")]
         let params = {
             wasm_bindgen_futures::spawn_local(task_loop);
-
             TaskLoopParams::WindowEventLoop {}
         };
 
@@ -112,7 +111,7 @@ impl TaskLoop {
         request: &CreateArtifactRequest,
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        #[cfg(feature = "tokio")]
+        #[cfg(feature = "files")]
         let payload = {
             let tmp_file = if let Some(raw_data_slice) = raw_data {
                 // TODO(doug): Consider using a spooled tempfile
@@ -124,7 +123,7 @@ impl TaskLoop {
             };
             tmp_file.map(|f| UploadArtifactTaskPayload::File(f))
         };
-        #[cfg(not(feature = "tokio"))]
+        #[cfg(not(feature = "files"))]
         let payload = raw_data.map(|bytes| UploadArtifactTaskPayload::Bytes(bytes.to_vec()));
         // TODO(doug): Do we need to make a copy of the raw data here?
 

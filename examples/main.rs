@@ -1,11 +1,6 @@
 use clap::Parser;
-use observation_tools_client::builders::Transform3Builder;
-use observation_tools_client::builders::UserMetadataBuilder;
-use observation_tools_client::ClientOptions;
-use observation_tools_client::TokenGenerator;
-use observation_tools_client_examples::generate_stone_wall;
-use observation_tools_client_examples::GenericError;
-use tracing::info;
+use observation_tools_client::ClientError;
+use observation_tools_client_examples::run_examples;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -21,10 +16,18 @@ pub struct Args {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), GenericError> {
+async fn main() -> Result<(), ClientError> {
     env_logger::init();
 
     let args = Args::parse();
+
+    run_examples(
+        args.project_id,
+        args.auth_token,
+        args.ui_host,
+        args.api_host,
+    )
+    .await?;
 
     Ok(())
 }

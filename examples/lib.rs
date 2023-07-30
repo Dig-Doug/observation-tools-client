@@ -53,7 +53,6 @@ pub async fn run_examples(
 
     let run_uploader = client.create_run(&UserMetadataBuilder::new("examples"))?;
 
-    /*
     let uploader = run_uploader.child_uploader(&UserMetadataBuilder::new("generic"))?;
     // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
     let uploader_3d = uploader.child_uploader_3d(
@@ -61,7 +60,6 @@ pub async fn run_examples(
         Transform3Builder::identity(),
     )?;
     generate_stone_wall(&uploader_3d)?;
-     */
 
     println!("See the output at: {}", run_uploader.viewer_url());
 
