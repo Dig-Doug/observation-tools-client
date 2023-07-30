@@ -9,7 +9,7 @@ use artifacts_api_rust_proto::SeriesPoint;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct PublicSeriesId {
     pub(crate) proto: artifacts_api_rust_proto::SeriesId,
 }

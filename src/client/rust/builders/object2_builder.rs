@@ -43,6 +43,7 @@ impl Into<StructuredData> for &Object2Builder {
 }
 
 #[wasm_bindgen]
+#[derive(Debug, Clone)]
 pub struct Object2Updater {
     pub(crate) id: PublicArtifactId,
 }

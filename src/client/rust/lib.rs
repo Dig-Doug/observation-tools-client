@@ -1,22 +1,30 @@
 extern crate alloc;
+extern crate core;
 
 pub mod builders;
 mod client;
 mod run_id;
-mod task_handler;
+mod task_handle;
+mod task_loop;
 mod token_generator;
-mod upload_artifact_task;
 pub mod uploaders;
 mod util;
 
-pub use crate::builders::UserMetadataBuilder;
 pub use crate::client::Client;
 pub use crate::client::ClientOptions;
+pub use crate::task_handle::ArtifactUploader2dTaskHandle;
+pub use crate::task_handle::ArtifactUploader3dTaskHandle;
+pub(crate) use crate::task_handle::BaseArtifactUploaderTaskHandle;
+pub use crate::task_handle::GenericArtifactUploaderTaskHandle;
+pub use crate::task_handle::PublicArtifactIdTaskHandle;
+pub use crate::task_handle::PublicSeriesIdTaskHandle;
+pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
 use artifacts_api_rust_proto::ArtifactId;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[derive(Debug, Clone)]
 pub struct PublicArtifactId {
     pub(crate) id: ArtifactId,
 }

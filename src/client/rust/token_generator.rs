@@ -1,6 +1,6 @@
 use crate::util::ClientError;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum TokenGenerator {
     Constant(String),
 }

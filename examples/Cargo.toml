@@ -13,7 +13,7 @@ name = "observation_tools_client_examples"
 path = "lib.rs"
 
 [dependencies]
-observation-tools-client = { path = "../src/client/rust" }
+observation-tools-client = { path = "../src/client/rust", features = ["rust"] }
 nalgebra = { version = "^0.32", features = ["serde-serialize", "mint", "convert-glam024"] }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1.35"

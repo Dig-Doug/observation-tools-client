@@ -1,4 +1,5 @@
 use artifacts_api_rust_proto::ArtifactId;
+use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
 use std::error::Error;
@@ -25,6 +26,14 @@ pub enum ClientError {
         #[from]
         source: std::io::Error,
     },
+}
+
+impl ClientError {
+    pub fn from_string(message: impl Debug) -> ClientError {
+        ClientError::GenericError {
+            message: format!("Error: {:?}", message),
+        }
+    }
 }
 
 impl Into<JsValue> for ClientError {

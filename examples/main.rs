@@ -1,8 +1,8 @@
 use clap::Parser;
 use observation_tools_client::builders::Transform3Builder;
+use observation_tools_client::builders::UserMetadataBuilder;
 use observation_tools_client::ClientOptions;
 use observation_tools_client::TokenGenerator;
-use observation_tools_client::UserMetadataBuilder;
 use observation_tools_client_examples::generate_stone_wall;
 use observation_tools_client_examples::GenericError;
 use tracing::info;
@@ -35,23 +35,19 @@ async fn main() -> Result<(), GenericError> {
     })
     .expect("Failed to create client");
 
-    let run_uploader = client
-        .create_run(&UserMetadataBuilder::new("examples"))
-        .await?;
+    let run_uploader = client.create_run(&UserMetadataBuilder::new("examples"))?;
 
-    let uploader = run_uploader
-        .child_uploader(&UserMetadataBuilder::new("generic"))
-        .await?;
+    let uploader = run_uploader.child_uploader(&UserMetadataBuilder::new("generic"))?;
     // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
-    let uploader_3d = uploader
-        .child_uploader_3d(
-            &UserMetadataBuilder::new("generate_barn_wall"),
-            Transform3Builder::identity(),
-        )
-        .await?;
-    generate_stone_wall(uploader_3d).await?;
+    let uploader_3d = uploader.child_uploader_3d(
+        &UserMetadataBuilder::new("generate_barn_wall"),
+        Transform3Builder::identity(),
+    )?;
+    generate_stone_wall(&uploader_3d)?;
 
     println!("See the output at: {}", run_uploader.viewer_url());
+
+    client.shutdown().await?;
 
     Ok(())
 }

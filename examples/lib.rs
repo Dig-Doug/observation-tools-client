@@ -22,11 +22,11 @@ use observation_tools_client::builders::SeriesBuilder;
 use observation_tools_client::builders::SeriesPointBuilder;
 use observation_tools_client::builders::Transform2Builder;
 use observation_tools_client::builders::Transform3Builder;
+use observation_tools_client::builders::UserMetadataBuilder;
 use observation_tools_client::builders::Vector2Builder;
-use observation_tools_client::ArtifactUploader2d;
-use observation_tools_client::ArtifactUploader3d;
-use observation_tools_client::GenericArtifactUploader;
-use observation_tools_client::UserMetadataBuilder;
+use observation_tools_client::uploaders::ArtifactUploader2d;
+use observation_tools_client::uploaders::ArtifactUploader3d;
+use observation_tools_client::uploaders::GenericArtifactUploader;
 use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -53,7 +53,7 @@ struct AlgorithmParameters {
 //
 // NOTE:
 // - The algorithm assumes that the input wall profile is perpendicular to the ground plane.
-pub async fn generate_stone_wall(uploader_3d: ArtifactUploader3d) -> Result<(), GenericError> {
+pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), GenericError> {
     let wall_profile_world = vec![
         Point3::new(108.0, 64.0, 13.0),
         Point3::new(108.0, 64.0, 15.0),
@@ -68,14 +68,12 @@ pub async fn generate_stone_wall(uploader_3d: ArtifactUploader3d) -> Result<(), 
         max_stone_height: 1,
     };
 
-    uploader_3d
-        .upload_object3(
-            "wall_profile_world_space",
-            Polygon3Builder::from_points(wall_profile_world.clone()),
-        )
-        .await?;
+    uploader_3d.upload_object3(
+        "wall_profile_world_space",
+        Polygon3Builder::from_points(wall_profile_world.clone()),
+    )?;
     let (world_to_local_transform, local_to_world_transform) =
-        calculate_world_to_local_space_transforms(&wall_profile_world).await?;
+        calculate_world_to_local_space_transforms(&wall_profile_world)?;
 
     let wall_profile_2d: Vec<Point2<f64>> = wall_profile_world
         .iter()
@@ -83,18 +81,14 @@ pub async fn generate_stone_wall(uploader_3d: ArtifactUploader3d) -> Result<(), 
         .map(|p| Point2::new(p.x, p.y))
         .collect();
 
-    let wall_2d_uploader = uploader_3d
-        .child_uploader_2d("wall_2d", local_to_world_transform)
-        .await?;
+    let wall_2d_uploader = uploader_3d.child_uploader_2d("wall_2d", local_to_world_transform)?;
 
-    wall_2d_uploader
-        .upload_object2(
-            "wall_profile_local_space",
-            Polygon2Builder::from_points(wall_profile_2d.clone()),
-        )
-        .await?;
+    wall_2d_uploader.upload_object2(
+        "wall_profile_local_space",
+        Polygon2Builder::from_points(wall_profile_2d.clone()),
+    )?;
 
-    let stones = generate_stone_locations(&parameters, &wall_2d_uploader).await?;
+    let stones = generate_stone_locations(&parameters, &wall_2d_uploader)?;
 
     // TODO(doug): Convert the grid pattern to boxes
     // TODO(doug): Apply adjustments to boxes to add randomness
@@ -103,7 +97,7 @@ pub async fn generate_stone_wall(uploader_3d: ArtifactUploader3d) -> Result<(), 
     Ok(())
 }
 
-async fn calculate_world_to_local_space_transforms(
+fn calculate_world_to_local_space_transforms(
     wall_profile_world: &Vec<Point3<f64>>,
 ) -> Result<(Transform3<f64>, Transform3<f64>), GenericError> {
     // Calculate the normal of the wall
@@ -130,15 +124,13 @@ async fn calculate_world_to_local_space_transforms(
     Ok((world_to_local_transform, local_to_world_transform))
 }
 
-async fn generate_stone_locations(
+fn generate_stone_locations(
     parameters: &AlgorithmParameters,
     wall_2d_uploader: &ArtifactUploader2d,
 ) -> Result<Vec<Stone>, GenericError> {
     let mut series_builder = SeriesBuilder::new();
     let algorithm_step_dimension_id = series_builder.add_dimension("algorithm_step");
-    let algorithm_series_id = wall_2d_uploader
-        .series("grid_algorithm", series_builder)
-        .await?;
+    let algorithm_series_id = wall_2d_uploader.series("grid_algorithm", series_builder)?;
 
     // TODO(doug): Get width from polygon
     let width = 3.0;
@@ -208,12 +200,12 @@ async fn generate_stone_locations(
                 None => {
                     grid_image_updater = Some(
                         wall_2d_uploader
-                            .upload_object2("grid_image", object2)
-                            .await?,
+                            .upload_object2("grid_image", object2)?
+                            .result,
                     );
                 }
                 Some(updater) => {
-                    wall_2d_uploader.update_object2(&updater, object2).await?;
+                    wall_2d_uploader.update_object2(&updater, object2)?;
                 }
             };
             algorithm_step += 1;
