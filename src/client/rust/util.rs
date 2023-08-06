@@ -1,3 +1,4 @@
+use crate::builders::IntoGeometry2Builder;
 use artifacts_api_rust_proto::ArtifactId;
 use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;
@@ -21,6 +22,10 @@ pub enum ClientError {
     FailedToConvertJsValueToNumber { value: String },
     #[error("Failed to create image")]
     FailedToCreateImage,
+    #[error("Failed to convert type to Geometry2Builder")]
+    FailedToCreateGeometry2Builder,
+    #[error("Failed to convert type to Geometry3Builder")]
+    FailedToCreateGeometry3Builder,
     #[error("IO Error: {source}")]
     IoError {
         #[from]

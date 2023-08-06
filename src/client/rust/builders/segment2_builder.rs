@@ -1,9 +1,13 @@
 use crate::builders::Geometry2Builder;
+use crate::builders::Object2Builder;
 use crate::builders::Point2Builder;
 use artifacts_api_rust_proto::Segment2;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_derive::TryFromJsValue;
 
+#[derive(TryFromJsValue)]
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct Segment2Builder {
     pub(crate) proto: Segment2,
 }
@@ -24,8 +28,8 @@ impl Segment2Builder {
     }
 }
 
-impl Into<Geometry2Builder> for &Segment2Builder {
-    fn into(self) -> Geometry2Builder {
-        Geometry2Builder::segment(self)
+impl Into<Object2Builder> for &Segment2Builder {
+    fn into(self) -> Object2Builder {
+        Object2Builder::new(Geometry2Builder::segment(self))
     }
 }

@@ -6,7 +6,9 @@ use crate::builders::Transform3Builder;
 use artifacts_api_rust_proto::Polygon3;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_derive::TryFromJsValue;
 
+#[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Polygon3Builder {
@@ -57,9 +59,7 @@ impl Into<Geometry3Builder> for &Polygon3Builder {
 
 impl Into<Object3Builder> for Polygon3Builder {
     fn into(self) -> Object3Builder {
-        let mut builder = Object3Builder::new(self.into());
-        // TODO(doug): #default-transform
-        builder.add_transform(&Transform3Builder::identity());
+        let builder = Object3Builder::new(self.into());
         builder
     }
 }

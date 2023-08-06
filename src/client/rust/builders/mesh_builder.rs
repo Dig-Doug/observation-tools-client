@@ -1,9 +1,13 @@
 use crate::builders::Geometry3Builder;
+use crate::builders::Object3Builder;
 use crate::builders::VertexBuilder;
 use artifacts_api_rust_proto::Mesh;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_derive::TryFromJsValue;
 
+#[derive(TryFromJsValue)]
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct MeshBuilder {
     pub(crate) proto: Mesh,
 }
@@ -30,5 +34,12 @@ impl MeshBuilder {
 impl Into<Geometry3Builder> for &MeshBuilder {
     fn into(self) -> Geometry3Builder {
         Geometry3Builder::mesh(self)
+    }
+}
+
+impl Into<Object3Builder> for &MeshBuilder {
+    fn into(self) -> Object3Builder {
+        let mut builder = Object3Builder::new(self.into());
+        builder
     }
 }

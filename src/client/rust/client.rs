@@ -136,7 +136,6 @@ impl Client {
         request: &CreateArtifactRequest,
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        trace!("Uploading artifact");
         self.task_loop.submit_task(request, raw_data)
     }
 }
