@@ -111,6 +111,17 @@ impl TaskLoop {
         request: &CreateArtifactRequest,
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
+        let id = request
+            .artifact_id
+            .as_ref()
+            .expect("ArtifactId missing on upload task")
+            .clone();
+        trace!(
+            "Submitting artifact: {} raw_data_len: {}",
+            id,
+            raw_data.map(|d| d.len() as i64).unwrap_or(-1)
+        );
+
         #[cfg(feature = "files")]
         let payload = {
             let tmp_file = if let Some(raw_data_slice) = raw_data {
@@ -134,12 +145,6 @@ impl TaskLoop {
             completion_channel: send_completion_channel,
         };
 
-        let id = task
-            .request
-            .artifact_id
-            .as_ref()
-            .expect("ArtifactId missing on upload task")
-            .clone();
         self.send_task_channel
             .try_send(task)
             .map_err(ClientError::from_string)?;
@@ -184,7 +189,7 @@ impl TaskHandler {
         &self,
         task: &UploadArtifactTask,
     ) -> Result<(), GenericError> {
-        trace!("Handling artifact: {:?}", task);
+        trace!("Handling artifact: {:?}", task.request);
 
         let req_b64 = base64::encode(task.request.write_to_bytes()?);
         let mut form = reqwest::multipart::Form::new().text("request", req_b64);

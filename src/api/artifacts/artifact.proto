@@ -117,6 +117,7 @@ message Geometry2 {
     Polygon2 polygon2 = 2;
     Segment2 segment2 = 3;
     Image2 image2 = 4;
+    Rect2 rect2 = 5;
   }
 }
 

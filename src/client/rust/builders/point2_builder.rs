@@ -1,11 +1,15 @@
 use crate::builders::number_builder::NumberOrNumberBuilder;
 use crate::builders::Geometry2Builder;
 use crate::builders::NumberBuilder;
+use crate::builders::Object2Builder;
 use crate::util::ClientError;
 use artifacts_api_rust_proto::Point2;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_derive::TryFromJsValue;
 
+#[derive(TryFromJsValue)]
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct Point2Builder {
     pub(crate) proto: Point2,
 }
@@ -37,8 +41,8 @@ impl Point2Builder {
     }
 }
 
-impl Into<Geometry2Builder> for &Point2Builder {
-    fn into(self) -> Geometry2Builder {
-        Geometry2Builder::point(self)
+impl Into<Object2Builder> for &Point2Builder {
+    fn into(self) -> Object2Builder {
+        Object2Builder::new(Geometry2Builder::point(self))
     }
 }

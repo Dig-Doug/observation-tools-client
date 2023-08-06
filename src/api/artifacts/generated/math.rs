@@ -1142,6 +1142,129 @@ impl ::protobuf::reflect::ProtobufValue for Polygon2 {
 }
 
 #[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.Rect2)
+pub struct Rect2 {
+    // message fields
+    // @@protoc_insertion_point(field:observation_tools.proto.Rect2.size)
+    pub size: ::protobuf::MessageField<Vector2>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.Rect2.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Rect2 {
+    fn default() -> &'a Rect2 {
+        <Rect2 as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Rect2 {
+    pub fn new() -> Rect2 {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Vector2>(
+            "size",
+            |m: &Rect2| { &m.size },
+            |m: &mut Rect2| { &mut m.size },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Rect2>(
+            "Rect2",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Rect2 {
+    const NAME: &'static str = "Rect2";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.size)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.size.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.size.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Rect2 {
+        Rect2::new()
+    }
+
+    fn clear(&mut self) {
+        self.size.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Rect2 {
+        static instance: Rect2 = Rect2 {
+            size: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Rect2 {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Rect2").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Rect2 {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Rect2 {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
 // @@protoc_insertion_point(message:observation_tools.proto.PolygonEdge3)
 pub struct PolygonEdge3 {
     // message fields
@@ -2516,6 +2639,354 @@ impl ::protobuf::reflect::ProtobufValue for Matrix4x4 {
 }
 
 #[derive(PartialEq,Clone,Default,Debug)]
+// @@protoc_insertion_point(message:observation_tools.proto.Transform)
+pub struct Transform {
+    // message oneof groups
+    pub data: ::std::option::Option<transform::Data>,
+    // special fields
+    // @@protoc_insertion_point(special_field:observation_tools.proto.Transform.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a Transform {
+    fn default() -> &'a Transform {
+        <Transform as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Transform {
+    pub fn new() -> Transform {
+        ::std::default::Default::default()
+    }
+
+    // .observation_tools.proto.Transform2 transform2 = 1;
+
+    pub fn transform2(&self) -> &Transform2 {
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform2(ref v)) => v,
+            _ => <Transform2 as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_transform2(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_transform2(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform2(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_transform2(&mut self, v: Transform2) {
+        self.data = ::std::option::Option::Some(transform::Data::Transform2(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_transform2(&mut self) -> &mut Transform2 {
+        if let ::std::option::Option::Some(transform::Data::Transform2(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(transform::Data::Transform2(Transform2::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform2(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_transform2(&mut self) -> Transform2 {
+        if self.has_transform2() {
+            match self.data.take() {
+                ::std::option::Option::Some(transform::Data::Transform2(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Transform2::new()
+        }
+    }
+
+    // .observation_tools.proto.Transform3 transform3 = 2;
+
+    pub fn transform3(&self) -> &Transform3 {
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform3(ref v)) => v,
+            _ => <Transform3 as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_transform3(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_transform3(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform3(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_transform3(&mut self, v: Transform3) {
+        self.data = ::std::option::Option::Some(transform::Data::Transform3(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_transform3(&mut self) -> &mut Transform3 {
+        if let ::std::option::Option::Some(transform::Data::Transform3(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(transform::Data::Transform3(Transform3::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform3(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_transform3(&mut self) -> Transform3 {
+        if self.has_transform3() {
+            match self.data.take() {
+                ::std::option::Option::Some(transform::Data::Transform3(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Transform3::new()
+        }
+    }
+
+    // .observation_tools.proto.Transform3 transform2_to_3 = 3;
+
+    pub fn transform2_to_3(&self) -> &Transform3 {
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform2To3(ref v)) => v,
+            _ => <Transform3 as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_transform2_to_3(&mut self) {
+        self.data = ::std::option::Option::None;
+    }
+
+    pub fn has_transform2_to_3(&self) -> bool {
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform2To3(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_transform2_to_3(&mut self, v: Transform3) {
+        self.data = ::std::option::Option::Some(transform::Data::Transform2To3(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_transform2_to_3(&mut self) -> &mut Transform3 {
+        if let ::std::option::Option::Some(transform::Data::Transform2To3(_)) = self.data {
+        } else {
+            self.data = ::std::option::Option::Some(transform::Data::Transform2To3(Transform3::new()));
+        }
+        match self.data {
+            ::std::option::Option::Some(transform::Data::Transform2To3(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_transform2_to_3(&mut self) -> Transform3 {
+        if self.has_transform2_to_3() {
+            match self.data.take() {
+                ::std::option::Option::Some(transform::Data::Transform2To3(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Transform3::new()
+        }
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(1);
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, Transform2>(
+            "transform2",
+            Transform::has_transform2,
+            Transform::transform2,
+            Transform::mut_transform2,
+            Transform::set_transform2,
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, Transform3>(
+            "transform3",
+            Transform::has_transform3,
+            Transform::transform3,
+            Transform::mut_transform3,
+            Transform::set_transform3,
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, Transform3>(
+            "transform2_to_3",
+            Transform::has_transform2_to_3,
+            Transform::transform2_to_3,
+            Transform::mut_transform2_to_3,
+            Transform::set_transform2_to_3,
+        ));
+        oneofs.push(transform::Data::generated_oneof_descriptor_data());
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Transform>(
+            "Transform",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for Transform {
+    const NAME: &'static str = "Transform";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.data = ::std::option::Option::Some(transform::Data::Transform2(is.read_message()?));
+                },
+                18 => {
+                    self.data = ::std::option::Option::Some(transform::Data::Transform3(is.read_message()?));
+                },
+                26 => {
+                    self.data = ::std::option::Option::Some(transform::Data::Transform2To3(is.read_message()?));
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let ::std::option::Option::Some(ref v) = self.data {
+            match v {
+                &transform::Data::Transform2(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+                &transform::Data::Transform3(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+                &transform::Data::Transform2To3(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+            };
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let ::std::option::Option::Some(ref v) = self.data {
+            match v {
+                &transform::Data::Transform2(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+                },
+                &transform::Data::Transform3(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+                },
+                &transform::Data::Transform2To3(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+                },
+            };
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> Transform {
+        Transform::new()
+    }
+
+    fn clear(&mut self) {
+        self.data = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
+        self.data = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static Transform {
+        static instance: Transform = Transform {
+            data: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for Transform {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Transform").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for Transform {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Transform {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `Transform`
+pub mod transform {
+
+    #[derive(Clone,PartialEq,Debug)]
+    #[non_exhaustive]
+    // @@protoc_insertion_point(oneof:observation_tools.proto.Transform.data)
+    pub enum Data {
+        // @@protoc_insertion_point(oneof_field:observation_tools.proto.Transform.transform2)
+        Transform2(super::Transform2),
+        // @@protoc_insertion_point(oneof_field:observation_tools.proto.Transform.transform3)
+        Transform3(super::Transform3),
+        // @@protoc_insertion_point(oneof_field:observation_tools.proto.Transform.transform2_to_3)
+        Transform2To3(super::Transform3),
+    }
+
+    impl ::protobuf::Oneof for Data {
+    }
+
+    impl ::protobuf::OneofFull for Data {
+        fn descriptor() -> ::protobuf::reflect::OneofDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::OneofDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| <super::Transform as ::protobuf::MessageFull>::descriptor().oneof_by_name("data").unwrap()).clone()
+        }
+    }
+
+    impl Data {
+        pub(in super) fn generated_oneof_descriptor_data() -> ::protobuf::reflect::GeneratedOneofDescriptorData {
+            ::protobuf::reflect::GeneratedOneofDescriptorData::new::<Data>("data")
+        }
+    }
+}
+
+#[derive(PartialEq,Clone,Default,Debug)]
 // @@protoc_insertion_point(message:observation_tools.proto.Transform2)
 pub struct Transform2 {
     // message oneof groups
@@ -3095,7 +3566,9 @@ pub mod transform3 {
 pub struct TRS2 {
     // message fields
     // @@protoc_insertion_point(field:observation_tools.proto.TRS2.translation)
-    pub translation: ::protobuf::MessageField<Vector2>,
+    pub translation: ::protobuf::MessageField<Point2>,
+    // @@protoc_insertion_point(field:observation_tools.proto.TRS2.rotation)
+    pub rotation: ::protobuf::MessageField<Number>,
     // @@protoc_insertion_point(field:observation_tools.proto.TRS2.scale)
     pub scale: ::protobuf::MessageField<Vector2>,
     // special fields
@@ -3115,12 +3588,17 @@ impl TRS2 {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Vector2>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Point2>(
             "translation",
             |m: &TRS2| { &m.translation },
             |m: &mut TRS2| { &mut m.translation },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Number>(
+            "rotation",
+            |m: &TRS2| { &m.rotation },
+            |m: &mut TRS2| { &mut m.rotation },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Vector2>(
             "scale",
@@ -3148,6 +3626,9 @@ impl ::protobuf::Message for TRS2 {
                 10 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.translation)?;
                 },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.rotation)?;
+                },
                 26 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.scale)?;
                 },
@@ -3167,6 +3648,10 @@ impl ::protobuf::Message for TRS2 {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.rotation.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         if let Some(v) = self.scale.as_ref() {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
@@ -3179,6 +3664,9 @@ impl ::protobuf::Message for TRS2 {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.translation.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.rotation.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         }
         if let Some(v) = self.scale.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
@@ -3201,6 +3689,7 @@ impl ::protobuf::Message for TRS2 {
 
     fn clear(&mut self) {
         self.translation.clear();
+        self.rotation.clear();
         self.scale.clear();
         self.special_fields.clear();
     }
@@ -3208,6 +3697,7 @@ impl ::protobuf::Message for TRS2 {
     fn default_instance() -> &'static TRS2 {
         static instance: TRS2 = TRS2 {
             translation: ::protobuf::MessageField::none(),
+            rotation: ::protobuf::MessageField::none(),
             scale: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -3237,7 +3727,7 @@ impl ::protobuf::reflect::ProtobufValue for TRS2 {
 pub struct TRS3 {
     // message fields
     // @@protoc_insertion_point(field:observation_tools.proto.TRS3.translation)
-    pub translation: ::protobuf::MessageField<Vector3>,
+    pub translation: ::protobuf::MessageField<Point3>,
     // @@protoc_insertion_point(field:observation_tools.proto.TRS3.scale)
     pub scale: ::protobuf::MessageField<Vector3>,
     // special fields
@@ -3259,7 +3749,7 @@ impl TRS3 {
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Vector3>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Point3>(
             "translation",
             |m: &TRS3| { &m.translation },
             |m: &mut TRS3| { &mut m.translation },
@@ -3393,62 +3883,69 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x03\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x01z\"G\n\x0c\
     PolygonEdge2\x127\n\x06vertex\x18\x01\x20\x01(\x0b2\x1f.observation_tool\
     s.proto.Point2R\x06vertex\"G\n\x08Polygon2\x12;\n\x05edges\x18\x01\x20\
-    \x03(\x0b2%.observation_tools.proto.PolygonEdge2R\x05edges\"G\n\x0cPolyg\
-    onEdge3\x127\n\x06vertex\x18\x01\x20\x01(\x0b2\x1f.observation_tools.pro\
-    to.Point3R\x06vertex\"G\n\x08Polygon3\x12;\n\x05edges\x18\x01\x20\x03(\
-    \x0b2%.observation_tools.proto.PolygonEdge3R\x05edges\"\xc5\x02\n\x05Gra\
-    ph\x12?\n\x05nodes\x18\x01\x20\x03(\x0b2).observation_tools.proto.Graph.\
-    NodesEntryR\x05nodes\x12?\n\x05edges\x18\x02\x20\x03(\x0b2).observation_\
-    tools.proto.Graph.EdgesEntryR\x05edges\x1a\\\n\nNodesEntry\x12\x10\n\x03\
-    key\x18\x01\x20\x01(\tR\x03key\x128\n\x05value\x18\x02\x20\x01(\x0b2\".o\
-    bservation_tools.proto.GraphNodeR\x05value:\x028\x01\x1a\\\n\nEdgesEntry\
-    \x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x128\n\x05value\x18\x02\x20\
-    \x01(\x0b2\".observation_tools.proto.GraphEdgeR\x05value:\x028\x01\"H\n\
-    \tGraphNode\x12;\n\x08position\x18\x01\x20\x01(\x0b2\x1f.observation_too\
-    ls.proto.Point3R\x08position\"O\n\tGraphEdge\x12\"\n\rstart_node_id\x18\
-    \x01\x20\x01(\tR\x0bstartNodeId\x12\x1e\n\x0bend_node_id\x18\x02\x20\x01\
-    (\tR\tendNodeId\"\xdf\x03\n\tMatrix3x3\x122\n\x04m0_0\x18\x01\x20\x01(\
-    \x0b2\x1f.observation_tools.proto.NumberR\x03m00\x122\n\x04m0_1\x18\x02\
-    \x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m01\x122\n\x04m0_2\
-    \x18\x03\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m02\x122\n\
-    \x04m1_0\x18\x04\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m1\
-    0\x122\n\x04m1_1\x18\x05\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
-    rR\x03m11\x122\n\x04m1_2\x18\x06\x20\x01(\x0b2\x1f.observation_tools.pro\
-    to.NumberR\x03m12\x122\n\x04m2_0\x18\x07\x20\x01(\x0b2\x1f.observation_t\
-    ools.proto.NumberR\x03m20\x122\n\x04m2_1\x18\x08\x20\x01(\x0b2\x1f.obser\
-    vation_tools.proto.NumberR\x03m21\x122\n\x04m2_2\x18\t\x20\x01(\x0b2\x1f\
-    .observation_tools.proto.NumberR\x03m22\"\xcb\x06\n\tMatrix4x4\x122\n\
-    \x04m0_0\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m0\
-    0\x122\n\x04m0_1\x18\x02\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
-    rR\x03m01\x122\n\x04m0_2\x18\x03\x20\x01(\x0b2\x1f.observation_tools.pro\
-    to.NumberR\x03m02\x122\n\x04m0_3\x18\x04\x20\x01(\x0b2\x1f.observation_t\
-    ools.proto.NumberR\x03m03\x122\n\x04m1_0\x18\x05\x20\x01(\x0b2\x1f.obser\
-    vation_tools.proto.NumberR\x03m10\x122\n\x04m1_1\x18\x06\x20\x01(\x0b2\
-    \x1f.observation_tools.proto.NumberR\x03m11\x122\n\x04m1_2\x18\x07\x20\
-    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m12\x122\n\x04m1_3\x18\
-    \x08\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m13\x122\n\x04\
-    m2_0\x18\t\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m20\x122\
-    \n\x04m2_1\x18\n\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m2\
-    1\x122\n\x04m2_2\x18\x0b\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
-    rR\x03m22\x122\n\x04m2_3\x18\x0c\x20\x01(\x0b2\x1f.observation_tools.pro\
-    to.NumberR\x03m23\x122\n\x04m3_0\x18\r\x20\x01(\x0b2\x1f.observation_too\
-    ls.proto.NumberR\x03m30\x122\n\x04m3_1\x18\x0e\x20\x01(\x0b2\x1f.observa\
-    tion_tools.proto.NumberR\x03m31\x122\n\x04m3_2\x18\x0f\x20\x01(\x0b2\x1f\
-    .observation_tools.proto.NumberR\x03m32\x122\n\x04m3_3\x18\x10\x20\x01(\
-    \x0b2\x1f.observation_tools.proto.NumberR\x03m33\"e\n\nTransform2\x121\n\
-    \x03trs\x18\x01\x20\x01(\x0b2\x1d.observation_tools.proto.TRS2H\0R\x03tr\
-    s\x12\x1c\n\x08identity\x18\x02\x20\x01(\x08H\0R\x08identityB\x06\n\x04d\
-    ata\"\xa3\x01\n\nTransform3\x121\n\x03trs\x18\x01\x20\x01(\x0b2\x1d.obse\
-    rvation_tools.proto.TRS3H\0R\x03trs\x12<\n\x06matrix\x18\x02\x20\x01(\
-    \x0b2\".observation_tools.proto.Matrix4x4H\0R\x06matrix\x12\x1c\n\x08ide\
-    ntity\x18\x03\x20\x01(\x08H\0R\x08identityB\x06\n\x04data\"\x82\x01\n\
-    \x04TRS2\x12B\n\x0btranslation\x18\x01\x20\x01(\x0b2\x20.observation_too\
-    ls.proto.Vector2R\x0btranslation\x126\n\x05scale\x18\x03\x20\x01(\x0b2\
-    \x20.observation_tools.proto.Vector2R\x05scale\"\x82\x01\n\x04TRS3\x12B\
-    \n\x0btranslation\x18\x01\x20\x01(\x0b2\x20.observation_tools.proto.Vect\
-    or3R\x0btranslation\x126\n\x05scale\x18\x03\x20\x01(\x0b2\x20.observatio\
-    n_tools.proto.Vector3R\x05scaleB\x1b\n\x17tools.observation.protoP\x01b\
-    \x06proto3\
+    \x03(\x0b2%.observation_tools.proto.PolygonEdge2R\x05edges\"=\n\x05Rect2\
+    \x124\n\x04size\x18\x01\x20\x01(\x0b2\x20.observation_tools.proto.Vector\
+    2R\x04size\"G\n\x0cPolygonEdge3\x127\n\x06vertex\x18\x01\x20\x01(\x0b2\
+    \x1f.observation_tools.proto.Point3R\x06vertex\"G\n\x08Polygon3\x12;\n\
+    \x05edges\x18\x01\x20\x03(\x0b2%.observation_tools.proto.PolygonEdge3R\
+    \x05edges\"\xc5\x02\n\x05Graph\x12?\n\x05nodes\x18\x01\x20\x03(\x0b2).ob\
+    servation_tools.proto.Graph.NodesEntryR\x05nodes\x12?\n\x05edges\x18\x02\
+    \x20\x03(\x0b2).observation_tools.proto.Graph.EdgesEntryR\x05edges\x1a\\\
+    \n\nNodesEntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x128\n\x05val\
+    ue\x18\x02\x20\x01(\x0b2\".observation_tools.proto.GraphNodeR\x05value:\
+    \x028\x01\x1a\\\n\nEdgesEntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03ke\
+    y\x128\n\x05value\x18\x02\x20\x01(\x0b2\".observation_tools.proto.GraphE\
+    dgeR\x05value:\x028\x01\"H\n\tGraphNode\x12;\n\x08position\x18\x01\x20\
+    \x01(\x0b2\x1f.observation_tools.proto.Point3R\x08position\"O\n\tGraphEd\
+    ge\x12\"\n\rstart_node_id\x18\x01\x20\x01(\tR\x0bstartNodeId\x12\x1e\n\
+    \x0bend_node_id\x18\x02\x20\x01(\tR\tendNodeId\"\xdf\x03\n\tMatrix3x3\
+    \x122\n\x04m0_0\x18\x01\x20\x01(\x0b2\x1f.observation_tools.proto.Number\
+    R\x03m00\x122\n\x04m0_1\x18\x02\x20\x01(\x0b2\x1f.observation_tools.prot\
+    o.NumberR\x03m01\x122\n\x04m0_2\x18\x03\x20\x01(\x0b2\x1f.observation_to\
+    ols.proto.NumberR\x03m02\x122\n\x04m1_0\x18\x04\x20\x01(\x0b2\x1f.observ\
+    ation_tools.proto.NumberR\x03m10\x122\n\x04m1_1\x18\x05\x20\x01(\x0b2\
+    \x1f.observation_tools.proto.NumberR\x03m11\x122\n\x04m1_2\x18\x06\x20\
+    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m12\x122\n\x04m2_0\x18\
+    \x07\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m20\x122\n\x04\
+    m2_1\x18\x08\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m21\
+    \x122\n\x04m2_2\x18\t\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\
+    \x03m22\"\xcb\x06\n\tMatrix4x4\x122\n\x04m0_0\x18\x01\x20\x01(\x0b2\x1f.\
+    observation_tools.proto.NumberR\x03m00\x122\n\x04m0_1\x18\x02\x20\x01(\
+    \x0b2\x1f.observation_tools.proto.NumberR\x03m01\x122\n\x04m0_2\x18\x03\
+    \x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m02\x122\n\x04m0_3\
+    \x18\x04\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m03\x122\n\
+    \x04m1_0\x18\x05\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m1\
+    0\x122\n\x04m1_1\x18\x06\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
+    rR\x03m11\x122\n\x04m1_2\x18\x07\x20\x01(\x0b2\x1f.observation_tools.pro\
+    to.NumberR\x03m12\x122\n\x04m1_3\x18\x08\x20\x01(\x0b2\x1f.observation_t\
+    ools.proto.NumberR\x03m13\x122\n\x04m2_0\x18\t\x20\x01(\x0b2\x1f.observa\
+    tion_tools.proto.NumberR\x03m20\x122\n\x04m2_1\x18\n\x20\x01(\x0b2\x1f.o\
+    bservation_tools.proto.NumberR\x03m21\x122\n\x04m2_2\x18\x0b\x20\x01(\
+    \x0b2\x1f.observation_tools.proto.NumberR\x03m22\x122\n\x04m2_3\x18\x0c\
+    \x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m23\x122\n\x04m3_0\
+    \x18\r\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m30\x122\n\
+    \x04m3_1\x18\x0e\x20\x01(\x0b2\x1f.observation_tools.proto.NumberR\x03m3\
+    1\x122\n\x04m3_2\x18\x0f\x20\x01(\x0b2\x1f.observation_tools.proto.Numbe\
+    rR\x03m32\x122\n\x04m3_3\x18\x10\x20\x01(\x0b2\x1f.observation_tools.pro\
+    to.NumberR\x03m33\"\xf0\x01\n\tTransform\x12E\n\ntransform2\x18\x01\x20\
+    \x01(\x0b2#.observation_tools.proto.Transform2H\0R\ntransform2\x12E\n\nt\
+    ransform3\x18\x02\x20\x01(\x0b2#.observation_tools.proto.Transform3H\0R\
+    \ntransform3\x12M\n\x0ftransform2_to_3\x18\x03\x20\x01(\x0b2#.observatio\
+    n_tools.proto.Transform3H\0R\rtransform2To3B\x06\n\x04data\"e\n\nTransfo\
+    rm2\x121\n\x03trs\x18\x01\x20\x01(\x0b2\x1d.observation_tools.proto.TRS2\
+    H\0R\x03trs\x12\x1c\n\x08identity\x18\x02\x20\x01(\x08H\0R\x08identityB\
+    \x06\n\x04data\"\xa3\x01\n\nTransform3\x121\n\x03trs\x18\x01\x20\x01(\
+    \x0b2\x1d.observation_tools.proto.TRS3H\0R\x03trs\x12<\n\x06matrix\x18\
+    \x02\x20\x01(\x0b2\".observation_tools.proto.Matrix4x4H\0R\x06matrix\x12\
+    \x1c\n\x08identity\x18\x03\x20\x01(\x08H\0R\x08identityB\x06\n\x04data\"\
+    \xbe\x01\n\x04TRS2\x12A\n\x0btranslation\x18\x01\x20\x01(\x0b2\x1f.obser\
+    vation_tools.proto.Point2R\x0btranslation\x12;\n\x08rotation\x18\x02\x20\
+    \x01(\x0b2\x1f.observation_tools.proto.NumberR\x08rotation\x126\n\x05sca\
+    le\x18\x03\x20\x01(\x0b2\x20.observation_tools.proto.Vector2R\x05scale\"\
+    \x81\x01\n\x04TRS3\x12A\n\x0btranslation\x18\x01\x20\x01(\x0b2\x1f.obser\
+    vation_tools.proto.Point3R\x0btranslation\x126\n\x05scale\x18\x03\x20\
+    \x01(\x0b2\x20.observation_tools.proto.Vector3R\x05scaleB\x1b\n\x17tools\
+    .observation.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3466,7 +3963,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(19);
+            let mut messages = ::std::vec::Vec::with_capacity(21);
             messages.push(Number::generated_message_descriptor_data());
             messages.push(Point2::generated_message_descriptor_data());
             messages.push(Segment2::generated_message_descriptor_data());
@@ -3475,6 +3972,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(Vector3::generated_message_descriptor_data());
             messages.push(PolygonEdge2::generated_message_descriptor_data());
             messages.push(Polygon2::generated_message_descriptor_data());
+            messages.push(Rect2::generated_message_descriptor_data());
             messages.push(PolygonEdge3::generated_message_descriptor_data());
             messages.push(Polygon3::generated_message_descriptor_data());
             messages.push(Graph::generated_message_descriptor_data());
@@ -3482,6 +3980,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(GraphEdge::generated_message_descriptor_data());
             messages.push(Matrix3x3::generated_message_descriptor_data());
             messages.push(Matrix4x4::generated_message_descriptor_data());
+            messages.push(Transform::generated_message_descriptor_data());
             messages.push(Transform2::generated_message_descriptor_data());
             messages.push(Transform3::generated_message_descriptor_data());
             messages.push(TRS2::generated_message_descriptor_data());

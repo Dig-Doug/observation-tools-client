@@ -2,6 +2,8 @@ use crate::builders::NumberBuilder;
 use crate::builders::Point2Builder;
 use crate::builders::Point3Builder;
 use crate::builders::Transform3Builder;
+use crate::builders::Vector2Builder;
+use crate::builders::Vector3Builder;
 use nalgebra::Matrix3;
 use nalgebra::Matrix4;
 use nalgebra::Point2;
@@ -24,6 +26,22 @@ impl<T: Scalar + Into<NumberBuilder>> Into<Point2Builder> for Point2<T> {
 impl<T: Scalar + Into<NumberBuilder>> Into<Point3Builder> for Point3<T> {
     fn into(self) -> Point3Builder {
         Point3Builder::new(
+            self.x.clone().into(),
+            self.y.clone().into(),
+            self.z.clone().into(),
+        )
+    }
+}
+
+impl<T: Scalar + Into<NumberBuilder>> Into<Vector2Builder> for Vector2<T> {
+    fn into(self) -> Vector2Builder {
+        Vector2Builder::new(self.x.clone().into(), self.y.clone().into())
+    }
+}
+
+impl<T: Scalar + Into<NumberBuilder>> Into<Vector3Builder> for Vector3<T> {
+    fn into(self) -> Vector3Builder {
+        Vector3Builder::new(
             self.x.clone().into(),
             self.y.clone().into(),
             self.z.clone().into(),
@@ -56,8 +74,8 @@ pub fn transform3_proto_to_transform(
                 Translation::from(
                     trs.translation
                         .as_ref()
-                        .map(|v| vector3_proto_to_vector3(&v))
-                        .unwrap_or(Vector3::zeros()),
+                        .map(|v| point3_proto_to_point3(&v))
+                        .unwrap_or(Point3::origin()),
                 ),
                 Rotation::identity(),
                 1.0,
@@ -180,8 +198,8 @@ pub fn transform2_proto_to_transform(
             let t = trs
                 .translation
                 .as_ref()
-                .map(|v| vector2_proto_to_vector2(&v))
-                .unwrap_or(Vector2::zeros());
+                .map(|v| point2_proto_to_point2(&v))
+                .unwrap_or(Point2::origin());
             nalgebra::convert(Similarity::from_parts(
                 Translation::from(Vector3::new(t[0], t[1], 0.0)),
                 Rotation::identity(),

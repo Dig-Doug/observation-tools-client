@@ -6,8 +6,11 @@ use crate::builders::Transform2Builder;
 use artifacts_api_rust_proto::Polygon2;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_derive::TryFromJsValue;
 
+#[derive(TryFromJsValue)]
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct Polygon2Builder {
     pub(crate) proto: Polygon2,
 }
@@ -57,8 +60,6 @@ impl Into<Geometry2Builder> for Polygon2Builder {
 impl Into<Object2Builder> for Polygon2Builder {
     fn into(self) -> Object2Builder {
         let mut builder = Object2Builder::new(self.into());
-        // TODO(doug): #default-transform
-        builder.add_transform(&Transform2Builder::identity());
         builder
     }
 }

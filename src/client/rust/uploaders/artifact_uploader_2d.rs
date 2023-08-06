@@ -1,12 +1,15 @@
 use crate::builders::Object2Builder;
 use crate::builders::Object2Updater;
 use crate::builders::SeriesBuilder;
+use crate::builders::Transform2Builder;
 use crate::builders::UserMetadataBuilder;
 use crate::task_handle::Object2UpdaterTaskHandle;
 use crate::task_handle::TaskHandle;
 use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
 use crate::util::ClientError;
+use crate::ArtifactUploader2dTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
+use artifacts_api_rust_proto::ArtifactType;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -76,5 +79,12 @@ impl ArtifactUploader2d {
         let metadata = metadata.into();
         let data = series.into();
         self.series_js(&metadata, &data)
+    }
+
+    pub fn child_uploader_2d<M: Into<UserMetadataBuilder>>(
+        &self,
+        metadata: M,
+    ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
+        self.base.child_uploader_2d(&metadata.into(), None)
     }
 }

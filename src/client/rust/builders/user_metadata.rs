@@ -32,6 +32,12 @@ impl UserMetadataBuilder {
 
 impl Into<UserMetadataBuilder> for &str {
     fn into(self) -> UserMetadataBuilder {
-        UserMetadataBuilder::new(self)
+        UserMetadataBuilder::new(self.into())
+    }
+}
+
+impl Into<UserMetadataBuilder> for String {
+    fn into(self) -> UserMetadataBuilder {
+        UserMetadataBuilder::new(&self)
     }
 }

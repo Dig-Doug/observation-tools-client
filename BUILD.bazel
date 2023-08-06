@@ -1,5 +1,4 @@
 load("@rules_rust//proto:toolchain.bzl", "rust_proto_toolchain")
-load("@npm//:defs.bzl", "npm_link_all_packages")
 
 rust_proto_toolchain(
     name = "proto-toolchain-impl",
@@ -17,5 +16,3 @@ toolchain(
     toolchain = ":proto-toolchain-impl",
     toolchain_type = "@rules_rust//proto:toolchain_type",
 )
-
-npm_link_all_packages()

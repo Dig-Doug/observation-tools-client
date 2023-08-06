@@ -10,8 +10,11 @@ use image::ImageBuffer;
 use image::ImageOutputFormat;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_derive::TryFromJsValue;
 
+#[derive(TryFromJsValue)]
 #[wasm_bindgen]
+#[derive(Clone)]
 pub struct Image2Builder {
     pub(crate) proto: Image2,
 }
@@ -64,7 +67,6 @@ impl Into<Geometry2Builder> for Image2Builder {
 impl Into<Object2Builder> for Image2Builder {
     fn into(self) -> Object2Builder {
         let builder = Object2Builder::new(self.into());
-        // TODO(doug): no #default-transform
         builder
     }
 }

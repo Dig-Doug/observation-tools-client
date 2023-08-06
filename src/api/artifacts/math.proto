@@ -44,6 +44,10 @@ message Polygon2 {
   repeated PolygonEdge2 edges = 1;
 }
 
+message Rect2 {
+  Vector2 size = 1;
+}
+
 message PolygonEdge3 {
   Point3 vertex = 1;
 }
@@ -126,15 +130,14 @@ message Transform3 {
 }
 
 message TRS2 {
-  Vector2 translation = 1;
-
-  // TODO(doug): Rotation
-
+  Point2 translation = 1;
+  // Rotation in radians
+  Number rotation = 2;
   Vector2 scale = 3;
 }
 
 message TRS3 {
-  Vector3 translation = 1;
+  Point3 translation = 1;
 
   // TODO(doug): Rotation
 
