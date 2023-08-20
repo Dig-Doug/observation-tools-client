@@ -113,11 +113,16 @@ function Feature({benefit}) {
     </div>);
 }
 
-const CODE = `fn generate_city() {
+const EXPORT_CODE = `fn generate_city() {
   let points = generate_city_outline();
   let poly = Polygon2Builder::from_points(points);
   uploader.upload_object2("city_outline", poly);
 }
+`;
+
+const VISUALIZE_CODE = `let image = Image2Builder::from(data);
+image.set_per_pixel_transform(
+  PerPixelTransformBuilder::random_distinct_color());
 `;
 
 const STEPS = [{
@@ -128,9 +133,8 @@ const STEPS = [{
             <CodeBlock
                 language="rust"
                 showLineNumbers={true}
-
             >
-                {CODE}
+                {EXPORT_CODE}
             </CodeBlock>
         </div>
         <BrowserWindow className={styles.primitivesBrowserWindow}>
@@ -161,8 +165,14 @@ const STEPS = [{
     title: 'Visualize', description: <>
         Spend time looking at your data, not deciphering text logs or building custom tools
     </>, image: <div className={styles.pixelImages}>
-        <PixelImage />
-        <MdArrowRightAlt className={styles.pixelArrow}/>
+        <div className={styles.pixelCode}>
+        <CodeBlock
+            language="rust"
+            showLineNumbers={true}
+        >
+            {VISUALIZE_CODE}
+        </CodeBlock>
+        </div>
         <PixelImage useColors={true}/>
     </div>,
     benefits: [{
@@ -282,7 +292,7 @@ function IntersectionWindowImage({index}) {
     }
 }
 
-function PixelImage({ useColors}) {
+function PixelImage({}) {
     const width = 10;
     const height = 10;
     const data = useMemo(() => {
@@ -309,16 +319,11 @@ function PixelImage({ useColors}) {
         }
         return data;
     }, [width, height]);
-    const COLORS = ['var(--ifm-background-surface-color)', 'var(--ifm-color-danger)', 'var(--ifm-color-success)', 'var(--ifm-color-info)'];
     return <div className={styles.pixelImage}
-                style={{
-                }}
-    aria-hidden={true}>
+                aria-hidden={true}>
         {data.map((value, i) => {
-            return <div className={styles.pixel} key={i} style={{
-                backgroundColor: useColors ? COLORS[value] : `var(--ifm-background-surface-color)`,
-            }}>
-                {useColors ? "" : value}
+            return <div className={styles.pixel} key={i} data-color-index={value}>
+                {value}
             </div>;
         })}
     </div>;

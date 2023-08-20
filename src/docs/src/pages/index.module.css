@@ -349,12 +349,21 @@ p {
 }
 
 .pixelImages {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto auto;
+    grid-row-gap: 2rem;
+}
+
+.pixelCode {
+    grid-column: 1 / 4;
+    grid-row: 2;
 }
 
 .pixelImage {
+    grid-column: 2;
+    grid-row: 1;
+    z-index: 1;
     box-shadow: rgba(0, 0, 0, 0.12) 0px 8px 30px 0px;
     display: grid;
     grid-gap: 1px;
@@ -363,34 +372,55 @@ p {
 }
 
 .pixel {
+    background-color: var(--ifm-background-surface-color);
     text-align: center;
+    animation: 10s ease-in 1s infinite alternate;
 }
 
-@media screen and (max-width: 660px) {
-    .pixelImage {
-        grid-template-rows: repeat(10, 14px);
-        grid-template-columns: repeat(10, 14px);
+.pixel[data-color-index="1"] {
+    animation-name: pixelBackgroundRed;
+}
+.pixel[data-color-index="2"] {
+    animation-name: pixelBackgroundGreen;
+}
+.pixel[data-color-index="3"] {
+    animation-name: pixelBackgroundBlue;
+}
+
+@keyframes pixelBackgroundRed {
+    from,10% {
+        background-color: var(--ifm-background-surface-color);
     }
 
-    .pixelArrow {
-        width: 32px;
-        height: 32px;
-    }
-
-    .pixel {
-        font-size: 10px;
+    20%,to {
+        background-color: var(--ifm-color-danger);
     }
 }
 
-@media screen and (min-width: 660px) and (max-width: 1300px) {
+@keyframes pixelBackgroundGreen {
+    from,10% {
+        background-color: var(--ifm-background-surface-color);
+    }
+
+    20%,to {
+        background-color: var(--ifm-color-success);
+    }
+}
+
+@keyframes pixelBackgroundBlue {
+    from,10% {
+        background-color: var(--ifm-background-surface-color);
+    }
+
+    20%,to {
+        background-color: var(--ifm-color-info);
+    }
+}
+
+@media screen and (max-width: 1300px) {
     .pixelImage {
         grid-template-rows: repeat(10, 24px);
         grid-template-columns: repeat(10, 24px);
-    }
-
-    .pixelArrow {
-        width: 64px;
-        height: 64px;
     }
 
     .pixel {
@@ -402,11 +432,6 @@ p {
     .pixelImage {
         grid-template-rows: repeat(10, 32px);
         grid-template-columns: repeat(10, 32px);
-    }
-
-    .pixelArrow {
-        width: 64px;
-        height: 64px;
     }
 
     .pixel {
