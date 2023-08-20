@@ -8,6 +8,11 @@ p {
 }
 
 @media screen and (max-width: 966px) {
+    .main {
+        --ifm-pre-padding: 0.5rem;
+        --ifm-code-font-size: 65%;
+    }
+
     h3 {
         font-size: 4rem;
     }
@@ -105,7 +110,7 @@ p {
 
     max-width: 1248px;
     margin: 0 auto;
-    padding: 0 1rem;
+    padding: 2rem 1rem 0;
 }
 
 .buttons {
@@ -184,7 +189,7 @@ p {
 @media screen and (max-width: 966px) {
     .stepImage,
     .benefitImage {
-        padding: 1rem;
+        padding-bottom: 1rem;
     }
 }
 
