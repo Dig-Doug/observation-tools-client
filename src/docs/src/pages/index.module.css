@@ -374,45 +374,47 @@ p {
 .pixel {
     background-color: var(--ifm-background-surface-color);
     text-align: center;
-    animation: 10s ease-in 1s infinite alternate;
+    animation: 3s ease-in 0s infinite alternate;
 }
 
 .pixel[data-color-index="1"] {
     animation-name: pixelBackgroundRed;
 }
+
 .pixel[data-color-index="2"] {
     animation-name: pixelBackgroundGreen;
 }
+
 .pixel[data-color-index="3"] {
     animation-name: pixelBackgroundBlue;
 }
 
 @keyframes pixelBackgroundRed {
-    from,10% {
+    from, 50% {
         background-color: var(--ifm-background-surface-color);
     }
 
-    20%,to {
+    75%, to {
         background-color: var(--ifm-color-danger);
     }
 }
 
 @keyframes pixelBackgroundGreen {
-    from,10% {
+    from, 50% {
         background-color: var(--ifm-background-surface-color);
     }
 
-    20%,to {
+    75%, to {
         background-color: var(--ifm-color-success);
     }
 }
 
 @keyframes pixelBackgroundBlue {
-    from,10% {
+    from, 50% {
         background-color: var(--ifm-background-surface-color);
     }
 
-    20%,to {
+    75%, to {
         background-color: var(--ifm-color-info);
     }
 }
