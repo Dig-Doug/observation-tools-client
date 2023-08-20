@@ -7,7 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Logging meets the 3rd dimension',
-  tagline: 'Export and visualize data from anywhere in your program' ,
+  tagline: 'Export, visualize, and inspect data from anywhere in your program' ,
   url: 'https://observation.tools',
   baseUrl: '/',
   onBrokenLinks: 'throw',
@@ -84,6 +84,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
+        additionalLanguages: ['rust'],
       },
     }),
 };
