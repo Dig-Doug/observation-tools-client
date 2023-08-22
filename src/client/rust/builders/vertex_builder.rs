@@ -1,6 +1,6 @@
 use crate::builders::Point3Builder;
 use crate::builders::Vector3Builder;
-use artifacts_api_rust_proto::Vertex;
+use crate::generated::Vertex;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

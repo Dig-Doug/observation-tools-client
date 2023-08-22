@@ -59,52 +59,48 @@ impl<T: Scalar + RealField + Into<NumberBuilder>> Into<Transform3Builder> for Tr
 
 pub fn transform_to_transform3_proto<T: Scalar + RealField + Into<NumberBuilder>>(
     transform: &Transform3<T>,
-) -> artifacts_api_rust_proto::Transform3 {
-    let mut proto = artifacts_api_rust_proto::Transform3::new();
+) -> crate::generated::Transform3 {
+    let mut proto = crate::generated::Transform3::new();
     *proto.mut_matrix() = matrix_to_matrix4x4_proto(transform.matrix());
     proto
 }
 
-pub fn transform3_proto_to_transform(
-    proto: &artifacts_api_rust_proto::Transform3,
-) -> Transform3<f32> {
+pub fn transform3_proto_to_transform(proto: &crate::generated::Transform3) -> Transform3<f32> {
     match proto.data.as_ref().unwrap() {
-        artifacts_api_rust_proto::transform3::Data::Trs(trs) => {
-            nalgebra::convert(Similarity::from_parts(
-                Translation::from(
-                    trs.translation
-                        .as_ref()
-                        .map(|v| point3_proto_to_point3(&v))
-                        .unwrap_or(Point3::origin()),
-                ),
-                Rotation::identity(),
-                1.0,
-            ))
-        }
-        artifacts_api_rust_proto::transform3::Data::Matrix(matrix) => {
+        crate::generated::transform3::Data::Trs(trs) => nalgebra::convert(Similarity::from_parts(
+            Translation::from(
+                trs.translation
+                    .as_ref()
+                    .map(|v| point3_proto_to_point3(&v))
+                    .unwrap_or(Point3::origin()),
+            ),
+            Rotation::identity(),
+            1.0,
+        )),
+        crate::generated::transform3::Data::Matrix(matrix) => {
             Transform3::<f32>::from_matrix_unchecked(matrix4x4_proto_to_matrix(matrix))
         }
-        artifacts_api_rust_proto::transform3::Data::Identity(_) => Transform3::identity(),
+        crate::generated::transform3::Data::Identity(_) => Transform3::identity(),
         _ => panic!("Unhandled transform3 case"),
     }
 }
 
 pub fn number_to_proto<T: Scalar + RealField + Into<NumberBuilder>>(
     value: T,
-) -> artifacts_api_rust_proto::Number {
+) -> crate::generated::Number {
     let b: NumberBuilder = value.into();
     b.proto
 }
 
-pub fn number_proto_to_f32(proto: &artifacts_api_rust_proto::Number) -> f32 {
+pub fn number_proto_to_f32(proto: &crate::generated::Number) -> f32 {
     proto.d as f32
 }
 
-pub fn point2_proto_to_point2(proto: &artifacts_api_rust_proto::Point2) -> Point2<f32> {
+pub fn point2_proto_to_point2(proto: &crate::generated::Point2) -> Point2<f32> {
     Point2::new(number_proto_to_f32(&proto.x), number_proto_to_f32(&proto.y))
 }
 
-pub fn point2_proto_to_point3(proto: &artifacts_api_rust_proto::Point2) -> Point3<f32> {
+pub fn point2_proto_to_point3(proto: &crate::generated::Point2) -> Point3<f32> {
     Point3::new(
         number_proto_to_f32(&proto.x),
         number_proto_to_f32(&proto.y),
@@ -112,7 +108,7 @@ pub fn point2_proto_to_point3(proto: &artifacts_api_rust_proto::Point2) -> Point
     )
 }
 
-pub fn point3_proto_to_point3(proto: &artifacts_api_rust_proto::Point3) -> Point3<f32> {
+pub fn point3_proto_to_point3(proto: &crate::generated::Point3) -> Point3<f32> {
     Point3::new(
         number_proto_to_f32(&proto.x),
         number_proto_to_f32(&proto.y),
@@ -120,11 +116,11 @@ pub fn point3_proto_to_point3(proto: &artifacts_api_rust_proto::Point3) -> Point
     )
 }
 
-pub fn vector2_proto_to_vector2(proto: &artifacts_api_rust_proto::Vector2) -> Vector2<f32> {
+pub fn vector2_proto_to_vector2(proto: &crate::generated::Vector2) -> Vector2<f32> {
     Vector2::new(number_proto_to_f32(&proto.x), number_proto_to_f32(&proto.y))
 }
 
-pub fn vector3_proto_to_vector3(proto: &artifacts_api_rust_proto::Vector3) -> Vector3<f32> {
+pub fn vector3_proto_to_vector3(proto: &crate::generated::Vector3) -> Vector3<f32> {
     Vector3::new(
         number_proto_to_f32(&proto.x),
         number_proto_to_f32(&proto.y),
@@ -132,7 +128,7 @@ pub fn vector3_proto_to_vector3(proto: &artifacts_api_rust_proto::Vector3) -> Ve
     )
 }
 
-pub fn matrix3x3_proto_to_matrix(proto: &artifacts_api_rust_proto::Matrix3x3) -> Matrix3<f32> {
+pub fn matrix3x3_proto_to_matrix(proto: &crate::generated::Matrix3x3) -> Matrix3<f32> {
     Matrix3::new(
         number_proto_to_f32(&proto.m0_0),
         number_proto_to_f32(&proto.m0_1),
@@ -146,7 +142,7 @@ pub fn matrix3x3_proto_to_matrix(proto: &artifacts_api_rust_proto::Matrix3x3) ->
     )
 }
 
-pub fn matrix4x4_proto_to_matrix(proto: &artifacts_api_rust_proto::Matrix4x4) -> Matrix4<f32> {
+pub fn matrix4x4_proto_to_matrix(proto: &crate::generated::Matrix4x4) -> Matrix4<f32> {
     Matrix4::new(
         number_proto_to_f32(&proto.m0_0),
         number_proto_to_f32(&proto.m0_1),
@@ -169,8 +165,8 @@ pub fn matrix4x4_proto_to_matrix(proto: &artifacts_api_rust_proto::Matrix4x4) ->
 
 pub fn matrix_to_matrix4x4_proto<T: Scalar + RealField + Into<NumberBuilder>>(
     matrix: &Matrix4<T>,
-) -> artifacts_api_rust_proto::Matrix4x4 {
-    let mut proto = artifacts_api_rust_proto::Matrix4x4::new();
+) -> crate::generated::Matrix4x4 {
+    let mut proto = crate::generated::Matrix4x4::new();
     proto.m0_0 = Some(number_to_proto(matrix.m11.clone())).into();
     proto.m0_1 = Some(number_to_proto(matrix.m12.clone())).into();
     proto.m0_2 = Some(number_to_proto(matrix.m13.clone())).into();
@@ -190,11 +186,9 @@ pub fn matrix_to_matrix4x4_proto<T: Scalar + RealField + Into<NumberBuilder>>(
     proto
 }
 
-pub fn transform2_proto_to_transform(
-    proto: &artifacts_api_rust_proto::Transform2,
-) -> Transform3<f32> {
+pub fn transform2_proto_to_transform(proto: &crate::generated::Transform2) -> Transform3<f32> {
     match proto.data.as_ref().unwrap() {
-        artifacts_api_rust_proto::transform2::Data::Trs(trs) => {
+        crate::generated::transform2::Data::Trs(trs) => {
             let t = trs
                 .translation
                 .as_ref()
@@ -206,7 +200,7 @@ pub fn transform2_proto_to_transform(
                 1.0,
             ))
         }
-        artifacts_api_rust_proto::transform2::Data::Identity(_) => Transform3::identity(),
+        crate::generated::transform2::Data::Identity(_) => Transform3::identity(),
         _ => panic!("Unhandled transform2 case"),
     }
 }

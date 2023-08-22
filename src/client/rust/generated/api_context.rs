@@ -19,7 +19,7 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `src/api/artifacts/api_context.proto`
+//! Generated file from `src/proto/api_context.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -347,19 +347,18 @@ impl ::protobuf::reflect::ProtobufValue for RunUploaderData {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n#src/api/artifacts/api_context.proto\x12\x17observation_tools.proto\
-    \x1a\"src/api/artifacts/project_id.proto\x1a\x20src/api/artifacts/artifa\
-    ct.proto\x1a\x1esrc/api/artifacts/run_id.proto\"\xaf\x02\n\x19ArtifactGr\
-    oupUploaderData\x12A\n\nproject_id\x18\x07\x20\x01(\x0b2\".observation_t\
-    ools.proto.ProjectIdR\tprojectId\x125\n\x06run_id\x18\x05\x20\x01(\x0b2\
-    \x1e.observation_tools.proto.RunIdR\x05runId\x123\n\x02id\x18\x03\x20\
-    \x01(\x0b2#.observation_tools.proto.ArtifactIdR\x02id\x12Q\n\x12ancestor\
-    _group_ids\x18\x06\x20\x03(\x0b2#.observation_tools.proto.ArtifactIdR\
-    \x10ancestorGroupIdsJ\x04\x08\x01\x10\x02J\x04\x08\x02\x10\x03J\x04\x08\
-    \x04\x10\x05\"g\n\x0fRunUploaderData\x12\x1d\n\nproject_id\x18\x01\x20\
-    \x01(\tR\tprojectId\x125\n\x06run_id\x18\x02\x20\x01(\x0b2\x1e.observati\
-    on_tools.proto.RunIdR\x05runIdB\x1b\n\x17tools.observation.protoP\x01b\
-    \x06proto3\
+    \n\x1bsrc/proto/api_context.proto\x12\x17observation_tools.proto\x1a\x1a\
+    src/proto/project_id.proto\x1a\x18src/proto/artifact.proto\x1a\x16src/pr\
+    oto/run_id.proto\"\xaf\x02\n\x19ArtifactGroupUploaderData\x12A\n\nprojec\
+    t_id\x18\x07\x20\x01(\x0b2\".observation_tools.proto.ProjectIdR\tproject\
+    Id\x125\n\x06run_id\x18\x05\x20\x01(\x0b2\x1e.observation_tools.proto.Ru\
+    nIdR\x05runId\x123\n\x02id\x18\x03\x20\x01(\x0b2#.observation_tools.prot\
+    o.ArtifactIdR\x02id\x12Q\n\x12ancestor_group_ids\x18\x06\x20\x03(\x0b2#.\
+    observation_tools.proto.ArtifactIdR\x10ancestorGroupIdsJ\x04\x08\x01\x10\
+    \x02J\x04\x08\x02\x10\x03J\x04\x08\x04\x10\x05\"g\n\x0fRunUploaderData\
+    \x12\x1d\n\nproject_id\x18\x01\x20\x01(\tR\tprojectId\x125\n\x06run_id\
+    \x18\x02\x20\x01(\x0b2\x1e.observation_tools.proto.RunIdR\x05runIdB\x1b\
+    \n\x17tools.observation.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

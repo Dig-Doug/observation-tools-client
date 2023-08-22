@@ -1,4 +1,4 @@
-use artifacts_api_rust_proto::ArtifactUserMetadata;
+use crate::generated::ArtifactUserMetadata;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

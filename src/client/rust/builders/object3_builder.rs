@@ -4,9 +4,9 @@ use crate::builders::MeshBuilder;
 use crate::builders::Polygon3Builder;
 use crate::builders::SphereBuilder;
 use crate::builders::Transform3Builder;
+use crate::generated::Object3;
+use crate::generated::StructuredData;
 use crate::ClientError;
-use artifacts_api_rust_proto::Object3;
-use artifacts_api_rust_proto::StructuredData;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

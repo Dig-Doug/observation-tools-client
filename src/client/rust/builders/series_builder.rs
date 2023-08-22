@@ -1,17 +1,17 @@
 use crate::builders::number_builder::NumberOrNumberBuilder;
 use crate::builders::NumberBuilder;
+use crate::generated::SeriesData;
+use crate::generated::SeriesDimensionData;
+use crate::generated::SeriesDimensionValue;
+use crate::generated::SeriesPoint;
 use crate::util::new_artifact_id;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::SeriesData;
-use artifacts_api_rust_proto::SeriesDimensionData;
-use artifacts_api_rust_proto::SeriesDimensionValue;
-use artifacts_api_rust_proto::SeriesPoint;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct PublicSeriesId {
-    pub(crate) proto: artifacts_api_rust_proto::SeriesId,
+    pub(crate) proto: crate::generated::SeriesId,
 }
 
 #[wasm_bindgen]
@@ -29,7 +29,7 @@ impl SeriesBuilder {
     }
 
     pub fn add_dimension(&mut self, name: &str) -> PublicSeriesDimensionId {
-        let mut id = artifacts_api_rust_proto::SeriesDimensionId::new();
+        let mut id = crate::generated::SeriesDimensionId::new();
         id.artifact_id = Some(new_artifact_id()).into();
 
         let mut proto = SeriesDimensionData::new();
@@ -44,7 +44,7 @@ impl SeriesBuilder {
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct PublicSeriesDimensionId {
-    pub(crate) proto: artifacts_api_rust_proto::SeriesDimensionId,
+    pub(crate) proto: crate::generated::SeriesDimensionId,
 }
 
 #[wasm_bindgen]

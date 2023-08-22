@@ -2,8 +2,8 @@ use crate::builders::number_builder::NumberOrNumberBuilder;
 use crate::builders::Geometry2Builder;
 use crate::builders::NumberBuilder;
 use crate::builders::Object2Builder;
+use crate::generated::Point2;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::Point2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 

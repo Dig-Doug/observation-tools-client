@@ -1,13 +1,13 @@
 [package]
-name = "observation-tools-client"
+name = "observation-tools"
 version = "0.0.4"
 edition = "2021"
 license = "Apache-2.0"
-description = "Export and visualize data from anywhere in your stack"
+description = "Export, visualize, and inspect data from anywhere in your program"
 readme = "README.md"
 homepage = "https://observation.tools"
 repository = "https://github.com/Dig-Doug/observation-tools-client"
-documentation = "https://www.observation.tools/docs/intro"
+documentation = "https://www.observation.tools/docs/quickstart"
 include = [
     "**/*.rs",
     "Cargo.toml",
@@ -21,7 +21,6 @@ path = "lib.rs"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-artifacts_api_rust_proto = { path = "../../api/artifacts" }
 anyhow = "^1.0"
 async-channel = "^1.8"
 async-trait = "^0.1.52"

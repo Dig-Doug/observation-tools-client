@@ -3,13 +3,13 @@ use crate::builders::Object2Updater;
 use crate::builders::SeriesBuilder;
 use crate::builders::Transform2Builder;
 use crate::builders::UserMetadataBuilder;
+use crate::generated::ArtifactType;
 use crate::task_handle::Object2UpdaterTaskHandle;
 use crate::task_handle::TaskHandle;
 use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
 use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
-use artifacts_api_rust_proto::ArtifactType;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

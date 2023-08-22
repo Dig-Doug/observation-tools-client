@@ -19,52 +19,52 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `src/api/artifacts/project.proto`
+//! Generated file from `src/proto/uuid.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
 const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_2_0;
 
 #[derive(PartialEq,Clone,Default,Debug)]
-// @@protoc_insertion_point(message:observation_tools.proto.ProjectId)
-pub struct ProjectId {
+// @@protoc_insertion_point(message:observation_tools.proto.Uuid)
+pub struct Uuid {
     // message fields
-    // @@protoc_insertion_point(field:observation_tools.proto.ProjectId.uuid)
-    pub uuid: ::protobuf::MessageField<super::uuid::Uuid>,
+    // @@protoc_insertion_point(field:observation_tools.proto.Uuid.data)
+    pub data: ::std::vec::Vec<u8>,
     // special fields
-    // @@protoc_insertion_point(special_field:observation_tools.proto.ProjectId.special_fields)
+    // @@protoc_insertion_point(special_field:observation_tools.proto.Uuid.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a ProjectId {
-    fn default() -> &'a ProjectId {
-        <ProjectId as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a Uuid {
+    fn default() -> &'a Uuid {
+        <Uuid as ::protobuf::Message>::default_instance()
     }
 }
 
-impl ProjectId {
-    pub fn new() -> ProjectId {
+impl Uuid {
+    pub fn new() -> Uuid {
         ::std::default::Default::default()
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::uuid::Uuid>(
-            "uuid",
-            |m: &ProjectId| { &m.uuid },
-            |m: &mut ProjectId| { &mut m.uuid },
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "data",
+            |m: &Uuid| { &m.data },
+            |m: &mut Uuid| { &mut m.data },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProjectId>(
-            "ProjectId",
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Uuid>(
+            "Uuid",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for ProjectId {
-    const NAME: &'static str = "ProjectId";
+impl ::protobuf::Message for Uuid {
+    const NAME: &'static str = "Uuid";
 
     fn is_initialized(&self) -> bool {
         true
@@ -74,7 +74,7 @@ impl ::protobuf::Message for ProjectId {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.uuid)?;
+                    self.data = is.read_bytes()?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -88,9 +88,8 @@ impl ::protobuf::Message for ProjectId {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.uuid.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        if !self.data.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(1, &self.data);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -98,8 +97,8 @@ impl ::protobuf::Message for ProjectId {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.uuid.as_ref() {
-            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        if !self.data.is_empty() {
+            os.write_bytes(1, &self.data)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -113,46 +112,45 @@ impl ::protobuf::Message for ProjectId {
         &mut self.special_fields
     }
 
-    fn new() -> ProjectId {
-        ProjectId::new()
+    fn new() -> Uuid {
+        Uuid::new()
     }
 
     fn clear(&mut self) {
-        self.uuid.clear();
+        self.data.clear();
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static ProjectId {
-        static instance: ProjectId = ProjectId {
-            uuid: ::protobuf::MessageField::none(),
+    fn default_instance() -> &'static Uuid {
+        static instance: Uuid = Uuid {
+            data: ::std::vec::Vec::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for ProjectId {
+impl ::protobuf::MessageFull for Uuid {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("ProjectId").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("Uuid").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for ProjectId {
+impl ::std::fmt::Display for Uuid {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for ProjectId {
+impl ::protobuf::reflect::ProtobufValue for Uuid {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x1fsrc/api/artifacts/project.proto\x12\x17observation_tools.proto\x1a\
-    \x1csrc/api/artifacts/uuid.proto\">\n\tProjectId\x121\n\x04uuid\x18\x01\
-    \x20\x01(\x0b2\x1d.observation_tools.proto.UuidR\x04uuidB\x1b\n\x17tools\
-    .observation.protoP\x01b\x06proto3\
+    \n\x14src/proto/uuid.proto\x12\x17observation_tools.proto\"\x1a\n\x04Uui\
+    d\x12\x12\n\x04data\x18\x01\x20\x01(\x0cR\x04dataB\x1b\n\x17tools.observ\
+    ation.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -169,10 +167,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::uuid::file_descriptor().clone());
+            let mut deps = ::std::vec::Vec::with_capacity(0);
             let mut messages = ::std::vec::Vec::with_capacity(1);
-            messages.push(ProjectId::generated_message_descriptor_data());
+            messages.push(Uuid::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

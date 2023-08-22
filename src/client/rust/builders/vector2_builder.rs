@@ -1,7 +1,7 @@
 use crate::builders::number_builder::NumberOrNumberBuilder;
 use crate::builders::NumberBuilder;
+use crate::generated::Vector2;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::Vector2;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

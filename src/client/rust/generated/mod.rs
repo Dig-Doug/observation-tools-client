@@ -24,4 +24,4 @@ pub use run_id::*;
 pub mod static_source_data_manifest;
 pub use static_source_data_manifest::*;
 pub mod uuid;
-pub use uuid::*;
+pub use self::uuid::*;

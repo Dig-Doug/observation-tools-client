@@ -14,7 +14,7 @@ path = "lib.rs"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-observation-tools-client = { path = "../src/client/rust"}
+observation-tools = { path = "../src/client/rust"}
 nalgebra = { version = "^0.32", features = ["serde-serialize", "mint", "convert-glam024"] }
 tokio = { version = "1", features = ["full"], optional = true }
 tracing = "0.1.35"
@@ -28,5 +28,6 @@ wasm-bindgen-futures = "0.4.28"
 anyhow = "^1.0"
 
 [features]
-rust = ["observation-tools-client/rust", "tokio"]
-wasm = ["observation-tools-client/wasm"]
+rust = ["observation-tools/rust", "tokio"]
+wasm = ["observation-tools/wasm"]
+default = ["rust"]

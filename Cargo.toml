@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "src/api/artifacts",
     "src/client/rust",
     "examples",
 ]

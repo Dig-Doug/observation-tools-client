@@ -1,7 +1,7 @@
 use crate::builders::Geometry3Builder;
 use crate::builders::NumberBuilder;
 use crate::builders::Object3Builder;
-use artifacts_api_rust_proto::Sphere;
+use crate::generated::Sphere;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
