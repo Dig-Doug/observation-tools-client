@@ -11,8 +11,6 @@ documentation = "https://www.observation.tools/docs/quickstart"
 include = [
     "**/*.rs",
     "Cargo.toml",
-    "pyproject.toml",
-    "**/*.md",
 ]
 
 [lib]
