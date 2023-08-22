@@ -1,4 +1,4 @@
-use artifacts_api_rust_proto::Transform3;
+use crate::generated::Transform3;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

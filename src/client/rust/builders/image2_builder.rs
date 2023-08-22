@@ -1,10 +1,10 @@
 use crate::builders::Geometry2Builder;
 use crate::builders::Object2Builder;
+use crate::generated::Image2;
+use crate::generated::PerPixelTransform;
+use crate::generated::RandomDistinctColor;
+use crate::generated::StructuredData;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::Image2;
-use artifacts_api_rust_proto::PerPixelTransform;
-use artifacts_api_rust_proto::RandomDistinctColor;
-use artifacts_api_rust_proto::StructuredData;
 use image::GrayImage;
 use image::ImageBuffer;
 use image::ImageOutputFormat;

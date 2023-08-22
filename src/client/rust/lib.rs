@@ -3,6 +3,7 @@ extern crate core;
 
 pub mod builders;
 mod client;
+mod generated;
 mod run_id;
 mod task_handle;
 mod task_loop;
@@ -12,6 +13,7 @@ mod util;
 
 pub use crate::client::Client;
 pub use crate::client::ClientOptions;
+use crate::generated::ArtifactId;
 pub use crate::task_handle::ArtifactUploader2dTaskHandle;
 pub use crate::task_handle::ArtifactUploader3dTaskHandle;
 pub(crate) use crate::task_handle::BaseArtifactUploaderTaskHandle;
@@ -21,7 +23,6 @@ pub use crate::task_handle::PublicSeriesIdTaskHandle;
 pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::util::ClientError;
-use artifacts_api_rust_proto::ArtifactId;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

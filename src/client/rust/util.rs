@@ -1,5 +1,5 @@
 use crate::builders::IntoGeometry2Builder;
-use artifacts_api_rust_proto::ArtifactId;
+use crate::generated::ArtifactId;
 use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
@@ -62,9 +62,9 @@ pub(crate) fn decode_id_proto<M: Message>(encoded: &str) -> Result<M, GenericErr
     Ok(M::parse_from_bytes(&proto_bytes)?)
 }
 
-pub(crate) fn new_uuid_proto() -> artifacts_api_rust_proto::Uuid {
+pub(crate) fn new_uuid_proto() -> crate::generated::Uuid {
     let uuid = Uuid::new_v4();
-    let mut proto = artifacts_api_rust_proto::Uuid::new();
+    let mut proto = crate::generated::Uuid::new();
     proto.data = uuid.as_bytes().to_vec();
     proto
 }

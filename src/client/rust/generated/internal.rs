@@ -19,7 +19,7 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `src/api/artifacts/internal.proto`
+//! Generated file from `src/proto/internal.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -447,17 +447,16 @@ impl ::protobuf::reflect::ProtobufValue for CanonicalArtifactId {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x20src/api/artifacts/internal.proto\x12\x17observation_tools.proto\
-    \x1a\"src/api/artifacts/project_id.proto\x1a\x20src/api/artifacts/artifa\
-    ct.proto\x1a\x1csrc/api/artifacts/uuid.proto\"\xc7\x01\n\x0ePublicGlobal\
-    Id\x12C\n\nproject_id\x18\x01\x20\x01(\x0b2\".observation_tools.proto.Pr\
-    ojectIdH\0R\tprojectId\x12b\n\x15canonical_artifact_id\x18\x03\x20\x01(\
-    \x0b2,.observation_tools.proto.CanonicalArtifactIdH\0R\x13canonicalArtif\
-    actIdB\x06\n\x04dataJ\x04\x08\x02\x10\x03\"\x9e\x01\n\x13CanonicalArtifa\
-    ctId\x12A\n\nproject_id\x18\x01\x20\x01(\x0b2\".observation_tools.proto.\
-    ProjectIdR\tprojectId\x12D\n\x0bartifact_id\x18\x02\x20\x01(\x0b2#.obser\
-    vation_tools.proto.ArtifactIdR\nartifactIdB\x1b\n\x17tools.observation.p\
-    rotoP\x01b\x06proto3\
+    \n\x18src/proto/internal.proto\x12\x17observation_tools.proto\x1a\x1asrc\
+    /proto/project_id.proto\x1a\x18src/proto/artifact.proto\x1a\x14src/proto\
+    /uuid.proto\"\xc7\x01\n\x0ePublicGlobalId\x12C\n\nproject_id\x18\x01\x20\
+    \x01(\x0b2\".observation_tools.proto.ProjectIdH\0R\tprojectId\x12b\n\x15\
+    canonical_artifact_id\x18\x03\x20\x01(\x0b2,.observation_tools.proto.Can\
+    onicalArtifactIdH\0R\x13canonicalArtifactIdB\x06\n\x04dataJ\x04\x08\x02\
+    \x10\x03\"\x9e\x01\n\x13CanonicalArtifactId\x12A\n\nproject_id\x18\x01\
+    \x20\x01(\x0b2\".observation_tools.proto.ProjectIdR\tprojectId\x12D\n\
+    \x0bartifact_id\x18\x02\x20\x01(\x0b2#.observation_tools.proto.ArtifactI\
+    dR\nartifactIdB\x1b\n\x17tools.observation.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

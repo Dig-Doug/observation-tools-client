@@ -1,12 +1,14 @@
 syntax = "proto3";
 
-import "src/api/artifacts/uuid.proto";
+import "src/proto/artifact.proto";
 
 package observation_tools.proto;
 
 option java_multiple_files = true;
 option java_package = "tools.observation.proto";
 
-message ProjectId {
-  Uuid uuid = 1;
+message RunId {
+  ArtifactId id = 2;
+  
+  reserved 1;
 }

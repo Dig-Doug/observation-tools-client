@@ -3,7 +3,7 @@ use crate::builders::Point2Builder;
 use crate::builders::Polygon2Builder;
 use crate::builders::Rect2Builder;
 use crate::builders::Segment2Builder;
-use artifacts_api_rust_proto::Geometry2;
+use crate::generated::Geometry2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 

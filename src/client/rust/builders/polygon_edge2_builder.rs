@@ -1,5 +1,5 @@
 use crate::builders::Point2Builder;
-use artifacts_api_rust_proto::PolygonEdge2;
+use crate::generated::PolygonEdge2;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

@@ -1,16 +1,16 @@
 use crate::builders::Geometry2Builder;
-use crate::builders::IntoGeometry2Builder;
 use crate::builders::Image2Builder;
+use crate::builders::IntoGeometry2Builder;
 use crate::builders::Point2Builder;
 use crate::builders::Polygon2Builder;
 use crate::builders::Rect2Builder;
 use crate::builders::Segment2Builder;
 use crate::builders::SeriesPointBuilder;
 use crate::builders::Transform2Builder;
+use crate::generated::Object2;
+use crate::generated::StructuredData;
 use crate::ClientError;
 use crate::PublicArtifactId;
-use artifacts_api_rust_proto::Object2;
-use artifacts_api_rust_proto::StructuredData;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

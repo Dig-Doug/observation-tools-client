@@ -19,7 +19,7 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `src/api/artifacts/create_artifact.proto`
+//! Generated file from `src/proto/create_artifact.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -485,20 +485,19 @@ impl ::protobuf::reflect::ProtobufValue for CreateArtifactResponse {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n'src/api/artifacts/create_artifact.proto\x12\x17observation_tools.prot\
-    o\x1a\x20src/api/artifacts/artifact.proto\x1a\x1esrc/api/artifacts/run_i\
-    d.proto\x1a\"src/api/artifacts/project_id.proto\"\xd6\x03\n\x15CreateArt\
-    ifactRequest\x12A\n\nproject_id\x18\x08\x20\x01(\x0b2\".observation_tool\
-    s.proto.ProjectIdR\tprojectId\x125\n\x06run_id\x18\x04\x20\x01(\x0b2\x1e\
-    .observation_tools.proto.RunIdR\x05runId\x12D\n\x0bartifact_id\x18\x05\
-    \x20\x01(\x0b2#.observation_tools.proto.ArtifactIdR\nartifactId\x12G\n\
-    \x0cseries_point\x18\x07\x20\x01(\x0b2$.observation_tools.proto.SeriesPo\
-    intR\x0bseriesPoint\x12L\n\rartifact_data\x18\x02\x20\x01(\x0b2%.observa\
-    tion_tools.proto.ArtifactDataH\0R\x0cartifactData\x12R\n\x0fartifact_upd\
-    ate\x18\x06\x20\x01(\x0b2'.observation_tools.proto.ArtifactUpdateH\0R\
-    \x0eartifactUpdateB\x06\n\x04dataJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\
-    \x04\"\x18\n\x16CreateArtifactResponseB\x1b\n\x17tools.observation.proto\
-    P\x01b\x06proto3\
+    \n\x1fsrc/proto/create_artifact.proto\x12\x17observation_tools.proto\x1a\
+    \x18src/proto/artifact.proto\x1a\x16src/proto/run_id.proto\x1a\x1asrc/pr\
+    oto/project_id.proto\"\xd6\x03\n\x15CreateArtifactRequest\x12A\n\nprojec\
+    t_id\x18\x08\x20\x01(\x0b2\".observation_tools.proto.ProjectIdR\tproject\
+    Id\x125\n\x06run_id\x18\x04\x20\x01(\x0b2\x1e.observation_tools.proto.Ru\
+    nIdR\x05runId\x12D\n\x0bartifact_id\x18\x05\x20\x01(\x0b2#.observation_t\
+    ools.proto.ArtifactIdR\nartifactId\x12G\n\x0cseries_point\x18\x07\x20\
+    \x01(\x0b2$.observation_tools.proto.SeriesPointR\x0bseriesPoint\x12L\n\r\
+    artifact_data\x18\x02\x20\x01(\x0b2%.observation_tools.proto.ArtifactDat\
+    aH\0R\x0cartifactData\x12R\n\x0fartifact_update\x18\x06\x20\x01(\x0b2'.o\
+    bservation_tools.proto.ArtifactUpdateH\0R\x0eartifactUpdateB\x06\n\x04da\
+    taJ\x04\x08\x01\x10\x02J\x04\x08\x03\x10\x04\"\x18\n\x16CreateArtifactRe\
+    sponseB\x1b\n\x17tools.observation.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

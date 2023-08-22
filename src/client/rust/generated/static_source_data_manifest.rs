@@ -19,7 +19,7 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `src/api/artifacts/static_source_data_manifest.proto`
+//! Generated file from `src/proto/static_source_data_manifest.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -694,20 +694,20 @@ impl ::protobuf::reflect::ProtobufValue for StaticSourceDataVersionEntry {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n3src/api/artifacts/static_source_data_manifest.proto\x12\x17observatio\
-    n_tools.proto\x1a\x1csrc/api/artifacts/uuid.proto\"l\n\x18StaticSourceDa\
-    taManifest\x12P\n\x07entries\x18\x01\x20\x03(\x0b26.observation_tools.pr\
-    oto.StaticSourceDataManifestEntryR\x07entries\"\xd4\x01\n\x1dStaticSourc\
-    eDataManifestEntry\x12\x0e\n\x02id\x18\x03\x20\x01(\tR\x02id\x12P\n\x06s\
-    ource\x18\x01\x20\x01(\x0b28.observation_tools.proto.StaticSourceDataSou\
-    rceReferenceR\x06source\x12Q\n\x08versions\x18\x02\x20\x03(\x0b25.observ\
-    ation_tools.proto.StaticSourceDataVersionEntryR\x08versions\"T\n\x1fStat\
-    icSourceDataManifestEntryId\x121\n\x04uuid\x18\x01\x20\x01(\x0b2\x1d.obs\
-    ervation_tools.proto.UuidR\x04uuid\">\n\x1fStaticSourceDataSourceReferen\
-    ce\x12\x1b\n\tfile_name\x18\x01\x20\x01(\tR\x08fileName\"X\n\x1cStaticSo\
-    urceDataVersionEntry\x12$\n\x0esource_data_id\x18\x01\x20\x01(\tR\x0csou\
-    rceDataId\x12\x12\n\x04hash\x18\x02\x20\x01(\tR\x04hashB\x1b\n\x17tools.\
-    observation.protoP\x01b\x06proto3\
+    \n+src/proto/static_source_data_manifest.proto\x12\x17observation_tools.\
+    proto\x1a\x14src/proto/uuid.proto\"l\n\x18StaticSourceDataManifest\x12P\
+    \n\x07entries\x18\x01\x20\x03(\x0b26.observation_tools.proto.StaticSourc\
+    eDataManifestEntryR\x07entries\"\xd4\x01\n\x1dStaticSourceDataManifestEn\
+    try\x12\x0e\n\x02id\x18\x03\x20\x01(\tR\x02id\x12P\n\x06source\x18\x01\
+    \x20\x01(\x0b28.observation_tools.proto.StaticSourceDataSourceReferenceR\
+    \x06source\x12Q\n\x08versions\x18\x02\x20\x03(\x0b25.observation_tools.p\
+    roto.StaticSourceDataVersionEntryR\x08versions\"T\n\x1fStaticSourceDataM\
+    anifestEntryId\x121\n\x04uuid\x18\x01\x20\x01(\x0b2\x1d.observation_tool\
+    s.proto.UuidR\x04uuid\">\n\x1fStaticSourceDataSourceReference\x12\x1b\n\
+    \tfile_name\x18\x01\x20\x01(\tR\x08fileName\"X\n\x1cStaticSourceDataVers\
+    ionEntry\x12$\n\x0esource_data_id\x18\x01\x20\x01(\tR\x0csourceDataId\
+    \x12\x12\n\x04hash\x18\x02\x20\x01(\tR\x04hashB\x1b\n\x17tools.observati\
+    on.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

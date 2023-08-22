@@ -59,7 +59,6 @@ crates_repository(
     manifests = [
         "//:Cargo.toml",
         "//:examples/Cargo.toml",
-        "//src/api/artifacts:Cargo.toml",
         "//src/client/rust:Cargo.toml",
     ],
 )

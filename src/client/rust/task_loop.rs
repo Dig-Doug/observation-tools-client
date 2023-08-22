@@ -1,9 +1,9 @@
+use crate::generated::CreateArtifactRequest;
 use crate::token_generator::TokenGenerator;
 use crate::util::ClientError;
 use crate::util::GenericError;
 use crate::PublicArtifactId;
 use crate::PublicArtifactIdTaskHandle;
-use artifacts_api_rust_proto::CreateArtifactRequest;
 use protobuf::Message;
 use reqwest::multipart::Part;
 use std::io::Write;
@@ -28,7 +28,7 @@ pub enum TaskLoopParams {
     TokioRuntime {
         runtime: tokio::runtime::Handle,
     },
-    WindowEventLoop {},
+    None,
 }
 
 #[derive(Debug)]
@@ -76,7 +76,7 @@ impl TaskLoop {
             }
         };
 
-        #[cfg(feature = "rust")]
+        #[cfg(feature = "tokio")]
         let params = {
             let runtime = match tokio::runtime::Handle::try_current() {
                 Ok(handle) => handle,
@@ -90,11 +90,8 @@ impl TaskLoop {
             runtime.spawn(task_loop);
             TaskLoopParams::TokioRuntime { runtime }
         };
-        #[cfg(feature = "wasm")]
-        let params = {
-            wasm_bindgen_futures::spawn_local(task_loop);
-            TaskLoopParams::WindowEventLoop {}
-        };
+        #[cfg(not(feature = "tokio"))]
+        let params = TaskLoopParams::None;
 
         Ok(TaskLoop {
             task_handler,
@@ -170,7 +167,7 @@ impl TaskLoop {
             TaskLoopParams::TokioRuntime { runtime } => {
                 // TODO(doug): Eval runtime
             }
-            TaskLoopParams::WindowEventLoop { .. } => {}
+            TaskLoopParams::None => {}
         }
         self.send_task_channel.close();
         let _ = self.receive_shutdown_channel.recv().await;

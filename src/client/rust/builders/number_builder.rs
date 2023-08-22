@@ -1,6 +1,6 @@
 extern crate alloc;
+use crate::generated::Number;
 use crate::util::ClientError;
-use artifacts_api_rust_proto::Number;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "src/api/artifacts/artifact.proto";
+import "src/proto/artifact.proto";
 import "google/protobuf/timestamp.proto";
 
 package observation_tools.proto;

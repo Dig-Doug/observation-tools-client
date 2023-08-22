@@ -1,5 +1,5 @@
 {
-  "checksum": "386b6ff2f77c31861cbf2c9c2d49a805b3103d9907a7469793cf29e3fe09a3ef",
+  "checksum": "8ca1892688a9f3fc601108961933a9575597b587ef1f59234626ad7712e596e0",
   "crates": {
     "addr2line 0.20.0": {
       "name": "addr2line",
@@ -459,40 +459,6 @@
         "version": "0.5.1"
       },
       "license": "Apache-2.0"
-    },
-    "artifacts_api_rust_proto 0.0.0": {
-      "name": "artifacts_api_rust_proto",
-      "version": "0.0.0",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "artifacts_api_rust_proto",
-            "crate_root": "generated/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "artifacts_api_rust_proto",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "protobuf 3.2.0",
-              "target": "protobuf"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.0.0"
-      },
-      "license": null
     },
     "async-channel 1.9.0": {
       "name": "async-channel",
@@ -7172,8 +7138,8 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "observation-tools-client 0.0.4": {
-      "name": "observation-tools-client",
+    "observation-tools 0.0.4": {
+      "name": "observation-tools",
       "version": "0.0.4",
       "repository": null,
       "targets": [
@@ -14413,8 +14379,7 @@
     "weezl 0.1.7"
   ],
   "workspace_members": {
-    "artifacts_api_rust_proto 0.0.0": "src/api/artifacts",
-    "observation-tools-client 0.0.4": "src/client/rust",
+    "observation-tools 0.0.4": "src/client/rust",
     "observation-tools-client-examples 0.0.3": "examples"
   },
   "conditions": {

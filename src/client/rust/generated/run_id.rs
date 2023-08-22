@@ -19,7 +19,7 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `src/api/artifacts/run_id.proto`
+//! Generated file from `src/proto/run_id.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -149,10 +149,10 @@ impl ::protobuf::reflect::ProtobufValue for RunId {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x1esrc/api/artifacts/run_id.proto\x12\x17observation_tools.proto\x1a\
-    \x20src/api/artifacts/artifact.proto\"B\n\x05RunId\x123\n\x02id\x18\x02\
-    \x20\x01(\x0b2#.observation_tools.proto.ArtifactIdR\x02idJ\x04\x08\x01\
-    \x10\x02B\x1b\n\x17tools.observation.protoP\x01b\x06proto3\
+    \n\x16src/proto/run_id.proto\x12\x17observation_tools.proto\x1a\x18src/p\
+    roto/artifact.proto\"B\n\x05RunId\x123\n\x02id\x18\x02\x20\x01(\x0b2#.ob\
+    servation_tools.proto.ArtifactIdR\x02idJ\x04\x08\x01\x10\x02B\x1b\n\x17t\
+    ools.observation.protoP\x01b\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

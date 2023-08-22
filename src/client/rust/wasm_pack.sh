@@ -1,2 +1,3 @@
 #!/bin/bash
-wasm-pack build --target nodejs --dev --features wasm
+wasm-pack build --scope observation-tools --target nodejs --dev --features wasm
+sed -i 's/observation-tools\/observation-tools/observation-tools\/client/' pkg/package.json
