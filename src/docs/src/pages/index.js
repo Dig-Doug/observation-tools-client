@@ -89,18 +89,6 @@ function useWindowDimensions() {
 function HeaderBackground() {
     const FONT_SIZE = 32;
     const {width, height} = useWindowDimensions();
-    const rowCount = Math.max(Math.ceil(height / FONT_SIZE), 1);
-    const columnCount = Math.max(Math.ceil(width / FONT_SIZE), 1);
-    const heightMap = useMemo(() => {
-        const data = Array(rowCount * columnCount).fill();
-        for (let x = 0; x < rowCount; x++) {
-            for (let y = 0; y < columnCount; y++) {
-                const index = x + y * rowCount;
-                data[index] = Math.min(x, y);
-            }
-        }
-        return data;
-    }, []);
     const lines = useMemo(() => {
         let radius = FONT_SIZE;
         let lines = [];
@@ -122,14 +110,7 @@ function HeaderBackground() {
     return <>
         <svg viewBox={`0 0 ${width} ${height}`}
              aria-hidden={true}
-             className={styles.heroBackground}
-             style={{
-                 position: 'absolute',
-                 width: '100%',
-                 stroke: 'var(--ifm-color-emphasis-100)',
-                 fill: 'var(--ifm-color-emphasis-100)',
-                 pointerEvents: 'none',
-             }}>
+             className={styles.heroBackground}>
             <g
                 className={styles.headerBackgroundText}
             >
