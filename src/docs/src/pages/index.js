@@ -2,6 +2,8 @@ import React, {useEffect, useMemo, useState} from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import useIsBrowser from '@docusaurus/useIsBrowser';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
 import {
@@ -63,10 +65,86 @@ export default function Home() {
     </Layout>);
 }
 
+function useWindowDimensions() {
+    const isBrowser = useIsBrowser();
+
+    function getWindowDimensions() {
+        if (!isBrowser) {
+            return {width: 0, height: 0};
+        }
+        // TODO(doug): Get size from headers for SSR
+        return {
+            width: window?.innerWidth || 0,
+            height: window?.innerHeight || 0,
+        }
+    }
+
+    const [windowDimensions, setWindowDimensions] = useState(
+        getWindowDimensions()
+    );
+    useEffect(() => {
+        function handleResize() {
+            setWindowDimensions(getWindowDimensions())
+        }
+        handleResize();
+        window.addEventListener("resize", handleResize)
+        return () => window.removeEventListener("resize", handleResize)
+    }, [isBrowser]);
+    return windowDimensions
+}
+
+function HeaderBackground() {
+    const FONT_SIZE = 32;
+    const {width, height} = useWindowDimensions();
+    const lines = useMemo(() => {
+        let radius = FONT_SIZE;
+        let lines = [];
+        while (radius < Math.max(width, height)) {
+            let path = "M";
+            const NUM_POINTS = 32;
+            for (let i = 0; i < NUM_POINTS; i++) {
+                const angle = i / NUM_POINTS * Math.PI * 2;
+                const x = Math.cos(angle) * radius + width / 2;
+                const y = Math.sin(angle) * radius + height / 2;
+                path += ` ${x} ${y}`;
+            }
+            path += "z";
+            lines.push(path);
+            radius += FONT_SIZE;
+        }
+        return lines;
+    }, [FONT_SIZE, width, height]);
+    return <>
+        <svg viewBox={`0 0 ${width} ${height}`}
+             aria-hidden={true}
+             className={styles.heroBackground}>
+            <g
+                className={styles.headerBackgroundText}
+            >
+                {lines.map((path, index) => {
+                    return <text key={index} x={-2 * FONT_SIZE + Math.sin(index) * FONT_SIZE}
+                                 y={FONT_SIZE * index}
+                                 style={{fontSize: FONT_SIZE}}>
+                        {path}
+                    </text>
+                })}
+            </g>
+            <g
+                className={styles.headerBackgroundLines}
+            >
+                {lines.map((path, index) => {
+                    return <path key={index} stroke="context-stroke" fill="none" d={path} strokeWidth={5}/>
+                })}
+            </g>
+        </svg>
+    </>;
+}
+
 function HomepageHeader() {
     const {siteConfig} = useDocusaurusContext();
     return (<header className={clsx('hero hero--secondary', styles.heroBanner)}>
-        <div className="container">
+        <HeaderBackground/>
+        <div className={clsx("container", styles.heroBannerContent)} style={{zIndex: 1}}>
             <h1 className="hero__title">
                 Logging meets the <span className={styles.title3d}>3rd dimension</span>
             </h1>
@@ -158,37 +236,42 @@ const STEPS = [{
     </div>
     , benefits: [{
         title: 'Toolbox of existing primitives', icon: MdViewInAr, description: (<>
-            Model your data with our library of existing primitives and visualize them in seconds
+            Model your data with our library of existing 2d and 3d primitives, e.g. polygons, images
         </>),
-    },]
+    },
+        {
+            title: "Local or remote execution", icon: MdDeviceHub, description: <>
+                Data collection is not limited to one machine. Export data from distributed systems/pipelines and
+                aggregate it in a single place.
+            </>
+        }
+    ]
 }, {
     title: 'Visualize', description: <>
-        Spend time looking at your data, not deciphering text logs or building custom tools
+        View collected data in our web-based viewer. Spend time looking at your data, not deciphering text logs or
+        building custom tools.
     </>, image: <div className={styles.pixelImages}>
         <div className={styles.pixelCode}>
-        <CodeBlock
-            language="rust"
-            showLineNumbers={true}
-        >
-            {VISUALIZE_CODE}
-        </CodeBlock>
+            <CodeBlock
+                language="rust"
+                showLineNumbers={true}
+            >
+                {VISUALIZE_CODE}
+            </CodeBlock>
         </div>
-        <PixelImage useColors={true}/>
+        <BrowserWindow className={styles.pixelImageBrowser}>
+            <PixelImage useColors={true}/>
+        </BrowserWindow>
     </div>,
     benefits: [{
         title: 'Library of data transformations', icon: MdHomeRepairService, description: <>
             Apply transformations to objects to make them easier to understand, e.g. recoloring images, coordinate
             transforms
         </>
-    }, {
-        title: "Local or remote execution", icon: MdDeviceHub, description: <>
-            Data collection is not limited to one machine. Aggregate data from distributed systems/pipelines and
-            view it in a single place.
-        </>
-    }]
+    },]
 }, {
     title: 'Inspect', description: <>
-        Quickly find and diagnose issues so you can get back to building
+        Use our tools to quickly find and diagnose issues so you can get back to building
     </>,
     image: <IntersectionWindow/>,
     benefits: [{
@@ -211,7 +294,6 @@ function BrowserWindow({className, children}) {
                     https://observation.tools
                     <MdRefresh className={styles.browserRefresh}/>
                 </div>
-                <MdClose className={styles.browserClose}/>
             </div>
             <div className={styles.browserContent}>
                 {children}
