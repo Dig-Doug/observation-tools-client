@@ -2,6 +2,8 @@ import React, {useEffect, useMemo, useState} from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import useIsBrowser from '@docusaurus/useIsBrowser';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
 import {
@@ -64,7 +66,12 @@ export default function Home() {
 }
 
 function useWindowDimensions() {
+    const isBrowser = useIsBrowser();
+
     function getWindowDimensions() {
+        if (!isBrowser) {
+            return {width: 0, height: 0};
+        }
         // TODO(doug): Get size from headers for SSR
         return {
             width: window?.innerWidth || 0,
@@ -79,10 +86,10 @@ function useWindowDimensions() {
         function handleResize() {
             setWindowDimensions(getWindowDimensions())
         }
-
+        handleResize();
         window.addEventListener("resize", handleResize)
         return () => window.removeEventListener("resize", handleResize)
-    }, []);
+    }, [isBrowser]);
     return windowDimensions
 }
 
@@ -106,7 +113,7 @@ function HeaderBackground() {
             radius += FONT_SIZE;
         }
         return lines;
-    });
+    }, [FONT_SIZE, width, height]);
     return <>
         <svg viewBox={`0 0 ${width} ${height}`}
              aria-hidden={true}
