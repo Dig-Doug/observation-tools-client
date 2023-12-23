@@ -1,6 +1,7 @@
 use crate::builders::Geometry3Builder;
 use crate::builders::IntoGeometry3Builder;
 use crate::builders::MeshBuilder;
+use crate::builders::Object2Builder;
 use crate::builders::Polygon3Builder;
 use crate::builders::SphereBuilder;
 use crate::builders::Transform3Builder;
@@ -47,10 +48,16 @@ impl Object3Builder {
     }
 }
 
-impl Into<StructuredData> for &Object3Builder {
-    fn into(self) -> StructuredData {
+impl TryInto<StructuredData> for &Object3Builder {
+    type Error = ClientError;
+
+    fn try_into(self) -> Result<StructuredData, Self::Error> {
+        if self.proto.transforms.is_empty() {
+            return Err(ClientError::NoTransformsInBuilder);
+        }
+
         let mut s = StructuredData::new();
         *s.mut_object3() = self.proto.clone();
-        s
+        Ok(s)
     }
 }

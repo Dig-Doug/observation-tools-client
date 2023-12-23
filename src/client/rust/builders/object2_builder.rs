@@ -66,11 +66,17 @@ impl Object2Builder {
     }
 }
 
-impl Into<StructuredData> for &Object2Builder {
-    fn into(self) -> StructuredData {
+impl TryInto<StructuredData> for &Object2Builder {
+    type Error = ClientError;
+
+    fn try_into(self) -> Result<StructuredData, Self::Error> {
+        if self.proto.transforms.is_empty() {
+            return Err(ClientError::NoTransformsInBuilder);
+        }
+
         let mut s = StructuredData::new();
         *s.mut_object2() = self.proto.clone();
-        s
+        Ok(s)
     }
 }
 

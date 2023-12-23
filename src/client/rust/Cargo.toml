@@ -47,9 +47,9 @@ tracing = "0.1.35"
 tracing-wasm = "0.2.1"
 url = "2.2.2"
 uuid = { version = "1.2.2", features = ["v4"] }
-wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
-wasm-bindgen-futures = "0.4.28"
-web-sys = { version = "0.3.55", features = ['Window', 'Performance', 'PerformanceTiming'] }
+wasm-bindgen = { version = "0.2.89", features = ["serde-serialize"] }
+wasm-bindgen-futures = "0.4.39"
+web-sys = { version = "0.3.66", features = ['Window', 'Performance', 'PerformanceTiming'] }
 wasm-bindgen-derive = "0.2.1"
 nalgebra = { version = "^0.32" }
 

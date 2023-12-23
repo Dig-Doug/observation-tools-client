@@ -61,6 +61,11 @@ pub async fn run_examples(
     let run_uploader = client.create_run(&UserMetadataBuilder::new("examples"))?;
 
     let uploader = run_uploader.child_uploader(&UserMetadataBuilder::new("generic"))?;
+
+    let uploader_2d =
+        uploader.child_uploader_2d(&UserMetadataBuilder::new("upload_image_example"))?;
+    upload_image_example(&uploader_2d)?;
+
     // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
     let uploader_3d = uploader.child_uploader_3d(
         &UserMetadataBuilder::new("generate_barn_wall"),
@@ -85,6 +90,12 @@ pub async fn run_examples_js(
     run_examples(project_id, auth_token, ui_host, api_host)
         .await
         .map_err(|e| JsValue::from_str(&format!("{:?}", e)))
+}
+
+fn upload_image_example(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error> {
+    let bytes = include_bytes!("docusaurus.png");
+    uploader.upload_object2("dinosaur", Image2Builder::new(bytes, "image/png"))?;
+    Ok(())
 }
 
 struct AlgorithmParameters {

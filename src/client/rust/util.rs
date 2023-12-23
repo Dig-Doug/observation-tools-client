@@ -31,6 +31,10 @@ pub enum ClientError {
         #[from]
         source: std::io::Error,
     },
+    #[error("No transforms on object: Did you forget to add one to the builder?")]
+    NoTransformsInBuilder,
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }
 
 impl ClientError {
