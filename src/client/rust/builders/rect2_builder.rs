@@ -31,7 +31,7 @@ impl Rect2Builder {
 
 impl Into<Object2Builder> for Rect2Builder {
     fn into(self) -> Object2Builder {
-        let mut builder = Object2Builder::new(Geometry2Builder::rect(&self));
+        let mut builder = Object2Builder::new(Geometry2Builder::rect(self));
         builder
     }
 }

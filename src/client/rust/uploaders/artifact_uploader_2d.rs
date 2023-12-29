@@ -1,3 +1,4 @@
+use std::any::TypeId;
 use crate::builders::Object2Builder;
 use crate::builders::Object2Updater;
 use crate::builders::SeriesBuilder;
@@ -31,7 +32,7 @@ impl ArtifactUploader2d {
             .base
             .upload_raw(
                 metadata,
-                data.try_into()
+                data.clone().try_into()
                     .with_context(|| format!("Failed to parse object `{}`", metadata.proto.name))?,
                 data.series_point.as_ref(),
             )?
@@ -44,7 +45,7 @@ impl ArtifactUploader2d {
         data: &Object2Builder,
     ) -> Result<(), ClientError> {
         self.base
-            .update_raw(&artifact.id, data.try_into()?, data.series_point.as_ref())?;
+            .update_raw(&artifact.id, data.clone().try_into()?, data.series_point.as_ref())?;
         Ok(())
     }
 
@@ -59,15 +60,17 @@ impl ArtifactUploader2d {
 }
 
 impl ArtifactUploader2d {
-    pub fn upload_object2<M: Into<UserMetadataBuilder>, D: Into<Object2Builder>>(
+    pub fn upload_object2<M: Into<UserMetadataBuilder>, D: Into<Object2Builder> + 'static>(
         &self,
         metadata: M,
         data: D,
     ) -> Result<Object2UpdaterTaskHandle, ClientError> {
         let metadata = metadata.into();
         let mut data = data.into();
-        // #implicit-transform
-        data.add_transform(&Transform2Builder::identity());
+        if TypeId::of::<D>() != TypeId::of::<Object2Builder>() {
+            // #implicit-transform
+            data.add_transform(&Transform2Builder::identity());
+        }
         self.upload_object2_js(&metadata, &data)
     }
 

@@ -15,7 +15,7 @@ use nalgebra::Translation3;
 use nalgebra::UnitComplex;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
-use observation_tools_client::builders::Image2Builder;
+use observation_tools_client::builders::{Image2Builder, Segment2Builder};
 use observation_tools_client::builders::Object2Builder;
 use observation_tools_client::builders::Object2Updater;
 use observation_tools_client::builders::Object3Builder;
@@ -56,15 +56,15 @@ pub async fn run_examples(
         client: None,
         token_generator: TokenGenerator::Constant(auth_token),
     })
-    .expect("Failed to create client");
+        .expect("Failed to create client");
 
     let run_uploader = client.create_run(&UserMetadataBuilder::new("examples"))?;
 
     let uploader = run_uploader.child_uploader(&UserMetadataBuilder::new("generic"))?;
 
     let uploader_2d =
-        uploader.child_uploader_2d(&UserMetadataBuilder::new("upload_image_example"))?;
-    upload_image_example(&uploader_2d)?;
+        uploader.child_uploader_2d(&UserMetadataBuilder::new("upload_basic_example"))?;
+    upload_basic_example(&uploader_2d)?;
 
     // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
     let uploader_3d = uploader.child_uploader_3d(
@@ -92,9 +92,11 @@ pub async fn run_examples_js(
         .map_err(|e| JsValue::from_str(&format!("{:?}", e)))
 }
 
-fn upload_image_example(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error> {
-    let bytes = include_bytes!("docusaurus.png");
-    uploader.upload_object2("dinosaur", Image2Builder::new(bytes, "image/png"))?;
+fn upload_basic_example(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error> {
+    uploader.upload_object2("dinosaur", Image2Builder::new(include_bytes!("docusaurus.png"), "image/png"))?;
+    uploader.upload_object2("point2", Point2Builder::new(1.0, 1.0))?;
+    uploader.upload_object2("segment2", Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)))?;
+    uploader.upload_object2("rect2", Rect2Builder::from(Vector2Builder::new(1.0, 2.0)))?;
     Ok(())
 }
 
@@ -170,7 +172,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
         stones_uploader.upload_object2(format!("stone_{}", stone.id), object2)?;
 
         let center: Point2Builder = stone.world_position.clone().into();
-        let mut center2: Object2Builder = (&center).into();
+        let mut center2: Object2Builder = center.into();
         center2.add_transform(&Transform2Builder::from_trs(
             stone.world_position,
             0.0,
@@ -259,7 +261,7 @@ fn generate_stone_locations(
                 }
                 max_y
             }
-            .min(parameters.max_stone_grd_height);
+                .min(parameters.max_stone_grd_height);
 
             let stone_width = rng.gen_range(1..=max_x);
             let stone_height = rng.gen_range(1..=max_y);

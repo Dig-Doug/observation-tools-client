@@ -27,13 +27,13 @@ impl SphereBuilder {
     }
 }
 
-impl Into<Geometry3Builder> for &SphereBuilder {
+impl Into<Geometry3Builder> for SphereBuilder {
     fn into(self) -> Geometry3Builder {
         Geometry3Builder::sphere(self)
     }
 }
 
-impl Into<Object3Builder> for &SphereBuilder {
+impl Into<Object3Builder> for SphereBuilder {
     fn into(self) -> Object3Builder {
         let mut builder = Object3Builder::new(self.into());
         builder

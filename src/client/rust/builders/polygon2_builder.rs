@@ -45,15 +45,9 @@ impl Polygon2Builder {
     }
 }
 
-impl Into<Geometry2Builder> for &Polygon2Builder {
-    fn into(self) -> Geometry2Builder {
-        Geometry2Builder::polygon(self)
-    }
-}
-
 impl Into<Geometry2Builder> for Polygon2Builder {
     fn into(self) -> Geometry2Builder {
-        Geometry2Builder::polygon(&self)
+        Geometry2Builder::polygon(self)
     }
 }
 

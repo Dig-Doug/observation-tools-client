@@ -22,35 +22,34 @@ extern "C" {
     pub type IntoGeometry2Builder;
 }
 
-// TODO(doug): These methods should probably consume the input
 impl Geometry2Builder {
-    pub(crate) fn point(point: &Point2Builder) -> Geometry2Builder {
+    pub(crate) fn point(point: Point2Builder) -> Geometry2Builder {
         let mut proto = Geometry2::new();
-        *proto.mut_point2() = point.proto.clone();
+        *proto.mut_point2() = point.proto;
         Geometry2Builder { proto }
     }
 
-    pub(crate) fn segment(segment: &Segment2Builder) -> Geometry2Builder {
+    pub(crate) fn segment(segment: Segment2Builder) -> Geometry2Builder {
         let mut proto = Geometry2::new();
-        *proto.mut_segment2() = segment.proto.clone();
+        *proto.mut_segment2() = segment.proto;
         Geometry2Builder { proto }
     }
 
-    pub(crate) fn polygon(polygon: &Polygon2Builder) -> Geometry2Builder {
+    pub(crate) fn polygon(polygon: Polygon2Builder) -> Geometry2Builder {
         let mut proto = Geometry2::new();
-        *proto.mut_polygon2() = polygon.proto.clone();
+        *proto.mut_polygon2() = polygon.proto;
         Geometry2Builder { proto }
     }
 
-    pub(crate) fn image(image: &Image2Builder) -> Geometry2Builder {
+    pub(crate) fn image(image: Image2Builder) -> Geometry2Builder {
         let mut proto = Geometry2::new();
-        *proto.mut_image2() = image.proto.clone();
+        *proto.mut_image2() = image.proto;
         Geometry2Builder { proto }
     }
 
-    pub(crate) fn rect(rect: &Rect2Builder) -> Geometry2Builder {
+    pub(crate) fn rect(rect: Rect2Builder) -> Geometry2Builder {
         let mut proto = Geometry2::new();
-        *proto.mut_rect2() = rect.proto.clone();
+        *proto.mut_rect2() = rect.proto;
         Geometry2Builder { proto }
     }
 }

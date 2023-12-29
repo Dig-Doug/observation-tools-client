@@ -41,7 +41,7 @@ impl Point2Builder {
     }
 }
 
-impl Into<Object2Builder> for &Point2Builder {
+impl Into<Object2Builder> for Point2Builder {
     fn into(self) -> Object2Builder {
         Object2Builder::new(Geometry2Builder::point(self))
     }
