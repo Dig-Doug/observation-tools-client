@@ -1,8 +1,8 @@
-use std::any::TypeId;
 use crate::builders::Object2Builder;
 use crate::builders::Object2Updater;
 use crate::builders::SeriesBuilder;
 use crate::builders::Transform2Builder;
+use crate::builders::Transform3Builder;
 use crate::builders::UserMetadataBuilder;
 use crate::generated::ArtifactType;
 use crate::generated::Transform2;
@@ -13,6 +13,7 @@ use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
 use anyhow::Context;
+use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -32,7 +33,8 @@ impl ArtifactUploader2d {
             .base
             .upload_raw(
                 metadata,
-                data.clone().try_into()
+                data.clone()
+                    .try_into()
                     .with_context(|| format!("Failed to parse object `{}`", metadata.proto.name))?,
                 data.series_point.as_ref(),
             )?
@@ -44,8 +46,11 @@ impl ArtifactUploader2d {
         artifact: &Object2Updater,
         data: &Object2Builder,
     ) -> Result<(), ClientError> {
-        self.base
-            .update_raw(&artifact.id, data.clone().try_into()?, data.series_point.as_ref())?;
+        self.base.update_raw(
+            &artifact.id,
+            data.clone().try_into()?,
+            data.series_point.as_ref(),
+        )?;
         Ok(())
     }
 

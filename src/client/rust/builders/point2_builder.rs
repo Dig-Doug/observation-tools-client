@@ -27,6 +27,10 @@ impl Point2Builder {
         ))
     }
 
+    pub fn origin() -> Point2Builder {
+        Point2Builder::new(0.0, 0.0)
+    }
+
     pub fn from_number_builder(x: NumberBuilder, y: NumberBuilder) -> Point2Builder {
         let mut proto = Point2::new();
         proto.x = Some(x.proto).into();
