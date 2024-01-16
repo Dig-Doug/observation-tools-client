@@ -26,10 +26,10 @@ impl Object2Builder {
     pub fn new_js(value: IntoGeometry2Builder) -> Result<Object2Builder, ClientError> {
         let js_value: &JsValue = value.as_ref();
         if let Ok(val) = Point2Builder::try_from(js_value) {
-            return Ok((&val).into());
+            return Ok(val.into());
         }
         if let Ok(val) = Segment2Builder::try_from(js_value) {
-            return Ok((&val).into());
+            return Ok(val.into());
         }
         if let Ok(val) = Polygon2Builder::try_from(js_value) {
             return Ok(val.into());
@@ -66,11 +66,17 @@ impl Object2Builder {
     }
 }
 
-impl Into<StructuredData> for &Object2Builder {
-    fn into(self) -> StructuredData {
+impl TryInto<StructuredData> for Object2Builder {
+    type Error = ClientError;
+
+    fn try_into(self) -> Result<StructuredData, Self::Error> {
+        if self.proto.transforms.is_empty() {
+            return Err(ClientError::NoTransformsInBuilder);
+        }
+
         let mut s = StructuredData::new();
-        *s.mut_object2() = self.proto.clone();
-        s
+        *s.mut_object2() = self.proto;
+        Ok(s)
     }
 }
 

@@ -22,21 +22,21 @@ extern "C" {
 
 #[wasm_bindgen]
 impl Geometry3Builder {
-    pub(crate) fn sphere(sphere: &SphereBuilder) -> Geometry3Builder {
+    pub(crate) fn sphere(sphere: SphereBuilder) -> Geometry3Builder {
         let mut proto = Geometry3::new();
-        *proto.mut_sphere() = sphere.proto.clone();
+        *proto.mut_sphere() = sphere.proto;
         Geometry3Builder { proto }
     }
 
-    pub(crate) fn polygon(polygon: &Polygon3Builder) -> Geometry3Builder {
+    pub(crate) fn polygon(polygon: Polygon3Builder) -> Geometry3Builder {
         let mut proto = Geometry3::new();
-        *proto.mut_polygon() = polygon.proto.clone();
+        *proto.mut_polygon() = polygon.proto;
         Geometry3Builder { proto }
     }
 
-    pub(crate) fn mesh(mesh: &MeshBuilder) -> Geometry3Builder {
+    pub(crate) fn mesh(mesh: MeshBuilder) -> Geometry3Builder {
         let mut proto = Geometry3::new();
-        *proto.mut_mesh() = mesh.proto.clone();
+        *proto.mut_mesh() = mesh.proto;
         Geometry3Builder { proto }
     }
 }

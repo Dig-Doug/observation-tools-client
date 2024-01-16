@@ -47,15 +47,10 @@ impl Polygon3Builder {
 
 impl Into<Geometry3Builder> for Polygon3Builder {
     fn into(self) -> Geometry3Builder {
-        Geometry3Builder::polygon(&self)
-    }
-}
-
-impl Into<Geometry3Builder> for &Polygon3Builder {
-    fn into(self) -> Geometry3Builder {
         Geometry3Builder::polygon(self)
     }
 }
+
 
 impl Into<Object3Builder> for Polygon3Builder {
     fn into(self) -> Object3Builder {

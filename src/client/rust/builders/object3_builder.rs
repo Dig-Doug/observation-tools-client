@@ -1,6 +1,7 @@
 use crate::builders::Geometry3Builder;
 use crate::builders::IntoGeometry3Builder;
 use crate::builders::MeshBuilder;
+use crate::builders::Object2Builder;
 use crate::builders::Polygon3Builder;
 use crate::builders::SphereBuilder;
 use crate::builders::Transform3Builder;
@@ -20,13 +21,13 @@ impl Object3Builder {
     pub fn new_js(value: IntoGeometry3Builder) -> Result<Object3Builder, ClientError> {
         let js_value: &JsValue = value.as_ref();
         if let Ok(val) = SphereBuilder::try_from(js_value) {
-            return Ok((&val).into());
+            return Ok(val.into());
         }
         if let Ok(val) = Polygon3Builder::try_from(js_value) {
             return Ok(val.into());
         }
         if let Ok(val) = MeshBuilder::try_from(js_value) {
-            return Ok((&val).into());
+            return Ok(val.into());
         }
         if let Ok(val) = Geometry3Builder::try_from(js_value) {
             return Ok(Object3Builder::new(val));
@@ -47,10 +48,16 @@ impl Object3Builder {
     }
 }
 
-impl Into<StructuredData> for &Object3Builder {
-    fn into(self) -> StructuredData {
+impl TryInto<StructuredData> for Object3Builder {
+    type Error = ClientError;
+
+    fn try_into(self) -> Result<StructuredData, Self::Error> {
+        if self.proto.transforms.is_empty() {
+            return Err(ClientError::NoTransformsInBuilder);
+        }
+
         let mut s = StructuredData::new();
-        *s.mut_object3() = self.proto.clone();
-        s
+        *s.mut_object3() = self.proto;
+        Ok(s)
     }
 }

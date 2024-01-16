@@ -28,7 +28,7 @@ impl Segment2Builder {
     }
 }
 
-impl Into<Object2Builder> for &Segment2Builder {
+impl Into<Object2Builder> for Segment2Builder {
     fn into(self) -> Object2Builder {
         Object2Builder::new(Geometry2Builder::segment(self))
     }

@@ -50,17 +50,17 @@ impl Image2Builder {
     }
 }
 
-impl Into<StructuredData> for &Image2Builder {
+impl Into<StructuredData> for Image2Builder {
     fn into(self) -> StructuredData {
         let mut s = StructuredData::new();
-        *s.mut_image2() = self.proto.clone();
+        *s.mut_image2() = self.proto;
         s
     }
 }
 
 impl Into<Geometry2Builder> for Image2Builder {
     fn into(self) -> Geometry2Builder {
-        Geometry2Builder::image(&self)
+        Geometry2Builder::image(self)
     }
 }
 

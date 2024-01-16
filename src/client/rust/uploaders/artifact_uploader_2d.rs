@@ -2,14 +2,18 @@ use crate::builders::Object2Builder;
 use crate::builders::Object2Updater;
 use crate::builders::SeriesBuilder;
 use crate::builders::Transform2Builder;
+use crate::builders::Transform3Builder;
 use crate::builders::UserMetadataBuilder;
 use crate::generated::ArtifactType;
+use crate::generated::Transform2;
 use crate::task_handle::Object2UpdaterTaskHandle;
 use crate::task_handle::TaskHandle;
 use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
 use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
+use anyhow::Context;
+use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -27,7 +31,13 @@ impl ArtifactUploader2d {
     ) -> Result<Object2UpdaterTaskHandle, ClientError> {
         Ok(self
             .base
-            .upload_raw(metadata, data.into(), data.series_point.as_ref())?
+            .upload_raw(
+                metadata,
+                data.clone()
+                    .try_into()
+                    .with_context(|| format!("Failed to parse object `{}`", metadata.proto.name))?,
+                data.series_point.as_ref(),
+            )?
             .map_handle(|id| Object2Updater { id }))
     }
 
@@ -36,8 +46,11 @@ impl ArtifactUploader2d {
         artifact: &Object2Updater,
         data: &Object2Builder,
     ) -> Result<(), ClientError> {
-        self.base
-            .update_raw(&artifact.id, data.into(), data.series_point.as_ref())?;
+        self.base.update_raw(
+            &artifact.id,
+            data.clone().try_into()?,
+            data.series_point.as_ref(),
+        )?;
         Ok(())
     }
 
@@ -52,13 +65,17 @@ impl ArtifactUploader2d {
 }
 
 impl ArtifactUploader2d {
-    pub fn upload_object2<M: Into<UserMetadataBuilder>, D: Into<Object2Builder>>(
+    pub fn upload_object2<M: Into<UserMetadataBuilder>, D: Into<Object2Builder> + 'static>(
         &self,
         metadata: M,
         data: D,
     ) -> Result<Object2UpdaterTaskHandle, ClientError> {
         let metadata = metadata.into();
-        let data = data.into();
+        let mut data = data.into();
+        if TypeId::of::<D>() != TypeId::of::<Object2Builder>() {
+            // #implicit-transform
+            data.add_transform(&Transform2Builder::identity());
+        }
         self.upload_object2_js(&metadata, &data)
     }
 

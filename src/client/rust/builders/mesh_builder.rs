@@ -31,13 +31,13 @@ impl MeshBuilder {
     }
 }
 
-impl Into<Geometry3Builder> for &MeshBuilder {
+impl Into<Geometry3Builder> for MeshBuilder {
     fn into(self) -> Geometry3Builder {
         Geometry3Builder::mesh(self)
     }
 }
 
-impl Into<Object3Builder> for &MeshBuilder {
+impl Into<Object3Builder> for MeshBuilder {
     fn into(self) -> Object3Builder {
         let mut builder = Object3Builder::new(self.into());
         builder

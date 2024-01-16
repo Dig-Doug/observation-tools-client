@@ -7,6 +7,7 @@ use crate::generated::TRS2;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[derive(Debug, Clone)]
 pub struct Transform2Builder {
     pub(crate) proto: Transform2,
 }

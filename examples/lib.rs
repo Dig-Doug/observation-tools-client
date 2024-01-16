@@ -25,6 +25,7 @@ use observation_tools_client::builders::Polygon2Builder;
 use observation_tools_client::builders::Polygon3Builder;
 use observation_tools_client::builders::PolygonEdge3Builder;
 use observation_tools_client::builders::Rect2Builder;
+use observation_tools_client::builders::Segment2Builder;
 use observation_tools_client::builders::SeriesBuilder;
 use observation_tools_client::builders::SeriesPointBuilder;
 use observation_tools_client::builders::SphereBuilder;
@@ -61,6 +62,11 @@ pub async fn run_examples(
     let run_uploader = client.create_run(&UserMetadataBuilder::new("examples"))?;
 
     let uploader = run_uploader.child_uploader(&UserMetadataBuilder::new("generic"))?;
+
+    let uploader_2d =
+        uploader.child_uploader_2d(&UserMetadataBuilder::new("upload_basic_example"))?;
+    upload_basic_example(&uploader_2d)?;
+
     // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
     let uploader_3d = uploader.child_uploader_3d(
         &UserMetadataBuilder::new("generate_barn_wall"),
@@ -87,6 +93,20 @@ pub async fn run_examples_js(
         .map_err(|e| JsValue::from_str(&format!("{:?}", e)))
 }
 
+fn upload_basic_example(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error> {
+    uploader.upload_object2(
+        "dinosaur",
+        Image2Builder::new(include_bytes!("docusaurus.png"), "image/png"),
+    )?;
+    uploader.upload_object2("point2", Point2Builder::new(1.0, 1.0))?;
+    uploader.upload_object2(
+        "segment2",
+        Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
+    )?;
+    uploader.upload_object2("rect2", Rect2Builder::from(Vector2Builder::new(1.0, 2.0)))?;
+    Ok(())
+}
+
 struct AlgorithmParameters {
     desired_grid_cell_size: f64,
     max_stone_grid_width: usize,
@@ -104,11 +124,11 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
         Point3::new(11400.0, 6800.0, 1300.0),
     ];
     let parameters = AlgorithmParameters {
-        desired_grid_cell_size: 50.0,
+        desired_grid_cell_size: 100.0,
         max_stone_grid_width: 1,
         max_stone_grd_height: 1,
         max_stone_rotation_delta_degrees: 2.0,
-        max_stone_shrink_percentage: 0.02,
+        max_stone_shrink_percentage: 0.2,
     };
 
     uploader_3d.upload_object3(
@@ -137,34 +157,28 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
     let stones_uploader = wall_2d_uploader.child_uploader_2d("stones")?;
     let mut rng = ChaCha8Rng::seed_from_u64(2);
     for stone in stones {
+        let rotation_radians = rng
+            .gen_range(
+                -parameters.max_stone_rotation_delta_degrees
+                    ..=parameters.max_stone_rotation_delta_degrees,
+            )
+            .to_radians();
+
+        let max_side_length = stone.world_size / (rotation_radians.sin() + rotation_radians.cos());
         let size_variation = rng.gen_range(0.0..=parameters.max_stone_shrink_percentage);
-        let final_size = stone.world_size * (1.0 - size_variation);
-
-        let rotation_degrees = rng.gen_range(
-            -parameters.max_stone_rotation_delta_degrees
-                ..=parameters.max_stone_rotation_delta_degrees,
-        );
-
-        Isometry2::from_parts(
-            Translation2::from(stone.world_position),
-            UnitComplex::from_angle(rotation_degrees.to_radians()),
-        );
+        let final_size = max_side_length * (1.0 - size_variation);
 
         let mut object2: Object2Builder = Rect2Builder::from(final_size).into();
-        object2.add_transform(&Transform2Builder::from_trs(
+        let transform = Transform2Builder::from_trs(
             stone.world_position,
-            rotation_degrees.to_radians(),
+            rotation_radians,
             Vector2::from_element(1.0),
-        ));
+        );
+        object2.add_transform(&transform);
         stones_uploader.upload_object2(format!("stone_{}", stone.id), object2)?;
 
-        let center: Point2Builder = stone.world_position.clone().into();
-        let mut center2: Object2Builder = (&center).into();
-        center2.add_transform(&Transform2Builder::from_trs(
-            stone.world_position,
-            0.0,
-            Vector2::from_element(1.0),
-        ));
+        let mut center2: Object2Builder = Point2Builder::origin().into();
+        center2.add_transform(&transform);
         stones_uploader.upload_object2(format!("stone_center_{}", stone.id), center2)?;
     }
 
@@ -213,17 +227,15 @@ fn generate_stone_locations(
     let algorithm_step_dimension_id = series_builder.add_dimension("algorithm_step");
     let algorithm_series_id = wall_2d_uploader.series("grid_algorithm", series_builder)?;
 
-    let size = {
-        let (min, max) = calculate_bounding_box(&wall_profile_2d)?;
-        max - min
-    };
+    let (bb_min, bb_max) = calculate_bounding_box(&wall_profile_2d)?;
+    let size = { bb_max - bb_min };
 
     let mut rng = ChaCha8Rng::seed_from_u64(2);
     let calculate_num_cells_for_dimension =
         |dimension_size: f64| (dimension_size / parameters.desired_grid_cell_size).floor() as usize;
     let grid_width = calculate_num_cells_for_dimension(size.x);
     let grid_height = calculate_num_cells_for_dimension(size.y);
-    let cell_size = size / (grid_width as f64);
+    let cell_size = size.component_div(&Vector2::new(grid_width as f64, grid_height as f64));
     let mut grid = vec![0u8; grid_width * grid_height];
     let grid_index = |x, y| x + y * grid_width;
     let mut stone_counter = 0u8;
@@ -260,7 +272,8 @@ fn generate_stone_locations(
             }
             stones.push(GridStone {
                 id: stone_counter,
-                world_position: (Point2::origin() - (cell_size / 2.0)
+                world_position: (bb_min
+                    + (cell_size / 2.0)
                     + Vector2::new(x, y).cast().component_mul(&cell_size)),
                 world_size: Vector2::new(stone_width, stone_height)
                     .cast()
@@ -274,9 +287,11 @@ fn generate_stone_locations(
             )?;
             image.set_per_pixel_transform(PerPixelTransformBuilder::random_distinct_color());
             let mut object2: Object2Builder = image.into();
-            object2.add_transform(&Transform2Builder::scale(Vector2Builder::new(
-                size.x, size.y,
-            )));
+            object2.add_transform(&Transform2Builder::from_trs(
+                bb_min,
+                0.0,
+                Vector2Builder::new(size.x, size.y),
+            ));
             object2.set_series_point(&SeriesPointBuilder::new(
                 &algorithm_series_id,
                 &algorithm_step_dimension_id,

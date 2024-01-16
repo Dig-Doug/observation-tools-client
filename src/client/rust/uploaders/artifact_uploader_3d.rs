@@ -1,5 +1,7 @@
-use crate::builders::Object3Builder;
+use std::any::TypeId;
+use crate::builders::{Object2Builder, Object3Builder};
 use crate::builders::SeriesBuilder;
+use crate::builders::Transform2Builder;
 use crate::builders::Transform3Builder;
 use crate::builders::UserMetadataBuilder;
 use crate::generated::ArtifactType;
@@ -26,7 +28,7 @@ impl ArtifactUploader3d {
         metadata: &UserMetadataBuilder,
         data: Object3Builder,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        self.base.upload_raw(metadata, (&data).into(), None)
+        self.base.upload_raw(metadata, data.try_into()?, None)
     }
 
     // TODO(doug): Where in the artifact hierarchy should series be defined?
@@ -49,13 +51,18 @@ impl ArtifactUploader3d {
 }
 
 impl ArtifactUploader3d {
-    pub fn upload_object3<M: Into<UserMetadataBuilder>, D: Into<Object3Builder>>(
+    pub fn upload_object3<M: Into<UserMetadataBuilder>, D: Into<Object3Builder> + 'static>(
         &self,
         metadata: M,
         data: D,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
+        let mut object3 = data.into();
+        if TypeId::of::<D>() != TypeId::of::<Object2Builder>() {
+            // #implicit-transform
+            object3.add_transform(&Transform3Builder::identity());
+        }
         self.base
-            .upload_raw(&(metadata.into()), (&data.into()).into(), None)
+            .upload_raw(&(metadata.into()), object3.try_into()?, None)
     }
 
     pub fn child_uploader_2d<M: Into<UserMetadataBuilder>, T: Into<Transform3Builder>>(
