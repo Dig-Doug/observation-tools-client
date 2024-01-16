@@ -1,8 +1,8 @@
-load("@rules_rust//proto:toolchain.bzl", "rust_proto_toolchain")
+load("@rules_rust//proto/protobuf:toolchain.bzl", "rust_proto_toolchain")
 
 rust_proto_toolchain(
     name = "proto-toolchain-impl",
-    edition = "2018",
+    edition = "2021",
     proto_compile_deps = [
         "@crate_index//:protobuf",
     ],
@@ -14,5 +14,5 @@ rust_proto_toolchain(
 toolchain(
     name = "proto-toolchain",
     toolchain = ":proto-toolchain-impl",
-    toolchain_type = "@rules_rust//proto:toolchain_type",
+    toolchain_type = "@rules_rust//proto/protobuf:toolchain_type",
 )
