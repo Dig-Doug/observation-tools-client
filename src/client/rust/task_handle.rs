@@ -1,15 +1,21 @@
-use crate::builders::Object2Updater;
-use crate::builders::PublicSeriesId;
-use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
-use crate::uploaders::ArtifactUploader2d;
-use crate::uploaders::ArtifactUploader3d;
-use crate::uploaders::GenericArtifactUploader;
-use crate::uploaders::RunUploader;
+use crate::artifacts::Object2Updater;
+use crate::artifacts::PublicSeriesId;
+use crate::groups::base_artifact_uploader::BaseArtifactUploader;
+use crate::groups::ArtifactUploader2d;
+use crate::groups::ArtifactUploader3d;
+use crate::groups::GenericArtifactUploader;
+use crate::groups::RunUploader;
 use crate::PublicArtifactId;
 use async_channel::Receiver;
+use async_trait::async_trait;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use wasm_bindgen::prelude::wasm_bindgen;
+
+#[async_trait]
+pub trait ArtifactUploadHandle<T>: Deref<Target = T> {
+    async fn wait_for_upload(&self);
+}
 
 #[macro_export]
 macro_rules! task_handle_impl {
@@ -27,6 +33,13 @@ macro_rules! task_handle_impl {
             pub async fn wait_for(&self) {
                 // TODO(doug): Expose error for caller
                 let _unused = self.channel.recv().await;
+            }
+        }
+
+        #[async_trait]
+        impl ArtifactUploadHandle<$res> for $sub {
+            async fn wait_for_upload(&self) {
+                self.wait_for().await;
             }
         }
 
@@ -57,7 +70,8 @@ macro_rules! task_handle_impl {
         }
     };
 }
-// wasm-bindgen can't handle generics, so we have to implement each task handle manually
+// wasm-bindgen can't handle generics, so we have to implement each task handle
+// manually
 task_handle_impl!(PublicArtifactIdTaskHandle PublicArtifactId);
 task_handle_impl!(GenericArtifactUploaderTaskHandle GenericArtifactUploader);
 task_handle_impl!(ArtifactUploader2dTaskHandle ArtifactUploader2d);

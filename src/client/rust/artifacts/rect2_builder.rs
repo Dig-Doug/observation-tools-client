@@ -1,7 +1,7 @@
-use crate::builders::Geometry2Builder;
-use crate::builders::Object2Builder;
-use crate::builders::Transform2Builder;
-use crate::builders::Vector2Builder;
+use crate::artifacts::Geometry2Builder;
+use crate::artifacts::Object2Builder;
+use crate::artifacts::Transform2Builder;
+use crate::artifacts::Vector2Builder;
 use crate::generated::Rect2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;

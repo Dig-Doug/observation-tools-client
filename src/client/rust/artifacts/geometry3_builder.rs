@@ -1,6 +1,6 @@
-use crate::builders::MeshBuilder;
-use crate::builders::Polygon3Builder;
-use crate::builders::SphereBuilder;
+use crate::artifacts::MeshBuilder;
+use crate::artifacts::Polygon3Builder;
+use crate::artifacts::SphereBuilder;
 use crate::generated::Geometry3;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;

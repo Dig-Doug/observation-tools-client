@@ -3,3 +3,5 @@ imports_granularity = "Item"
 ignore = [
     "src/api/artifacts/generated"
 ]
+format_code_in_doc_comments = true
+wrap_comments = true

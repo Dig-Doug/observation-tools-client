@@ -1,4 +1,4 @@
-use crate::builders::IntoGeometry2Builder;
+use crate::artifacts::IntoGeometry2Builder;
 use crate::generated::ArtifactId;
 use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;

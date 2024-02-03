@@ -1,5 +1,5 @@
-use crate::builders::Geometry2Builder;
-use crate::builders::Object2Builder;
+use crate::artifacts::Geometry2Builder;
+use crate::artifacts::Object2Builder;
 use crate::generated::Image2;
 use crate::generated::PerPixelTransform;
 use crate::generated::RandomDistinctColor;

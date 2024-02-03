@@ -1,8 +1,8 @@
-use crate::builders::Geometry3Builder;
-use crate::builders::Object3Builder;
-use crate::builders::Point3Builder;
-use crate::builders::PolygonEdge3Builder;
-use crate::builders::Transform3Builder;
+use crate::artifacts::Geometry3Builder;
+use crate::artifacts::Object3Builder;
+use crate::artifacts::Point3Builder;
+use crate::artifacts::PolygonEdge3Builder;
+use crate::artifacts::Transform3Builder;
 use crate::generated::Polygon3;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
@@ -50,7 +50,6 @@ impl Into<Geometry3Builder> for Polygon3Builder {
         Geometry3Builder::polygon(self)
     }
 }
-
 
 impl Into<Object3Builder> for Polygon3Builder {
     fn into(self) -> Object3Builder {

@@ -1,9 +1,9 @@
-use crate::builders::NumberBuilder;
-use crate::builders::Point2Builder;
-use crate::builders::Point3Builder;
-use crate::builders::Transform3Builder;
-use crate::builders::Vector2Builder;
-use crate::builders::Vector3Builder;
+use crate::artifacts::NumberBuilder;
+use crate::artifacts::Point2Builder;
+use crate::artifacts::Point3Builder;
+use crate::artifacts::Transform3Builder;
+use crate::artifacts::Vector2Builder;
+use crate::artifacts::Vector3Builder;
 use nalgebra::Matrix3;
 use nalgebra::Matrix4;
 use nalgebra::Point2;

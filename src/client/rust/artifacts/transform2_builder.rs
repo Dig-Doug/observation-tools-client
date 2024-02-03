@@ -1,6 +1,6 @@
-use crate::builders::NumberBuilder;
-use crate::builders::Point2Builder;
-use crate::builders::Vector2Builder;
+use crate::artifacts::NumberBuilder;
+use crate::artifacts::Point2Builder;
+use crate::artifacts::Vector2Builder;
 use crate::generated::Number;
 use crate::generated::Transform2;
 use crate::generated::TRS2;

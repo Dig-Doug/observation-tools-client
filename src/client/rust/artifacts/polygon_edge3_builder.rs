@@ -1,4 +1,4 @@
-use crate::builders::Point3Builder;
+use crate::artifacts::Point3Builder;
 use crate::generated::PolygonEdge3;
 use wasm_bindgen::prelude::*;
 

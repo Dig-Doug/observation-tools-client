@@ -2,6 +2,7 @@ use crate::generated::ArtifactUserMetadata;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[derive(Debug, Clone)]
 pub struct UserMetadataBuilder {
     pub(crate) proto: ArtifactUserMetadata,
 }
@@ -17,12 +18,16 @@ impl UserMetadataBuilder {
         Self::new_impl(name)
     }
 
-    pub fn add_metadata(&mut self, key: String, value: String) {
-        self.proto.metadata.insert(key, value);
+    pub fn add_metadata_js(&mut self, key: String, value: String) {
+        self.add_metadata(key, value);
     }
 }
 
 impl UserMetadataBuilder {
+    pub fn add_metadata<K: Into<String>, V: Into<String>>(&mut self, key: K, value: V) {
+        self.proto.metadata.insert(key.into(), value.into());
+    }
+
     fn new_impl(name: &str) -> UserMetadataBuilder {
         let mut proto = ArtifactUserMetadata::new();
         proto.name = name.to_string();

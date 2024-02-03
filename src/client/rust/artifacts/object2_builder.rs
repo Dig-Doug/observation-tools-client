@@ -1,12 +1,12 @@
-use crate::builders::Geometry2Builder;
-use crate::builders::Image2Builder;
-use crate::builders::IntoGeometry2Builder;
-use crate::builders::Point2Builder;
-use crate::builders::Polygon2Builder;
-use crate::builders::Rect2Builder;
-use crate::builders::Segment2Builder;
-use crate::builders::SeriesPointBuilder;
-use crate::builders::Transform2Builder;
+use crate::artifacts::Geometry2Builder;
+use crate::artifacts::Image2Builder;
+use crate::artifacts::IntoGeometry2Builder;
+use crate::artifacts::Point2Builder;
+use crate::artifacts::Polygon2Builder;
+use crate::artifacts::Rect2Builder;
+use crate::artifacts::Segment2Builder;
+use crate::artifacts::SeriesPointBuilder;
+use crate::artifacts::Transform2Builder;
 use crate::generated::Object2;
 use crate::generated::StructuredData;
 use crate::ClientError;
@@ -46,7 +46,7 @@ impl Object2Builder {
         Err(ClientError::FailedToCreateGeometry2Builder)
     }
 
-    pub fn add_transform(&mut self, transform: &Transform2Builder) {
+    pub fn add_transform(&mut self, transform: Transform2Builder) {
         self.proto.transforms.push(transform.proto.clone());
     }
 

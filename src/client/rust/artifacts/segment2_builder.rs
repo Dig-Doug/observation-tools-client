@@ -1,6 +1,6 @@
-use crate::builders::Geometry2Builder;
-use crate::builders::Object2Builder;
-use crate::builders::Point2Builder;
+use crate::artifacts::Geometry2Builder;
+use crate::artifacts::Object2Builder;
+use crate::artifacts::Point2Builder;
 use crate::generated::Segment2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;

@@ -1,4 +1,4 @@
-use crate::builders::Point2Builder;
+use crate::artifacts::Point2Builder;
 use crate::generated::PolygonEdge2;
 use wasm_bindgen::prelude::*;
 

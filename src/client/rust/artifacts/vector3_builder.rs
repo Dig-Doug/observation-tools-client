@@ -1,5 +1,5 @@
-use crate::builders::number_builder::NumberOrNumberBuilder;
-use crate::builders::NumberBuilder;
+use crate::artifacts::number_builder::NumberOrNumberBuilder;
+use crate::artifacts::NumberBuilder;
 use crate::generated::Vector3;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;

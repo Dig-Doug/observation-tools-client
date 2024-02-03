@@ -194,7 +194,7 @@ function Feature({benefit}) {
 const EXPORT_CODE = `fn generate_city() {
   let points = generate_city_outline();
   let poly = Polygon2Builder::from_points(points);
-  uploader.upload_object2("city_outline", poly);
+  uploader.create_object2("city_outline", poly);
 }
 `;
 

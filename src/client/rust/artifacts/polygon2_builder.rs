@@ -1,8 +1,8 @@
-use crate::builders::Geometry2Builder;
-use crate::builders::Object2Builder;
-use crate::builders::Point2Builder;
-use crate::builders::PolygonEdge2Builder;
-use crate::builders::Transform2Builder;
+use crate::artifacts::Geometry2Builder;
+use crate::artifacts::Object2Builder;
+use crate::artifacts::Point2Builder;
+use crate::artifacts::PolygonEdge2Builder;
+use crate::artifacts::Transform2Builder;
 use crate::generated::Polygon2;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;

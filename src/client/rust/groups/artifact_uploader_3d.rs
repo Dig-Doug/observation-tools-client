@@ -1,20 +1,23 @@
-use std::any::TypeId;
-use crate::builders::{Object2Builder, Object3Builder};
-use crate::builders::SeriesBuilder;
-use crate::builders::Transform2Builder;
-use crate::builders::Transform3Builder;
-use crate::builders::UserMetadataBuilder;
+use crate::artifacts::Object2Builder;
+use crate::artifacts::Object3Builder;
+use crate::artifacts::SeriesBuilder;
+use crate::artifacts::Transform2Builder;
+use crate::artifacts::Transform3Builder;
+use crate::artifacts::UserMetadataBuilder;
 use crate::generated::ArtifactType;
+use crate::groups::base_artifact_uploader::BaseArtifactUploader;
+use crate::groups::ArtifactUploader2d;
 use crate::task_handle::TaskHandle;
-use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
-use crate::uploaders::ArtifactUploader2d;
 use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::ArtifactUploader3dTaskHandle;
 use crate::PublicArtifactIdTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
+use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 
+/// An artifact group representing a 3-dimensional world. This group can only
+/// contain [Object3](Object3Builder) artifacts.
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct ArtifactUploader3d {
@@ -23,12 +26,12 @@ pub struct ArtifactUploader3d {
 
 #[wasm_bindgen]
 impl ArtifactUploader3d {
-    pub fn upload_object3_js(
+    pub fn create_object3_js(
         &self,
         metadata: &UserMetadataBuilder,
         data: Object3Builder,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        self.base.upload_raw(metadata, data.try_into()?, None)
+        self.create_object3(metadata.clone(), data)
     }
 
     // TODO(doug): Where in the artifact hierarchy should series be defined?
@@ -37,7 +40,7 @@ impl ArtifactUploader3d {
         metadata: &UserMetadataBuilder,
         series: &SeriesBuilder,
     ) -> Result<PublicSeriesIdTaskHandle, ClientError> {
-        self.base.series(metadata, series)
+        self.base.series(metadata.clone(), series)
     }
 
     pub fn child_uploader_3d(
@@ -46,12 +49,12 @@ impl ArtifactUploader3d {
         base_transform: Transform3Builder,
     ) -> Result<ArtifactUploader3dTaskHandle, ClientError> {
         self.base
-            .child_uploader_3d(metadata, base_transform.proto, None)
+            .child_uploader_3d(metadata.clone(), base_transform.proto, None)
     }
 }
 
 impl ArtifactUploader3d {
-    pub fn upload_object3<M: Into<UserMetadataBuilder>, D: Into<Object3Builder> + 'static>(
+    pub fn create_object3<M: Into<UserMetadataBuilder>, D: Into<Object3Builder> + 'static>(
         &self,
         metadata: M,
         data: D,
@@ -61,8 +64,7 @@ impl ArtifactUploader3d {
             // #implicit-transform
             object3.add_transform(&Transform3Builder::identity());
         }
-        self.base
-            .upload_raw(&(metadata.into()), object3.try_into()?, None)
+        self.base.upload_raw(metadata, object3.try_into()?, None)
     }
 
     pub fn child_uploader_2d<M: Into<UserMetadataBuilder>, T: Into<Transform3Builder>>(
@@ -70,9 +72,7 @@ impl ArtifactUploader3d {
         metadata: M,
         to_3d_transform: T,
     ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
-        let mut request = self
-            .base
-            .base_create_artifact_request(&metadata.into(), None);
+        let mut request = self.base.base_create_artifact_request(metadata, None);
         let artifact_data = request.mut_artifact_data();
         artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_2D_IN_3D_GROUP.into();
         let transform: Transform3Builder = to_3d_transform.into();

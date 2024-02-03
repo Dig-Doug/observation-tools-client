@@ -1,6 +1,6 @@
-use crate::builders::Geometry3Builder;
-use crate::builders::Object3Builder;
-use crate::builders::VertexBuilder;
+use crate::artifacts::Geometry3Builder;
+use crate::artifacts::Object3Builder;
+use crate::artifacts::VertexBuilder;
 use crate::generated::Mesh;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;

@@ -15,26 +15,26 @@ use nalgebra::Translation3;
 use nalgebra::UnitComplex;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
-use observation_tools_client::builders::Image2Builder;
-use observation_tools_client::builders::Object2Builder;
-use observation_tools_client::builders::Object2Updater;
-use observation_tools_client::builders::Object3Builder;
-use observation_tools_client::builders::PerPixelTransformBuilder;
-use observation_tools_client::builders::Point2Builder;
-use observation_tools_client::builders::Polygon2Builder;
-use observation_tools_client::builders::Polygon3Builder;
-use observation_tools_client::builders::PolygonEdge3Builder;
-use observation_tools_client::builders::Rect2Builder;
-use observation_tools_client::builders::Segment2Builder;
-use observation_tools_client::builders::SeriesBuilder;
-use observation_tools_client::builders::SeriesPointBuilder;
-use observation_tools_client::builders::SphereBuilder;
-use observation_tools_client::builders::Transform2Builder;
-use observation_tools_client::builders::Transform3Builder;
-use observation_tools_client::builders::UserMetadataBuilder;
-use observation_tools_client::builders::Vector2Builder;
-use observation_tools_client::uploaders::ArtifactUploader2d;
-use observation_tools_client::uploaders::ArtifactUploader3d;
+use observation_tools_client::artifacts::Image2Builder;
+use observation_tools_client::artifacts::Object2Builder;
+use observation_tools_client::artifacts::Object2Updater;
+use observation_tools_client::artifacts::Object3Builder;
+use observation_tools_client::artifacts::PerPixelTransformBuilder;
+use observation_tools_client::artifacts::Point2Builder;
+use observation_tools_client::artifacts::Polygon2Builder;
+use observation_tools_client::artifacts::Polygon3Builder;
+use observation_tools_client::artifacts::PolygonEdge3Builder;
+use observation_tools_client::artifacts::Rect2Builder;
+use observation_tools_client::artifacts::Segment2Builder;
+use observation_tools_client::artifacts::SeriesBuilder;
+use observation_tools_client::artifacts::SeriesPointBuilder;
+use observation_tools_client::artifacts::SphereBuilder;
+use observation_tools_client::artifacts::Transform2Builder;
+use observation_tools_client::artifacts::Transform3Builder;
+use observation_tools_client::artifacts::UserMetadataBuilder;
+use observation_tools_client::artifacts::Vector2Builder;
+use observation_tools_client::groups::ArtifactUploader2d;
+use observation_tools_client::groups::ArtifactUploader3d;
 use observation_tools_client::ClientError;
 use observation_tools_client::ClientOptions;
 use observation_tools_client::TokenGenerator;
@@ -54,24 +54,20 @@ pub async fn run_examples(
         ui_host,
         api_host,
         project_id,
-        client: None,
+        reqwest_client: None,
         token_generator: TokenGenerator::Constant(auth_token),
-    })
-    .expect("Failed to create client");
+    })?;
 
-    let run_uploader = client.create_run(&UserMetadataBuilder::new("examples"))?;
+    let run_uploader = client.create_run("examples")?;
 
-    let uploader = run_uploader.child_uploader(&UserMetadataBuilder::new("generic"))?;
+    let uploader = run_uploader.child_uploader("generic")?;
 
-    let uploader_2d =
-        uploader.child_uploader_2d(&UserMetadataBuilder::new("upload_basic_example"))?;
+    let uploader_2d = uploader.child_uploader_2d("upload_basic_example")?;
     upload_basic_example(&uploader_2d)?;
 
     // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
-    let uploader_3d = uploader.child_uploader_3d(
-        &UserMetadataBuilder::new("generate_barn_wall"),
-        Transform3Builder::identity(),
-    )?;
+    let uploader_3d =
+        uploader.child_uploader_3d("generate_barn_wall", Transform3Builder::identity())?;
     generate_stone_wall(&uploader_3d)?;
 
     info!("See the output at: {}", run_uploader.viewer_url());
@@ -94,16 +90,16 @@ pub async fn run_examples_js(
 }
 
 fn upload_basic_example(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error> {
-    uploader.upload_object2(
+    uploader.create_object2(
         "dinosaur",
         Image2Builder::new(include_bytes!("docusaurus.png"), "image/png"),
     )?;
-    uploader.upload_object2("point2", Point2Builder::new(1.0, 1.0))?;
-    uploader.upload_object2(
+    uploader.create_object2("point2", Point2Builder::new(1.0, 1.0))?;
+    uploader.create_object2(
         "segment2",
         Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
     )?;
-    uploader.upload_object2("rect2", Rect2Builder::from(Vector2Builder::new(1.0, 2.0)))?;
+    uploader.create_object2("rect2", Rect2Builder::from(Vector2Builder::new(1.0, 2.0)))?;
     Ok(())
 }
 
@@ -131,7 +127,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
         max_stone_shrink_percentage: 0.2,
     };
 
-    uploader_3d.upload_object3(
+    uploader_3d.create_object3(
         "wall_profile_world_space",
         Polygon3Builder::from_points(wall_profile_world.clone()),
     )?;
@@ -147,7 +143,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
 
     let wall_2d_uploader = uploader_3d.child_uploader_2d("wall_2d", local_to_world_transform)?;
 
-    wall_2d_uploader.upload_object2(
+    wall_2d_uploader.create_object2(
         "wall_profile_local_space",
         Polygon2Builder::from_points(wall_profile_2d.clone()),
     )?;
@@ -174,12 +170,12 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
             rotation_radians,
             Vector2::from_element(1.0),
         );
-        object2.add_transform(&transform);
-        stones_uploader.upload_object2(format!("stone_{}", stone.id), object2)?;
+        object2.add_transform(transform);
+        stones_uploader.create_object2(format!("stone_{}", stone.id), object2)?;
 
         let mut center2: Object2Builder = Point2Builder::origin().into();
-        center2.add_transform(&transform);
-        stones_uploader.upload_object2(format!("stone_center_{}", stone.id), center2)?;
+        center2.add_transform(transform);
+        stones_uploader.create_object2(format!("stone_center_{}", stone.id), center2)?;
     }
 
     // TODO(doug): Convert the grid pattern to boxes
@@ -287,7 +283,7 @@ fn generate_stone_locations(
             )?;
             image.set_per_pixel_transform(PerPixelTransformBuilder::random_distinct_color());
             let mut object2: Object2Builder = image.into();
-            object2.add_transform(&Transform2Builder::from_trs(
+            object2.add_transform(Transform2Builder::from_trs(
                 bb_min,
                 0.0,
                 Vector2Builder::new(size.x, size.y),
@@ -301,7 +297,7 @@ fn generate_stone_locations(
                 None => {
                     grid_image_updater = Some(
                         wall_2d_uploader
-                            .upload_object2("grid_image", object2)?
+                            .create_object2("grid_image", object2)?
                             .result,
                     );
                 }

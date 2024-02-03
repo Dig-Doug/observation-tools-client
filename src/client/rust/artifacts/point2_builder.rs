@@ -1,7 +1,7 @@
-use crate::builders::number_builder::NumberOrNumberBuilder;
-use crate::builders::Geometry2Builder;
-use crate::builders::NumberBuilder;
-use crate::builders::Object2Builder;
+use crate::artifacts::number_builder::NumberOrNumberBuilder;
+use crate::artifacts::Geometry2Builder;
+use crate::artifacts::NumberBuilder;
+use crate::artifacts::Object2Builder;
 use crate::generated::Point2;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;

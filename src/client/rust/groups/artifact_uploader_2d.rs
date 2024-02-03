@@ -1,14 +1,14 @@
-use crate::builders::Object2Builder;
-use crate::builders::Object2Updater;
-use crate::builders::SeriesBuilder;
-use crate::builders::Transform2Builder;
-use crate::builders::Transform3Builder;
-use crate::builders::UserMetadataBuilder;
+use crate::artifacts::Object2Builder;
+use crate::artifacts::Object2Updater;
+use crate::artifacts::SeriesBuilder;
+use crate::artifacts::Transform2Builder;
+use crate::artifacts::Transform3Builder;
+use crate::artifacts::UserMetadataBuilder;
 use crate::generated::ArtifactType;
 use crate::generated::Transform2;
+use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::task_handle::Object2UpdaterTaskHandle;
 use crate::task_handle::TaskHandle;
-use crate::uploaders::base_artifact_uploader::BaseArtifactUploader;
 use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
@@ -16,6 +16,8 @@ use anyhow::Context;
 use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 
+/// An artifact group representing a 2-dimensional world. This group can only
+/// contain [Object2](Object2Builder) artifacts.
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct ArtifactUploader2d {
@@ -24,21 +26,12 @@ pub struct ArtifactUploader2d {
 
 #[wasm_bindgen]
 impl ArtifactUploader2d {
-    pub fn upload_object2_js(
+    pub fn create_object2_js(
         &self,
         metadata: &UserMetadataBuilder,
         data: &Object2Builder,
     ) -> Result<Object2UpdaterTaskHandle, ClientError> {
-        Ok(self
-            .base
-            .upload_raw(
-                metadata,
-                data.clone()
-                    .try_into()
-                    .with_context(|| format!("Failed to parse object `{}`", metadata.proto.name))?,
-                data.series_point.as_ref(),
-            )?
-            .map_handle(|id| Object2Updater { id }))
+        self.create_object2(metadata.clone(), data.clone())
     }
 
     pub fn update_object2_js(
@@ -46,12 +39,7 @@ impl ArtifactUploader2d {
         artifact: &Object2Updater,
         data: &Object2Builder,
     ) -> Result<(), ClientError> {
-        self.base.update_raw(
-            &artifact.id,
-            data.clone().try_into()?,
-            data.series_point.as_ref(),
-        )?;
-        Ok(())
+        self.update_object2(artifact, data.clone())
     }
 
     // TODO(doug): Where in the artifact hierarchy should series be defined?
@@ -60,12 +48,12 @@ impl ArtifactUploader2d {
         metadata: &UserMetadataBuilder,
         series: &SeriesBuilder,
     ) -> Result<PublicSeriesIdTaskHandle, ClientError> {
-        self.base.series(metadata, series)
+        self.series(metadata.clone(), series.clone())
     }
 }
 
 impl ArtifactUploader2d {
-    pub fn upload_object2<M: Into<UserMetadataBuilder>, D: Into<Object2Builder> + 'static>(
+    pub fn create_object2<M: Into<UserMetadataBuilder>, D: Into<Object2Builder> + 'static>(
         &self,
         metadata: M,
         data: D,
@@ -74,9 +62,19 @@ impl ArtifactUploader2d {
         let mut data = data.into();
         if TypeId::of::<D>() != TypeId::of::<Object2Builder>() {
             // #implicit-transform
-            data.add_transform(&Transform2Builder::identity());
+            data.add_transform(Transform2Builder::identity());
         }
-        self.upload_object2_js(&metadata, &data)
+
+        Ok(self
+            .base
+            .upload_raw(
+                metadata.clone(),
+                data.clone()
+                    .try_into()
+                    .with_context(|| format!("Failed to parse object `{}`", metadata.proto.name))?,
+                data.series_point.as_ref(),
+            )?
+            .map_handle(|id| Object2Updater { id }))
     }
 
     pub fn update_object2<D: Into<Object2Builder>>(
@@ -85,7 +83,10 @@ impl ArtifactUploader2d {
         data: D,
     ) -> Result<(), ClientError> {
         let data = data.into();
-        self.update_object2_js(&artifact, &data)
+        let series_point = data.series_point.clone();
+        self.base
+            .update_raw(&artifact.id, data.try_into()?, series_point.as_ref())?;
+        Ok(())
     }
 
     pub fn series<M: Into<UserMetadataBuilder>, D: Into<SeriesBuilder>>(
@@ -93,15 +94,13 @@ impl ArtifactUploader2d {
         metadata: M,
         series: D,
     ) -> Result<PublicSeriesIdTaskHandle, ClientError> {
-        let metadata = metadata.into();
-        let data = series.into();
-        self.series_js(&metadata, &data)
+        self.base.series(metadata, &series.into())
     }
 
     pub fn child_uploader_2d<M: Into<UserMetadataBuilder>>(
         &self,
         metadata: M,
     ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
-        self.base.child_uploader_2d(&metadata.into(), None)
+        self.base.child_uploader_2d(metadata, None)
     }
 }

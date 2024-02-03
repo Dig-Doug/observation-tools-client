@@ -1,10 +1,10 @@
-use crate::builders::Geometry3Builder;
-use crate::builders::IntoGeometry3Builder;
-use crate::builders::MeshBuilder;
-use crate::builders::Object2Builder;
-use crate::builders::Polygon3Builder;
-use crate::builders::SphereBuilder;
-use crate::builders::Transform3Builder;
+use crate::artifacts::Geometry3Builder;
+use crate::artifacts::IntoGeometry3Builder;
+use crate::artifacts::MeshBuilder;
+use crate::artifacts::Object2Builder;
+use crate::artifacts::Polygon3Builder;
+use crate::artifacts::SphereBuilder;
+use crate::artifacts::Transform3Builder;
 use crate::generated::Object3;
 use crate::generated::StructuredData;
 use crate::ClientError;

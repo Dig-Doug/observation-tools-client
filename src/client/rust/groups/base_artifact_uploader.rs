@@ -1,7 +1,7 @@
-use crate::builders::PublicSeriesId;
-use crate::builders::SeriesBuilder;
-use crate::builders::SeriesPointBuilder;
-use crate::builders::UserMetadataBuilder;
+use crate::artifacts::PublicSeriesId;
+use crate::artifacts::SeriesBuilder;
+use crate::artifacts::SeriesPointBuilder;
+use crate::artifacts::UserMetadataBuilder;
 use crate::client::Client;
 use crate::generated::artifact_update;
 use crate::generated::ArtifactGroupUploaderData;
@@ -12,11 +12,11 @@ use crate::generated::PublicGlobalId;
 use crate::generated::SeriesId;
 use crate::generated::StructuredData;
 use crate::generated::Transform3;
+use crate::groups::ArtifactUploader2d;
+use crate::groups::ArtifactUploader3d;
+use crate::groups::GenericArtifactUploader;
 use crate::run_id::RunId;
 use crate::task_handle::TaskHandle;
-use crate::uploaders::ArtifactUploader2d;
-use crate::uploaders::ArtifactUploader3d;
-use crate::uploaders::GenericArtifactUploader;
 use crate::util::encode_id_proto;
 use crate::util::new_artifact_id;
 use crate::util::time_now;
@@ -99,14 +99,14 @@ impl BaseArtifactUploader {
         request
     }
 
-    pub(crate) fn base_create_artifact_request(
+    pub(crate) fn base_create_artifact_request<M: Into<UserMetadataBuilder>>(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: M,
         series_point: Option<&SeriesPointBuilder>,
     ) -> CreateArtifactRequest {
         let mut request = self.base_artifact_request(new_artifact_id(), series_point);
         let group_data = request.mut_artifact_data();
-        group_data.user_metadata = Some(metadata.proto.clone()).into();
+        group_data.user_metadata = Some(metadata.into().proto.clone()).into();
         self.data
             .ancestor_group_ids
             .iter()
@@ -134,9 +134,9 @@ impl BaseArtifactUploader {
             }))
     }
 
-    pub fn child_uploader(
+    pub fn child_uploader<M: Into<UserMetadataBuilder>>(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: M,
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<GenericArtifactUploaderTaskHandle, ClientError> {
         let mut request = self.base_create_artifact_request(metadata, series_point);
@@ -146,9 +146,9 @@ impl BaseArtifactUploader {
             .map_handle(|result| GenericArtifactUploader { base: result }))
     }
 
-    pub fn child_uploader_2d(
+    pub fn child_uploader_2d<M: Into<UserMetadataBuilder>>(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: M,
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
         let mut request = self.base_create_artifact_request(metadata, series_point);
@@ -158,9 +158,9 @@ impl BaseArtifactUploader {
             .map_handle(|result| ArtifactUploader2d { base: result }))
     }
 
-    pub fn child_uploader_3d(
+    pub fn child_uploader_3d<M: Into<UserMetadataBuilder>>(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: M,
         base_transform: Transform3,
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<ArtifactUploader3dTaskHandle, ClientError> {
@@ -173,9 +173,9 @@ impl BaseArtifactUploader {
             .map_handle(|result| ArtifactUploader3d { base: result }))
     }
 
-    pub fn series(
+    pub fn series<M: Into<UserMetadataBuilder>>(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: M,
         series: &SeriesBuilder,
     ) -> Result<PublicSeriesIdTaskHandle, ClientError> {
         let mut request = self.base_create_artifact_request(metadata, None);
@@ -193,9 +193,9 @@ impl BaseArtifactUploader {
             }))
     }
 
-    pub fn upload_raw(
+    pub fn upload_raw<M: Into<UserMetadataBuilder>>(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: M,
         data: StructuredData,
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
@@ -206,9 +206,9 @@ impl BaseArtifactUploader {
         )
     }
 
-    pub fn upload_raw_bytes(
+    pub fn upload_raw_bytes<M: Into<UserMetadataBuilder>>(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: M,
         data: &[u8],
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {

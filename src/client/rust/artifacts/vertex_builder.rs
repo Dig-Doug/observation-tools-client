@@ -1,5 +1,5 @@
-use crate::builders::Point3Builder;
-use crate::builders::Vector3Builder;
+use crate::artifacts::Point3Builder;
+use crate::artifacts::Vector3Builder;
 use crate::generated::Vertex;
 use wasm_bindgen::prelude::*;
 
