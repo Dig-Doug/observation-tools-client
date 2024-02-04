@@ -6,7 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Logging meets the 3rd dimension',
+  title: 'Logging meets the 2nd dimension',
   tagline: 'Export, visualize, and inspect data from anywhere in your program' ,
   url: 'https://observation.tools',
   baseUrl: '/',
@@ -45,8 +45,7 @@ const config = {
         },
         items: [
           {
-            type: 'doc',
-            docId: 'quickstart',
+            href: 'https://docs.rs/observation-tools/latest/observation_tools_client/',
             position: 'left',
             label: 'Docs',
           },
@@ -61,20 +60,19 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
-            items: [
-              {
-                label: 'Quickstart',
-                to: '/docs/quickstart',
-              },
-            ],
-          },
-          {
             title: 'More',
             items: [
               {
+                label: 'Docs',
+                href: 'https://docs.rs/observation-tools/latest/observation_tools_client/',
+              },
+              {
                 label: 'GitHub',
                 href: 'https://github.com/Dig-Doug/observation-tools-client',
+              },
+              {
+                label: 'crates.io',
+                href: 'https://crates.io/crates/observation-tools'
               },
             ],
           },

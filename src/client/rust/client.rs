@@ -1,21 +1,21 @@
-use crate::builders::UserMetadataBuilder;
+use crate::artifacts::UserMetadataBuilder;
 use crate::generated::public_global_id;
 use crate::generated::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
 use crate::generated::CreateArtifactRequest;
 use crate::generated::ProjectId;
 use crate::generated::PublicGlobalId;
 use crate::generated::StructuredData;
+use crate::groups::base_artifact_uploader::artifact_group_uploader_data_from_request;
+use crate::groups::base_artifact_uploader::BaseArtifactUploaderBuilder;
+use crate::groups::RunUploader;
 use crate::task_handle::TaskHandle;
 use crate::task_loop::TaskHandler;
 use crate::task_loop::TaskLoop;
-use crate::uploaders::base_artifact_uploader::artifact_group_uploader_data_from_request;
-use crate::uploaders::base_artifact_uploader::BaseArtifactUploaderBuilder;
-use crate::uploaders::RunUploader;
 use crate::util::decode_id_proto;
 use crate::util::new_artifact_id;
 use crate::util::time_now;
 use crate::util::ClientError;
-use crate::util::GenericError;
+
 use crate::PublicArtifactIdTaskHandle;
 use crate::RunUploaderTaskHandle;
 use crate::TokenGenerator;
@@ -33,7 +33,7 @@ pub struct ClientOptions {
     pub ui_host: Option<String>,
     pub api_host: Option<String>,
     pub project_id: String,
-    pub client: Option<reqwest::Client>,
+    pub reqwest_client: Option<reqwest::Client>,
     pub token_generator: TokenGenerator,
 }
 
@@ -59,7 +59,7 @@ impl Client {
             ui_host: Some(ui_host),
             api_host: Some(api_host),
             token_generator: TokenGenerator::Constant(token),
-            client: None,
+            reqwest_client: None,
         })
         .map_err(|e| JsValue::from_str(&format!("{}", e)))
     }
@@ -71,34 +71,19 @@ impl Client {
         Ok(())
     }
 
-    pub fn create_run(
+    pub fn create_run_js(
         &self,
         metadata: &UserMetadataBuilder,
     ) -> Result<RunUploaderTaskHandle, ClientError> {
-        let mut request = CreateArtifactRequest::new();
-        request.project_id = Some(self.project_id.clone()).into();
-        request.artifact_id = Some(new_artifact_id()).into();
-        request.run_id.mut_or_insert_default().id = request.artifact_id.clone();
-        let group_data = request.mut_artifact_data();
-        group_data.user_metadata = Some(metadata.proto.clone()).into();
-        group_data.artifact_type = ARTIFACT_TYPE_ROOT_GROUP.into();
-        group_data.client_creation_time = Some(time_now()).into();
-        Ok(self
-            .upload_artifact(&request, None)?
-            .map_handle(|_result| RunUploader {
-                base: BaseArtifactUploaderBuilder::default()
-                    .client(self.clone())
-                    .data(artifact_group_uploader_data_from_request(&request))
-                    .init(),
-            }))
+        self.create_run(metadata.clone())
     }
 }
 
 impl Client {
-    pub fn new(options: ClientOptions) -> Result<Self, GenericError> {
+    pub fn new(options: ClientOptions) -> Result<Self, ClientError> {
         trace!("Creating client");
         let task_handler = Arc::new(TaskHandler {
-            client: options.client.clone().unwrap_or_else(|| {
+            client: options.reqwest_client.clone().unwrap_or_else(|| {
                 let builder = reqwest::Client::builder().cookie_store(true);
                 builder.build().expect("Failed to build reqwest client")
             }),
@@ -106,9 +91,11 @@ impl Client {
             host: options.api_host.clone().unwrap_or(API_HOST.to_string()),
         });
 
-        let task_loop = Arc::new(TaskLoop::new(task_handler.clone())?);
+        let task_loop =
+            Arc::new(TaskLoop::new(task_handler.clone()).map_err(ClientError::from_string)?);
 
-        let proto: PublicGlobalId = decode_id_proto(&options.project_id)?;
+        let proto: PublicGlobalId =
+            decode_id_proto(&options.project_id).map_err(ClientError::from_string)?;
         let project_id = match proto.data {
             Some(public_global_id::Data::ProjectId(project_id)) => project_id,
             _ => Err(anyhow!("Invalid project id: {}", options.project_id))?,
@@ -137,5 +124,28 @@ impl Client {
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
         self.task_loop.submit_task(request, raw_data)
+    }
+
+    pub fn create_run<M: Into<UserMetadataBuilder>>(
+        &self,
+        into_metadata: M,
+    ) -> Result<RunUploaderTaskHandle, ClientError> {
+        let mut request = CreateArtifactRequest::new();
+        request.project_id = Some(self.project_id.clone()).into();
+        request.artifact_id = Some(new_artifact_id()).into();
+        request.run_id.mut_or_insert_default().id = request.artifact_id.clone();
+        let group_data = request.mut_artifact_data();
+        let metadata = into_metadata.into();
+        group_data.user_metadata = Some(metadata.proto.clone()).into();
+        group_data.artifact_type = ARTIFACT_TYPE_ROOT_GROUP.into();
+        group_data.client_creation_time = Some(time_now()).into();
+        Ok(self
+            .upload_artifact(&request, None)?
+            .map_handle(|_result| RunUploader {
+                base: BaseArtifactUploaderBuilder::default()
+                    .client(self.clone())
+                    .data(artifact_group_uploader_data_from_request(&request))
+                    .init(),
+            }))
     }
 }
