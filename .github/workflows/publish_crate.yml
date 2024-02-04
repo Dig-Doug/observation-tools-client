@@ -4,7 +4,7 @@ on:
       - '*'
   workflow_dispatch:
 
-name: Publish crate
+name: Publish observation-tools crate
 jobs:
   publish:
     name: Publish
@@ -15,7 +15,7 @@ jobs:
       - name: Install rust
         run: rustup install stable
       - name: Publish
-        run: cargo publish --token "$CARGO_REGISTRY_TOKEN"
+        run: cargo publish -p observation-tools --token "$CARGO_REGISTRY_TOKEN"
         env:
           CRATES_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
  
