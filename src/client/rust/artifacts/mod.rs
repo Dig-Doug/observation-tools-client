@@ -67,11 +67,16 @@
 //! #   Ok(())
 //! # }
 //! ```
+//!
+//! ## Primitives
+//! <div class="warning"> Support for 3D primitives is experimental </div>
+//!
+//! Don't see a primitive you're looking for? Need conversions from types in another crate? Let us know! File a [feature request](https://github.com/Dig-Doug/observation-tools-client/issues) or [email us](mailto:help@observation.tools).
 mod geometry2_builder;
 mod geometry3_builder;
 mod image2_builder;
 mod mesh_builder;
-mod nalegbra;
+pub mod nalegbra;
 mod number_builder;
 mod object2_builder;
 mod object3_builder;

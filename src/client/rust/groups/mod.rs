@@ -29,8 +29,9 @@
 //! ## Updating artifacts
 //! A [crate::ArtifactUploadHandle] returned by a creation method will
 //! also contain an **artifact updater** that you can use to submit incremental
-//! updates to the artifact. Updates are generally coupled with a [Series] to
-//! keep track of updates over a dimension, e.g. time.
+//! updates to the artifact. Updates are generally coupled with a
+//! [crate::artifacts::SeriesBuilder] to keep track of updates over a dimension,
+//! e.g. time.
 //!
 //! ```rust
 //! # use observation_tools_client::{ArtifactUploadHandle, ClientError};

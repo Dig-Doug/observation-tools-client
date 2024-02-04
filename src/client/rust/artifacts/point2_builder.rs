@@ -7,6 +7,7 @@ use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// A 2D point.
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]

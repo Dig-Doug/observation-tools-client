@@ -5,6 +5,7 @@ use crate::generated::Mesh;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// A 3D mesh
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]
@@ -39,7 +40,7 @@ impl Into<Geometry3Builder> for MeshBuilder {
 
 impl Into<Object3Builder> for MeshBuilder {
     fn into(self) -> Object3Builder {
-        let mut builder = Object3Builder::new(self.into());
+        let builder = Object3Builder::new(self.into());
         builder
     }
 }

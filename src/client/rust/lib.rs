@@ -47,7 +47,7 @@
 //! | Language | Package | Version|
 //! |----------|---------| -------|
 //! | Rust     | `observation-tools` | [![Crates.io](https://img.shields.io/crates/v/observation-tools)](https://crates.io/crates/observation-tools) |
-//! | JavaScript | `@observation-tools/client` | [![npm(scoped)](https://img.shields.io/npm/v/%40observation-tools/client)](https://www.npmjs.com/package/@observation-tools/client) |
+//! | JavaScript **experimental** | `@observation-tools/client` | [![npm(scoped)](https://img.shields.io/npm/v/%40observation-tools/client)](https://www.npmjs.com/package/@observation-tools/client) |
 //!
 //! Don't see the language you're looking for? Let us know! File a [feature request](https://github.com/Dig-Doug/observation-tools-client/issues) or [email us](mailto:help@observation.tools).
 //!
@@ -82,7 +82,7 @@
 //! /// The name of the run will show up in the UI. You can optionally add key-value metadata to
 //! /// all objects, see [`builders::UserMetadataBuilder::add_metadata`].
 //! let run_uploader = client.create_run("getting-started-example")?;
-//! /// ArtifactGroups are represented as "groups"
+//! /// ArtifactGroups are represented as "uploaders"
 //! let uploader_2d = run_uploader.child_uploader_2d("shapes")?;
 //! uploader_2d.create_object2(
 //!     "segment2",
@@ -100,6 +100,9 @@
 //! ## Visualize your data
 //!
 //! To view the exported data, you can either find the run on the [dashboard](https://app.observation.tools/) or generate a direct url with [`groups::RunUploader::viewer_url`].
+//!
+//! ## Examples
+//! For more examples, check out the [examples](https://github.com/Dig-Doug/observation-tools-client/tree/main/examples) directory in the repository.
 extern crate alloc;
 extern crate core;
 
@@ -126,7 +129,6 @@ pub use crate::task_handle::PublicSeriesIdTaskHandle;
 pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::util::ClientError;
-use tracing::info;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

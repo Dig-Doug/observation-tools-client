@@ -1,7 +1,7 @@
 use crate::artifacts::Object2Builder;
 use crate::artifacts::Object3Builder;
 use crate::artifacts::SeriesBuilder;
-use crate::artifacts::Transform2Builder;
+
 use crate::artifacts::Transform3Builder;
 use crate::artifacts::UserMetadataBuilder;
 use crate::generated::ArtifactType;

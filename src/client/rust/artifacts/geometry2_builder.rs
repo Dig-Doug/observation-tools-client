@@ -7,6 +7,7 @@ use crate::generated::Geometry2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// 2D geometry. Normally you do not need to interact with this type directly.
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]

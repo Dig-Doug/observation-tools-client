@@ -1,41 +1,41 @@
 use anyhow::anyhow;
-use clap::Parser;
-use nalgebra::Affine3;
-use nalgebra::Isometry2;
+
+
+
 use nalgebra::Isometry3;
 use nalgebra::Matrix3;
 use nalgebra::Point2;
 use nalgebra::Point3;
-use nalgebra::Quaternion;
+
 use nalgebra::Rotation3;
-use nalgebra::Transform;
+
 use nalgebra::Transform3;
-use nalgebra::Translation2;
-use nalgebra::Translation3;
-use nalgebra::UnitComplex;
+
+
+
 use nalgebra::Vector2;
 use nalgebra::Vector3;
 use observation_tools_client::artifacts::Image2Builder;
 use observation_tools_client::artifacts::Object2Builder;
 use observation_tools_client::artifacts::Object2Updater;
-use observation_tools_client::artifacts::Object3Builder;
+
 use observation_tools_client::artifacts::PerPixelTransformBuilder;
 use observation_tools_client::artifacts::Point2Builder;
 use observation_tools_client::artifacts::Polygon2Builder;
 use observation_tools_client::artifacts::Polygon3Builder;
-use observation_tools_client::artifacts::PolygonEdge3Builder;
+
 use observation_tools_client::artifacts::Rect2Builder;
 use observation_tools_client::artifacts::Segment2Builder;
 use observation_tools_client::artifacts::SeriesBuilder;
 use observation_tools_client::artifacts::SeriesPointBuilder;
-use observation_tools_client::artifacts::SphereBuilder;
+
 use observation_tools_client::artifacts::Transform2Builder;
 use observation_tools_client::artifacts::Transform3Builder;
-use observation_tools_client::artifacts::UserMetadataBuilder;
+
 use observation_tools_client::artifacts::Vector2Builder;
 use observation_tools_client::groups::ArtifactUploader2d;
 use observation_tools_client::groups::ArtifactUploader3d;
-use observation_tools_client::ClientError;
+
 use observation_tools_client::ClientOptions;
 use observation_tools_client::TokenGenerator;
 use rand::Rng;
@@ -170,7 +170,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
             rotation_radians,
             Vector2::from_element(1.0),
         );
-        object2.add_transform(transform);
+        object2.add_transform(transform.clone());
         stones_uploader.create_object2(format!("stone_{}", stone.id), object2)?;
 
         let mut center2: Object2Builder = Point2Builder::origin().into();

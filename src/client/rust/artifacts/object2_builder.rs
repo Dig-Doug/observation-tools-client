@@ -13,6 +13,7 @@ use crate::ClientError;
 use crate::PublicArtifactId;
 use wasm_bindgen::prelude::*;
 
+/// A 2D object.
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Object2Builder {
@@ -80,6 +81,7 @@ impl TryInto<StructuredData> for Object2Builder {
     }
 }
 
+/// Updater for an Object2.
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Object2Updater {

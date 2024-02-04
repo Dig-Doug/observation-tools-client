@@ -7,7 +7,7 @@ description = "Export, visualize, and inspect data from anywhere in your program
 readme = "../../../README.md"
 homepage = "https://observation.tools"
 repository = "https://github.com/Dig-Doug/observation-tools-client"
-documentation = "https://www.observation.tools/docs/quickstart"
+documentation = "https://docs.rs/observation-tools/latest/observation_tools_client/"
 include = [
     "**/*.rs",
     "Cargo.toml",

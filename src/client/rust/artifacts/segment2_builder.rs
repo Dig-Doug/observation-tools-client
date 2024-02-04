@@ -5,6 +5,7 @@ use crate::generated::Segment2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// A 2D line segment.
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]

@@ -5,6 +5,7 @@ use crate::generated::Sphere;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// A 3D sphere.
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]
@@ -35,7 +36,6 @@ impl Into<Geometry3Builder> for SphereBuilder {
 
 impl Into<Object3Builder> for SphereBuilder {
     fn into(self) -> Object3Builder {
-        let mut builder = Object3Builder::new(self.into());
-        builder
+        Object3Builder::new(self.into())
     }
 }

@@ -56,7 +56,7 @@ export default function Home() {
                     </Link>
                     <Link
                         className="button button--secondary button--lg"
-                        to="/docs/quickstart">
+                        to="https://docs.rs/observation-tools/latest/observation_tools_client/">
                         Read the docs
                     </Link>
                 </div>
@@ -86,6 +86,7 @@ function useWindowDimensions() {
         function handleResize() {
             setWindowDimensions(getWindowDimensions())
         }
+
         handleResize();
         window.addEventListener("resize", handleResize)
         return () => window.removeEventListener("resize", handleResize)
@@ -146,7 +147,7 @@ function HomepageHeader() {
         <HeaderBackground/>
         <div className={clsx("container", styles.heroBannerContent)} style={{zIndex: 1}}>
             <h1 className="hero__title">
-                Logging meets the <span className={styles.title3d}>3rd dimension</span>
+                Logging meets the <span className={styles.title3d}>2rd dimension</span>
             </h1>
             <h2 className="hero__subtitle">
                 {siteConfig.tagline}
@@ -154,7 +155,7 @@ function HomepageHeader() {
             <div className={styles.buttons}>
                 <Link
                     className="button button--primary button--lg"
-                    to="/docs/quickstart">
+                    to="https://docs.rs/observation-tools/latest/observation_tools_client/">
                     Get started
                 </Link>
             </div>

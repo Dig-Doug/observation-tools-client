@@ -1,7 +1,6 @@
 use crate::artifacts::Geometry3Builder;
 use crate::artifacts::IntoGeometry3Builder;
 use crate::artifacts::MeshBuilder;
-use crate::artifacts::Object2Builder;
 use crate::artifacts::Polygon3Builder;
 use crate::artifacts::SphereBuilder;
 use crate::artifacts::Transform3Builder;

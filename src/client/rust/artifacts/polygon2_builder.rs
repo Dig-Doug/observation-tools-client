@@ -2,12 +2,13 @@ use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
 use crate::artifacts::Point2Builder;
 use crate::artifacts::PolygonEdge2Builder;
-use crate::artifacts::Transform2Builder;
+
 use crate::generated::Polygon2;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// A 2D polygon.
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]
@@ -53,7 +54,7 @@ impl Into<Geometry2Builder> for Polygon2Builder {
 
 impl Into<Object2Builder> for Polygon2Builder {
     fn into(self) -> Object2Builder {
-        let mut builder = Object2Builder::new(self.into());
+        let builder = Object2Builder::new(self.into());
         builder
     }
 }

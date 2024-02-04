@@ -1,3 +1,4 @@
+//! Conversions from nalgebra types.
 use crate::artifacts::NumberBuilder;
 use crate::artifacts::Point2Builder;
 use crate::artifacts::Point3Builder;

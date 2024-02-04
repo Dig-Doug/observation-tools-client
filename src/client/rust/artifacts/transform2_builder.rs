@@ -1,7 +1,7 @@
 use crate::artifacts::NumberBuilder;
 use crate::artifacts::Point2Builder;
 use crate::artifacts::Vector2Builder;
-use crate::generated::Number;
+
 use crate::generated::Transform2;
 use crate::generated::TRS2;
 use wasm_bindgen::prelude::*;

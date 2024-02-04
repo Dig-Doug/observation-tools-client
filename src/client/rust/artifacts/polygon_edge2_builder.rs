@@ -2,6 +2,7 @@ use crate::artifacts::Point2Builder;
 use crate::generated::PolygonEdge2;
 use wasm_bindgen::prelude::*;
 
+/// An edge of a [Polygon2Builder](crate::artifacts::Polygon2Builder).
 #[wasm_bindgen]
 pub struct PolygonEdge2Builder {
     pub(crate) proto: PolygonEdge2,

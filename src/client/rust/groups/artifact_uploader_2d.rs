@@ -2,10 +2,10 @@ use crate::artifacts::Object2Builder;
 use crate::artifacts::Object2Updater;
 use crate::artifacts::SeriesBuilder;
 use crate::artifacts::Transform2Builder;
-use crate::artifacts::Transform3Builder;
+
 use crate::artifacts::UserMetadataBuilder;
-use crate::generated::ArtifactType;
-use crate::generated::Transform2;
+
+
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::task_handle::Object2UpdaterTaskHandle;
 use crate::task_handle::TaskHandle;

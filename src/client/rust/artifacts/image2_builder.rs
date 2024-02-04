@@ -12,6 +12,7 @@ use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// An image.
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]

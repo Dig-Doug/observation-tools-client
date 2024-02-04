@@ -10,7 +10,7 @@ use std::io::Write;
 use std::sync::Arc;
 use tracing::error;
 use tracing::trace;
-use wasm_bindgen::closure::Closure;
+
 
 #[derive(Debug)]
 pub struct TaskLoop {
@@ -164,7 +164,7 @@ impl TaskLoop {
     pub async fn shutdown(&self) {
         match &self.params {
             #[cfg(feature = "tokio")]
-            TaskLoopParams::TokioRuntime { runtime } => {
+            TaskLoopParams::TokioRuntime { runtime: _ } => {
                 // TODO(doug): Eval runtime
             }
             TaskLoopParams::None => {}

@@ -1,11 +1,12 @@
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
-use crate::artifacts::Transform2Builder;
+
 use crate::artifacts::Vector2Builder;
 use crate::generated::Rect2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
+/// An axis-aligned rectangle.
 #[derive(TryFromJsValue)]
 #[wasm_bindgen]
 #[derive(Clone)]
@@ -31,7 +32,6 @@ impl Rect2Builder {
 
 impl Into<Object2Builder> for Rect2Builder {
     fn into(self) -> Object2Builder {
-        let mut builder = Object2Builder::new(Geometry2Builder::rect(self));
-        builder
+        Object2Builder::new(Geometry2Builder::rect(self))
     }
 }

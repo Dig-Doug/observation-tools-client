@@ -4,6 +4,7 @@ use crate::generated::Point3;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
+/// A 3D point.
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Point3Builder {
