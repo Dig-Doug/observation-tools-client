@@ -15,7 +15,7 @@ jobs:
       - name: Install rust
         run: rustup install stable
       - name: Publish
-        run: cargo publish -p observation-tools --token "$CARGO_REGISTRY_TOKEN"
+        run: cargo publish -p observation-tools
         env:
-          CRATES_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
  
