@@ -11,6 +11,7 @@ documentation = "https://docs.rs/observation-tools/"
 include = [
     "**/*.rs",
     "Cargo.toml",
+    "sign_in_redirect.html",
 ]
 
 [lib]
