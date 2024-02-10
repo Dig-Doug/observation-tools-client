@@ -2,7 +2,6 @@ use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
 use crate::artifacts::Point2Builder;
 use crate::artifacts::PolygonEdge2Builder;
-
 use crate::generated::Polygon2;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;

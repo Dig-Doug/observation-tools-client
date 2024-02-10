@@ -28,7 +28,6 @@ use observation_tools_client::TokenGenerator;
 use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-
 use wasm_bindgen::prelude::*;
 
 pub async fn run_examples(

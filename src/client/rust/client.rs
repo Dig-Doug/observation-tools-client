@@ -15,7 +15,6 @@ use crate::util::decode_id_proto;
 use crate::util::new_artifact_id;
 use crate::util::time_now;
 use crate::util::ClientError;
-
 use crate::PublicArtifactIdTaskHandle;
 use crate::RunUploaderTaskHandle;
 use crate::TokenGenerator;

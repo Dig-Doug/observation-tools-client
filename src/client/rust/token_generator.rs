@@ -2,17 +2,11 @@ use crate::util::ClientError;
 use crate::util::GenericError;
 use cached::proc_macro::cached;
 use cached::Cached;
-
-
-
-
 use oauth2::basic::BasicErrorResponse;
 use oauth2::basic::BasicRevocationErrorResponse;
 use oauth2::basic::BasicTokenIntrospectionResponse;
-
 use oauth2::basic::BasicTokenType;
 use oauth2::reqwest::async_http_client;
-
 use oauth2::AuthType;
 use oauth2::AuthUrl;
 use oauth2::AuthorizationCode;
@@ -20,7 +14,6 @@ use oauth2::Client;
 use oauth2::ClientId;
 use oauth2::ClientSecret;
 use oauth2::CsrfToken;
-
 use oauth2::DeviceAuthorizationResponse;
 use oauth2::DeviceAuthorizationUrl;
 use oauth2::ExtraDeviceAuthorizationFields;
@@ -29,24 +22,19 @@ use oauth2::PkceCodeChallenge;
 use oauth2::RedirectUrl;
 use oauth2::RevocationUrl;
 use oauth2::Scope;
-
 use oauth2::StandardRevocableToken;
 use oauth2::StandardTokenResponse;
 use oauth2::TokenResponse;
 use oauth2::TokenUrl;
 use serde::Deserialize;
 use serde::Serialize;
-
-
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 use std::net::SocketAddr;
 use std::net::TcpListener;
-
 use std::time::Duration;
 use std::time::Instant;
-
 use url::Url;
 
 #[derive(Debug, Clone)]

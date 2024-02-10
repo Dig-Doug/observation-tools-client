@@ -74,7 +74,8 @@ impl SeriesPointBuilder {
         )
     }
 
-    // TODO(doug): Allow series with multiple dimensions, private intentionally since not implemented
+    // TODO(doug): Allow series with multiple dimensions, private intentionally
+    // since not implemented
     fn add_dimension_js(
         &mut self,
         dimension: &PublicSeriesDimensionId,
