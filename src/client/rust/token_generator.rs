@@ -14,7 +14,6 @@ use oauth2::Client;
 use oauth2::ClientId;
 use oauth2::ClientSecret;
 use oauth2::CsrfToken;
-use oauth2::DeviceAuthorizationResponse;
 use oauth2::DeviceAuthorizationUrl;
 use oauth2::ExtraDeviceAuthorizationFields;
 use oauth2::ExtraTokenFields;
@@ -41,7 +40,7 @@ use url::Url;
 pub enum TokenGenerator {
     /// Generate a URL to complete authentication in a browser.
     OAuth2BrowserFlow,
-    #[cfg(not(feature = "wasm"))]
+    #[cfg(feature = "tokio")]
     /// Generate a code you can use to sign in on another device. Use this flow
     /// when the execution environment doesn't have good input methods.
     OAuth2DeviceCodeFlow,
@@ -92,7 +91,7 @@ impl TokenGenerator {
     pub async fn token(&self) -> Result<String, ClientError> {
         match self {
             TokenGenerator::Constant(s) => Ok(s.clone()),
-            #[cfg(not(feature = "wasm"))]
+            #[cfg(feature = "tokio")]
             TokenGenerator::OAuth2DeviceCodeFlow => {
                 self.device_flow().await.map_err(ClientError::from_string)
             }
@@ -120,7 +119,7 @@ impl TokenGenerator {
         token.id_token()
     }
 
-    #[cfg(not(feature = "wasm"))]
+    #[cfg(feature = "tokio")]
     async fn device_flow(&self) -> Result<String, GenericError> {
         let previous_token = {
             let mut cache = DEVICE_FLOW.lock().await;
@@ -252,7 +251,7 @@ Authenticate in your browser: {}
     })
 }
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(feature = "tokio")]
 #[cached(
     size = 1,
     key = "()",
