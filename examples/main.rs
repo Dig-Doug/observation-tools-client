@@ -1,7 +1,5 @@
 use clap::Parser;
-use observation_tools_client::ClientError;
 use observation_tools_client_examples::run_examples;
-use tracing::info;
 use tracing_subscriber;
 
 #[derive(Parser, Debug, Clone)]

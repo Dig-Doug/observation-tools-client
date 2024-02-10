@@ -41,6 +41,7 @@ use url::Url;
 pub enum TokenGenerator {
     /// Generate a URL to complete authentication in a browser.
     OAuth2BrowserFlow,
+    #[cfg(not(feature = "wasm"))]
     /// Generate a code you can use to sign in on another device. Use this flow
     /// when the execution environment doesn't have good input methods.
     OAuth2DeviceCodeFlow,
@@ -91,6 +92,7 @@ impl TokenGenerator {
     pub async fn token(&self) -> Result<String, ClientError> {
         match self {
             TokenGenerator::Constant(s) => Ok(s.clone()),
+            #[cfg(not(feature = "wasm"))]
             TokenGenerator::OAuth2DeviceCodeFlow => {
                 self.device_flow().await.map_err(ClientError::from_string)
             }
@@ -118,6 +120,7 @@ impl TokenGenerator {
         token.id_token()
     }
 
+    #[cfg(not(feature = "wasm"))]
     async fn device_flow(&self) -> Result<String, GenericError> {
         let previous_token = {
             let mut cache = DEVICE_FLOW.lock().await;
@@ -249,6 +252,7 @@ Authenticate in your browser: {}
     })
 }
 
+#[cfg(not(feature = "wasm"))]
 #[cached(
     size = 1,
     key = "()",
@@ -303,7 +307,11 @@ Enter this code: {}
 
     let response = client
         .exchange_device_access_token(&details)
-        .request_async(async_http_client, tokio::time::sleep, None)
+        .request_async(
+            async_http_client,
+            tokio::time::sleep,
+            Some(Duration::from_secs(5 * 60)),
+        )
         .await?;
     Ok(GoogleAuthToken {
         token: response,
