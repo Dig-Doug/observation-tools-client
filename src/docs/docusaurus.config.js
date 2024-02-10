@@ -45,7 +45,7 @@ const config = {
         },
         items: [
           {
-            href: 'https://docs.rs/observation-tools/latest/observation_tools_client/',
+            href: 'https://docs.rs/observation-tools/',
             position: 'left',
             label: 'Docs',
           },
@@ -64,7 +64,7 @@ const config = {
             items: [
               {
                 label: 'Docs',
-                href: 'https://docs.rs/observation-tools/latest/observation_tools_client/',
+                href: 'https://docs.rs/observation-tools/',
               },
               {
                 label: 'GitHub',

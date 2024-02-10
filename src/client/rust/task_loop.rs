@@ -11,7 +11,6 @@ use std::sync::Arc;
 use tracing::error;
 use tracing::trace;
 
-
 #[derive(Debug)]
 pub struct TaskLoop {
     task_handler: Arc<TaskHandler>,

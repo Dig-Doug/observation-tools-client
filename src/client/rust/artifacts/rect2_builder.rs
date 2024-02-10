@@ -1,6 +1,5 @@
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
-
 use crate::artifacts::Vector2Builder;
 use crate::generated::Rect2;
 use wasm_bindgen::prelude::*;

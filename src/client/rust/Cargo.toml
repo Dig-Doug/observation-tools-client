@@ -1,13 +1,13 @@
 [package]
 name = "observation-tools"
-version = "0.0.6"
+version = "0.0.7"
 edition = "2021"
 license = "Apache-2.0"
 description = "Export, visualize, and inspect data from anywhere in your program"
 readme = "../../../README.md"
 homepage = "https://observation.tools"
 repository = "https://github.com/Dig-Doug/observation-tools-client"
-documentation = "https://docs.rs/observation-tools/latest/observation_tools_client/"
+documentation = "https://docs.rs/observation-tools/"
 include = [
     "**/*.rs",
     "Cargo.toml",
@@ -24,6 +24,7 @@ async-channel = "^1.8"
 async-trait = "^0.1.52"
 base64 = "^0.21"
 bs58 = "^0.5"
+cached = { version = "^0.48", features= ["async"] }
 console_error_panic_hook = "^0.1"
 custom_error = "^1.9"
 thiserror = "^1.0"
@@ -52,6 +53,7 @@ wasm-bindgen-futures = "0.4.39"
 web-sys = { version = "0.3.66", features = ['Window', 'Performance', 'PerformanceTiming'] }
 wasm-bindgen-derive = "0.2.1"
 nalgebra = { version = "^0.32" }
+oauth2 = "4.4.2"
 
 [build-dependencies]
 protobuf-codegen = "=3.2.0"

@@ -1,52 +1,38 @@
 use anyhow::anyhow;
-
-
-
 use nalgebra::Isometry3;
 use nalgebra::Matrix3;
 use nalgebra::Point2;
 use nalgebra::Point3;
-
 use nalgebra::Rotation3;
-
 use nalgebra::Transform3;
-
-
-
 use nalgebra::Vector2;
 use nalgebra::Vector3;
 use observation_tools_client::artifacts::Image2Builder;
 use observation_tools_client::artifacts::Object2Builder;
 use observation_tools_client::artifacts::Object2Updater;
-
 use observation_tools_client::artifacts::PerPixelTransformBuilder;
 use observation_tools_client::artifacts::Point2Builder;
 use observation_tools_client::artifacts::Polygon2Builder;
 use observation_tools_client::artifacts::Polygon3Builder;
-
 use observation_tools_client::artifacts::Rect2Builder;
 use observation_tools_client::artifacts::Segment2Builder;
 use observation_tools_client::artifacts::SeriesBuilder;
 use observation_tools_client::artifacts::SeriesPointBuilder;
-
 use observation_tools_client::artifacts::Transform2Builder;
 use observation_tools_client::artifacts::Transform3Builder;
-
 use observation_tools_client::artifacts::Vector2Builder;
 use observation_tools_client::groups::ArtifactUploader2d;
 use observation_tools_client::groups::ArtifactUploader3d;
-
 use observation_tools_client::ClientOptions;
 use observation_tools_client::TokenGenerator;
 use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use tracing::info;
 use wasm_bindgen::prelude::*;
 
 pub async fn run_examples(
     project_id: String,
-    auth_token: String,
+    device_code_auth: bool,
     ui_host: Option<String>,
     api_host: Option<String>,
 ) -> Result<(), anyhow::Error> {
@@ -55,7 +41,11 @@ pub async fn run_examples(
         api_host,
         project_id,
         reqwest_client: None,
-        token_generator: TokenGenerator::Constant(auth_token),
+        token_generator: if device_code_auth {
+            TokenGenerator::OAuth2DeviceCodeFlow
+        } else {
+            TokenGenerator::OAuth2BrowserFlow
+        },
     })?;
 
     let run_uploader = client.create_run("examples")?;
@@ -70,7 +60,7 @@ pub async fn run_examples(
         uploader.child_uploader_3d("generate_barn_wall", Transform3Builder::identity())?;
     generate_stone_wall(&uploader_3d)?;
 
-    info!("See the output at: {}", run_uploader.viewer_url());
+    println!("See the output at: {}", run_uploader.viewer_url());
 
     client.shutdown().await?;
 
@@ -80,11 +70,10 @@ pub async fn run_examples(
 #[wasm_bindgen]
 pub async fn run_examples_js(
     project_id: String,
-    auth_token: String,
     ui_host: Option<String>,
     api_host: Option<String>,
 ) -> Result<(), JsValue> {
-    run_examples(project_id, auth_token, ui_host, api_host)
+    run_examples(project_id, false, ui_host, api_host)
         .await
         .map_err(|e| JsValue::from_str(&format!("{:?}", e)))
 }
