@@ -14,7 +14,6 @@ use oauth2::Client;
 use oauth2::ClientId;
 use oauth2::ClientSecret;
 use oauth2::CsrfToken;
-use oauth2::DeviceAuthorizationResponse;
 use oauth2::DeviceAuthorizationUrl;
 use oauth2::ExtraDeviceAuthorizationFields;
 use oauth2::ExtraTokenFields;
@@ -41,6 +40,7 @@ use url::Url;
 pub enum TokenGenerator {
     /// Generate a URL to complete authentication in a browser.
     OAuth2BrowserFlow,
+    #[cfg(feature = "tokio")]
     /// Generate a code you can use to sign in on another device. Use this flow
     /// when the execution environment doesn't have good input methods.
     OAuth2DeviceCodeFlow,
@@ -91,6 +91,7 @@ impl TokenGenerator {
     pub async fn token(&self) -> Result<String, ClientError> {
         match self {
             TokenGenerator::Constant(s) => Ok(s.clone()),
+            #[cfg(feature = "tokio")]
             TokenGenerator::OAuth2DeviceCodeFlow => {
                 self.device_flow().await.map_err(ClientError::from_string)
             }
@@ -118,6 +119,7 @@ impl TokenGenerator {
         token.id_token()
     }
 
+    #[cfg(feature = "tokio")]
     async fn device_flow(&self) -> Result<String, GenericError> {
         let previous_token = {
             let mut cache = DEVICE_FLOW.lock().await;
@@ -249,6 +251,7 @@ Authenticate in your browser: {}
     })
 }
 
+#[cfg(feature = "tokio")]
 #[cached(
     size = 1,
     key = "()",
@@ -303,7 +306,11 @@ Enter this code: {}
 
     let response = client
         .exchange_device_access_token(&details)
-        .request_async(async_http_client, tokio::time::sleep, None)
+        .request_async(
+            async_http_client,
+            tokio::time::sleep,
+            Some(Duration::from_secs(5 * 60)),
+        )
         .await?;
     Ok(GoogleAuthToken {
         token: response,

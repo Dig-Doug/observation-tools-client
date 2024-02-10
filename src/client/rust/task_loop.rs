@@ -4,9 +4,9 @@ use crate::util::ClientError;
 use crate::util::GenericError;
 use crate::PublicArtifactId;
 use crate::PublicArtifactIdTaskHandle;
+use base64::Engine;
 use protobuf::Message;
 use reqwest::multipart::Part;
-use std::io::Write;
 use std::sync::Arc;
 use tracing::error;
 use tracing::trace;
@@ -187,7 +187,8 @@ impl TaskHandler {
     ) -> Result<(), GenericError> {
         trace!("Handling artifact: {:?}", task.request);
 
-        let req_b64 = base64::encode(task.request.write_to_bytes()?);
+        let req_b64 =
+            base64::engine::general_purpose::STANDARD.encode(task.request.write_to_bytes()?);
         let mut form = reqwest::multipart::Form::new().text("request", req_b64);
         if let Some(payload) = task.payload.as_ref() {
             let part = match payload {
