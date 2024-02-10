@@ -76,7 +76,7 @@
 //!     api_host: None,
 //!     project_id: std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
 //!     reqwest_client: None,
-//!     token_generator: TokenGenerator::Constant(std::env::var("OBSERVATION_TOOLS_AUTH_TOKEN")?),
+//!     token_generator: TokenGenerator::OAuth2BrowserFlow,
 //! })?;
 //!
 //! /// The name of the run will show up in the UI. You can optionally add key-value metadata to

@@ -56,7 +56,7 @@ export default function Home() {
                     </Link>
                     <Link
                         className="button button--secondary button--lg"
-                        to="https://docs.rs/observation-tools/latest/observation_tools_client/">
+                        to="https://docs.rs/observation-tools/">
                         Read the docs
                     </Link>
                 </div>
@@ -155,7 +155,7 @@ function HomepageHeader() {
             <div className={styles.buttons}>
                 <Link
                     className="button button--primary button--lg"
-                    to="https://docs.rs/observation-tools/latest/observation_tools_client/">
+                    to="https://docs.rs/observation-tools/">
                     Get started
                 </Link>
             </div>

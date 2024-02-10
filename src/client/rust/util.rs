@@ -1,4 +1,3 @@
-
 use crate::generated::ArtifactId;
 use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;
@@ -35,6 +34,14 @@ pub enum ClientError {
     NoTransformsInBuilder,
     #[error(transparent)]
     Other(#[from] anyhow::Error),
+    #[error("Did not receive an id_token from Google OAuth. This is likely a bug in the client.")]
+    GoogleOAuthNoIdToken,
+    #[error(
+        "Received an invalid state from Google OAuth. Expected: {expected}, Received: {received}"
+    )]
+    GoogleOAuthReceivedInvalidState { expected: String, received: String },
+    #[error("Failed to open OAuth2 PKCE server")]
+    FailedToOpenPKCEServer,
 }
 
 impl ClientError {

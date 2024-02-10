@@ -8,12 +8,18 @@ use tracing_subscriber;
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     #[arg(long)]
+    /// Project to upload data to
     pub project_id: String,
     #[arg(long)]
-    pub auth_token: String,
+    /// Use the device code authentication flow instead of the browser flow
+    pub device_code_auth: bool,
     #[arg(long)]
+    /// **Internal testing** Point the client to a different observation.tools
+    /// UI server.
     pub ui_host: Option<String>,
     #[arg(long)]
+    /// **Internal testing** Point the client to a different observation.tools
+    /// API server.
     pub api_host: Option<String>,
 }
 
@@ -25,7 +31,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     run_examples(
         args.project_id,
-        args.auth_token,
+        args.device_code_auth,
         args.ui_host,
         args.api_host,
     )
