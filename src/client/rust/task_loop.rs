@@ -90,7 +90,10 @@ impl TaskLoop {
             TaskLoopParams::TokioRuntime { runtime }
         };
         #[cfg(not(feature = "tokio"))]
-        let params = TaskLoopParams::None;
+        let params = {
+            wasm_bindgen_futures::spawn_local(task_loop);
+            TaskLoopParams::None
+        };
 
         Ok(TaskLoop {
             task_handler,

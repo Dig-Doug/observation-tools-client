@@ -1,12 +1,11 @@
-//! # Artifact groups
-//! **Artifact groups** help organize artifacts and can define how artifacts can
-//! be visualized together. Artifact groups can be generic, meaning they can
+//! **Artifact groups** help organize artifacts and can define how artifacts are
+//! visualized together. Artifact groups can be generic, meaning they can
 //! hold any type of artifact, or they can be specialized to hold only certain
 //! types of artifacts, e.g. 2D objects only. Artifacts are added to groups
 //! using an **artifact uploader**. Specialized artifact groups have specialized
-//! groups, e.g. [ArtifactUploader2d] for 2D objects.
+//! uploaders, e.g. [ArtifactUploader2d] for 2D objects.
 //!
-//! ## Creating artifacts
+//! # Creating artifacts
 //! To upload an artifact, you must create the artifact by calling one of the
 //! `create` methods on an artifact group. Calling a creation method will return
 //! a [crate::ArtifactUploadHandle] and begin uploading the input data
@@ -26,7 +25,7 @@
 //! # }
 //! ```
 //!
-//! ## Updating artifacts
+//! # Updating artifacts
 //! A [crate::ArtifactUploadHandle] returned by a creation method will
 //! also contain an **artifact updater** that you can use to submit incremental
 //! updates to the artifact. Updates are generally coupled with a

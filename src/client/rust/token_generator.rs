@@ -2,6 +2,8 @@ use crate::util::ClientError;
 use crate::util::GenericError;
 use cached::proc_macro::cached;
 use cached::Cached;
+use instant::Instant;
+use js_sys::Promise;
 use oauth2::basic::BasicErrorResponse;
 use oauth2::basic::BasicRevocationErrorResponse;
 use oauth2::basic::BasicTokenIntrospectionResponse;
@@ -14,6 +16,7 @@ use oauth2::Client;
 use oauth2::ClientId;
 use oauth2::ClientSecret;
 use oauth2::CsrfToken;
+use oauth2::DeviceAuthorizationResponse;
 use oauth2::DeviceAuthorizationUrl;
 use oauth2::ExtraDeviceAuthorizationFields;
 use oauth2::ExtraTokenFields;
@@ -33,14 +36,17 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::net::TcpListener;
 use std::time::Duration;
-use std::time::Instant;
+use tracing::info;
+use tracing::trace;
+use tracing::warn;
 use url::Url;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Debug, Clone)]
 pub enum TokenGenerator {
+    #[cfg(feature = "rust")]
     /// Generate a URL to complete authentication in a browser.
     OAuth2BrowserFlow,
-    #[cfg(feature = "tokio")]
     /// Generate a code you can use to sign in on another device. Use this flow
     /// when the execution environment doesn't have good input methods.
     OAuth2DeviceCodeFlow,
@@ -91,10 +97,10 @@ impl TokenGenerator {
     pub async fn token(&self) -> Result<String, ClientError> {
         match self {
             TokenGenerator::Constant(s) => Ok(s.clone()),
-            #[cfg(feature = "tokio")]
             TokenGenerator::OAuth2DeviceCodeFlow => {
                 self.device_flow().await.map_err(ClientError::from_string)
             }
+            #[cfg(feature = "rust")]
             TokenGenerator::OAuth2BrowserFlow => {
                 self.pkce_flow().await.map_err(ClientError::from_string)
             }
@@ -119,7 +125,6 @@ impl TokenGenerator {
         token.id_token()
     }
 
-    #[cfg(feature = "tokio")]
     async fn device_flow(&self) -> Result<String, GenericError> {
         let previous_token = {
             let mut cache = DEVICE_FLOW.lock().await;
@@ -159,25 +164,6 @@ fn pkce_flow_client(redirect_address: SocketAddr) -> Result<GoogleClient, Generi
     Ok(client)
 }
 
-fn device_code_flow_client() -> Result<GoogleClient, GenericError> {
-    let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())?;
-    let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())?;
-    let device_auth_url =
-        DeviceAuthorizationUrl::new("https://oauth2.googleapis.com/device/code".to_string())?;
-    Ok(GoogleClient::new(
-        ClientId::new(
-            "939860080094-gesblh8dc3j1v7num3h7igit60e181ke.apps.googleusercontent.com".to_string(),
-        ),
-        Some(ClientSecret::new(
-            "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".to_string(),
-        )),
-        auth_url,
-        Some(token_url),
-    )
-    .set_device_authorization_url(device_auth_url)
-    .set_auth_type(AuthType::RequestBody))
-}
-
 #[cached(
     size = 1,
     key = "()",
@@ -214,7 +200,7 @@ async fn pkce_flow(
         .set_pkce_challenge(pkce_code_challenge)
         .url();
 
-    println!(
+    warn!(
         r#"
 #############################################
 ############# observation.tools #############
@@ -251,7 +237,25 @@ Authenticate in your browser: {}
     })
 }
 
-#[cfg(feature = "tokio")]
+fn device_code_flow_client() -> Result<GoogleClient, GenericError> {
+    let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())?;
+    let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())?;
+    let device_auth_url =
+        DeviceAuthorizationUrl::new("https://oauth2.googleapis.com/device/code".to_string())?;
+    Ok(GoogleClient::new(
+        ClientId::new(
+            "939860080094-gesblh8dc3j1v7num3h7igit60e181ke.apps.googleusercontent.com".to_string(),
+        ),
+        Some(ClientSecret::new(
+            "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".to_string(),
+        )),
+        auth_url,
+        Some(token_url),
+    )
+    .set_device_authorization_url(device_auth_url)
+    .set_auth_type(AuthType::RequestBody))
+}
+
 #[cached(
     size = 1,
     key = "()",
@@ -280,13 +284,14 @@ async fn device_flow(
         }
     }
 
+    trace!("Making device code request");
     let details: DeviceAuthorizationResponse<GoogleTokenFields> = client
         .exchange_device_code()?
         .add_scope(Scope::new("email".to_string()))
         .request_async(async_http_client)
         .await?;
 
-    println!(
+    warn!(
         r#"
 #############################################
 ############# observation.tools #############
@@ -308,14 +313,32 @@ Enter this code: {}
         .exchange_device_access_token(&details)
         .request_async(
             async_http_client,
+            #[cfg(not(feature = "wasm"))]
             tokio::time::sleep,
+            #[cfg(feature = "wasm")]
+            sleep,
             Some(Duration::from_secs(5 * 60)),
         )
         .await?;
+    warn!("Successfully exchanged device code for access token");
     Ok(GoogleAuthToken {
         token: response,
         request_time,
     })
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_name = setTimeout)]
+    fn set_timeout(resolve: js_sys::Function, duration: i32);
+}
+
+pub async fn sleep(duration: Duration) {
+    let mut cb = |resolve: js_sys::Function, reject: js_sys::Function| {
+        set_timeout(resolve, duration.as_millis() as i32);
+    };
+    let p = js_sys::Promise::new(&mut cb);
+    wasm_bindgen_futures::JsFuture::from(p).await.unwrap();
 }
 
 async fn create_pkce_listen_server(

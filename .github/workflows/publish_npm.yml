@@ -1,0 +1,28 @@
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+name: Publish @observation-tools/client npm package
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install node
+        uses: actions/setup-node@v3
+      - name: Install rust
+        run: rustup install stable
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Build
+        run: src/client/rust/wasm-pack.sh
+      - name: Publish
+        run: npm publish src/client/rust/pkg --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+ 

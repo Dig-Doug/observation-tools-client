@@ -30,15 +30,17 @@
 //!
 //! ## Create a project
 //!
+//! All data uploaded to Observation Tools is associated with a project.
+//! Projects have a unique ID that you'll use to initialize the client in the
+//! next step.
+//!
 //! To create a project, do the following:
 //! 1. Sign in to the [dashboard](https://app.observation.tools/)
 //! 1. Click "Create project"
-//! 1. Give your project a name
-//! 1. Hit "Create".
 //!
-//! Below your project's name will be an ID that you'll need to initialize the
-//! client. Project IDs are not sensitive, so you can embed them in your source
-//! code.
+//! You should see your project's ID on the following screen. You can also find
+//! it on the "Settings" page. Project IDs are not sensitive, so you can embed
+//! them in your source code.
 //!
 //! ## Install a client library
 //!
@@ -101,7 +103,7 @@
 //!
 //! To view the exported data, you can either find the run on the [dashboard](https://app.observation.tools/) or generate a direct url with [`groups::RunUploader::viewer_url`].
 //!
-//! ## Examples
+//! # Examples
 //! For more examples, check out the [examples](https://github.com/Dig-Doug/observation-tools-client/tree/main/examples) directory in the repository.
 extern crate alloc;
 extern crate core;
@@ -129,6 +131,7 @@ pub use crate::task_handle::PublicSeriesIdTaskHandle;
 pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::util::ClientError;
+use tracing_wasm::WASMLayerConfigBuilder;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -144,8 +147,10 @@ pub fn start() -> Result<(), JsValue> {
     // getting proper error line numbers for panics.
     console_error_panic_hook::set_once();
 
-    // Add this line:
-    tracing_wasm::set_as_global_default();
+    let mut config_builder = WASMLayerConfigBuilder::new();
+    #[cfg(not(debug_assertions))]
+    config_builder.set_max_level(tracing::Level::WARN);
+    tracing_wasm::set_as_global_default_with_config(config_builder.build());
 
     Ok(())
 }

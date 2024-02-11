@@ -1,21 +1,20 @@
-//! # Artifacts
 //! Artifacts have a few major components:
 //! 1. Geometry data, e.g. a mesh
 //! 1. Transforms that define how the geometry is positioned
-//! 1. Metadata
+//! 1. Metadata, e.g. the artifact's name
 //!
 //! To create an artifact within an [artifact group](crate::groups), you'll
-//! ultimately need to create an **object builder** (e.g [Object2Builder]),
+//! ultimately need to create an **object builder** (e.g. [Object2Builder]),
 //! which contains the geometry and transforms, and a
 //! [UserMetadataBuilder] to define the metadata. Once you have these pieces,
 //! you can add the artifact to a [artifact group](crate::groups) using an
 //! **artifact uploader**.
 //!
-//! ## Creating object builders
+//! # Creating object builders
 //! To create an object builder, you first need to represent your data as one of
 //! our primitive types, e.g. a [Polygon2Builder]. Once you have it, there are a
 //! couple ways to convert it into an object builder:
-//! ### Direct creation
+//! ## Direct creation
 //! All primitives can be converted into an object builder directly using
 //! `into()`. Then, you can add transforms to set the artifact's position:
 //!
@@ -24,11 +23,18 @@
 //! use observation_tools_client::artifacts::Point2Builder;
 //! use observation_tools_client::artifacts::Transform2Builder;
 //!
-//! let mut sphere: Object2Builder = Point2Builder::new(5.0, 3.0).into();
-//! sphere.add_transform(Transform2Builder::identity());
+//! // Create a primitive Point2
+//! let point = Point2Builder::new(5.0, 3.0);
+//! // Convert it into an Object2
+//! let mut point: Object2Builder = point.into();
+//! // Add an identity transform so the point is positioned at (5, 3)
+//! point.add_transform(Transform2Builder::identity());
 //! ```
 //!
-//! ### Implicit creation
+//! If you want to display the same geometry at different positions, you can
+//! also add multiple transforms to the artifact.
+//!
+//! ## Implicit creation
 //! If you do not need to set an explicit transform, you skip the object builder
 //! conversion:
 //!
@@ -44,7 +50,7 @@
 //! # }
 //! ```
 //!
-//! ## Metadata
+//! # Metadata
 //! The [UserMetadataBuilder] is used to store the artifact's name and
 //! additional metadata, stored as key-value pairs.
 //!
@@ -68,10 +74,10 @@
 //! # }
 //! ```
 //!
-//! ## Primitives
-//! <div class="warning"> Support for 3D primitives is experimental </div>
-//!
+//! # Primitives
 //! Don't see a primitive you're looking for? Need conversions from types in another crate? Let us know! File a [feature request](https://github.com/Dig-Doug/observation-tools-client/issues) or [email us](mailto:help@observation.tools).
+//!
+//! <div class="warning"> Support for 3D primitives is experimental </div>
 mod geometry2_builder;
 mod geometry3_builder;
 mod image2_builder;
