@@ -7,6 +7,8 @@ use crate::PublicArtifactIdTaskHandle;
 use base64::Engine;
 use protobuf::Message;
 use reqwest::multipart::Part;
+#[cfg(feature = "files")]
+use std::io::Write;
 use std::sync::Arc;
 use tracing::error;
 use tracing::trace;
