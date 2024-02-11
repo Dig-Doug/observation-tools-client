@@ -1,6 +1,6 @@
 [package]
 name = "observation-tools"
-version = "0.0.9"
+version = "0.0.10"
 edition = "2021"
 license = "Apache-2.0"
 description = "Export, visualize, and inspect data from anywhere in your program"
