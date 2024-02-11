@@ -7,6 +7,8 @@ use crate::PublicArtifactIdTaskHandle;
 use base64::Engine;
 use protobuf::Message;
 use reqwest::multipart::Part;
+#[cfg(feature = "files")]
+use std::io::Write;
 use std::sync::Arc;
 use tracing::error;
 use tracing::trace;
@@ -90,7 +92,10 @@ impl TaskLoop {
             TaskLoopParams::TokioRuntime { runtime }
         };
         #[cfg(not(feature = "tokio"))]
-        let params = TaskLoopParams::None;
+        let params = {
+            wasm_bindgen_futures::spawn_local(task_loop);
+            TaskLoopParams::None
+        };
 
         Ok(TaskLoop {
             task_handler,

@@ -48,16 +48,15 @@ pub struct Client {
 impl Client {
     #[wasm_bindgen(constructor)]
     pub fn new_wasm(
-        ui_host: String,
-        api_host: String,
-        token: String,
+        ui_host: Option<String>,
+        api_host: Option<String>,
         project_id: String,
     ) -> Result<Client, JsValue> {
         Client::new(ClientOptions {
             project_id,
-            ui_host: Some(ui_host),
-            api_host: Some(api_host),
-            token_generator: TokenGenerator::Constant(token),
+            ui_host,
+            api_host,
+            token_generator: TokenGenerator::OAuth2DeviceCodeFlow,
             reqwest_client: None,
         })
         .map_err(|e| JsValue::from_str(&format!("{}", e)))

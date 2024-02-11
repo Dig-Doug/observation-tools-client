@@ -9,7 +9,11 @@ To run the examples yourself, do the following:
 5. Run the command in your terminal:
 
 ```bash
+# Rust
 cargo run --features rust -- --project-id <project-id>
+
+# JavaScript
+node index.js --project-id 3jejjf7hRLvqjVN1pyfd6qDWvq4WPE
 ```
 
 After the program finishes executing, click the URL to go to the viewer UI.
