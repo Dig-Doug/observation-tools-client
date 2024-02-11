@@ -33,7 +33,7 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build
-        run: ./src/client/rust/wasm-pack.sh
+        run: src/client/rust/wasm_pack.sh
       - name: Publish
         run: npm publish src/client/rust/pkg --access public
         env:
