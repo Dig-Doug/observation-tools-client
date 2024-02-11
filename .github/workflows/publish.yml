@@ -9,7 +9,6 @@ jobs:
   publish-crate:
     name: Publish observation-tools crate
     runs-on: ubuntu-latest
-    needs: setup
     environment: crates.io
     steps:
       - name: Checkout
@@ -23,7 +22,6 @@ jobs:
   publish-npm:
     name: Publish @observation-tools/client npm package
     runs-on: ubuntu-latest
-    needs: setup
     environment: npm
     steps:
       - name: Checkout
