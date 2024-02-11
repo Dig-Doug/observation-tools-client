@@ -313,9 +313,9 @@ Enter this code: {}
         .exchange_device_access_token(&details)
         .request_async(
             async_http_client,
-            #[cfg(not(feature = "wasm"))]
+            #[cfg(feature = "tokio")]
             tokio::time::sleep,
-            #[cfg(feature = "wasm")]
+            #[cfg(not(feature = "tokio"))]
             sleep,
             Some(Duration::from_secs(5 * 60)),
         )
