@@ -147,7 +147,7 @@ function HomepageHeader() {
         <HeaderBackground/>
         <div className={clsx("container", styles.heroBannerContent)} style={{zIndex: 1}}>
             <h1 className="hero__title">
-                Logging meets the <span className={styles.title3d}>2rd dimension</span>
+                Logging meets the <span className={styles.title3d}>2nd dimension</span>
             </h1>
             <h2 className="hero__subtitle">
                 {siteConfig.tagline}
