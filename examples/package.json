@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@observation-tools/client": "^0.0.10",
     "minimist": "^1.2.8"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import {Client, UserMetadataBuilder, Point2Builder, Object2Builder, Transform2Builder} from "../src/client/rust/pkg/observation_tools_client.js";
+import {Client, UserMetadataBuilder, Point2Builder, Object2Builder, Transform2Builder} from "@observation-tools/client";
 import parse from "minimist";
 
 const argv = parse(process.argv.slice(2));

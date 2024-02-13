@@ -56,6 +56,8 @@ wasm-bindgen = { version = "0.2.89", features = ["serde-serialize"] }
 wasm-bindgen-derive = "0.2.1"
 wasm-bindgen-futures = "0.4.39"
 web-sys = { version = "0.3.66", features = ['Window', 'Performance', 'PerformanceTiming'] }
+keyring = "2"
+whoami = "1.4"
 
 [build-dependencies]
 protobuf-codegen = "=3.2.0"
@@ -64,3 +66,6 @@ protobuf-codegen = "=3.2.0"
 files = ["tempfile"]
 rust = ["tokio", "tokio-util", "files", "reqwest/stream"]
 wasm = []
+
+[package.metadata.docs.rs]
+all-features = true
