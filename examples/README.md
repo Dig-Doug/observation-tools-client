@@ -13,7 +13,8 @@ To run the examples yourself, do the following:
 cargo run --features rust -- --project-id <project-id>
 
 # JavaScript
-node index.js --project-id <project-id>
+pnpm install
+pnpm run start --project-id <project-id>
 ```
 
 After the program finishes executing, click the URL to go to the viewer UI.

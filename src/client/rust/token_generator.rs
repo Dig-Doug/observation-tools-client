@@ -4,6 +4,7 @@ use cached::proc_macro::cached;
 use cached::Cached;
 use instant::Instant;
 use js_sys::Promise;
+use keyring::Entry;
 use oauth2::basic::BasicErrorResponse;
 use oauth2::basic::BasicRevocationErrorResponse;
 use oauth2::basic::BasicTokenIntrospectionResponse;
@@ -22,6 +23,7 @@ use oauth2::ExtraDeviceAuthorizationFields;
 use oauth2::ExtraTokenFields;
 use oauth2::PkceCodeChallenge;
 use oauth2::RedirectUrl;
+use oauth2::RefreshToken;
 use oauth2::RevocationUrl;
 use oauth2::Scope;
 use oauth2::StandardRevocableToken;
@@ -41,6 +43,9 @@ use tracing::trace;
 use tracing::warn;
 use url::Url;
 use wasm_bindgen::prelude::wasm_bindgen;
+
+const KEYRING_BROWSER_FLOW: &str = "observation.tools/oauth2_browser_flow";
+const KEYRING_DEVICE_FLOW: &str = "observation.tools/oauth2_device_flow";
 
 #[derive(Debug, Clone)]
 pub enum TokenGenerator {
@@ -119,7 +124,8 @@ impl TokenGenerator {
                     break 'token Ok(previous_token);
                 }
             }
-            pkce_flow(previous_token).await
+            let refresh_token = get_refresh_token(&previous_token, KEYRING_BROWSER_FLOW);
+            pkce_flow(refresh_token).await
         }?;
 
         token.id_token()
@@ -137,10 +143,43 @@ impl TokenGenerator {
                     break 'token Ok(previous_token);
                 }
             }
-            device_flow(previous_token).await
+            let refresh_token = get_refresh_token(&previous_token, KEYRING_DEVICE_FLOW);
+            device_flow(refresh_token).await
         }?;
 
         token.id_token()
+    }
+}
+
+fn get_refresh_token(
+    previous_token: &Option<GoogleAuthToken>,
+    keyring_key: &str,
+) -> Option<RefreshToken> {
+    previous_token
+        .as_ref()
+        .and_then(|t| t.token.refresh_token())
+        .cloned()
+        .or_else(|| {
+            let entry = Entry::new(keyring_key, &whoami::username());
+            match entry.and_then(|e| e.get_password()) {
+                Ok(refresh_token) => {
+                    trace!("Found saved refresh token, using it first");
+                    Some(RefreshToken::new(refresh_token))
+                }
+                Err(e) => {
+                    trace!("Failed to retrieve refresh token from keyring: {}", e);
+                    None
+                }
+            }
+        })
+}
+
+fn save_refresh_token(token_response: &GoogleTokenResponse, keyring_key: &str) {
+    if let Some(refresh_token) = token_response.refresh_token() {
+        let entry = Entry::new(keyring_key, &whoami::username());
+        if let Err(e) = entry.and_then(|e| e.set_password(refresh_token.secret())) {
+            warn!("Failed to store refresh token in keyring: {}", e);
+        }
     }
 }
 
@@ -171,15 +210,10 @@ fn pkce_flow_client(redirect_address: SocketAddr) -> Result<GoogleClient, Generi
     result = true,
     sync_writes = true
 )]
-async fn pkce_flow(
-    previous_token: Option<GoogleAuthToken>,
-) -> Result<GoogleAuthToken, GenericError> {
+async fn pkce_flow(previous_token: Option<RefreshToken>) -> Result<GoogleAuthToken, GenericError> {
     let listener = TcpListener::bind("localhost:0")?;
     let client = pkce_flow_client(listener.local_addr()?)?;
-    if let Some(refresh_token) = previous_token
-        .as_ref()
-        .and_then(|token| token.token.refresh_token())
-    {
+    if let Some(refresh_token) = previous_token.as_ref() {
         let request_time = Instant::now();
         if let Ok(new_token) = client
             .exchange_refresh_token(refresh_token)
@@ -231,6 +265,8 @@ Authenticate in your browser: {}
         .request_async(async_http_client)
         .await?;
 
+    save_refresh_token(&token_response, KEYRING_BROWSER_FLOW);
+
     Ok(GoogleAuthToken {
         token: token_response,
         request_time,
@@ -264,14 +300,11 @@ fn device_code_flow_client() -> Result<GoogleClient, GenericError> {
     sync_writes = true
 )]
 async fn device_flow(
-    previous_token: Option<GoogleAuthToken>,
+    previous_token: Option<RefreshToken>,
 ) -> Result<GoogleAuthToken, GenericError> {
     let request_time = Instant::now();
     let client = device_code_flow_client()?;
-    if let Some(refresh_token) = previous_token
-        .as_ref()
-        .and_then(|token| token.token.refresh_token())
-    {
+    if let Some(refresh_token) = previous_token.as_ref() {
         if let Ok(new_token) = client
             .exchange_refresh_token(refresh_token)
             .request_async(async_http_client)
@@ -320,7 +353,11 @@ Enter this code: {}
             Some(Duration::from_secs(5 * 60)),
         )
         .await?;
+
+    save_refresh_token(&response, KEYRING_DEVICE_FLOW);
+
     warn!("Successfully exchanged device code for access token");
+
     Ok(GoogleAuthToken {
         token: response,
         request_time,
@@ -333,6 +370,7 @@ extern "C" {
     fn set_timeout(resolve: js_sys::Function, duration: i32);
 }
 
+#[cfg(not(feature = "tokio"))]
 pub async fn sleep(duration: Duration) {
     let mut cb = |resolve: js_sys::Function, reject: js_sys::Function| {
         set_timeout(resolve, duration.as_millis() as i32);

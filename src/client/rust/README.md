@@ -24,3 +24,18 @@ Serve the HTML files with automatic refresh:
 ```sh
 pnpm dlx browser-sync start --serveStatic target/doc --server target/doc --directory --files target/doc/** --no-open
 ```
+
+## Building the JS package
+
+```sh
+./src/client/rust/wasm_pack.sh
+```
+
+### Test examples with local changes
+
+```shell
+pnpm link ./src/client/rust/pkg
+
+# Undo with:
+pnpm unlink
+```
