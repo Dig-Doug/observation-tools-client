@@ -134,7 +134,7 @@ pub use crate::util::ClientError;
 use tracing_wasm::WASMLayerConfigBuilder;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct PublicArtifactId {
     pub(crate) id: ArtifactId,

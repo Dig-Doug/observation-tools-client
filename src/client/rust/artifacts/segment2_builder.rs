@@ -6,14 +6,14 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 2D line segment.
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct Segment2Builder {
     pub(crate) proto: Segment2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Segment2Builder {
     pub fn from_points(start: Point2Builder, end: Point2Builder) -> Segment2Builder {
         let mut proto = Segment2::new();

@@ -104,13 +104,16 @@ mod vector3_builder;
 mod vertex_builder;
 
 pub use geometry2_builder::Geometry2Builder;
+#[cfg(feature = "wasm")]
 pub use geometry2_builder::IntoGeometry2Builder;
 pub use geometry3_builder::Geometry3Builder;
+#[cfg(feature = "wasm")]
 pub use geometry3_builder::IntoGeometry3Builder;
 pub use image2_builder::Image2Builder;
 pub use image2_builder::PerPixelTransformBuilder;
 pub use mesh_builder::MeshBuilder;
 pub use number_builder::NumberBuilder;
+#[cfg(feature = "wasm")]
 pub use number_builder::NumberOrNumberBuilder;
 pub use object2_builder::Object2Builder;
 pub use object2_builder::Object2Updater;

@@ -8,16 +8,16 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 2D polygon.
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct Polygon2Builder {
     pub(crate) proto: Polygon2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Polygon2Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Polygon2Builder {
         let proto = Polygon2::new();
         Polygon2Builder { proto }

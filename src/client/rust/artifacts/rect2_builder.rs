@@ -6,16 +6,16 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// An axis-aligned rectangle.
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct Rect2Builder {
     pub(crate) proto: Rect2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Rect2Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new(size: &Vector2Builder) -> Rect2Builder {
         let mut proto = Rect2::new();
         proto.size = Some(size.proto.clone()).into();

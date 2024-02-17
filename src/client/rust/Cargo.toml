@@ -67,5 +67,5 @@ files = ["tempfile"]
 rust = ["tokio", "tokio-util", "files", "reqwest/stream"]
 wasm = []
 
-[package.metadata.docs.rs]
-all-features = true
+#[package.metadata.docs.rs]
+#all-features = true

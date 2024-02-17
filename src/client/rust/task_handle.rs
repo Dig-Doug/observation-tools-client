@@ -20,15 +20,15 @@ pub trait ArtifactUploadHandle<T>: Deref<Target = T> {
 #[macro_export]
 macro_rules! task_handle_impl {
     ($sub:ident $res:ident) => {
-        #[wasm_bindgen]
+        #[cfg_attr(feature = "wasm", wasm_bindgen)]
         #[derive(Debug, Clone)]
         pub struct $sub {
-            #[wasm_bindgen(getter_with_clone)]
+            #[cfg_attr(feature = "wasm", wasm_bindgen(getter_with_clone))]
             pub result: $res,
             pub(crate) channel: async_channel::Receiver<()>,
         }
 
-        #[wasm_bindgen]
+        #[cfg_attr(feature = "wasm", wasm_bindgen)]
         impl $sub {
             pub async fn wait_for(&self) {
                 // TODO(doug): Expose error for caller

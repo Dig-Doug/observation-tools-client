@@ -1,15 +1,16 @@
 use crate::generated::ArtifactUserMetadata;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct UserMetadataBuilder {
     pub(crate) proto: ArtifactUserMetadata,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl UserMetadataBuilder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(name: String) -> Self {
         Self::new_impl(&name)
     }

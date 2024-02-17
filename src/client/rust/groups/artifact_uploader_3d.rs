@@ -17,13 +17,13 @@ use wasm_bindgen::prelude::*;
 
 /// An artifact group representing a 3-dimensional world. This group can only
 /// contain [Object3](Object3Builder) artifacts.
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct ArtifactUploader3d {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl ArtifactUploader3d {
     pub fn create_object3_js(
         &self,

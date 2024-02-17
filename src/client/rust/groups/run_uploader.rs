@@ -9,13 +9,13 @@ use protobuf::Message;
 use wasm_bindgen::prelude::*;
 
 /// The "root" artifact group for a run.
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct RunUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl RunUploader {
     pub fn run_id(&self) -> RunId {
         self.base.run_id()

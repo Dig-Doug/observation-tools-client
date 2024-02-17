@@ -1,3 +1,4 @@
+#[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
 use crate::generated::SeriesData;
@@ -8,21 +9,21 @@ use crate::util::new_artifact_id;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct PublicSeriesId {
     pub(crate) proto: crate::generated::SeriesId,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct SeriesBuilder {
     pub(crate) proto: SeriesData,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl SeriesBuilder {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> SeriesBuilder {
         let proto = SeriesData::new();
         SeriesBuilder { proto }
@@ -41,27 +42,28 @@ impl SeriesBuilder {
     }
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct PublicSeriesDimensionId {
     pub(crate) proto: crate::generated::SeriesDimensionId,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct SeriesDimensionBuilder {
     pub(crate) proto: SeriesDimensionData,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct SeriesPointBuilder {
     pub(crate) proto: SeriesPoint,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl SeriesPointBuilder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(
         series_id: &PublicSeriesId,
         dimension_id: &PublicSeriesDimensionId,
@@ -74,6 +76,7 @@ impl SeriesPointBuilder {
         )
     }
 
+    #[cfg(feature = "wasm")]
     // TODO(doug): Allow series with multiple dimensions, private intentionally
     // since not implemented
     fn add_dimension_js(

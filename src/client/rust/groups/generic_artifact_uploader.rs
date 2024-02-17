@@ -11,13 +11,13 @@ use wasm_bindgen::prelude::*;
 
 /// An artifact group that can contain any type of artifact and create
 /// specialized child groups.
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct GenericArtifactUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl GenericArtifactUploader {
     pub fn child_uploader_js(
         &self,

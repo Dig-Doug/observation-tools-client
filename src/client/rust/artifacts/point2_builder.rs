@@ -1,3 +1,4 @@
+#[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::NumberBuilder;
@@ -8,16 +9,33 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 2D point.
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+/// ```rust
+/// use observation_tools_client::Client;
+/// use observation_tools_client::ClientError;
+///
+/// fn create_test_client() -> Result<Client, ClientError> {
+///     todo!("Impl")
+/// }
+///
+/// fn main() -> Result<(), ClientError> {
+///     use observation_tools_client::artifacts::Point2Builder;
+///     let client = create_test_client()?;
+///     let run = client.create_run("create_point2")?;
+///     let group2d = run.child_uploader_2d("point2_world")?;
+///     group2d.create_object2("my_point", Point2Builder::new(1.0, 2.0))?;
+/// }
+/// ```
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct Point2Builder {
     pub(crate) proto: Point2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Point2Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(
         x: NumberOrNumberBuilder,
         y: NumberOrNumberBuilder,

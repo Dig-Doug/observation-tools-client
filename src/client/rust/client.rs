@@ -36,7 +36,7 @@ pub struct ClientOptions {
     pub token_generator: TokenGenerator,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct Client {
     pub(crate) options: ClientOptions,
@@ -44,9 +44,9 @@ pub struct Client {
     task_loop: Arc<TaskLoop>,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Client {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_wasm(
         ui_host: Option<String>,
         api_host: Option<String>,

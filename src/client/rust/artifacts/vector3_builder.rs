@@ -1,17 +1,19 @@
+#[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
 use crate::generated::Vector3;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct Vector3Builder {
     pub(crate) proto: Vector3,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Vector3Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(
         x: NumberOrNumberBuilder,
         y: NumberOrNumberBuilder,

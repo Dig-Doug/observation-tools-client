@@ -13,14 +13,14 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// An image.
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct Image2Builder {
     pub(crate) proto: Image2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Image2Builder {
     pub fn new(data: &[u8], mime_type: &str) -> Self {
         let mut proto = Image2::new();
@@ -72,12 +72,12 @@ impl Into<Object2Builder> for Image2Builder {
     }
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct PerPixelTransformBuilder {
     pub(crate) proto: PerPixelTransform,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl PerPixelTransformBuilder {
     pub fn random_distinct_color() -> Self {
         let mut proto = PerPixelTransform::new();

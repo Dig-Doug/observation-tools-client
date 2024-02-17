@@ -6,16 +6,16 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 3D mesh
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct MeshBuilder {
     pub(crate) proto: Mesh,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl MeshBuilder {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> MeshBuilder {
         let proto = Mesh::new();
         MeshBuilder { proto }

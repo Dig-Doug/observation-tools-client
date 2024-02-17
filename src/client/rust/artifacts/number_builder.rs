@@ -1,24 +1,27 @@
 extern crate alloc;
+
 use crate::generated::Number;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct NumberBuilder {
     pub(crate) proto: Number,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(typescript_type = "number | NumberBuilder")]
     pub type NumberOrNumberBuilder;
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl NumberBuilder {
+    #[cfg(feature = "wasm")]
     pub fn from_js_value(value: NumberOrNumberBuilder) -> Result<NumberBuilder, ClientError> {
         let js_value: &JsValue = value.as_ref();
         if let Some(number) = js_value.as_f64() {

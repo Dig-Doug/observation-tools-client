@@ -5,13 +5,13 @@ use crate::generated::Transform2;
 use crate::generated::TRS2;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct Transform2Builder {
     pub(crate) proto: Transform2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Transform2Builder {
     pub fn identity() -> Transform2Builder {
         let mut proto = Transform2::new();

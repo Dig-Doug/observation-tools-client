@@ -5,13 +5,14 @@ use crate::generated::Geometry3;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
-#[derive(TryFromJsValue)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct Geometry3Builder {
     pub(crate) proto: Geometry3,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(
@@ -20,7 +21,7 @@ extern "C" {
     pub type IntoGeometry3Builder;
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Geometry3Builder {
     pub(crate) fn sphere(sphere: SphereBuilder) -> Geometry3Builder {
         let mut proto = Geometry3::new();

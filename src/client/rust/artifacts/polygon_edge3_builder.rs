@@ -3,13 +3,13 @@ use crate::generated::PolygonEdge3;
 use wasm_bindgen::prelude::*;
 
 /// An edge of a [Polygon3Builder](crate::artifacts::Polygon3Builder).
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Clone)]
 pub struct PolygonEdge3Builder {
     pub(crate) proto: PolygonEdge3,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl PolygonEdge3Builder {
     pub fn from_vertex(vertex: Point3Builder) -> PolygonEdge3Builder {
         let mut proto = PolygonEdge3::new();

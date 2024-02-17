@@ -3,14 +3,14 @@ use crate::artifacts::Vector3Builder;
 use crate::generated::Vertex;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct VertexBuilder {
     pub(crate) proto: Vertex,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl VertexBuilder {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new(position: Point3Builder) -> VertexBuilder {
         let mut proto = Vertex::new();
         proto.position = Some(position.proto).into();

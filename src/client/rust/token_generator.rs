@@ -364,6 +364,7 @@ Enter this code: {}
     })
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_name = setTimeout)]
