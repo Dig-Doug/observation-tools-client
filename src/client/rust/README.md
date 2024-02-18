@@ -42,4 +42,6 @@ pnpm unlink
 
 ## Running the doc tests
 
+```
 RUSTDOCFLAGS="-Z unstable-options --nocapture" cargo +nightly test --doc
+```

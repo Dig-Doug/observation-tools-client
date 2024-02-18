@@ -18,11 +18,11 @@ use wasm_bindgen_derive::TryFromJsValue;
 /// ```rust
 /// use observation_tools_client::artifacts::Image2Builder;
 /// use observation_tools_client::artifacts::Object2Builder;
+/// use observation_tools_client::artifacts::PerPixelTransformBuilder;
 /// use observation_tools_client::artifacts::Point2Builder;
 /// use observation_tools_client::artifacts::Rect2Builder;
 /// use observation_tools_client::artifacts::Segment2Builder;
 /// use observation_tools_client::artifacts::Transform2Builder;
-///     use observation_tools_client::artifacts::PerPixelTransformBuilder;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), observation_tools_client::ClientError> {
