@@ -10,12 +10,12 @@ use crate::generated::StructuredData;
 use crate::ClientError;
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 pub struct Object3Builder {
     pub(crate) proto: Object3,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl Object3Builder {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]

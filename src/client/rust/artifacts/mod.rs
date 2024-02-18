@@ -55,7 +55,7 @@
 //! additional metadata, stored as key-value pairs.
 //!
 //! If you do not need to add metadata, [UserMetadataBuilder] can be created
-//! implicitly from a string:  
+//! implicitly from a string:
 //! ```rust
 //! # use observation_tools_client::ClientError;
 //! # use observation_tools_client::groups::ArtifactUploader2d;

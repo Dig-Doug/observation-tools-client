@@ -31,12 +31,22 @@ pub(crate) const API_HOST: &str = "https://api.observation.tools";
 pub struct ClientOptions {
     pub ui_host: Option<String>,
     pub api_host: Option<String>,
-    pub project_id: String,
     pub reqwest_client: Option<reqwest::Client>,
     pub token_generator: TokenGenerator,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+impl Default for ClientOptions {
+    fn default() -> Self {
+        Self {
+            ui_host: None,
+            api_host: None,
+            reqwest_client: None,
+            token_generator: TokenGenerator::OAuth2DeviceCodeFlow,
+        }
+    }
+}
+
+#[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Client {
     pub(crate) options: ClientOptions,
@@ -44,7 +54,7 @@ pub struct Client {
     task_loop: Arc<TaskLoop>,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl Client {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_wasm(
@@ -52,13 +62,15 @@ impl Client {
         api_host: Option<String>,
         project_id: String,
     ) -> Result<Client, JsValue> {
-        Client::new(ClientOptions {
+        Client::new(
             project_id,
-            ui_host,
-            api_host,
-            token_generator: TokenGenerator::OAuth2DeviceCodeFlow,
-            reqwest_client: None,
-        })
+            ClientOptions {
+                ui_host,
+                api_host,
+                token_generator: TokenGenerator::OAuth2DeviceCodeFlow,
+                reqwest_client: None,
+            },
+        )
         .map_err(|e| JsValue::from_str(&format!("{}", e)))
     }
 
@@ -78,7 +90,7 @@ impl Client {
 }
 
 impl Client {
-    pub fn new(options: ClientOptions) -> Result<Self, ClientError> {
+    pub fn new(project_id: String, options: ClientOptions) -> Result<Self, ClientError> {
         trace!("Creating client");
         let task_handler = Arc::new(TaskHandler {
             client: options.reqwest_client.clone().unwrap_or_else(|| {
@@ -93,10 +105,10 @@ impl Client {
             Arc::new(TaskLoop::new(task_handler.clone()).map_err(ClientError::from_string)?);
 
         let proto: PublicGlobalId =
-            decode_id_proto(&options.project_id).map_err(ClientError::from_string)?;
+            decode_id_proto(&project_id).map_err(ClientError::from_string)?;
         let project_id = match proto.data {
             Some(public_global_id::Data::ProjectId(project_id)) => project_id,
-            _ => Err(anyhow!("Invalid project id: {}", options.project_id))?,
+            _ => Err(anyhow!("Invalid project id: {}", project_id))?,
         };
 
         let client = Client {

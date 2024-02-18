@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 #[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct NumberBuilder {
     pub(crate) proto: Number,
@@ -19,7 +19,7 @@ extern "C" {
     pub type NumberOrNumberBuilder;
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl NumberBuilder {
     #[cfg(feature = "wasm")]
     pub fn from_js_value(value: NumberOrNumberBuilder) -> Result<NumberBuilder, ClientError> {

@@ -1,2 +1,6 @@
 [unstable]
 bindeps = true
+
+[env]
+DOC_TEST_PROJECT_ID = "3jejjf7hivTXuAFRVakE1JNQBrJ3B9"
+RUST_LOG = "debug"

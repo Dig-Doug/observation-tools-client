@@ -5,13 +5,13 @@ use crate::generated::Transform2;
 use crate::generated::TRS2;
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Transform2Builder {
     pub(crate) proto: Transform2,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl Transform2Builder {
     pub fn identity() -> Transform2Builder {
         let mut proto = Transform2::new();
@@ -35,6 +35,14 @@ impl Transform2Builder {
 }
 
 impl Transform2Builder {
+    pub fn translation<T: Into<Point2Builder>>(translation: T) -> Transform2Builder {
+        let mut trs = TRS2::new();
+        trs.translation = Some(translation.into().proto).into();
+        let mut proto = Transform2::new();
+        *proto.mut_trs() = trs;
+        Transform2Builder { proto }
+    }
+
     pub fn scale<S: Into<Vector2Builder>>(scale: S) -> Transform2Builder {
         let mut trs = TRS2::new();
         trs.scale = Some(scale.into().proto).into();

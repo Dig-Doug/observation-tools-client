@@ -9,13 +9,13 @@ use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 3D polygon within a single plane.
 #[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct Polygon3Builder {
     pub(crate) proto: Polygon3,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl Polygon3Builder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Polygon3Builder {

@@ -15,14 +15,14 @@ use crate::PublicArtifactId;
 use wasm_bindgen::prelude::*;
 
 /// A 2D object.
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct Object2Builder {
     pub(crate) proto: Object2,
     pub(crate) series_point: Option<SeriesPointBuilder>,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl Object2Builder {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
@@ -84,7 +84,7 @@ impl TryInto<StructuredData> for Object2Builder {
 }
 
 /// Updater for an Object2.
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Object2Updater {
     pub(crate) id: PublicArtifactId,

@@ -9,13 +9,13 @@ use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 2D polygon.
 #[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct Polygon2Builder {
     pub(crate) proto: Polygon2,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl Polygon2Builder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Polygon2Builder {

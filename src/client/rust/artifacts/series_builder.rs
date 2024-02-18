@@ -9,19 +9,19 @@ use crate::util::new_artifact_id;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct PublicSeriesId {
     pub(crate) proto: crate::generated::SeriesId,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct SeriesBuilder {
     pub(crate) proto: SeriesData,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl SeriesBuilder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> SeriesBuilder {
@@ -42,25 +42,25 @@ impl SeriesBuilder {
     }
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct PublicSeriesDimensionId {
     pub(crate) proto: crate::generated::SeriesDimensionId,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct SeriesDimensionBuilder {
     pub(crate) proto: SeriesDimensionData,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct SeriesPointBuilder {
     pub(crate) proto: SeriesPoint,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl SeriesPointBuilder {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]

@@ -1,21 +1,22 @@
-use crate::artifacts::UserMetadataBuilder;
+use crate::artifacts::{Transform3Builder, UserMetadataBuilder};
 use crate::client::UI_HOST;
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::run_id::RunId;
 use crate::util::ClientError;
-use crate::ArtifactUploader2dTaskHandle;
+use crate::{ArtifactUploader2dTaskHandle, ArtifactUploader3dTaskHandle};
 use crate::GenericArtifactUploaderTaskHandle;
 use protobuf::Message;
 use wasm_bindgen::prelude::*;
+use crate::generated::Transform3;
 
 /// The "root" artifact group for a run.
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct RunUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl RunUploader {
     pub fn run_id(&self) -> RunId {
         self.base.run_id()
@@ -56,5 +57,12 @@ impl RunUploader {
         metadata: M,
     ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
         self.base.child_uploader_2d(metadata, None)
+    }
+
+    pub fn child_uploader_3d<M: Into<UserMetadataBuilder>>(
+        &self,
+        metadata: M,
+    ) -> Result<ArtifactUploader3dTaskHandle, ClientError> {
+        self.base.child_uploader_3d(metadata, Transform3Builder::identity().proto, None)
     }
 }

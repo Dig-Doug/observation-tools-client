@@ -5,12 +5,12 @@ use crate::generated::Vector2;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 pub struct Vector2Builder {
     pub(crate) proto: Vector2,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl Vector2Builder {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
@@ -35,5 +35,15 @@ impl Vector2Builder {
 impl Vector2Builder {
     pub fn new(x: impl Into<NumberBuilder>, y: impl Into<NumberBuilder>) -> Vector2Builder {
         Vector2Builder::from_number_builder(x.into(), y.into())
+    }
+}
+
+impl<A, B> From<(A, B)> for Vector2Builder
+where
+    A: Into<NumberBuilder>,
+    B: Into<NumberBuilder>,
+{
+    fn from((x, y): (A, B)) -> Vector2Builder {
+        Vector2Builder::new(x, y)
     }
 }

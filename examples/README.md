@@ -8,11 +8,15 @@ To run the examples yourself, do the following:
 4. Copy the project id
 5. Run the command in your terminal:
 
-```bash
-# Rust
-cargo run --features rust -- --project-id <project-id>
+### Rust
 
-# JavaScript
+```bash
+cargo run -- --project-id <project-id>
+```
+
+### JavaScript
+
+```
 pnpm install
 pnpm run start --project-id <project-id>
 ```

@@ -39,17 +39,19 @@ pub async fn run_examples(
     ui_host: Option<String>,
     api_host: Option<String>,
 ) -> Result<(), anyhow::Error> {
-    let client = observation_tools_client::Client::new(ClientOptions {
-        ui_host,
-        api_host,
+    let client = observation_tools_client::Client::new(
         project_id,
-        reqwest_client: None,
-        token_generator: if device_code_auth {
-            TokenGenerator::OAuth2DeviceCodeFlow
-        } else {
-            TokenGenerator::OAuth2BrowserFlow
+        ClientOptions {
+            ui_host,
+            api_host,
+            token_generator: if device_code_auth {
+                TokenGenerator::OAuth2DeviceCodeFlow
+            } else {
+                TokenGenerator::OAuth2BrowserFlow
+            },
+            ..Default::default()
         },
-    })?;
+    )?;
 
     let run_uploader = client.create_run("examples")?;
 
@@ -70,7 +72,7 @@ pub async fn run_examples(
     Ok(())
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 pub async fn run_examples_js(
     project_id: String,
     ui_host: Option<String>,

@@ -7,13 +7,13 @@ use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 3D sphere.
 #[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct SphereBuilder {
     pub(crate) proto: Sphere,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl SphereBuilder {
     pub fn from_number_builder(radius: NumberBuilder) -> SphereBuilder {
         let mut proto = Sphere::new();

@@ -39,3 +39,7 @@ pnpm link ./src/client/rust/pkg
 # Undo with:
 pnpm unlink
 ```
+
+## Running the doc tests
+
+RUSTDOCFLAGS="-Z unstable-options --nocapture" cargo +nightly test --doc

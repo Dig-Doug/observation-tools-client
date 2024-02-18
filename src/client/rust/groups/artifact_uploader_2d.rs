@@ -15,13 +15,13 @@ use wasm_bindgen::prelude::*;
 
 /// An artifact group representing a 2-dimensional world. This group can only
 /// contain [Object2](Object2Builder) artifacts.
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct ArtifactUploader2d {
     pub(crate) base: BaseArtifactUploader,
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 impl ArtifactUploader2d {
     pub fn create_object2_js(
         &self,

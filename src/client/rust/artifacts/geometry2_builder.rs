@@ -9,14 +9,14 @@ use wasm_bindgen_derive::TryFromJsValue;
 
 /// 2D geometry. Normally you do not need to interact with this type directly.
 #[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct Geometry2Builder {
     pub(crate) proto: Geometry2,
 }
 
 #[cfg(feature = "wasm")]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
+#[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(
         typescript_type = "Geometry2Builder | Point2Builder | Segment2Builder | Polygon2Builder | Image2Builder | Rect2Builder"
