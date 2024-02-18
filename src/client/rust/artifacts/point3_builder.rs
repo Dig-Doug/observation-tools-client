@@ -1,5 +1,7 @@
+#[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
+use crate::artifacts::Point2Builder;
 use crate::generated::Point3;
 use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
@@ -13,7 +15,8 @@ pub struct Point3Builder {
 
 #[wasm_bindgen]
 impl Point3Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(
         x: NumberOrNumberBuilder,
         y: NumberOrNumberBuilder,
@@ -46,5 +49,16 @@ impl Point3Builder {
         z: impl Into<NumberBuilder>,
     ) -> Point3Builder {
         Point3Builder::from_number_builder(x.into(), y.into(), z.into())
+    }
+}
+
+impl<A, B, C> From<(A, B, C)> for Point3Builder
+where
+    A: Into<NumberBuilder>,
+    B: Into<NumberBuilder>,
+    C: Into<NumberBuilder>,
+{
+    fn from((x, y, z): (A, B, C)) -> Point3Builder {
+        Point3Builder::new(x, y, z)
     }
 }

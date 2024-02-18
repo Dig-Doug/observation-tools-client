@@ -1,3 +1,4 @@
+#[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
 use crate::generated::SeriesData;
@@ -22,7 +23,7 @@ pub struct SeriesBuilder {
 
 #[wasm_bindgen]
 impl SeriesBuilder {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> SeriesBuilder {
         let proto = SeriesData::new();
         SeriesBuilder { proto }
@@ -61,7 +62,8 @@ pub struct SeriesPointBuilder {
 
 #[wasm_bindgen]
 impl SeriesPointBuilder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(
         series_id: &PublicSeriesId,
         dimension_id: &PublicSeriesDimensionId,
@@ -74,6 +76,7 @@ impl SeriesPointBuilder {
         )
     }
 
+    #[cfg(feature = "wasm")]
     // TODO(doug): Allow series with multiple dimensions, private intentionally
     // since not implemented
     fn add_dimension_js(

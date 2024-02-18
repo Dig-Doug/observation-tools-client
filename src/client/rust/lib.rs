@@ -73,13 +73,10 @@
 //! use observation_tools_client::ClientOptions;
 //! use observation_tools_client::TokenGenerator;
 //!
-//! let client = Client::new(ClientOptions {
-//!     ui_host: None,
-//!     api_host: None,
-//!     project_id: std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
-//!     reqwest_client: None,
-//!     token_generator: TokenGenerator::OAuth2BrowserFlow,
-//! })?;
+//! let client = Client::new(
+//!     std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
+//!     ClientOptions::default(),
+//! )?;
 //!
 //! /// The name of the run will show up in the UI. You can optionally add key-value metadata to
 //! /// all objects, see [`builders::UserMetadataBuilder::add_metadata`].
@@ -117,6 +114,8 @@ mod task_handle;
 mod task_loop;
 mod token_generator;
 mod util;
+// TODO: https://github.com/rust-lang/rust/issues/67295
+pub mod test_utils;
 
 pub use crate::client::Client;
 pub use crate::client::ClientOptions;

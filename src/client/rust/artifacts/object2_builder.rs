@@ -1,5 +1,6 @@
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Image2Builder;
+#[cfg(feature = "wasm")]
 use crate::artifacts::IntoGeometry2Builder;
 use crate::artifacts::Point2Builder;
 use crate::artifacts::Polygon2Builder;
@@ -23,7 +24,8 @@ pub struct Object2Builder {
 
 #[wasm_bindgen]
 impl Object2Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(value: IntoGeometry2Builder) -> Result<Object2Builder, ClientError> {
         let js_value: &JsValue = value.as_ref();
         if let Ok(val) = Point2Builder::try_from(js_value) {

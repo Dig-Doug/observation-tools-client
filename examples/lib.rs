@@ -8,10 +8,12 @@ use nalgebra::Transform3;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
 use observation_tools_client::artifacts::Image2Builder;
+use observation_tools_client::artifacts::MeshBuilder;
 use observation_tools_client::artifacts::Object2Builder;
 use observation_tools_client::artifacts::Object2Updater;
 use observation_tools_client::artifacts::PerPixelTransformBuilder;
 use observation_tools_client::artifacts::Point2Builder;
+use observation_tools_client::artifacts::Point3Builder;
 use observation_tools_client::artifacts::Polygon2Builder;
 use observation_tools_client::artifacts::Polygon3Builder;
 use observation_tools_client::artifacts::Rect2Builder;
@@ -21,6 +23,7 @@ use observation_tools_client::artifacts::SeriesPointBuilder;
 use observation_tools_client::artifacts::Transform2Builder;
 use observation_tools_client::artifacts::Transform3Builder;
 use observation_tools_client::artifacts::Vector2Builder;
+use observation_tools_client::artifacts::VertexBuilder;
 use observation_tools_client::groups::ArtifactUploader2d;
 use observation_tools_client::groups::ArtifactUploader3d;
 use observation_tools_client::ClientOptions;
@@ -36,17 +39,19 @@ pub async fn run_examples(
     ui_host: Option<String>,
     api_host: Option<String>,
 ) -> Result<(), anyhow::Error> {
-    let client = observation_tools_client::Client::new(ClientOptions {
-        ui_host,
-        api_host,
+    let client = observation_tools_client::Client::new(
         project_id,
-        reqwest_client: None,
-        token_generator: if device_code_auth {
-            TokenGenerator::OAuth2DeviceCodeFlow
-        } else {
-            TokenGenerator::OAuth2BrowserFlow
+        ClientOptions {
+            ui_host,
+            api_host,
+            token_generator: if device_code_auth {
+                TokenGenerator::OAuth2DeviceCodeFlow
+            } else {
+                TokenGenerator::OAuth2BrowserFlow
+            },
+            ..Default::default()
         },
-    })?;
+    )?;
 
     let run_uploader = client.create_run("examples")?;
 

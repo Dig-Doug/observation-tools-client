@@ -1,4 +1,5 @@
 use crate::artifacts::Geometry3Builder;
+#[cfg(feature = "wasm")]
 use crate::artifacts::IntoGeometry3Builder;
 use crate::artifacts::MeshBuilder;
 use crate::artifacts::Polygon3Builder;
@@ -16,7 +17,8 @@ pub struct Object3Builder {
 
 #[wasm_bindgen]
 impl Object3Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(value: IntoGeometry3Builder) -> Result<Object3Builder, ClientError> {
         let js_value: &JsValue = value.as_ref();
         if let Ok(val) = SphereBuilder::try_from(js_value) {

@@ -8,13 +8,14 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// 2D geometry. Normally you do not need to interact with this type directly.
-#[derive(TryFromJsValue)]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Geometry2Builder {
     pub(crate) proto: Geometry2,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(

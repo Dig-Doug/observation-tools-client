@@ -1,4 +1,7 @@
 use crate::generated::ArtifactId;
+use crate::Client;
+use crate::ClientOptions;
+use crate::TokenGenerator;
 use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;

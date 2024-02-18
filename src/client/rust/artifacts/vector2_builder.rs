@@ -1,3 +1,4 @@
+#[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
 use crate::generated::Vector2;
@@ -11,7 +12,8 @@ pub struct Vector2Builder {
 
 #[wasm_bindgen]
 impl Vector2Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg(feature = "wasm")]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(
         x: NumberOrNumberBuilder,
         y: NumberOrNumberBuilder,
@@ -33,5 +35,15 @@ impl Vector2Builder {
 impl Vector2Builder {
     pub fn new(x: impl Into<NumberBuilder>, y: impl Into<NumberBuilder>) -> Vector2Builder {
         Vector2Builder::from_number_builder(x.into(), y.into())
+    }
+}
+
+impl<A, B> From<(A, B)> for Vector2Builder
+where
+    A: Into<NumberBuilder>,
+    B: Into<NumberBuilder>,
+{
+    fn from((x, y): (A, B)) -> Vector2Builder {
+        Vector2Builder::new(x, y)
     }
 }

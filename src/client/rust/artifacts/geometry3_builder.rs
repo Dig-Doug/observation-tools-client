@@ -5,13 +5,14 @@ use crate::generated::Geometry3;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
-#[derive(TryFromJsValue)]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Geometry3Builder {
     pub(crate) proto: Geometry3,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(

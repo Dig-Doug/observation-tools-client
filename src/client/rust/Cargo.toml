@@ -1,6 +1,6 @@
 [package]
 name = "observation-tools"
-version = "0.0.11"
+version = "0.0.12"
 edition = "2021"
 license = "Apache-2.0"
 description = "Export, visualize, and inspect data from anywhere in your program"
@@ -12,6 +12,7 @@ include = [
     "**/*.rs",
     "Cargo.toml",
     "sign_in_redirect.html",
+    "testdata/*",
 ]
 
 [lib]
@@ -62,10 +63,11 @@ whoami = "1.4"
 [build-dependencies]
 protobuf-codegen = "=3.2.0"
 
+[dev-dependencies]
+tracing-subscriber = "0.3"
+
 [features]
 files = ["tempfile"]
 rust = ["tokio", "tokio-util", "files", "reqwest/stream"]
 wasm = []
-
-[package.metadata.docs.rs]
-all-features = true
+default = ["rust"]

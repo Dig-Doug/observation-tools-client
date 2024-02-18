@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 3D polygon within a single plane.
-#[derive(TryFromJsValue)]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Polygon3Builder {
@@ -17,7 +17,7 @@ pub struct Polygon3Builder {
 
 #[wasm_bindgen]
 impl Polygon3Builder {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Polygon3Builder {
         let proto = Polygon3::new();
         Polygon3Builder { proto }

@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 3D sphere.
-#[derive(TryFromJsValue)]
+#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct SphereBuilder {
