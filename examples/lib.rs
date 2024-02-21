@@ -7,27 +7,24 @@ use nalgebra::Rotation3;
 use nalgebra::Transform3;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
-use observation_tools_client::artifacts::Image2Builder;
-use observation_tools_client::artifacts::MeshBuilder;
-use observation_tools_client::artifacts::Object2Builder;
-use observation_tools_client::artifacts::Object2Updater;
-use observation_tools_client::artifacts::PerPixelTransformBuilder;
-use observation_tools_client::artifacts::Point2Builder;
-use observation_tools_client::artifacts::Point3Builder;
-use observation_tools_client::artifacts::Polygon2Builder;
-use observation_tools_client::artifacts::Polygon3Builder;
-use observation_tools_client::artifacts::Rect2Builder;
-use observation_tools_client::artifacts::Segment2Builder;
-use observation_tools_client::artifacts::SeriesBuilder;
-use observation_tools_client::artifacts::SeriesPointBuilder;
-use observation_tools_client::artifacts::Transform2Builder;
-use observation_tools_client::artifacts::Transform3Builder;
-use observation_tools_client::artifacts::Vector2Builder;
-use observation_tools_client::artifacts::VertexBuilder;
-use observation_tools_client::groups::ArtifactUploader2d;
-use observation_tools_client::groups::ArtifactUploader3d;
-use observation_tools_client::ClientOptions;
-use observation_tools_client::TokenGenerator;
+use observation_tools::artifacts::Image2Builder;
+use observation_tools::artifacts::Object2Builder;
+use observation_tools::artifacts::Object2Updater;
+use observation_tools::artifacts::PerPixelTransformBuilder;
+use observation_tools::artifacts::Point2Builder;
+use observation_tools::artifacts::Polygon2Builder;
+use observation_tools::artifacts::Polygon3Builder;
+use observation_tools::artifacts::Rect2Builder;
+use observation_tools::artifacts::Segment2Builder;
+use observation_tools::artifacts::SeriesBuilder;
+use observation_tools::artifacts::SeriesPointBuilder;
+use observation_tools::artifacts::Transform2Builder;
+use observation_tools::artifacts::Transform3Builder;
+use observation_tools::artifacts::Vector2Builder;
+use observation_tools::groups::ArtifactUploader2d;
+use observation_tools::groups::ArtifactUploader3d;
+use observation_tools::ClientOptions;
+use observation_tools::TokenGenerator;
 use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -39,7 +36,7 @@ pub async fn run_examples(
     ui_host: Option<String>,
     api_host: Option<String>,
 ) -> Result<(), anyhow::Error> {
-    let client = observation_tools_client::Client::new(
+    let client = observation_tools::Client::new(
         project_id,
         ClientOptions {
             ui_host,

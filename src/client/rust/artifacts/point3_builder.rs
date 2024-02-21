@@ -1,9 +1,7 @@
 #[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
-use crate::artifacts::Point2Builder;
 use crate::generated::Point3;
-use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
 /// A 3D point.
@@ -21,7 +19,7 @@ impl Point3Builder {
         x: NumberOrNumberBuilder,
         y: NumberOrNumberBuilder,
         z: NumberOrNumberBuilder,
-    ) -> Result<Point3Builder, ClientError> {
+    ) -> Result<Point3Builder, crate::ClientError> {
         Ok(Point3Builder::from_number_builder(
             NumberBuilder::from_js_value(x)?,
             NumberBuilder::from_js_value(y)?,

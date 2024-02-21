@@ -1,15 +1,9 @@
 use crate::generated::ArtifactId;
-use crate::Client;
-use crate::ClientOptions;
-use crate::TokenGenerator;
 use core::fmt::Debug;
 use protobuf::well_known_types::timestamp::Timestamp;
 use protobuf::Message;
 use std::error::Error;
 use std::time::Duration;
-use std::time::Instant;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 use uuid::Uuid;
 use wasm_bindgen::JsValue;
 
@@ -100,6 +94,9 @@ fn since_epoch() -> Duration {
 
 #[cfg(not(feature = "wasm"))]
 fn since_epoch() -> Duration {
+    use std::time::SystemTime;
+    use std::time::UNIX_EPOCH;
+
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")

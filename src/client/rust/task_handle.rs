@@ -12,12 +12,14 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 use wasm_bindgen::prelude::wasm_bindgen;
 
+/*
 #[async_trait]
 pub trait ArtifactUploadHandle<T>: Deref<Target = T> {
-    async fn wait_for_upload(&self);
+    async fn wait_for_upload(self) -> T;
 }
+ */
 
-#[macro_export]
+//#[macro_export]
 macro_rules! task_handle_impl {
     ($sub:ident $res:ident) => {
         #[wasm_bindgen]
@@ -28,20 +30,23 @@ macro_rules! task_handle_impl {
             pub(crate) channel: async_channel::Receiver<()>,
         }
 
+        /*
         #[wasm_bindgen]
         impl $sub {
-            pub async fn wait_for(&self) {
+            pub async fn wait_for(self) -> $res {
                 // TODO(doug): Expose error for caller
                 let _unused = self.channel.recv().await;
+                self.result
             }
         }
 
         #[async_trait]
         impl ArtifactUploadHandle<$res> for $sub {
-            async fn wait_for_upload(&self) {
-                self.wait_for().await;
+            async fn wait_for_upload(self) -> $res {
+                self.wait_for().await
             }
         }
+         */
 
         impl Deref for $sub {
             type Target = $res;

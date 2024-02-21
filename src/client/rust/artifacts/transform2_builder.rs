@@ -35,6 +35,7 @@ impl Transform2Builder {
 }
 
 impl Transform2Builder {
+    /// Create a transform for a translation.
     pub fn translation<T: Into<Point2Builder>>(translation: T) -> Transform2Builder {
         let mut trs = TRS2::new();
         trs.translation = Some(translation.into().proto).into();
@@ -43,6 +44,7 @@ impl Transform2Builder {
         Transform2Builder { proto }
     }
 
+    /// Create a transform for a scale.
     pub fn scale<S: Into<Vector2Builder>>(scale: S) -> Transform2Builder {
         let mut trs = TRS2::new();
         trs.scale = Some(scale.into().proto).into();
@@ -51,6 +53,7 @@ impl Transform2Builder {
         Transform2Builder { proto }
     }
 
+    /// Create a transform from a translation, rotation (in radians), and scale.
     pub fn from_trs<T: Into<Point2Builder>, R: Into<NumberBuilder>, S: Into<Vector2Builder>>(
         translation: T,
         rotation: R,

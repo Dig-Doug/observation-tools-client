@@ -19,9 +19,9 @@
 //! `into()`. Then, you can add transforms to set the artifact's position:
 //!
 //! ```rust
-//! use observation_tools_client::artifacts::Object2Builder;
-//! use observation_tools_client::artifacts::Point2Builder;
-//! use observation_tools_client::artifacts::Transform2Builder;
+//! use observation_tools::artifacts::Object2Builder;
+//! use observation_tools::artifacts::Point2Builder;
+//! use observation_tools::artifacts::Transform2Builder;
 //!
 //! // Create a primitive Point2
 //! let point = Point2Builder::new(5.0, 3.0);
@@ -39,9 +39,9 @@
 //! conversion:
 //!
 //! ```rust
-//! # use observation_tools_client::ClientError;
-//! # use observation_tools_client::groups::ArtifactUploader2d;
-//! use observation_tools_client::artifacts::Point2Builder;
+//! # use observation_tools::ClientError;
+//! # use observation_tools::groups::ArtifactUploader2d;
+//! use observation_tools::artifacts::Point2Builder;
 //!
 //! # fn implicit_object_builder(uploader: &ArtifactUploader2d) -> Result<(), ClientError>{
 //! // The Point2 will be converted to an Object2 with an identity transform
@@ -57,10 +57,10 @@
 //! If you do not need to add metadata, [UserMetadataBuilder] can be created
 //! implicitly from a string:
 //! ```rust
-//! # use observation_tools_client::ClientError;
-//! # use observation_tools_client::groups::ArtifactUploader2d;
-//! use observation_tools_client::artifacts::Point2Builder;
-//! use observation_tools_client::artifacts::UserMetadataBuilder;
+//! # use observation_tools::ClientError;
+//! # use observation_tools::groups::ArtifactUploader2d;
+//! use observation_tools::artifacts::Point2Builder;
+//! use observation_tools::artifacts::UserMetadataBuilder;
 //!
 //! # fn user_metadata(uploader: &ArtifactUploader2d) -> Result<(), ClientError>{
 //! // Creates an artifact with the name "my-point"

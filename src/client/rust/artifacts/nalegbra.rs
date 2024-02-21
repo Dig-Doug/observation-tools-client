@@ -82,7 +82,6 @@ pub fn transform3_proto_to_transform(proto: &crate::generated::Transform3) -> Tr
             Transform3::<f32>::from_matrix_unchecked(matrix4x4_proto_to_matrix(matrix))
         }
         crate::generated::transform3::Data::Identity(_) => Transform3::identity(),
-        _ => panic!("Unhandled transform3 case"),
     }
 }
 
@@ -202,6 +201,5 @@ pub fn transform2_proto_to_transform(proto: &crate::generated::Transform2) -> Tr
             ))
         }
         crate::generated::transform2::Data::Identity(_) => Transform3::identity(),
-        _ => panic!("Unhandled transform2 case"),
     }
 }

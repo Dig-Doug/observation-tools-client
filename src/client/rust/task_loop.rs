@@ -1,24 +1,47 @@
 use crate::generated::CreateArtifactRequest;
+use crate::task_handle::TaskHandle;
 use crate::token_generator::TokenGenerator;
 use crate::util::ClientError;
 use crate::util::GenericError;
 use crate::PublicArtifactId;
 use crate::PublicArtifactIdTaskHandle;
 use base64::Engine;
+use futures::future::BoxFuture;
+use futures::ready;
+use pin_project::pin_project;
 use protobuf::Message;
+use reqwest::cookie;
 use reqwest::multipart::Part;
+use std::future::Future;
 #[cfg(feature = "files")]
 use std::io::Write;
+use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::Barrier;
+use std::sync::Condvar;
+use std::sync::Mutex;
+use std::task::Context;
+use std::task::Poll;
+use std::time::Duration;
+use tokio::sync::OwnedSemaphorePermit;
+use tokio::sync::Semaphore;
+use tokio_util::sync::PollSemaphore;
+use tokio_util::task::TaskTracker;
+use tower::limit::concurrency::future::ResponseFuture;
+use tower::limit::ConcurrencyLimit;
+use tower::make::Shared;
+use tower::util::BoxCloneService;
+use tower::util::BoxService;
+use tower::Service;
+use tower::ServiceExt;
 use tracing::error;
 use tracing::trace;
+use url::Url;
 
 #[derive(Debug)]
 pub struct TaskLoop {
-    task_handler: Arc<TaskHandler>,
+    task_handler: BoxCloneService<UploadArtifactTask, (), GenericError>,
     params: TaskLoopParams,
-    send_task_channel: async_channel::Sender<UploadArtifactTask>,
-    receive_shutdown_channel: async_channel::Receiver<()>,
     #[cfg(feature = "files")]
     tmp_dir: Arc<tempfile::TempDir>,
 }
@@ -27,9 +50,17 @@ pub struct TaskLoop {
 pub enum TaskLoopParams {
     #[cfg(feature = "tokio")]
     TokioRuntime {
-        runtime: tokio::runtime::Handle,
+        handle: tokio::runtime::Handle,
+        /// If we create our own runtime, hold a reference to prevent it from
+        /// being dropped
+        runtime: Option<Arc<tokio::runtime::Runtime>>,
+        task_tracker: TaskTracker,
     },
-    None,
+    #[cfg(not(feature = "tokio"))]
+    None {
+        send_task_channel: async_channel::Sender<UploadArtifactTask>,
+        receive_shutdown_channel: async_channel::Receiver<()>,
+    },
 }
 
 #[derive(Debug)]
@@ -43,65 +74,73 @@ pub struct UploadArtifactTask {
 pub enum UploadArtifactTaskPayload {
     #[cfg(feature = "files")]
     File(tempfile::NamedTempFile),
+    #[cfg(not(feature = "files"))]
     Bytes(Vec<u8>),
 }
 
 impl TaskLoop {
-    pub(crate) fn new(task_handler: Arc<TaskHandler>) -> Result<TaskLoop, GenericError> {
-        let (send_task_channel, receive_task_channel) = async_channel::unbounded();
-        let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
-        let task_loop = {
-            let task_handler = task_handler.clone();
-            async move {
-                trace!("Taskloop started");
-
-                while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
-                    let task = receive_task_channel.recv().await;
-                    match task {
-                        Ok(t) => {
-                            let result = task_handler.handle_upload_artifact_task(&t).await;
-                            if let Err(e) = result {
-                                error!("Failed to upload artifact: {}", e);
-                            }
-                        }
-                        Err(_) => {
-                            error!("Failed to receive task");
-                        }
-                    }
-                }
-
-                trace!("Shutting down task loop");
-                if let Err(e) = send_shutdown_channel.send(()).await {
-                    error!("Error shutting down: {}", e);
-                }
-            }
-        };
-
+    pub(crate) fn new(
+        task_handler: BoxCloneService<UploadArtifactTask, (), GenericError>,
+    ) -> Result<TaskLoop, GenericError> {
         #[cfg(feature = "tokio")]
         let params = {
-            let runtime = match tokio::runtime::Handle::try_current() {
-                Ok(handle) => handle,
+            let (handle, runtime) = match tokio::runtime::Handle::try_current() {
+                Ok(handle) => (handle, None),
                 Err(_e) => {
-                    let runtime = tokio::runtime::Builder::new_multi_thread()
-                        .enable_all()
-                        .build()?;
-                    runtime.handle().clone()
+                    let runtime = Arc::new(
+                        tokio::runtime::Builder::new_multi_thread()
+                            .enable_all()
+                            .build()?,
+                    );
+                    (runtime.handle().clone(), Some(runtime))
                 }
             };
-            runtime.spawn(task_loop);
-            TaskLoopParams::TokioRuntime { runtime }
+            TaskLoopParams::TokioRuntime {
+                handle,
+                runtime,
+                task_tracker: TaskTracker::new(),
+            }
         };
         #[cfg(not(feature = "tokio"))]
         let params = {
+            let (send_task_channel, receive_task_channel) = async_channel::unbounded();
+            let (send_shutdown_channel, receive_shutdown_channel) = async_channel::bounded(1);
+            let task_loop = {
+                let task_handler = task_handler.clone();
+                async move {
+                    trace!("Taskloop started");
+
+                    while !receive_task_channel.is_closed() || !receive_task_channel.is_empty() {
+                        let task = receive_task_channel.recv().await;
+                        match task {
+                            Ok(t) => {
+                                let result = task_handler.handle_upload_artifact_task(&t).await;
+                                if let Err(e) = result {
+                                    error!("Failed to upload artifact: {}", e);
+                                }
+                            }
+                            Err(_) => {
+                                error!("Failed to receive task");
+                            }
+                        }
+                    }
+
+                    trace!("Shutting down task loop");
+                    if let Err(e) = send_shutdown_channel.send(()).await {
+                        error!("Error shutting down: {}", e);
+                    }
+                }
+            };
             wasm_bindgen_futures::spawn_local(task_loop);
-            TaskLoopParams::None
+            TaskLoopParams::None {
+                receive_shutdown_channel,
+                send_task_channel,
+            }
         };
 
         Ok(TaskLoop {
             task_handler,
             params,
-            receive_shutdown_channel,
-            send_task_channel,
             #[cfg(feature = "files")]
             tmp_dir: Self::create_tmp_dir(),
         })
@@ -146,9 +185,41 @@ impl TaskLoop {
             completion_channel: send_completion_channel,
         };
 
-        self.send_task_channel
-            .try_send(task)
-            .map_err(ClientError::from_string)?;
+        match &self.params {
+            #[cfg(feature = "tokio")]
+            TaskLoopParams::TokioRuntime {
+                handle,
+                task_tracker,
+                ..
+            } => {
+                let mut task_handler = self.task_handler.clone();
+                task_tracker.spawn_on(
+                    async move {
+                        trace!("Waiting for service ready");
+                        match task_handler.ready().await {
+                            Ok(service) => {
+                                trace!("Service ready");
+                                if let Err(e) = service.call(task).await {
+                                    error!("Failed to upload artifact: {}", e);
+                                }
+                                trace!("Service done");
+                            }
+                            Err(e) => {
+                                error!("Failed to upload artifact: {}", e);
+                            }
+                        }
+                    },
+                    handle,
+                );
+            }
+            #[cfg(not(feature = "tokio"))]
+            TaskLoopParams::None => {
+                self.send_task_channel
+                    .try_send(task)
+                    .map_err(ClientError::from_string)?;
+            }
+        }
+
         Ok(PublicArtifactIdTaskHandle {
             result: PublicArtifactId { id },
             channel: receive_completion_channel,
@@ -168,81 +239,50 @@ impl TaskLoop {
     pub async fn shutdown(&self) {
         match &self.params {
             #[cfg(feature = "tokio")]
-            TaskLoopParams::TokioRuntime { runtime: _ } => {
-                // TODO(doug): Eval runtime
+            TaskLoopParams::TokioRuntime { .. } => {
+                // All clean up is done in Drop
+                error!("shutdown() is not required for rust");
             }
-            TaskLoopParams::None => {}
-        }
-        self.send_task_channel.close();
-        let _ = self.receive_shutdown_channel.recv().await;
-    }
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct TaskHandler {
-    pub host: String,
-    pub token_generator: TokenGenerator,
-    pub client: reqwest::Client,
-}
-
-impl TaskHandler {
-    async fn handle_upload_artifact_task(
-        &self,
-        task: &UploadArtifactTask,
-    ) -> Result<(), GenericError> {
-        trace!("Handling artifact: {:?}", task.request);
-
-        let req_b64 =
-            base64::engine::general_purpose::STANDARD.encode(task.request.write_to_bytes()?);
-        let mut form = reqwest::multipart::Form::new().text("request", req_b64);
-        if let Some(payload) = task.payload.as_ref() {
-            let part = match payload {
-                #[cfg(feature = "files")]
-                UploadArtifactTaskPayload::File(f) => {
-                    use tokio_util::codec::BytesCodec;
-                    use tokio_util::codec::FramedRead;
-
-                    let file = tokio::fs::File::open(f).await?;
-                    Part::stream(reqwest::Body::wrap_stream(FramedRead::new(
-                        file,
-                        BytesCodec::new(),
-                    )))
-                }
-                UploadArtifactTaskPayload::Bytes(bytes) => Part::bytes(bytes.clone()),
-            };
-            form = form.part("raw_data", part);
-        }
-
-        let token = self.token_generator.token().await?;
-        let response = self
-            .client
-            .post(format!("{}/create-artifact", self.host))
-            .bearer_auth(token)
-            .multipart(form)
-            .send()
-            .await
-            .map_err(|e| ClientError::GenericError {
-                message: e.to_string(),
-            })?;
-
-        let status = response.status();
-        if status.is_client_error() || status.is_server_error() {
-            let response_body = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "No body".to_string());
-            Err(ClientError::ServerError {
-                status_code: status.as_u16(),
-                response: response_body,
-            })?
-        } else {
-            Ok(())
+            #[cfg(not(feature = "tokio"))]
+            TaskLoopParams::None {
+                send_task_channel,
+                receive_shutdown_channel,
+            } => {
+                send_task_channel.close();
+                let _ = receive_shutdown_channel.recv().await;
+            }
         }
     }
 }
 
-impl Drop for TaskHandler {
+impl Drop for TaskLoop {
     fn drop(&mut self) {
-        trace!("Task handler dropped");
+        match &self.params {
+            #[cfg(feature = "tokio")]
+            TaskLoopParams::TokioRuntime {
+                handle,
+                task_tracker,
+                ..
+            } => {
+                task_tracker.close();
+
+                let (send_tasks_done, receive_tasks_done) = std::sync::mpsc::channel();
+                let task_tracker = task_tracker.clone();
+                handle.spawn(async move {
+                    error!("Waiting for tasks to complete");
+                    task_tracker.wait().await;
+                    if let Err(e) = send_tasks_done.send(()) {
+                        error!("Failed to send tasks done signal: {}", e);
+                    }
+                });
+                if let Err(e) = receive_tasks_done.recv_timeout(Duration::from_secs(60)) {
+                    error!("Failed to wait for tasks to complete: {}", e);
+                }
+            }
+            #[cfg(not(feature = "tokio"))]
+            TaskLoopParams::None => {
+                warn!("Users must call shutdown()");
+            }
+        }
     }
 }

@@ -5,10 +5,9 @@ use crate::artifacts::Rect2Builder;
 use crate::artifacts::Segment2Builder;
 use crate::generated::Geometry2;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_derive::TryFromJsValue;
 
 /// 2D geometry. Normally you do not need to interact with this type directly.
-#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Geometry2Builder {

@@ -9,8 +9,9 @@ use crate::groups::base_artifact_uploader::artifact_group_uploader_data_from_req
 use crate::groups::base_artifact_uploader::BaseArtifactUploaderBuilder;
 use crate::groups::RunUploader;
 use crate::task_handle::TaskHandle;
-use crate::task_loop::TaskHandler;
 use crate::task_loop::TaskLoop;
+use crate::throttle_without_access_cookie::ThrottleWithoutAccessCookieLayer;
+use crate::upload_artifact::UploadArtifactService;
 use crate::util::decode_id_proto;
 use crate::util::new_artifact_id;
 use crate::util::time_now;
@@ -20,8 +21,13 @@ use crate::RunUploaderTaskHandle;
 use crate::TokenGenerator;
 use anyhow::anyhow;
 use protobuf::Message;
+use reqwest::cookie;
+use std::ops::Deref;
 use std::sync::Arc;
+use tower::ServiceBuilder;
+use tower::ServiceExt;
 use tracing::trace;
+use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub(crate) const UI_HOST: &str = "https://app.observation.tools";
@@ -41,7 +47,11 @@ impl Default for ClientOptions {
             ui_host: None,
             api_host: None,
             reqwest_client: None,
-            token_generator: TokenGenerator::OAuth2DeviceCodeFlow,
+            token_generator: if cfg!(feature = "rust") {
+                TokenGenerator::OAuth2BrowserFlow
+            } else {
+                TokenGenerator::OAuth2DeviceCodeFlow
+            },
         }
     }
 }
@@ -92,17 +102,25 @@ impl Client {
 impl Client {
     pub fn new(project_id: String, options: ClientOptions) -> Result<Self, ClientError> {
         trace!("Creating client");
-        let task_handler = Arc::new(TaskHandler {
-            client: options.reqwest_client.clone().unwrap_or_else(|| {
-                let builder = reqwest::Client::builder().cookie_store(true);
-                builder.build().expect("Failed to build reqwest client")
-            }),
-            token_generator: options.token_generator.clone(),
-            host: options.api_host.clone().unwrap_or(API_HOST.to_string()),
-        });
 
-        let task_loop =
-            Arc::new(TaskLoop::new(task_handler.clone()).map_err(ClientError::from_string)?);
+        let api_host = options.api_host.clone().unwrap_or(API_HOST.to_string());
+        let cookie_store = Arc::new(cookie::Jar::default());
+        let service = ServiceBuilder::new()
+            .layer(ThrottleWithoutAccessCookieLayer {
+                cookie_store: cookie_store.clone(),
+                api_host: Url::parse(&api_host).map_err(ClientError::from_string)?,
+            })
+            .service(UploadArtifactService {
+                client: options.reqwest_client.clone().unwrap_or_else(|| {
+                    let builder = reqwest::Client::builder().cookie_provider(cookie_store.clone());
+                    builder.build().expect("Failed to build reqwest client")
+                }),
+                token_generator: options.token_generator.clone(),
+                host: api_host,
+            })
+            .boxed_clone();
+
+        let task_loop = Arc::new(TaskLoop::new(service).map_err(ClientError::from_string)?);
 
         let proto: PublicGlobalId =
             decode_id_proto(&project_id).map_err(ClientError::from_string)?;

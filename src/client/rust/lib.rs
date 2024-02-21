@@ -67,11 +67,11 @@
 //!
 //! ```rust
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use observation_tools_client::artifacts::Point2Builder;
-//! use observation_tools_client::artifacts::Segment2Builder;
-//! use observation_tools_client::Client;
-//! use observation_tools_client::ClientOptions;
-//! use observation_tools_client::TokenGenerator;
+//! use observation_tools::artifacts::Point2Builder;
+//! use observation_tools::artifacts::Segment2Builder;
+//! use observation_tools::Client;
+//! use observation_tools::ClientOptions;
+//! use observation_tools::TokenGenerator;
 //!
 //! let client = Client::new(
 //!     std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
@@ -112,15 +112,15 @@ pub mod groups;
 mod run_id;
 mod task_handle;
 mod task_loop;
+mod throttle_without_access_cookie;
 mod token_generator;
+mod upload_artifact;
 mod util;
-// TODO: https://github.com/rust-lang/rust/issues/67295
-pub mod test_utils;
 
 pub use crate::client::Client;
 pub use crate::client::ClientOptions;
 use crate::generated::ArtifactId;
-pub use crate::task_handle::ArtifactUploadHandle;
+//pub use crate::task_handle::ArtifactUploadHandle;
 pub use crate::task_handle::ArtifactUploader2dTaskHandle;
 pub use crate::task_handle::ArtifactUploader3dTaskHandle;
 pub(crate) use crate::task_handle::BaseArtifactUploaderTaskHandle;
@@ -146,10 +146,14 @@ pub fn start() -> Result<(), JsValue> {
     // getting proper error line numbers for panics.
     console_error_panic_hook::set_once();
 
-    let mut config_builder = WASMLayerConfigBuilder::new();
-    #[cfg(not(debug_assertions))]
-    config_builder.set_max_level(tracing::Level::WARN);
-    tracing_wasm::set_as_global_default_with_config(config_builder.build());
+    let config = if cfg!(debug_assertions) {
+        WASMLayerConfigBuilder::new().build()
+    } else {
+        WASMLayerConfigBuilder::new()
+            .set_max_level(tracing::Level::WARN)
+            .build()
+    };
+    tracing_wasm::set_as_global_default_with_config(config);
 
     Ok(())
 }

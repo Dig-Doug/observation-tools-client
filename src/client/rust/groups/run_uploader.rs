@@ -1,7 +1,6 @@
 use crate::artifacts::Transform3Builder;
 use crate::artifacts::UserMetadataBuilder;
 use crate::client::UI_HOST;
-use crate::generated::Transform3;
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::run_id::RunId;
 use crate::util::ClientError;

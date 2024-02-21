@@ -5,10 +5,9 @@ use crate::artifacts::PolygonEdge3Builder;
 use crate::generated::Polygon3;
 use itertools::Itertools;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 3D polygon within a single plane.
-#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Polygon3Builder {

@@ -1,9 +1,6 @@
 use crate::artifacts::Geometry3Builder;
 #[cfg(feature = "wasm")]
 use crate::artifacts::IntoGeometry3Builder;
-use crate::artifacts::MeshBuilder;
-use crate::artifacts::Polygon3Builder;
-use crate::artifacts::SphereBuilder;
 use crate::artifacts::Transform3Builder;
 use crate::generated::Object3;
 use crate::generated::StructuredData;
@@ -20,6 +17,10 @@ impl Object3Builder {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(value: IntoGeometry3Builder) -> Result<Object3Builder, ClientError> {
+        use crate::artifacts::MeshBuilder;
+        use crate::artifacts::Polygon3Builder;
+        use crate::artifacts::SphereBuilder;
+
         let js_value: &JsValue = value.as_ref();
         if let Ok(val) = SphereBuilder::try_from(js_value) {
             return Ok(val.into());
