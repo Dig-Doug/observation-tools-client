@@ -28,6 +28,7 @@ impl RunUploader {
             "{}/project/{}/artifact/{}",
             self.base
                 .client
+                .inner
                 .options
                 .ui_host
                 .clone()

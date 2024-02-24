@@ -53,14 +53,14 @@ tracing = "0.1.35"
 tracing-wasm = "0.2.1"
 url = "2.2.2"
 uuid = { version = "1.2.2", features = ["v4"] }
-wasm-bindgen = { version = "0.2.89", features = ["serde-serialize"] }
+wasm-bindgen = { version = "0.2.91", features = ["serde-serialize"] }
 wasm-bindgen-derive = "0.2.1"
 wasm-bindgen-futures = "0.4.39"
 web-sys = { version = "0.3.66", features = ['Window', 'Performance', 'PerformanceTiming'] }
 keyring = "2"
 whoami = "1.4"
 docify = "0.2.7"
-tower = { version = "0.4.13", features = ["full"] }
+tower = { version = "0.4.13", features = ["limit", "util", "buffer"] }
 tower-service = "0.3.2"
 pin-project = "1"
 tower-layer = "0.3.2"

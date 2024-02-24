@@ -6,4 +6,4 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
-reqwest = { git = "https://github.com/Dig-Doug/reqwest", branch = "wasm-cookies"}
+reqwest = { git = "https://github.com/Dig-Doug/reqwest", branch = "wasm-cookies" }

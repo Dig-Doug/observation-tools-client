@@ -111,7 +111,6 @@ mod generated;
 pub mod groups;
 mod run_id;
 mod task_handle;
-mod task_loop;
 mod throttle_without_access_cookie;
 mod token_generator;
 mod upload_artifact;

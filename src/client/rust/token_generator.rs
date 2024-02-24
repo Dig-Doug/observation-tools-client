@@ -40,6 +40,8 @@ use std::time::Duration;
 use tracing::trace;
 use tracing::warn;
 use url::Url;
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
 
 const KEYRING_BROWSER_FLOW: &str = "observation.tools/oauth2_browser_flow";
 const KEYRING_DEVICE_FLOW: &str = "observation.tools/oauth2_device_flow";
@@ -83,6 +85,7 @@ pub struct GoogleTokenFields {
 }
 
 impl ExtraTokenFields for GoogleTokenFields {}
+
 impl ExtraDeviceAuthorizationFields for GoogleTokenFields {}
 
 type GoogleTokenResponse = StandardTokenResponse<GoogleTokenFields, BasicTokenType>;

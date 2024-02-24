@@ -20,7 +20,6 @@ for (let i = 0; i < numPoints; i++) {
     group2d.result.create_object2_js(new UserMetadataBuilder("point2"), object2);
 }
 
-await client.shutdown();
-
 console.log(`View contents at: ${run_handle.result.viewer_url()}`);
 
+await client.shutdown();

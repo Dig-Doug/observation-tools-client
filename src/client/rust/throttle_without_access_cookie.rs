@@ -1,3 +1,4 @@
+use core::fmt::Debug;
 use futures::ready;
 use pin_project::pin_project;
 use reqwest::cookie;
@@ -10,41 +11,45 @@ use tower::limit::concurrency::future::ResponseFuture;
 use tower::limit::ConcurrencyLimit;
 use tower::Layer;
 use tower_service::Service;
-use tracing::trace;
 use url::Url;
 
-pub(crate) struct ThrottleWithoutAccessCookieLayer {
-    pub cookie_store: Arc<dyn cookie::CookieStore>,
+#[derive(Debug)]
+pub(crate) struct ThrottleWithoutAccessCookieLayer<T> {
+    pub cookie_store: Arc<T>,
     pub api_host: Url,
 }
 
-impl<S> Layer<S> for ThrottleWithoutAccessCookieLayer
-    where
-        S: Clone,
+impl<C, S> Layer<S> for ThrottleWithoutAccessCookieLayer<C>
+where
+    C: cookie::CookieStore + Debug,
+    S: Clone,
 {
-    type Service = ThrottleWithoutAccessCookie<S>;
+    type Service = ThrottleWithoutAccessCookie<C, S>;
 
     fn layer(&self, service: S) -> Self::Service {
         ThrottleWithoutAccessCookie::new(service, self.cookie_store.clone(), self.api_host.clone())
     }
 }
 
+pub(crate) trait DebugCookieStore: cookie::CookieStore + Debug {}
+
 /// Throttle requests until we get an access token cookie, which makes requests
 /// cheaper and faster.
-#[derive(Clone)]
-pub(crate) struct ThrottleWithoutAccessCookie<T> {
+#[derive(Debug, Clone)]
+pub(crate) struct ThrottleWithoutAccessCookie<C, T> {
     inner: T,
-    cookie_store: Arc<dyn cookie::CookieStore>,
+    cookie_store: Arc<C>,
     api_host: Url,
     concurrency_limiter: ConcurrencyLimit<T>,
 }
 
-impl<T> ThrottleWithoutAccessCookie<T>
-    where
-        T: Clone,
+impl<C, T> ThrottleWithoutAccessCookie<C, T>
+where
+    C: cookie::CookieStore + Debug,
+    T: Clone,
 {
     /// Create a new concurrency limiter.
-    pub fn new(inner: T, cookie_store: Arc<dyn cookie::CookieStore>, api_host: Url) -> Self {
+    pub fn new(inner: T, cookie_store: Arc<C>, api_host: Url) -> Self {
         ThrottleWithoutAccessCookie {
             inner: inner.clone(),
             cookie_store,
@@ -83,9 +88,10 @@ impl<T> ThrottleWithoutAccessCookie<T>
 
 const ACCESS_TOKEN_COOKIE: &str = "ObsToolsAccessToken";
 
-impl<S, Request> Service<Request> for ThrottleWithoutAccessCookie<S>
-    where
-        S: Service<Request> + Clone,
+impl<C, S, Request> Service<Request> for ThrottleWithoutAccessCookie<C, S>
+where
+    C: cookie::CookieStore + Debug,
+    S: Service<Request> + Clone,
 {
     type Response = S::Response;
     type Error = S::Error;
@@ -111,14 +117,15 @@ impl<S, Request> Service<Request> for ThrottleWithoutAccessCookie<S>
 }
 
 #[pin_project(project = ThrottleWithoutAccessCookieFutureProj)]
+#[derive(Debug)]
 pub enum ThrottleWithoutAccessCookieFuture<T> {
     InnerFuture(#[pin] T),
     ResponseFuture(#[pin] ResponseFuture<T>),
 }
 
 impl<F, T, E> Future for ThrottleWithoutAccessCookieFuture<F>
-    where
-        F: Future<Output=Result<T, E>>,
+where
+    F: Future<Output = Result<T, E>>,
 {
     type Output = Result<T, E>;
 

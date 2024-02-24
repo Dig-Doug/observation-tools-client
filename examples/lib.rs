@@ -64,8 +64,6 @@ pub async fn run_examples(
 
     println!("See the output at: {}", run_uploader.viewer_url());
 
-    client.shutdown().await?;
-
     Ok(())
 }
 
