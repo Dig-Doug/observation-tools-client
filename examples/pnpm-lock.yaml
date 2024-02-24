@@ -2,7 +2,7 @@ lockfileVersion: '6.0'
 
 dependencies:
   '@observation-tools/client':
-    specifier: ^0.0.10
+    specifier: '>=0.0.10'
     version: link:../src/client/rust/pkg
   minimist:
     specifier: ^1.2.8

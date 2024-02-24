@@ -3,42 +3,12 @@ use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::NumberBuilder;
 use crate::artifacts::Object2Builder;
-use crate::artifacts::Vector2Builder;
 use crate::generated::Point2;
-use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 2D point.
-///
-/// # Example
-/// ```rust
-/// use observation_tools_client::artifacts::Point2Builder;
-///
-/// #[tokio::main]
-/// async fn main() -> Result<(), observation_tools_client::ClientError> {
-///     tracing_subscriber::fmt::init();
-///     let client = observation_tools_client::test_utils::create_doc_test_client()?;
-///
-///     // Set up a 2D group:
-///     let run = client.create_run("create_point2")?;
-///     let group2d = run.child_uploader_2d("point2_world")?;
-///
-///     // Basic usage:
-///     group2d.create_object2("my_point", Point2Builder::new(1.0, 2.0))?;
-///     // Point2s can be created directly from tuples:
-///     let tuple_point: Point2Builder = (3.0, 4.0).into();
-///     group2d.create_object2("my_tuple_point", tuple_point)?;
-///
-///     // Convert from an nalgebra point:
-///     let nalgebra_point: Point2Builder = nalgebra::Point2::new(5.0, 3.0).into();
-///     group2d.create_object2("nalgebra_point", nalgebra_point)?;
-///
-///     client.shutdown().await?;
-///     Ok(())
-/// }
-/// ```
-#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[doc = docify::embed_run!("tests/examples.rs", point2_example)]
+#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Point2Builder {
@@ -73,7 +43,7 @@ impl Point2Builder {
     pub fn new_js(
         x: NumberOrNumberBuilder,
         y: NumberOrNumberBuilder,
-    ) -> Result<Point2Builder, ClientError> {
+    ) -> Result<Point2Builder, crate::ClientError> {
         Ok(Point2Builder::new(
             NumberBuilder::from_js_value(x)?,
             NumberBuilder::from_js_value(y)?,

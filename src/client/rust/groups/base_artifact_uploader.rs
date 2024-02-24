@@ -40,7 +40,6 @@ pub(crate) struct BaseArtifactUploader {
 impl BaseArtifactUploaderBuilder {
     pub fn init(&mut self) -> BaseArtifactUploader {
         let uploader = self.build().unwrap();
-
         uploader
     }
 }

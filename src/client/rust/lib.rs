@@ -1,7 +1,7 @@
 #![doc(
-    html_favicon_url = "https://observation.tools/img/favicon.svg",
-    html_logo_url = "https://observation.tools/img/logo.svg",
-    issue_tracker_base_url = "https://github.com/Dig-Doug/observation-tools-client/issues/"
+html_favicon_url = "https://observation.tools/img/favicon.svg",
+html_logo_url = "https://observation.tools/img/logo.svg",
+issue_tracker_base_url = "https://github.com/Dig-Doug/observation-tools-client/issues/"
 )]
 //!
 //! # Quickstart
@@ -66,31 +66,31 @@
 //! artifacts during different parts of our program and export artifacts:
 //!
 //! ```rust
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use observation_tools_client::artifacts::Point2Builder;
-//! use observation_tools_client::artifacts::Segment2Builder;
-//! use observation_tools_client::Client;
-//! use observation_tools_client::ClientOptions;
-//! use observation_tools_client::TokenGenerator;
+//! use observation_tools::artifacts::Point2Builder;
+//! use observation_tools::artifacts::Segment2Builder;
+//! use observation_tools::Client;
+//! use observation_tools::ClientOptions;
+//! use observation_tools::TokenGenerator;
 //!
-//! let client = Client::new(
-//!     std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
-//!     ClientOptions::default(),
-//! )?;
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let client = Client::new(
+//!         std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
+//!         ClientOptions::default(),
+//!     )?;
 //!
-//! /// The name of the run will show up in the UI. You can optionally add key-value metadata to
-//! /// all objects, see [`builders::UserMetadataBuilder::add_metadata`].
-//! let run_uploader = client.create_run("getting-started-example")?;
-//! /// ArtifactGroups are represented as "uploaders"
-//! let uploader_2d = run_uploader.child_uploader_2d("shapes")?;
-//! uploader_2d.create_object2(
-//!     "segment2",
-//!     Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
-//! )?;
+//!     /// The name of the run will show up in the UI. You can optionally add key-value metadata to
+//!     /// all objects, see [`builders::UserMetadataBuilder::add_metadata`].
+//!     let run_uploader = client.create_run("getting-started-example")?;
+//!     /// ArtifactGroups are represented as "uploaders"
+//!     let uploader_2d = run_uploader.child_uploader_2d("shapes")?;
+//!     uploader_2d.create_object2(
+//!         "segment2",
+//!         Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
+//!     )?;
 //!
-//! println!("See the output at: {}", run_uploader.viewer_url());
-//! # Ok(())
-//! # }
+//!     println!("See the output at: {}", run_uploader.viewer_url());
+//!     Ok(())
+//! }
 //! ```
 //!
 //! For more information on the types of data you can upload, see the
@@ -111,16 +111,15 @@ mod generated;
 pub mod groups;
 mod run_id;
 mod task_handle;
-mod task_loop;
+mod throttle_without_access_cookie;
 mod token_generator;
+mod upload_artifact;
 mod util;
-// TODO: https://github.com/rust-lang/rust/issues/67295
-pub mod test_utils;
 
 pub use crate::client::Client;
 pub use crate::client::ClientOptions;
 use crate::generated::ArtifactId;
-pub use crate::task_handle::ArtifactUploadHandle;
+//pub use crate::task_handle::ArtifactUploadHandle;
 pub use crate::task_handle::ArtifactUploader2dTaskHandle;
 pub use crate::task_handle::ArtifactUploader3dTaskHandle;
 pub(crate) use crate::task_handle::BaseArtifactUploaderTaskHandle;
@@ -146,10 +145,14 @@ pub fn start() -> Result<(), JsValue> {
     // getting proper error line numbers for panics.
     console_error_panic_hook::set_once();
 
-    let mut config_builder = WASMLayerConfigBuilder::new();
-    #[cfg(not(debug_assertions))]
-    config_builder.set_max_level(tracing::Level::WARN);
-    tracing_wasm::set_as_global_default_with_config(config_builder.build());
+    let config = if cfg!(debug_assertions) {
+        WASMLayerConfigBuilder::new().build()
+    } else {
+        WASMLayerConfigBuilder::new()
+            .set_max_level(tracing::Level::WARN)
+            .build()
+    };
+    tracing_wasm::set_as_global_default_with_config(config);
 
     Ok(())
 }

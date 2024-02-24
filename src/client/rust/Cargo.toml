@@ -16,7 +16,7 @@ include = [
 ]
 
 [lib]
-name = "observation_tools_client"
+name = "observation_tools"
 path = "lib.rs"
 crate-type = ["cdylib", "lib"]
 
@@ -35,7 +35,7 @@ env_logger = "^0.10.0"
 form_urlencoded = "1.0.1"
 futures = "0.3"
 image = "0.24.5"
-instant = { version = "0.1", features = [ "wasm-bindgen" ] }
+instant = { version = "0.1", features = ["wasm-bindgen"] }
 itertools = "^0.12"
 js-sys = "0.3.60"
 nalgebra = { version = "^0.32" }
@@ -48,17 +48,22 @@ sha2 = "0.10.6"
 tempfile = { version = "3", optional = true }
 thiserror = "^1.0"
 tokio = { version = "1", features = ["full"], optional = true }
-tokio-util = { version = "0.7.0", features = ["full"], optional = true }
+tokio-util = { version = "0.7.10", features = ["full"], optional = true }
 tracing = "0.1.35"
 tracing-wasm = "0.2.1"
 url = "2.2.2"
 uuid = { version = "1.2.2", features = ["v4"] }
-wasm-bindgen = { version = "0.2.89", features = ["serde-serialize"] }
+wasm-bindgen = { version = "0.2.91", features = ["serde-serialize"] }
 wasm-bindgen-derive = "0.2.1"
 wasm-bindgen-futures = "0.4.39"
 web-sys = { version = "0.3.66", features = ['Window', 'Performance', 'PerformanceTiming'] }
 keyring = "2"
 whoami = "1.4"
+docify = "0.2.7"
+tower = { version = "0.4.13", features = ["limit", "util", "buffer"] }
+tower-service = "0.3.2"
+pin-project = "1"
+tower-layer = "0.3.2"
 
 [build-dependencies]
 protobuf-codegen = "=3.2.0"
@@ -71,3 +76,6 @@ files = ["tempfile"]
 rust = ["tokio", "tokio-util", "files", "reqwest/stream"]
 wasm = []
 default = ["rust"]
+
+[package.metadata.docs.rs]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]

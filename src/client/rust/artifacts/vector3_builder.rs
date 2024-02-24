@@ -2,7 +2,6 @@
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
 use crate::generated::Vector3;
-use crate::util::ClientError;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -18,7 +17,7 @@ impl Vector3Builder {
         x: NumberOrNumberBuilder,
         y: NumberOrNumberBuilder,
         z: NumberOrNumberBuilder,
-    ) -> Result<Vector3Builder, ClientError> {
+    ) -> Result<Vector3Builder, crate::ClientError> {
         Ok(Vector3Builder::from_number_builder(
             NumberBuilder::from_js_value(x)?,
             NumberBuilder::from_js_value(y)?,

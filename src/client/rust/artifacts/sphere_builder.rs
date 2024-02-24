@@ -3,10 +3,9 @@ use crate::artifacts::NumberBuilder;
 use crate::artifacts::Object3Builder;
 use crate::generated::Sphere;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_derive::TryFromJsValue;
 
 /// A 3D sphere.
-#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct SphereBuilder {

@@ -3,7 +3,6 @@ use crate::util::GenericError;
 use cached::proc_macro::cached;
 use cached::Cached;
 use instant::Instant;
-use js_sys::Promise;
 use keyring::Entry;
 use oauth2::basic::BasicErrorResponse;
 use oauth2::basic::BasicRevocationErrorResponse;
@@ -38,11 +37,11 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::net::TcpListener;
 use std::time::Duration;
-use tracing::info;
 use tracing::trace;
 use tracing::warn;
 use url::Url;
-use wasm_bindgen::prelude::wasm_bindgen;
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
 
 const KEYRING_BROWSER_FLOW: &str = "observation.tools/oauth2_browser_flow";
 const KEYRING_DEVICE_FLOW: &str = "observation.tools/oauth2_device_flow";
@@ -86,6 +85,7 @@ pub struct GoogleTokenFields {
 }
 
 impl ExtraTokenFields for GoogleTokenFields {}
+
 impl ExtraDeviceAuthorizationFields for GoogleTokenFields {}
 
 type GoogleTokenResponse = StandardTokenResponse<GoogleTokenFields, BasicTokenType>;

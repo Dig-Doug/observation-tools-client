@@ -3,9 +3,8 @@ use crate::artifacts::Polygon3Builder;
 use crate::artifacts::SphereBuilder;
 use crate::generated::Geometry3;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_derive::TryFromJsValue;
 
-#[cfg_attr(feature = "wasm", derive(TryFromJsValue))]
+#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Geometry3Builder {

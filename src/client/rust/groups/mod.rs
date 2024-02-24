@@ -12,9 +12,9 @@
 //! asynchronously.
 //!
 //! ```rust
-//! # use observation_tools_client::{ArtifactUploadHandle, ClientError};
-//! # use observation_tools_client::groups::ArtifactUploader2d;
-//! use observation_tools_client::artifacts::Point2Builder;
+//! # use observation_tools::{ArtifactUploadHandle, ClientError};
+//! # use observation_tools::groups::ArtifactUploader2d;
+//! use observation_tools::artifacts::Point2Builder;
 //!
 //! # async fn create_artifact(uploader: &ArtifactUploader2d) -> Result<(), ClientError>{
 //! // Create methods do some data validation and may return an error
@@ -33,13 +33,13 @@
 //! e.g. time.
 //!
 //! ```rust
-//! # use observation_tools_client::{ArtifactUploadHandle, ClientError};
-//! # use observation_tools_client::groups::ArtifactUploader2d;
-//! use observation_tools_client::artifacts::Object2Builder;
-//! use observation_tools_client::artifacts::Point2Builder;
-//! use observation_tools_client::artifacts::SeriesBuilder;
-//! use observation_tools_client::artifacts::SeriesPointBuilder;
-//! use observation_tools_client::artifacts::Transform2Builder;
+//! # use observation_tools::{ArtifactUploadHandle, ClientError};
+//! # use observation_tools::groups::ArtifactUploader2d;
+//! use observation_tools::artifacts::Object2Builder;
+//! use observation_tools::artifacts::Point2Builder;
+//! use observation_tools::artifacts::SeriesBuilder;
+//! use observation_tools::artifacts::SeriesPointBuilder;
+//! use observation_tools::artifacts::Transform2Builder;
 //!
 //! # async fn update_artifact(uploader: &ArtifactUploader2d) -> Result<(), ClientError>{
 //! # // TODO(doug): This series example is pretty messy
