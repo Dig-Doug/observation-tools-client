@@ -1,7 +1,7 @@
 #![doc(
-    html_favicon_url = "https://observation.tools/img/favicon.svg",
-    html_logo_url = "https://observation.tools/img/logo.svg",
-    issue_tracker_base_url = "https://github.com/Dig-Doug/observation-tools-client/issues/"
+html_favicon_url = "https://observation.tools/img/favicon.svg",
+html_logo_url = "https://observation.tools/img/logo.svg",
+issue_tracker_base_url = "https://github.com/Dig-Doug/observation-tools-client/issues/"
 )]
 //!
 //! # Quickstart
@@ -66,31 +66,31 @@
 //! artifacts during different parts of our program and export artifacts:
 //!
 //! ```rust
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use observation_tools::artifacts::Point2Builder;
 //! use observation_tools::artifacts::Segment2Builder;
 //! use observation_tools::Client;
 //! use observation_tools::ClientOptions;
 //! use observation_tools::TokenGenerator;
 //!
-//! let client = Client::new(
-//!     std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
-//!     ClientOptions::default(),
-//! )?;
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let client = Client::new(
+//!         std::env::var("OBSERVATION_TOOLS_PROJECT_ID")?,
+//!         ClientOptions::default(),
+//!     )?;
 //!
-//! /// The name of the run will show up in the UI. You can optionally add key-value metadata to
-//! /// all objects, see [`builders::UserMetadataBuilder::add_metadata`].
-//! let run_uploader = client.create_run("getting-started-example")?;
-//! /// ArtifactGroups are represented as "uploaders"
-//! let uploader_2d = run_uploader.child_uploader_2d("shapes")?;
-//! uploader_2d.create_object2(
-//!     "segment2",
-//!     Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
-//! )?;
+//!     /// The name of the run will show up in the UI. You can optionally add key-value metadata to
+//!     /// all objects, see [`builders::UserMetadataBuilder::add_metadata`].
+//!     let run_uploader = client.create_run("getting-started-example")?;
+//!     /// ArtifactGroups are represented as "uploaders"
+//!     let uploader_2d = run_uploader.child_uploader_2d("shapes")?;
+//!     uploader_2d.create_object2(
+//!         "segment2",
+//!         Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
+//!     )?;
 //!
-//! println!("See the output at: {}", run_uploader.viewer_url());
-//! # Ok(())
-//! # }
+//!     println!("See the output at: {}", run_uploader.viewer_url());
+//!     Ok(())
+//! }
 //! ```
 //!
 //! For more information on the types of data you can upload, see the
