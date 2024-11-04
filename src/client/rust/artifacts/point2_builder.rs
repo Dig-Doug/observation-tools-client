@@ -3,7 +3,7 @@ use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::NumberBuilder;
 use crate::artifacts::Object2Builder;
-use crate::generated::Point2;
+use observation_tools_common::proto::Point2;
 use wasm_bindgen::prelude::*;
 
 /// A 2D point.
@@ -19,10 +19,12 @@ pub struct Point2Builder {
 impl Point2Builder {
     /// Create a point at (x, y).
     pub fn new(x: impl Into<NumberBuilder>, y: impl Into<NumberBuilder>) -> Point2Builder {
-        let mut proto = Point2::new();
-        proto.x = Some(x.into().proto).into();
-        proto.y = Some(y.into().proto).into();
-        Point2Builder { proto }
+        Point2Builder {
+            proto: Point2 {
+                x: Some(x.into().proto),
+                y: Some(y.into().proto),
+            },
+        }
     }
 }
 

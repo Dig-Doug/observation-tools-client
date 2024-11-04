@@ -2,8 +2,8 @@ use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
 use crate::artifacts::Point2Builder;
 use crate::artifacts::PolygonEdge2Builder;
-use crate::generated::Polygon2;
 use itertools::Itertools;
+use observation_tools_common::proto::Polygon2;
 use wasm_bindgen::prelude::*;
 
 /// A 2D polygon. Polygon2s are represented as an edge-loop, so an edge will be
@@ -20,8 +20,9 @@ pub struct Polygon2Builder {
 impl Polygon2Builder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Polygon2Builder {
-        let proto = Polygon2::new();
-        Polygon2Builder { proto }
+        Polygon2Builder {
+            proto: Polygon2::default(),
+        }
     }
 
     /// Add a vertex to the polygon.
@@ -41,9 +42,11 @@ impl Polygon2Builder {
     }
 
     pub fn from_edges(edges: &[PolygonEdge2Builder]) -> Polygon2Builder {
-        let mut proto = Polygon2::new();
-        proto.edges = edges.iter().map(|edge| edge.proto.clone()).collect();
-        Polygon2Builder { proto }
+        Polygon2Builder {
+            proto: Polygon2 {
+                edges: edges.iter().map(|edge| edge.proto.clone()).collect(),
+            },
+        }
     }
 }
 

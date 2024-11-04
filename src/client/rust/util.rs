@@ -1,8 +1,9 @@
-use crate::generated::ArtifactId;
 use core::fmt::Debug;
-use protobuf::well_known_types::timestamp::Timestamp;
-use protobuf::Message;
+use observation_tools_common::proto::ArtifactId;
+use prost::Message;
+use prost_types::Timestamp;
 use std::error::Error;
+use std::io::Cursor;
 use std::time::Duration;
 use uuid::Uuid;
 use wasm_bindgen::JsValue;
@@ -57,34 +58,34 @@ impl Into<JsValue> for ClientError {
 }
 
 pub(crate) fn new_artifact_id() -> ArtifactId {
-    let mut id = ArtifactId::new();
-    id.uuid = Some(new_uuid_proto()).into();
-    id
+    ArtifactId {
+        uuid: Some(new_uuid_proto()).into(),
+    }
 }
 
 pub(crate) fn encode_id_proto(msg: &impl Message) -> String {
-    bs58::encode(msg.write_to_bytes().unwrap()).into_string()
+    bs58::encode(msg.encode_to_vec()).into_string()
 }
 
-pub(crate) fn decode_id_proto<M: Message>(encoded: &str) -> Result<M, GenericError> {
+pub(crate) fn decode_id_proto<M: Message + Default>(encoded: &str) -> Result<M, GenericError> {
     let proto_bytes = bs58::decode(encoded).into_vec()?;
-    Ok(M::parse_from_bytes(&proto_bytes)?)
+    Ok(M::decode(&mut Cursor::new(proto_bytes))?)
 }
 
-pub(crate) fn new_uuid_proto() -> crate::generated::Uuid {
-    let uuid = Uuid::new_v4();
-    let mut proto = crate::generated::Uuid::new();
-    proto.data = uuid.as_bytes().to_vec();
-    proto
+pub(crate) fn new_uuid_proto() -> observation_tools_common::proto::Uuid {
+    observation_tools_common::proto::Uuid {
+        data: Uuid::new_v4().as_bytes().to_vec(),
+    }
 }
 
 pub(crate) fn time_now() -> Timestamp {
     let since_the_epoch = since_epoch();
-    let mut t = Timestamp::new();
-    t.seconds = since_the_epoch.as_secs() as i64;
-    let nanos = (since_the_epoch - Duration::from_secs(t.seconds as u64)).as_nanos();
-    t.nanos = nanos as i32;
-    t
+    let seconds = since_the_epoch.as_secs();
+    let nanos = (since_the_epoch - Duration::from_secs(seconds)).as_nanos();
+    Timestamp {
+        seconds: seconds as i64,
+        nanos: nanos as i32,
+    }
 }
 
 #[cfg(feature = "wasm")]

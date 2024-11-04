@@ -1,13 +1,14 @@
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
-use crate::generated::Image2;
-use crate::generated::PerPixelTransform;
-use crate::generated::RandomDistinctColor;
-use crate::generated::StructuredData;
 use crate::util::ClientError;
 use image::GrayImage;
 use image::ImageBuffer;
 use image::ImageOutputFormat;
+use observation_tools_common::proto::structured_data;
+use observation_tools_common::proto::Image2;
+use observation_tools_common::proto::PerPixelTransform;
+use observation_tools_common::proto::RandomDistinctColor;
+use observation_tools_common::proto::StructuredData;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
@@ -23,10 +24,13 @@ pub struct Image2Builder {
 #[wasm_bindgen]
 impl Image2Builder {
     pub fn new(data: &[u8], mime_type: &str) -> Self {
-        let mut proto = Image2::new();
-        proto.data = data.to_vec();
-        proto.mime_type = mime_type.to_string();
-        Image2Builder { proto }
+        Image2Builder {
+            proto: Image2 {
+                data: data.to_vec(),
+                mime_type: mime_type.to_string(),
+                ..Default::default()
+            },
+        }
     }
 
     pub fn from_grayscale_pixels(
@@ -36,13 +40,16 @@ impl Image2Builder {
     ) -> Result<Image2Builder, ClientError> {
         let img: GrayImage = ImageBuffer::from_raw(width, height, data.to_vec())
             .ok_or(ClientError::FailedToCreateImage)?;
-        let mut proto = Image2::new();
+        let mut proto = Image2 {
+            data: vec![],
+            mime_type: "image/png".to_string(),
+            ..Default::default()
+        };
         let mut cursor = Cursor::new(&mut proto.data);
         img.write_to(&mut cursor, ImageOutputFormat::Png)
             .map_err(|e| ClientError::GenericError {
                 message: e.to_string(),
             })?;
-        proto.mime_type = "image/png".to_string();
         Ok(Image2Builder { proto })
     }
 
@@ -53,9 +60,9 @@ impl Image2Builder {
 
 impl Into<StructuredData> for Image2Builder {
     fn into(self) -> StructuredData {
-        let mut s = StructuredData::new();
-        *s.mut_image2() = self.proto;
-        s
+        StructuredData {
+            data: Some(structured_data::Data::Image2(self.proto)),
+        }
     }
 }
 
@@ -80,8 +87,10 @@ pub struct PerPixelTransformBuilder {
 #[wasm_bindgen]
 impl PerPixelTransformBuilder {
     pub fn random_distinct_color() -> Self {
-        let mut proto = PerPixelTransform::new();
-        proto.random_distinct_color = Some(RandomDistinctColor::new()).into();
-        PerPixelTransformBuilder { proto }
+        PerPixelTransformBuilder {
+            proto: PerPixelTransform {
+                random_distinct_color: Some(RandomDistinctColor::default()).into(),
+            },
+        }
     }
 }

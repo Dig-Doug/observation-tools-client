@@ -3,7 +3,8 @@ use crate::artifacts::Point2Builder;
 use crate::artifacts::Polygon2Builder;
 use crate::artifacts::Rect2Builder;
 use crate::artifacts::Segment2Builder;
-use crate::generated::Geometry2;
+use observation_tools_common::proto::geometry2;
+use observation_tools_common::proto::Geometry2;
 use wasm_bindgen::prelude::*;
 
 /// 2D geometry. Normally you do not need to interact with this type directly.
@@ -25,32 +26,42 @@ extern "C" {
 
 impl Geometry2Builder {
     pub(crate) fn point(point: Point2Builder) -> Geometry2Builder {
-        let mut proto = Geometry2::new();
-        *proto.mut_point2() = point.proto;
-        Geometry2Builder { proto }
+        Geometry2Builder {
+            proto: Geometry2 {
+                data: Some(geometry2::Data::Point2(point.proto)),
+            },
+        }
     }
 
     pub(crate) fn segment(segment: Segment2Builder) -> Geometry2Builder {
-        let mut proto = Geometry2::new();
-        *proto.mut_segment2() = segment.proto;
-        Geometry2Builder { proto }
+        Geometry2Builder {
+            proto: Geometry2 {
+                data: Some(geometry2::Data::Segment2(segment.proto)),
+            },
+        }
     }
 
     pub(crate) fn polygon(polygon: Polygon2Builder) -> Geometry2Builder {
-        let mut proto = Geometry2::new();
-        *proto.mut_polygon2() = polygon.proto;
-        Geometry2Builder { proto }
+        Geometry2Builder {
+            proto: Geometry2 {
+                data: Some(geometry2::Data::Polygon2(polygon.proto)),
+            },
+        }
     }
 
     pub(crate) fn image(image: Image2Builder) -> Geometry2Builder {
-        let mut proto = Geometry2::new();
-        *proto.mut_image2() = image.proto;
-        Geometry2Builder { proto }
+        Geometry2Builder {
+            proto: Geometry2 {
+                data: Some(geometry2::Data::Image2(image.proto)),
+            },
+        }
     }
 
     pub(crate) fn rect(rect: Rect2Builder) -> Geometry2Builder {
-        let mut proto = Geometry2::new();
-        *proto.mut_rect2() = rect.proto;
-        Geometry2Builder { proto }
+        Geometry2Builder {
+            proto: Geometry2 {
+                data: Some(geometry2::Data::Rect2(rect.proto)),
+            },
+        }
     }
 }

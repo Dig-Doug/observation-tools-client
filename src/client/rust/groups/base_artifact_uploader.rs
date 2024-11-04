@@ -3,15 +3,6 @@ use crate::artifacts::SeriesBuilder;
 use crate::artifacts::SeriesPointBuilder;
 use crate::artifacts::UserMetadataBuilder;
 use crate::client::Client;
-use crate::generated::artifact_update;
-use crate::generated::ArtifactGroupUploaderData;
-use crate::generated::ArtifactId;
-use crate::generated::ArtifactType;
-use crate::generated::CreateArtifactRequest;
-use crate::generated::PublicGlobalId;
-use crate::generated::SeriesId;
-use crate::generated::StructuredData;
-use crate::generated::Transform3;
 use crate::groups::ArtifactUploader2d;
 use crate::groups::ArtifactUploader3d;
 use crate::groups::GenericArtifactUploader;
@@ -29,7 +20,23 @@ use crate::PublicArtifactId;
 use crate::PublicArtifactIdTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
 use derive_builder::Builder;
-use protobuf::Message;
+use observation_tools_common::proto::artifact_data;
+use observation_tools_common::proto::artifact_update;
+use observation_tools_common::proto::create_artifact_request;
+use observation_tools_common::proto::public_global_id;
+use observation_tools_common::proto::ArtifactData;
+use observation_tools_common::proto::ArtifactGroupUploaderData;
+use observation_tools_common::proto::ArtifactId;
+use observation_tools_common::proto::ArtifactType;
+use observation_tools_common::proto::ArtifactUpdate;
+use observation_tools_common::proto::CanonicalArtifactId;
+use observation_tools_common::proto::CreateArtifactRequest;
+use observation_tools_common::proto::Group3d;
+use observation_tools_common::proto::PublicGlobalId;
+use observation_tools_common::proto::SeriesId;
+use observation_tools_common::proto::StructuredData;
+use observation_tools_common::proto::Transform3;
+use prost::Message;
 
 #[derive(Builder, Debug)]
 pub(crate) struct BaseArtifactUploader {
@@ -56,27 +63,40 @@ impl Clone for BaseArtifactUploader {
 pub(crate) fn artifact_group_uploader_data_from_request(
     request: &CreateArtifactRequest,
 ) -> ArtifactGroupUploaderData {
-    let mut new_data = ArtifactGroupUploaderData::new();
-    new_data.project_id = request.project_id.clone();
-    new_data.run_id = request.run_id.clone();
-    new_data.id = request.artifact_id.clone();
-    new_data.ancestor_group_ids = request.artifact_data().ancestor_group_ids.clone();
-    new_data
+    ArtifactGroupUploaderData {
+        project_id: request.project_id.clone(),
+        run_id: request.run_id.clone(),
+        id: request.artifact_id.clone(),
+        ancestor_group_ids: match request.data {
+            Some(create_artifact_request::Data::ArtifactData(ref data)) => {
+                data.ancestor_group_ids.clone()
+            }
+            _ => vec![],
+        },
+    }
 }
 
 impl BaseArtifactUploader {
     pub(crate) fn project_global_id(&self) -> PublicGlobalId {
-        let mut proto = PublicGlobalId::new();
-        *proto.mut_project_id() = self.data.project_id.clone().unwrap_or_default();
-        proto
+        PublicGlobalId {
+            data: Some(public_global_id::Data::ProjectId(
+                self.data.project_id.clone().unwrap_or_default(),
+            )),
+        }
     }
 
     pub(crate) fn global_id(&self) -> PublicGlobalId {
-        let mut proto = PublicGlobalId::new();
-        let id = proto.mut_canonical_artifact_id();
-        id.project_id = self.data.project_id.clone();
-        id.artifact_id = self.data.run_id.id.clone();
-        proto
+        PublicGlobalId {
+            data: Some(public_global_id::Data::CanonicalArtifactId(
+                CanonicalArtifactId {
+                    project_id: self.data.project_id.clone(),
+                    artifact_id: match self.data.id.as_ref() {
+                        Some(id) => Some(id.clone()),
+                        None => None,
+                    },
+                },
+            )),
+        }
     }
 
     pub fn run_id(&self) -> RunId {
@@ -90,12 +110,13 @@ impl BaseArtifactUploader {
         artifact_id: ArtifactId,
         series_point: Option<&SeriesPointBuilder>,
     ) -> CreateArtifactRequest {
-        let mut request = CreateArtifactRequest::new();
-        request.project_id = self.data.project_id.clone();
-        request.run_id = self.data.run_id.clone();
-        request.artifact_id = Some(artifact_id.clone()).into();
-        request.series_point = series_point.map(|b| b.proto.clone()).into();
-        request
+        CreateArtifactRequest {
+            project_id: self.data.project_id.clone(),
+            run_id: self.data.run_id.clone(),
+            artifact_id: Some(artifact_id.clone()),
+            series_point: series_point.map(|b| b.proto.clone()),
+            ..Default::default()
+        }
     }
 
     pub(crate) fn base_create_artifact_request<M: Into<UserMetadataBuilder>>(
@@ -104,17 +125,18 @@ impl BaseArtifactUploader {
         series_point: Option<&SeriesPointBuilder>,
     ) -> CreateArtifactRequest {
         let mut request = self.base_artifact_request(new_artifact_id(), series_point);
-        let group_data = request.mut_artifact_data();
-        group_data.user_metadata = Some(metadata.into().proto.clone()).into();
-        self.data
-            .ancestor_group_ids
-            .iter()
-            .for_each(|id| group_data.ancestor_group_ids.push(id.clone()));
-        self.data
-            .id
-            .as_ref()
-            .map(|id| group_data.ancestor_group_ids.push(id.clone()));
-        group_data.client_creation_time = Some(time_now()).into();
+        request.data = Some(create_artifact_request::Data::ArtifactData(ArtifactData {
+            user_metadata: Some(metadata.into().proto.clone()),
+            ancestor_group_ids: self
+                .data
+                .ancestor_group_ids
+                .iter()
+                .chain(self.data.id.as_ref())
+                .cloned()
+                .collect(),
+            client_creation_time: Some(time_now()),
+            ..Default::default()
+        }));
         request
     }
 
@@ -139,7 +161,10 @@ impl BaseArtifactUploader {
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<GenericArtifactUploaderTaskHandle, ClientError> {
         let mut request = self.base_create_artifact_request(metadata, series_point);
-        request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_GENERIC.into();
+        request.data = Some(create_artifact_request::Data::ArtifactData(ArtifactData {
+            artifact_type: ArtifactType::Generic.into(),
+            ..Default::default()
+        }));
         Ok(self
             .create_child_group(request)?
             .map_handle(|result| GenericArtifactUploader { base: result }))
@@ -151,7 +176,10 @@ impl BaseArtifactUploader {
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
         let mut request = self.base_create_artifact_request(metadata, series_point);
-        request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_2D_GROUP.into();
+        request.data = Some(create_artifact_request::Data::ArtifactData(ArtifactData {
+            artifact_type: ArtifactType::ArtifactType2dGroup.into(),
+            ..Default::default()
+        }));
         Ok(self
             .create_child_group(request)?
             .map_handle(|result| ArtifactUploader2d { base: result }))
@@ -164,9 +192,14 @@ impl BaseArtifactUploader {
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<ArtifactUploader3dTaskHandle, ClientError> {
         let mut request = self.base_create_artifact_request(metadata, series_point);
-        let artifact_data = request.mut_artifact_data();
-        artifact_data.artifact_type = ArtifactType::ARTIFACT_TYPE_3D_GROUP.into();
-        artifact_data.mut_group_3d().base_transform = Some(base_transform).into();
+        request.data = Some(create_artifact_request::Data::ArtifactData(ArtifactData {
+            artifact_type: ArtifactType::ArtifactType3dGroup.into(),
+            type_data: Some(artifact_data::TypeData::Group3d(Group3d {
+                base_transform: Some(base_transform),
+                ..Default::default()
+            })),
+            ..Default::default()
+        }));
         Ok(self
             .create_child_group(request)?
             .map_handle(|result| ArtifactUploader3d { base: result }))
@@ -178,17 +211,18 @@ impl BaseArtifactUploader {
         series: &SeriesBuilder,
     ) -> Result<PublicSeriesIdTaskHandle, ClientError> {
         let mut request = self.base_create_artifact_request(metadata, None);
-        request.mut_artifact_data().artifact_type = ArtifactType::ARTIFACT_TYPE_SERIES.into();
-        *request.mut_artifact_data().mut_series() = series.proto.clone();
+        request.data = Some(create_artifact_request::Data::ArtifactData(ArtifactData {
+            artifact_type: ArtifactType::Series.into(),
+            type_data: Some(artifact_data::TypeData::Series(series.proto.clone())),
+            ..Default::default()
+        }));
         Ok(self
             .client
             .upload_artifact(&request, None)?
-            .map_handle(|id| {
-                let mut series_id_proto = SeriesId::new();
-                series_id_proto.artifact_id = Some(id.id).into();
-                PublicSeriesId {
-                    proto: series_id_proto,
-                }
+            .map_handle(|id| PublicSeriesId {
+                proto: SeriesId {
+                    artifact_id: Some(id.id),
+                },
             }))
     }
 
@@ -198,11 +232,7 @@ impl BaseArtifactUploader {
         data: StructuredData,
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        self.upload_raw_bytes(
-            metadata,
-            data.write_to_bytes().unwrap().as_slice(),
-            series_point,
-        )
+        self.upload_raw_bytes(metadata, data.encode_to_vec().as_slice(), series_point)
     }
 
     pub fn upload_raw_bytes<M: Into<UserMetadataBuilder>>(
@@ -221,11 +251,7 @@ impl BaseArtifactUploader {
         data: StructuredData,
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        self.update_raw_bytes(
-            &artifact_id,
-            data.write_to_bytes().unwrap().as_slice(),
-            series_point,
-        )
+        self.update_raw_bytes(&artifact_id, data.encode_to_vec().as_slice(), series_point)
     }
 
     pub fn update_raw_bytes(
@@ -235,12 +261,15 @@ impl BaseArtifactUploader {
         series_point: Option<&SeriesPointBuilder>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
         let mut request = self.base_artifact_request(artifact_id.id.clone(), series_point);
-        let artifact_update = request.mut_artifact_update();
-        artifact_update.operation = artifact_update::Operation::OPERATION_UPDATE.into();
+        request.data = Some(create_artifact_request::Data::ArtifactUpdate(
+            ArtifactUpdate {
+                operation: artifact_update::Operation::Update.into(),
+            },
+        ));
         self.client.upload_artifact_raw_bytes(&request, Some(data))
     }
 
     pub fn id(&self) -> String {
-        bs58::encode(self.data.id.write_to_bytes().unwrap()).into_string()
+        bs58::encode(self.data.id.clone().unwrap_or_default().encode_to_vec()).into_string()
     }
 }

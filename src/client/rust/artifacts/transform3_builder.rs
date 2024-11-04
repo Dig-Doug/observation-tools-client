@@ -1,4 +1,5 @@
-use crate::generated::Transform3;
+use observation_tools_common::proto::transform3;
+use observation_tools_common::proto::Transform3;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -9,8 +10,10 @@ pub struct Transform3Builder {
 #[wasm_bindgen]
 impl Transform3Builder {
     pub fn identity() -> Transform3Builder {
-        let mut proto = Transform3::new();
-        proto.set_identity(true);
-        Transform3Builder { proto }
+        Transform3Builder {
+            proto: Transform3 {
+                data: Some(transform3::Data::Identity(true)),
+            },
+        }
     }
 }

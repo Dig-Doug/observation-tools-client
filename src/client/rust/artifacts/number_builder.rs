@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use crate::generated::Number;
+use observation_tools_common::proto::Number;
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
@@ -42,8 +42,8 @@ impl NumberBuilder {
 
 impl Into<NumberBuilder> for f64 {
     fn into(self) -> NumberBuilder {
-        let mut proto = Number::new();
-        proto.d = self;
-        NumberBuilder { proto }
+        NumberBuilder {
+            proto: Number { d: self },
+        }
     }
 }

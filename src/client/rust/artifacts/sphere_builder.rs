@@ -1,7 +1,7 @@
 use crate::artifacts::Geometry3Builder;
 use crate::artifacts::NumberBuilder;
 use crate::artifacts::Object3Builder;
-use crate::generated::Sphere;
+use observation_tools_common::proto::Sphere;
 use wasm_bindgen::prelude::*;
 
 /// A 3D sphere.
@@ -15,9 +15,11 @@ pub struct SphereBuilder {
 #[wasm_bindgen]
 impl SphereBuilder {
     pub fn from_number_builder(radius: NumberBuilder) -> SphereBuilder {
-        let mut proto = Sphere::new();
-        proto.radius = Some(radius.proto).into();
-        SphereBuilder { proto }
+        SphereBuilder {
+            proto: Sphere {
+                radius: Some(radius.proto),
+            },
+        }
     }
 }
 

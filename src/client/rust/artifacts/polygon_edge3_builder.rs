@@ -1,5 +1,5 @@
 use crate::artifacts::Point3Builder;
-use crate::generated::PolygonEdge3;
+use observation_tools_common::proto::PolygonEdge3;
 use wasm_bindgen::prelude::*;
 
 /// An edge of a [Polygon3Builder](crate::artifacts::Polygon3Builder).
@@ -12,9 +12,11 @@ pub struct PolygonEdge3Builder {
 #[wasm_bindgen]
 impl PolygonEdge3Builder {
     pub fn from_vertex(vertex: Point3Builder) -> PolygonEdge3Builder {
-        let mut proto = PolygonEdge3::new();
-        proto.vertex = Some(vertex.proto).into();
-        PolygonEdge3Builder { proto }
+        PolygonEdge3Builder {
+            proto: PolygonEdge3 {
+                vertex: Some(vertex.proto),
+            },
+        }
     }
 }
 

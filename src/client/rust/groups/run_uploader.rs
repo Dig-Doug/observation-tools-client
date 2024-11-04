@@ -7,7 +7,7 @@ use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::ArtifactUploader3dTaskHandle;
 use crate::GenericArtifactUploaderTaskHandle;
-use protobuf::Message;
+use prost::Message;
 use wasm_bindgen::prelude::*;
 
 /// The "root" artifact group for a run.
@@ -33,8 +33,8 @@ impl RunUploader {
                 .ui_host
                 .clone()
                 .unwrap_or(UI_HOST.to_string()),
-            bs58::encode(self.base.project_global_id().write_to_bytes().unwrap()).into_string(),
-            bs58::encode(self.base.global_id().write_to_bytes().unwrap()).into_string(),
+            bs58::encode(self.base.project_global_id().encode_to_vec()).into_string(),
+            bs58::encode(self.base.global_id().encode_to_vec()).into_string(),
         )
     }
 

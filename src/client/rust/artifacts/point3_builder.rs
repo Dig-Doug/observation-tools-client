@@ -1,7 +1,7 @@
 #[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
-use crate::generated::Point3;
+use observation_tools_common::proto::Point3;
 use wasm_bindgen::prelude::*;
 
 /// A 3D point.
@@ -32,11 +32,13 @@ impl Point3Builder {
         y: NumberBuilder,
         z: NumberBuilder,
     ) -> Point3Builder {
-        let mut proto = Point3::new();
-        proto.x = Some(x.proto).into();
-        proto.y = Some(y.proto).into();
-        proto.z = Some(z.proto).into();
-        Point3Builder { proto }
+        Point3Builder {
+            proto: Point3 {
+                x: Some(x.proto),
+                y: Some(y.proto),
+                z: Some(z.proto),
+            },
+        }
     }
 }
 

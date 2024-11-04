@@ -1,7 +1,7 @@
 use crate::artifacts::Geometry3Builder;
 use crate::artifacts::Object3Builder;
 use crate::artifacts::VertexBuilder;
-use crate::generated::Mesh;
+use observation_tools_common::proto::Mesh;
 use wasm_bindgen::prelude::*;
 
 /// A 3D mesh
@@ -17,8 +17,9 @@ pub struct MeshBuilder {
 impl MeshBuilder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> MeshBuilder {
-        let proto = Mesh::new();
-        MeshBuilder { proto }
+        MeshBuilder {
+            proto: Mesh::default(),
+        }
     }
 
     pub fn add_vertex(&mut self, vertex: VertexBuilder) {

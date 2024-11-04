@@ -1,7 +1,7 @@
 #[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
-use crate::generated::Vector3;
+use observation_tools_common::proto::Vector3;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -30,11 +30,13 @@ impl Vector3Builder {
         y: NumberBuilder,
         z: NumberBuilder,
     ) -> Vector3Builder {
-        let mut proto = Vector3::new();
-        proto.x = Some(x.proto).into();
-        proto.y = Some(y.proto).into();
-        proto.z = Some(z.proto).into();
-        Vector3Builder { proto }
+        Vector3Builder {
+            proto: Vector3 {
+                x: Some(x.proto),
+                y: Some(y.proto),
+                z: Some(z.proto),
+            },
+        }
     }
 }
 

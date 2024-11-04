@@ -2,8 +2,8 @@ use crate::artifacts::Geometry3Builder;
 use crate::artifacts::Object3Builder;
 use crate::artifacts::Point3Builder;
 use crate::artifacts::PolygonEdge3Builder;
-use crate::generated::Polygon3;
 use itertools::Itertools;
+use observation_tools_common::proto::Polygon3;
 use wasm_bindgen::prelude::*;
 
 /// A 3D polygon within a single plane.
@@ -18,8 +18,9 @@ pub struct Polygon3Builder {
 impl Polygon3Builder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Polygon3Builder {
-        let proto = Polygon3::new();
-        Polygon3Builder { proto }
+        Polygon3Builder {
+            proto: Polygon3::default(),
+        }
     }
 
     pub fn add_edge(&mut self, edge: PolygonEdge3Builder) {
@@ -38,9 +39,11 @@ impl Polygon3Builder {
     }
 
     pub fn from_edges(edges: &[PolygonEdge3Builder]) -> Polygon3Builder {
-        let mut proto = Polygon3::new();
-        proto.edges = edges.iter().map(|edge| edge.proto.clone()).collect();
-        Polygon3Builder { proto }
+        Polygon3Builder {
+            proto: Polygon3 {
+                edges: edges.iter().map(|edge| edge.proto.clone()).collect(),
+            },
+        }
     }
 }
 

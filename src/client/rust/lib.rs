@@ -1,7 +1,7 @@
 #![doc(
-html_favicon_url = "https://observation.tools/img/favicon.svg",
-html_logo_url = "https://observation.tools/img/logo.svg",
-issue_tracker_base_url = "https://github.com/Dig-Doug/observation-tools-client/issues/"
+    html_favicon_url = "https://observation.tools/img/favicon.svg",
+    html_logo_url = "https://observation.tools/img/logo.svg",
+    issue_tracker_base_url = "https://github.com/Dig-Doug/observation-tools-client/issues/"
 )]
 //!
 //! # Quickstart
@@ -107,7 +107,6 @@ extern crate core;
 
 pub mod artifacts;
 mod client;
-mod generated;
 pub mod groups;
 mod run_id;
 mod task_handle;
@@ -118,7 +117,6 @@ mod util;
 
 pub use crate::client::Client;
 pub use crate::client::ClientOptions;
-use crate::generated::ArtifactId;
 //pub use crate::task_handle::ArtifactUploadHandle;
 pub use crate::task_handle::ArtifactUploader2dTaskHandle;
 pub use crate::task_handle::ArtifactUploader3dTaskHandle;
@@ -129,6 +127,7 @@ pub use crate::task_handle::PublicSeriesIdTaskHandle;
 pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::util::ClientError;
+use observation_tools_common::proto::ArtifactId;
 use tracing_wasm::WASMLayerConfigBuilder;
 use wasm_bindgen::prelude::*;
 

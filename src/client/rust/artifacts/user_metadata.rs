@@ -1,4 +1,4 @@
-use crate::generated::ArtifactUserMetadata;
+use observation_tools_common::proto::ArtifactUserMetadata;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -30,9 +30,12 @@ impl UserMetadataBuilder {
     }
 
     fn new_impl(name: &str) -> UserMetadataBuilder {
-        let mut proto = ArtifactUserMetadata::new();
-        proto.name = name.to_string();
-        UserMetadataBuilder { proto }
+        UserMetadataBuilder {
+            proto: ArtifactUserMetadata {
+                name: name.to_string(),
+                metadata: Default::default(),
+            },
+        }
     }
 }
 

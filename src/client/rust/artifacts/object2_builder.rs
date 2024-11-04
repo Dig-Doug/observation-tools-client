@@ -3,10 +3,11 @@ use crate::artifacts::Geometry2Builder;
 use crate::artifacts::IntoGeometry2Builder;
 use crate::artifacts::SeriesPointBuilder;
 use crate::artifacts::Transform2Builder;
-use crate::generated::Object2;
-use crate::generated::StructuredData;
 use crate::ClientError;
 use crate::PublicArtifactId;
+use observation_tools_common::proto::structured_data;
+use observation_tools_common::proto::Object2;
+use observation_tools_common::proto::StructuredData;
 use wasm_bindgen::prelude::*;
 
 /// A 2D object.
@@ -61,10 +62,11 @@ impl Object2Builder {
 
 impl Object2Builder {
     pub fn new(geometry: Geometry2Builder) -> Object2Builder {
-        let mut proto = Object2::new();
-        proto.geometry = Some(geometry.proto).into();
         Object2Builder {
-            proto,
+            proto: Object2 {
+                geometry: Some(geometry.proto),
+                transforms: vec![],
+            },
             series_point: None,
         }
     }
@@ -77,10 +79,9 @@ impl TryInto<StructuredData> for Object2Builder {
         if self.proto.transforms.is_empty() {
             return Err(ClientError::NoTransformsInBuilder);
         }
-
-        let mut s = StructuredData::new();
-        *s.mut_object2() = self.proto;
-        Ok(s)
+        Ok(StructuredData {
+            data: Some(structured_data::Data::Object2(self.proto)),
+        })
     }
 }
 

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "src/proto/artifact.proto";
+import "src/common/proto/artifact.proto";
 
 package observation_tools.proto;
 
@@ -9,6 +9,6 @@ option java_package = "tools.observation.proto";
 
 message RunId {
   ArtifactId id = 2;
-  
+
   reserved 1;
 }

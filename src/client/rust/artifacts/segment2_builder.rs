@@ -1,7 +1,7 @@
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
 use crate::artifacts::Point2Builder;
-use crate::generated::Segment2;
+use observation_tools_common::proto::Segment2;
 use wasm_bindgen::prelude::*;
 
 /// A 2D line segment.
@@ -16,10 +16,12 @@ pub struct Segment2Builder {
 #[wasm_bindgen]
 impl Segment2Builder {
     pub fn from_points(start: Point2Builder, end: Point2Builder) -> Segment2Builder {
-        let mut proto = Segment2::new();
-        proto.start = Some(start.proto).into();
-        proto.end = Some(end.proto).into();
-        Segment2Builder { proto }
+        Segment2Builder {
+            proto: Segment2 {
+                start: Some(start.proto),
+                end: Some(end.proto),
+            },
+        }
     }
 }
 

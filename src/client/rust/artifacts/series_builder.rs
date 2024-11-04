@@ -1,18 +1,19 @@
 #[cfg(feature = "wasm")]
 use crate::artifacts::number_builder::NumberOrNumberBuilder;
 use crate::artifacts::NumberBuilder;
-use crate::generated::SeriesData;
-use crate::generated::SeriesDimensionData;
-use crate::generated::SeriesDimensionValue;
-use crate::generated::SeriesPoint;
 use crate::util::new_artifact_id;
 use crate::util::ClientError;
+use observation_tools_common::proto::ArtifactType::Series;
+use observation_tools_common::proto::SeriesData;
+use observation_tools_common::proto::SeriesDimensionData;
+use observation_tools_common::proto::SeriesDimensionValue;
+use observation_tools_common::proto::SeriesPoint;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct PublicSeriesId {
-    pub(crate) proto: crate::generated::SeriesId,
+    pub(crate) proto: observation_tools_common::proto::SeriesId,
 }
 
 #[wasm_bindgen]
@@ -25,18 +26,20 @@ pub struct SeriesBuilder {
 impl SeriesBuilder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> SeriesBuilder {
-        let proto = SeriesData::new();
-        SeriesBuilder { proto }
+        SeriesBuilder {
+            proto: SeriesData::default(),
+        }
     }
 
     pub fn add_dimension(&mut self, name: &str) -> PublicSeriesDimensionId {
-        let mut id = crate::generated::SeriesDimensionId::new();
-        id.artifact_id = Some(new_artifact_id()).into();
+        let id = observation_tools_common::proto::SeriesDimensionId {
+            artifact_id: Some(new_artifact_id()),
+        };
 
-        let mut proto = SeriesDimensionData::new();
-        proto.name = name.to_string();
-        proto.id = Some(id.clone()).into();
-        self.proto.dimensions.push(proto);
+        self.proto.dimensions.push(SeriesDimensionData {
+            name: name.to_string(),
+            id: Some(id.clone()),
+        });
 
         PublicSeriesDimensionId { proto: id }
     }
@@ -45,7 +48,7 @@ impl SeriesBuilder {
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct PublicSeriesDimensionId {
-    pub(crate) proto: crate::generated::SeriesDimensionId,
+    pub(crate) proto: observation_tools_common::proto::SeriesDimensionId,
 }
 
 #[wasm_bindgen]
@@ -94,9 +97,12 @@ impl SeriesPointBuilder {
         dimension_id: &PublicSeriesDimensionId,
         value: N,
     ) -> Result<SeriesPointBuilder, ClientError> {
-        let mut proto = SeriesPoint::new();
-        proto.series_id = Some(series_id.proto.clone()).into();
-        let mut point = SeriesPointBuilder { proto };
+        let mut point = SeriesPointBuilder {
+            proto: SeriesPoint {
+                series_id: Some(series_id.proto.clone()),
+                values: vec![],
+            },
+        };
         point.add_dimension(dimension_id, value)?;
         Ok(point)
     }
@@ -106,10 +112,10 @@ impl SeriesPointBuilder {
         dimension: &PublicSeriesDimensionId,
         value: N,
     ) -> Result<(), ClientError> {
-        let mut proto = SeriesDimensionValue::new();
-        proto.dimension_id = Some(dimension.proto.clone()).into();
-        proto.value = Some(value.into().proto).into();
-        self.proto.values.push(proto);
+        self.proto.values.push(SeriesDimensionValue {
+            dimension_id: Some(dimension.proto.clone()),
+            value: Some(value.into().proto),
+        });
         Ok(())
     }
 }

@@ -1,10 +1,13 @@
 use crate::artifacts::Geometry3Builder;
 #[cfg(feature = "wasm")]
 use crate::artifacts::IntoGeometry3Builder;
+use crate::artifacts::Object2Builder;
 use crate::artifacts::Transform3Builder;
-use crate::generated::Object3;
-use crate::generated::StructuredData;
 use crate::ClientError;
+use observation_tools_common::proto::structured_data;
+use observation_tools_common::proto::Object2;
+use observation_tools_common::proto::Object3;
+use observation_tools_common::proto::StructuredData;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -44,9 +47,12 @@ impl Object3Builder {
 
 impl Object3Builder {
     pub fn new(geometry: Geometry3Builder) -> Object3Builder {
-        let mut proto = Object3::new();
-        proto.geometry = Some(geometry.proto).into();
-        Object3Builder { proto }
+        Object3Builder {
+            proto: Object3 {
+                geometry: Some(geometry.proto),
+                transforms: vec![],
+            },
+        }
     }
 }
 
@@ -57,9 +63,8 @@ impl TryInto<StructuredData> for Object3Builder {
         if self.proto.transforms.is_empty() {
             return Err(ClientError::NoTransformsInBuilder);
         }
-
-        let mut s = StructuredData::new();
-        *s.mut_object3() = self.proto;
-        Ok(s)
+        Ok(StructuredData {
+            data: Some(structured_data::Data::Object3(self.proto)),
+        })
     }
 }

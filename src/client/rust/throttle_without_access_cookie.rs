@@ -1,7 +1,6 @@
 use core::fmt::Debug;
 use futures::ready;
 use pin_project::pin_project;
-use reqwest::cookie;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -21,7 +20,7 @@ pub(crate) struct ThrottleWithoutAccessCookieLayer<T> {
 
 impl<C, S> Layer<S> for ThrottleWithoutAccessCookieLayer<C>
 where
-    C: cookie::CookieStore + Debug,
+    //C: cookie::CookieStore + Debug,
     S: Clone,
 {
     type Service = ThrottleWithoutAccessCookie<C, S>;
@@ -31,7 +30,7 @@ where
     }
 }
 
-pub(crate) trait DebugCookieStore: cookie::CookieStore + Debug {}
+pub(crate) trait DebugCookieStore: /*cookie::CookieStore + */Debug {}
 
 /// Throttle requests until we get an access token cookie, which makes requests
 /// cheaper and faster.
@@ -45,7 +44,7 @@ pub(crate) struct ThrottleWithoutAccessCookie<C, T> {
 
 impl<C, T> ThrottleWithoutAccessCookie<C, T>
 where
-    C: cookie::CookieStore + Debug,
+    //C: cookie::CookieStore + Debug,
     T: Clone,
 {
     /// Create a new concurrency limiter.
@@ -74,6 +73,9 @@ where
     }
 
     fn has_access_token_cookie(&self) -> bool {
+        // TODO(doug): Enable cookies
+        true
+        /*
         self.cookie_store
             .cookies(&self.api_host)
             .and_then(|cookie_header| {
@@ -83,6 +85,7 @@ where
                     .map(|h| h.contains(ACCESS_TOKEN_COOKIE))
             })
             .unwrap_or_default()
+         */
     }
 }
 
@@ -90,7 +93,8 @@ const ACCESS_TOKEN_COOKIE: &str = "ObsToolsAccessToken";
 
 impl<C, S, Request> Service<Request> for ThrottleWithoutAccessCookie<C, S>
 where
-    C: cookie::CookieStore + Debug,
+    //C: cookie::CookieStore
+    // + Debug,
     S: Service<Request> + Clone,
 {
     type Response = S::Response;

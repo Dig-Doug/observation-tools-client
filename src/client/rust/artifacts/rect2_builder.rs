@@ -1,7 +1,7 @@
 use crate::artifacts::Geometry2Builder;
 use crate::artifacts::Object2Builder;
 use crate::artifacts::Vector2Builder;
-use crate::generated::Rect2;
+use observation_tools_common::proto::Rect2;
 use wasm_bindgen::prelude::*;
 
 /// An axis-aligned rectangle.
@@ -17,9 +17,11 @@ pub struct Rect2Builder {
 impl Rect2Builder {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new(size: &Vector2Builder) -> Rect2Builder {
-        let mut proto = Rect2::new();
-        proto.size = Some(size.proto.clone()).into();
-        Rect2Builder { proto }
+        Rect2Builder {
+            proto: Rect2 {
+                size: Some(size.proto.clone()),
+            },
+        }
     }
 }
 

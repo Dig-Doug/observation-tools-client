@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-import "src/proto/uuid.proto";
-import "src/proto/math.proto";
+import "src/common/proto/uuid.proto";
+import "src/common/proto/math.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/field_mask.proto";
@@ -145,13 +145,13 @@ message Mesh {
   repeated Vertex vertices = 1;
 
   repeated uint32 indices = 2;
-  
+
   // TODO(doug): repeated Mesh sub_meshes = 6;
 }
 
 message Vertex {
   Point3 position = 1;
-  
+
   Vector3 normal = 2;
 }
 
@@ -165,7 +165,7 @@ message ArtifactUpdate {
   //.google.protobuf.Any field_data = 1;
 
   //.google.protobuf.FieldMask field = 2;
-  
+
   Operation operation = 3;
 }
 
@@ -190,7 +190,7 @@ message SeriesData {
 
 message SeriesDimensionData {
   SeriesDimensionId id = 1;
-  
+
   string name = 2;
 }
 

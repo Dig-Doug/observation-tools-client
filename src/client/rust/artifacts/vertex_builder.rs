@@ -1,6 +1,6 @@
 use crate::artifacts::Point3Builder;
 use crate::artifacts::Vector3Builder;
-use crate::generated::Vertex;
+use observation_tools_common::proto::Vertex;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -11,9 +11,12 @@ pub struct VertexBuilder {
 // Rust only functions
 impl VertexBuilder {
     pub fn new<P: Into<Point3Builder>>(position: P) -> VertexBuilder {
-        let mut proto = Vertex::new();
-        proto.position = Some(position.into().proto).into();
-        VertexBuilder { proto }
+        VertexBuilder {
+            proto: Vertex {
+                position: Some(position.into().proto),
+                normal: None,
+            },
+        }
     }
 }
 

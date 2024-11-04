@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "src/proto/uuid.proto";
+import "src/common/proto/uuid.proto";
 
 package observation_tools.proto;
 

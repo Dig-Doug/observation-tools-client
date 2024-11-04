@@ -1,10 +1,4 @@
 use crate::artifacts::UserMetadataBuilder;
-use crate::generated::public_global_id;
-use crate::generated::ArtifactType::ARTIFACT_TYPE_ROOT_GROUP;
-use crate::generated::CreateArtifactRequest;
-use crate::generated::ProjectId;
-use crate::generated::PublicGlobalId;
-use crate::generated::StructuredData;
 use crate::groups::base_artifact_uploader::artifact_group_uploader_data_from_request;
 use crate::groups::base_artifact_uploader::BaseArtifactUploaderBuilder;
 use crate::groups::RunUploader;
@@ -26,8 +20,16 @@ use crate::TokenGenerator;
 use anyhow::anyhow;
 use core::fmt::Debug;
 use core::fmt::Formatter;
-use protobuf::Message;
-use reqwest::cookie;
+use observation_tools_common::proto::create_artifact_request;
+use observation_tools_common::proto::public_global_id;
+use observation_tools_common::proto::ArtifactData;
+use observation_tools_common::proto::ArtifactType::RootGroup;
+use observation_tools_common::proto::CreateArtifactRequest;
+use observation_tools_common::proto::ProjectId;
+use observation_tools_common::proto::PublicGlobalId;
+use observation_tools_common::proto::RunId;
+use observation_tools_common::proto::StructuredData;
+use prost::Message;
 use std::io::Write;
 use std::sync::Arc;
 use std::time::Duration;
@@ -163,7 +165,7 @@ impl Client {
         request: &CreateArtifactRequest,
         structured_data: Option<StructuredData>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        let bytes = structured_data.and_then(|s| s.write_to_bytes().ok());
+        let bytes = structured_data.map(|s| s.encode_to_vec());
         self.upload_artifact_raw_bytes(request, bytes.as_ref().map(|b| b.as_slice()))
     }
 
@@ -179,15 +181,21 @@ impl Client {
         &self,
         into_metadata: M,
     ) -> Result<RunUploaderTaskHandle, ClientError> {
-        let mut request = CreateArtifactRequest::new();
-        request.project_id = Some(self.inner.project_id.clone()).into();
-        request.artifact_id = Some(new_artifact_id()).into();
-        request.run_id.mut_or_insert_default().id = request.artifact_id.clone();
-        let group_data = request.mut_artifact_data();
-        let metadata = into_metadata.into();
-        group_data.user_metadata = Some(metadata.proto.clone()).into();
-        group_data.artifact_type = ARTIFACT_TYPE_ROOT_GROUP.into();
-        group_data.client_creation_time = Some(time_now()).into();
+        let artifact_id = new_artifact_id();
+        let request = CreateArtifactRequest {
+            project_id: Some(self.inner.project_id.clone()).into(),
+            artifact_id: Some(artifact_id.clone()),
+            run_id: Some(RunId {
+                id: Some(artifact_id),
+            }),
+            data: Some(create_artifact_request::Data::ArtifactData(ArtifactData {
+                user_metadata: Some(into_metadata.into().proto),
+                artifact_type: RootGroup.into(),
+                client_creation_time: Some(time_now()),
+                ..Default::default()
+            })),
+            ..Default::default()
+        };
         Ok(self
             .upload_artifact(&request, None)?
             .map_handle(|_result| RunUploader {
@@ -204,15 +212,17 @@ impl ClientInner {
         trace!("Creating client");
 
         let api_host = options.api_host.clone().unwrap_or(API_HOST.to_string());
-        let cookie_store = Arc::new(cookie::Jar::default());
+        //let cookie_store = Arc::new(cookie::Jar::default());
         let service = ServiceBuilder::new()
             .layer(ThrottleWithoutAccessCookieLayer {
-                cookie_store: cookie_store.clone(),
+                //cookie_store: cookie_store.clone(),
+                cookie_store: Arc::new(()),
                 api_host: Url::parse(&api_host).map_err(ClientError::from_string)?,
             })
             .service(UploadArtifactService {
                 client: options.reqwest_client.clone().unwrap_or_else(|| {
-                    let builder = reqwest::Client::builder().cookie_provider(cookie_store.clone());
+                    let builder = reqwest::Client::builder();
+                    //.cookie_provider(cookie_store.clone());
                     builder.build().expect("Failed to build reqwest client")
                 }),
                 token_generator: options.token_generator.clone(),
