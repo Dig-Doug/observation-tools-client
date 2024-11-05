@@ -4,7 +4,7 @@ import "src/common/proto/project_id.proto";
 import "src/common/proto/artifact.proto";
 import "src/common/proto/uuid.proto";
 
-package observation_tools.proto;
+package observation_tools.common;
 
 option java_multiple_files = true;
 option java_package = "tools.observation.proto";

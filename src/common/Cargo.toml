@@ -8,8 +8,14 @@ name = "observation_tools_common"
 path = "lib.rs"
 
 [dependencies]
-prost = { workspace = true }
-prost-types = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+image = { workspace = true }
+nalgebra = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+uuid = { workspace = true, features = ["v4"] }
+wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
+wasm-bindgen-derive = { workspace = true }
 
 [build-dependencies]
 prost-build = { workspace = true }
