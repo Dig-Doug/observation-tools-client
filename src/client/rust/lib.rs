@@ -105,7 +105,6 @@
 extern crate alloc;
 extern crate core;
 
-pub mod artifacts;
 mod client;
 pub mod groups;
 mod run_id;
@@ -127,7 +126,9 @@ pub use crate::task_handle::PublicSeriesIdTaskHandle;
 pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::util::ClientError;
-use observation_tools_common::proto::ArtifactId;
+use observation_tools_common::artifact::ArtifactId;
+pub use observation_tools_common::artifacts;
+use observation_tools_common::artifacts::SeriesId;
 use tracing_wasm::WASMLayerConfigBuilder;
 use wasm_bindgen::prelude::*;
 
@@ -135,6 +136,12 @@ use wasm_bindgen::prelude::*;
 #[derive(Debug, Clone)]
 pub struct PublicArtifactId {
     pub(crate) id: ArtifactId,
+}
+
+#[wasm_bindgen]
+#[derive(Debug, Clone)]
+pub struct PublicSeriesId {
+    pub(crate) id: SeriesId,
 }
 
 #[wasm_bindgen(start)]

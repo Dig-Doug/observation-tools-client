@@ -7,20 +7,19 @@ use nalgebra::Rotation3;
 use nalgebra::Transform3;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
-use observation_tools::artifacts::Image2Builder;
-use observation_tools::artifacts::Object2Builder;
-use observation_tools::artifacts::Object2Updater;
-use observation_tools::artifacts::PerPixelTransformBuilder;
-use observation_tools::artifacts::Point2Builder;
-use observation_tools::artifacts::Polygon2Builder;
-use observation_tools::artifacts::Polygon3Builder;
-use observation_tools::artifacts::Rect2Builder;
-use observation_tools::artifacts::Segment2Builder;
-use observation_tools::artifacts::SeriesBuilder;
-use observation_tools::artifacts::SeriesPointBuilder;
-use observation_tools::artifacts::Transform2Builder;
-use observation_tools::artifacts::Transform3Builder;
-use observation_tools::artifacts::Vector2Builder;
+use observation_tools::artifacts::Image2;
+use observation_tools::artifacts::Object2;
+use observation_tools::artifacts::PerPixelTransform;
+use observation_tools::artifacts::Point2;
+use observation_tools::artifacts::Polygon2;
+use observation_tools::artifacts::Polygon3;
+use observation_tools::artifacts::Rect2;
+use observation_tools::artifacts::Segment2;
+use observation_tools::artifacts::Series;
+use observation_tools::artifacts::SeriesPoint;
+use observation_tools::artifacts::Transform2;
+use observation_tools::artifacts::Transform3;
+use observation_tools::artifacts::Vector2;
 use observation_tools::groups::ArtifactUploader2d;
 use observation_tools::groups::ArtifactUploader3d;
 use observation_tools::ClientOptions;
@@ -58,8 +57,7 @@ pub async fn run_examples(
     upload_basic_example(&uploader_2d)?;
 
     // TODO(doug): Should we simplify this to just uploader.child_uploader_3d?
-    let uploader_3d =
-        uploader.child_uploader_3d("generate_barn_wall", Transform3Builder::identity())?;
+    let uploader_3d = uploader.child_uploader_3d("generate_barn_wall", Transform3::identity())?;
     generate_stone_wall(&uploader_3d)?;
 
     println!("See the output at: {}", run_uploader.viewer_url());
@@ -81,14 +79,14 @@ pub async fn run_examples_js(
 fn upload_basic_example(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error> {
     uploader.create_object2(
         "dinosaur",
-        Image2Builder::new(include_bytes!("docusaurus.png"), "image/png"),
+        Image2::new(include_bytes!("docusaurus.png"), "image/png"),
     )?;
-    uploader.create_object2("point2", Point2Builder::new(1.0, 1.0))?;
+    uploader.create_object2("point2", Point2::new(1.0, 1.0))?;
     uploader.create_object2(
         "segment2",
-        Segment2Builder::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
+        Segment2::new(Point2Builder::new(-1.0, 1.0), Point2Builder::new(1.0, -1.0)),
     )?;
-    uploader.create_object2("rect2", Rect2Builder::from(Vector2Builder::new(1.0, 2.0)))?;
+    uploader.create_object2("rect2", Rect2::from(Vector2Builder::new(1.0, 2.0)))?;
     Ok(())
 }
 
@@ -118,7 +116,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
 
     uploader_3d.create_object3(
         "wall_profile_world_space",
-        Polygon3Builder::from_points(wall_profile_world.clone()),
+        Polygon3::from_points(wall_profile_world.clone()),
     )?;
 
     let (world_to_local_transform, local_to_world_transform) =
@@ -134,7 +132,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
 
     wall_2d_uploader.create_object2(
         "wall_profile_local_space",
-        Polygon2Builder::from_points(wall_profile_2d.clone()),
+        Polygon2::from_points(wall_profile_2d.clone()),
     )?;
 
     let stones = generate_stone_locations(&parameters, &wall_profile_2d, &wall_2d_uploader)?;
@@ -153,8 +151,8 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
         let size_variation = rng.gen_range(0.0..=parameters.max_stone_shrink_percentage);
         let final_size = max_side_length * (1.0 - size_variation);
 
-        let mut object2: Object2Builder = Rect2Builder::from(final_size).into();
-        let transform = Transform2Builder::from_trs(
+        let mut object2: Object2 = Rect2Builder::from(final_size).into();
+        let transform = Transform2::from_trs(
             stone.world_position,
             rotation_radians,
             Vector2::from_element(1.0),
@@ -162,7 +160,7 @@ pub fn generate_stone_wall(uploader_3d: &ArtifactUploader3d) -> Result<(), anyho
         object2.add_transform(transform.clone());
         stones_uploader.create_object2(format!("stone_{}", stone.id), object2)?;
 
-        let mut center2: Object2Builder = Point2Builder::origin().into();
+        let mut center2: Object2 = Point2Builder::origin().into();
         center2.add_transform(transform);
         stones_uploader.create_object2(format!("stone_center_{}", stone.id), center2)?;
     }
@@ -208,7 +206,7 @@ fn generate_stone_locations(
     wall_profile_2d: &Vec<Point2<f64>>,
     wall_2d_uploader: &ArtifactUploader2d,
 ) -> Result<Vec<GridStone>, anyhow::Error> {
-    let mut series_builder = SeriesBuilder::new();
+    let mut series_builder = Series::new();
     let algorithm_step_dimension_id = series_builder.add_dimension("algorithm_step");
     let algorithm_series_id = wall_2d_uploader.series("grid_algorithm", series_builder)?;
 
@@ -265,19 +263,19 @@ fn generate_stone_locations(
                     .component_mul(&cell_size),
             });
 
-            let mut image = Image2Builder::from_grayscale_pixels(
+            let mut image = Image2::from_grayscale_pixels(
                 grid.as_slice(),
                 grid_width as u32,
                 grid_height as u32,
             )?;
-            image.set_per_pixel_transform(PerPixelTransformBuilder::random_distinct_color());
-            let mut object2: Object2Builder = image.into();
-            object2.add_transform(Transform2Builder::from_trs(
+            image.set_per_pixel_transform(PerPixelTransform::random_distinct_color());
+            let mut object2: Object2 = image.into();
+            object2.add_transform(Transform2::from_trs(
                 bb_min,
                 0.0,
-                Vector2Builder::new(size.x, size.y),
+                Vector2::new(size.x, size.y),
             ));
-            object2.set_series_point(&SeriesPointBuilder::new(
+            object2.set_series_point(&SeriesPoint::new(
                 &algorithm_series_id,
                 &algorithm_step_dimension_id,
                 algorithm_step as f64,

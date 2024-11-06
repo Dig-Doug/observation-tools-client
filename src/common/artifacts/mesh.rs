@@ -1,19 +1,22 @@
 use crate::artifacts::Geometry3;
 use crate::artifacts::Object3;
 use crate::artifacts::Vertex;
+use serde::Deserialize;
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 /// A 3D mesh
 //#[doc = docify::embed_run!("tests/examples.rs", mesh3_example)]
-#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Mesh {
+    #[wasm_bindgen(skip)]
     pub vertices: Vec<Vertex>,
+    #[wasm_bindgen(skip)]
     pub indices: Vec<u32>,
 }
 
-//#[wasm_bindgen]
+#[wasm_bindgen]
 impl Mesh {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Mesh {
@@ -31,6 +34,15 @@ impl Mesh {
         self.indices.push(i0);
         self.indices.push(i1);
         self.indices.push(i2);
+    }
+}
+
+// WASM only functions
+#[cfg(feature = "wasm")]
+#[wasm_bindgen]
+impl Mesh {
+    pub fn into_object(self) -> Object3 {
+        self.into()
     }
 }
 

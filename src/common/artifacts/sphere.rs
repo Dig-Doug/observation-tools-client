@@ -1,20 +1,31 @@
 use crate::artifacts::Geometry3;
 use crate::artifacts::Number;
 use crate::artifacts::Object3;
+use serde::Deserialize;
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 /// A 3D sphere.
-#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Sphere {
+    #[wasm_bindgen(skip)]
     pub radius: Number,
 }
 
-//#[wasm_bindgen]
+#[wasm_bindgen]
 impl Sphere {
     pub fn from_number_builder(radius: Number) -> Sphere {
         Sphere { radius }
+    }
+}
+
+// WASM only functions
+#[cfg(feature = "wasm")]
+#[wasm_bindgen]
+impl Sphere {
+    pub fn into_object(self) -> Object3 {
+        self.into()
     }
 }
 

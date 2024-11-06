@@ -1,22 +1,27 @@
 use crate::artifact::ArtifactId;
 #[cfg(feature = "wasm")]
-use crate::artifacts::number_builder::NumberOrNumber;
+use crate::artifacts::number::NumberOrNumberBuilder;
+use crate::artifacts::ArtifactError;
 use crate::artifacts::Number;
+use serde::Deserialize;
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SeriesId {
+    #[wasm_bindgen(skip)]
     pub artifact_id: ArtifactId,
 }
 
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Series {
+    #[wasm_bindgen(skip)]
     pub dimensions: Vec<SeriesDimensionData>,
 }
 
-//#[wasm_bindgen]
+#[wasm_bindgen]
 impl Series {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Series {
@@ -37,34 +42,38 @@ impl Series {
     }
 }
 
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SeriesDimensionId {
+    #[wasm_bindgen(skip)]
     pub artifact_id: ArtifactId,
 }
 
-//#[wasm_bindgen]
-#[derive(Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct SeriesDimension {
-    pub(crate) proto: SeriesDimensionData,
+    #[wasm_bindgen(skip)]
+    pub data: SeriesDimensionData,
 }
 
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SeriesPoint {
+    #[wasm_bindgen(skip)]
     pub series_id: SeriesId,
+    #[wasm_bindgen(skip)]
     pub values: Vec<SeriesDimensionValue>,
 }
 
-//#[wasm_bindgen]
+#[wasm_bindgen]
 impl SeriesPoint {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new_js(
         series_id: &SeriesId,
         dimension_id: &SeriesDimensionId,
-        value: NumberOrNumber,
-    ) -> Result<SeriesPoint, anyhow::Error> {
+        value: NumberOrNumberBuilder,
+    ) -> Result<SeriesPoint, ArtifactError> {
         SeriesPoint::new(series_id, dimension_id, Number::from_js_value(value)?)
     }
 
@@ -74,8 +83,8 @@ impl SeriesPoint {
     fn add_dimension_js(
         &mut self,
         dimension: &SeriesDimensionId,
-        value: NumberOrNumber,
-    ) -> Result<(), anyhow::Error> {
+        value: NumberOrNumberBuilder,
+    ) -> Result<(), ArtifactError> {
         self.add_dimension(dimension, Number::from_js_value(value)?)
     }
 }
@@ -85,7 +94,7 @@ impl SeriesPoint {
         series_id: &SeriesId,
         dimension_id: &SeriesDimensionId,
         value: N,
-    ) -> Result<SeriesPoint, anyhow::Error> {
+    ) -> Result<SeriesPoint, ArtifactError> {
         let mut point = SeriesPoint {
             series_id: series_id.clone(),
             values: vec![],
@@ -98,7 +107,7 @@ impl SeriesPoint {
         &mut self,
         dimension: &SeriesDimensionId,
         value: N,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), ArtifactError> {
         self.values.push(SeriesDimensionValue {
             dimension_id: dimension.clone(),
             value: value.into(),
@@ -107,13 +116,13 @@ impl SeriesPoint {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SeriesDimensionData {
     pub id: SeriesDimensionId,
     pub name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SeriesDimensionValue {
     pub dimension_id: SeriesDimensionId,
     pub value: Number,

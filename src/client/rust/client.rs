@@ -1,6 +1,4 @@
-use crate::artifacts::UserMetadataBuilder;
-use crate::groups::base_artifact_uploader::artifact_group_uploader_data_from_request;
-use crate::groups::base_artifact_uploader::BaseArtifactUploaderBuilder;
+use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::groups::RunUploader;
 use crate::task_handle::TaskHandle;
 use crate::throttle_without_access_cookie::ThrottleWithoutAccessCookieLayer;
@@ -9,7 +7,6 @@ use crate::upload_artifact::UploadArtifactTask;
 use crate::upload_artifact::UploadArtifactTaskPayload;
 use crate::util::decode_id_proto;
 use crate::util::encode_id_proto;
-use crate::util::new_artifact_id;
 use crate::util::time_now;
 use crate::util::ClientError;
 use crate::util::GenericError;
@@ -20,15 +17,15 @@ use crate::TokenGenerator;
 use anyhow::anyhow;
 use core::fmt::Debug;
 use core::fmt::Formatter;
-use observation_tools_common::proto::create_artifact_request;
-use observation_tools_common::proto::public_global_id;
-use observation_tools_common::proto::ArtifactData;
-use observation_tools_common::proto::ArtifactType::RootGroup;
-use observation_tools_common::proto::CreateArtifactRequest;
-use observation_tools_common::proto::ProjectId;
-use observation_tools_common::proto::PublicGlobalId;
-use observation_tools_common::proto::RunId;
-use observation_tools_common::proto::StructuredData;
+use observation_tools_common::artifact::ArtifactData;
+use observation_tools_common::artifact::ArtifactId;
+use observation_tools_common::artifact::ArtifactType;
+use observation_tools_common::artifact::StructuredData;
+use observation_tools_common::artifacts::UserMetadata;
+use observation_tools_common::create_artifact::CreateArtifactRequest;
+use observation_tools_common::project::ProjectId;
+use observation_tools_common::run::RunId;
+use observation_tools_common::GlobalId;
 use prost::Message;
 use std::io::Write;
 use std::sync::Arc;
@@ -147,7 +144,7 @@ impl Client {
 
     pub fn create_run_js(
         &self,
-        metadata: &UserMetadataBuilder,
+        metadata: &UserMetadata,
     ) -> Result<RunUploaderTaskHandle, ClientError> {
         self.create_run(metadata.clone())
     }
@@ -162,47 +159,53 @@ impl Client {
 
     pub(crate) fn upload_artifact(
         &self,
-        request: &CreateArtifactRequest,
+        request: CreateArtifactRequest,
         structured_data: Option<StructuredData>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        let bytes = structured_data.map(|s| s.encode_to_vec());
+        let bytes = structured_data
+            .map(|s| rmp_serde::to_vec(&s))
+            .transpose()
+            .map_err(ClientError::from_string)?;
         self.upload_artifact_raw_bytes(request, bytes.as_ref().map(|b| b.as_slice()))
     }
 
     pub(crate) fn upload_artifact_raw_bytes(
         &self,
-        request: &CreateArtifactRequest,
+        request: CreateArtifactRequest,
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
         self.inner.submit_task(request, raw_data)
     }
 
-    pub fn create_run<M: Into<UserMetadataBuilder>>(
+    pub fn create_run<M: Into<UserMetadata>>(
         &self,
         into_metadata: M,
     ) -> Result<RunUploaderTaskHandle, ClientError> {
-        let artifact_id = new_artifact_id();
+        let artifact_id = ArtifactId::new();
         let request = CreateArtifactRequest {
-            project_id: Some(self.inner.project_id.clone()).into(),
-            artifact_id: Some(artifact_id.clone()),
-            run_id: Some(RunId {
-                id: Some(artifact_id),
-            }),
-            data: Some(create_artifact_request::Data::ArtifactData(ArtifactData {
-                user_metadata: Some(into_metadata.into().proto),
-                artifact_type: RootGroup.into(),
-                client_creation_time: Some(time_now()),
-                ..Default::default()
-            })),
-            ..Default::default()
+            project_id: self.inner.project_id.clone(),
+            artifact_id: artifact_id.clone(),
+            run_id: Some(RunId { id: artifact_id }),
+            payload: ArtifactData {
+                user_metadata: into_metadata.into(),
+                artifact_type: ArtifactType::RootGroup,
+                client_creation_time: time_now(),
+                ancestor_group_ids: vec![],
+            },
+            series_point: None,
         };
         Ok(self
-            .upload_artifact(&request, None)?
-            .map_handle(|_result| RunUploader {
-                base: BaseArtifactUploaderBuilder::default()
-                    .client(self.clone())
-                    .data(artifact_group_uploader_data_from_request(&request))
-                    .init(),
+            .upload_artifact(request, None)?
+            .map_handle(|run_id| RunUploader {
+                base: BaseArtifactUploader {
+                    client: self.clone(),
+                    project_id: self.inner.project_id.clone(),
+                    run_id: RunId {
+                        id: run_id.id.clone(),
+                    },
+                    id: run_id.id,
+                    ancestor_group_ids: vec![],
+                },
             }))
     }
 }
@@ -254,11 +257,16 @@ impl ClientInner {
             }
         }
 
-        let proto: PublicGlobalId =
-            decode_id_proto(&project_id).map_err(ClientError::from_string)?;
-        let project_id = match proto.data {
-            Some(public_global_id::Data::ProjectId(project_id)) => project_id,
-            _ => Err(anyhow!("Invalid project id: {}", project_id))?,
+        let global_id: GlobalId = project_id
+            .clone()
+            .try_into()
+            .map_err(ClientError::from_string)?;
+        let project_id = match global_id {
+            GlobalId::Project(project_id) => project_id,
+            _ => Err(anyhow!(
+                "The id was valid but not a project id: {}",
+                project_id
+            ))?,
         };
 
         let client = ClientInner {
@@ -274,14 +282,10 @@ impl ClientInner {
 
     fn submit_task(
         &self,
-        request: &CreateArtifactRequest,
+        request: CreateArtifactRequest,
         raw_data: Option<&[u8]>,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        let id = request
-            .artifact_id
-            .as_ref()
-            .ok_or(anyhow!("ArtifactId missing on upload task"))?
-            .clone();
+        let id = request.artifact_id.clone();
 
         #[cfg(feature = "files")]
         let payload = {

@@ -1,11 +1,11 @@
-use crate::artifacts::Object2Updater;
-use crate::artifacts::PublicSeriesId;
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::groups::ArtifactUploader2d;
 use crate::groups::ArtifactUploader3d;
 use crate::groups::GenericArtifactUploader;
+use crate::groups::Object2Updater;
 use crate::groups::RunUploader;
 use crate::PublicArtifactId;
+use crate::PublicSeriesId;
 use async_channel::Receiver;
 use async_trait::async_trait;
 use std::ops::Deref;

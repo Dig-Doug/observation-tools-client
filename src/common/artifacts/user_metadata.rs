@@ -1,14 +1,18 @@
+use serde::Deserialize;
+use serde::Serialize;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserMetadata {
+    #[wasm_bindgen(skip)]
     pub name: String,
+    #[wasm_bindgen(skip)]
     pub metadata: HashMap<String, String>,
 }
 
-//#[wasm_bindgen]
+#[wasm_bindgen]
 impl UserMetadata {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]

@@ -7,13 +7,19 @@ edition = "2021"
 name = "observation_tools_common"
 path = "lib.rs"
 
+[features]
+wasm = ["js-sys"]
+
 [dependencies]
 anyhow = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 image = { workspace = true }
+js-sys = { workspace = true, optional = true }
 nalgebra = { workspace = true }
+bs58 = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-uuid = { workspace = true, features = ["v4"] }
+thiserror = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
 wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
 wasm-bindgen-derive = { workspace = true }
 

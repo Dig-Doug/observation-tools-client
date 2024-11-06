@@ -7,8 +7,7 @@ use futures::future::BoxFuture;
 use futures::future::LocalBoxFuture;
 use futures::FutureExt;
 use futures::TryFutureExt;
-use observation_tools_common::proto::ArtifactId;
-use observation_tools_common::proto::CreateArtifactRequest;
+use observation_tools_common::create_artifact::CreateArtifactRequest;
 use prost::Message;
 use reqwest::multipart::Part;
 use std::task::Context;
@@ -35,12 +34,7 @@ pub struct UploadArtifactTask {
 
 impl UploadArtifactTask {
     pub fn artifact_id(&self) -> String {
-        encode_id_proto(
-            self.request
-                .artifact_id
-                .as_ref()
-                .unwrap_or(&ArtifactId::default()),
-        )
+        self.request.artifact_id.uuid.simple().to_string()
     }
 }
 
@@ -109,8 +103,8 @@ async fn upload_artifact_impl(
 ) -> Result<(), GenericError> {
     trace!("Uploading artifact: {:?}", task.artifact_id());
 
-    let req_b64 = base64::engine::general_purpose::STANDARD.encode(task.request.encode_to_vec());
-    let mut form = reqwest::multipart::Form::new().text("request", req_b64);
+    let request_bytes = rmp_serde::to_vec(&task.request).map_err(ClientError::from_string)?;
+    let mut form = reqwest::multipart::Form::new().part("request", Part::bytes(request_bytes));
     if let Some(payload) = task.payload.as_ref() {
         let part = match payload {
             #[cfg(feature = "files")]

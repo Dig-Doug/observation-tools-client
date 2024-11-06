@@ -1,16 +1,19 @@
 mod auth;
 mod ingestion;
 mod server;
+mod storage;
 
 use crate::auth::AuthState;
-use crate::ingestion::create_artifact::CreateArtifactState;
 use crate::server::ServerState;
-use axum::extract::FromRef;
 use axum::routing::get;
+use axum::routing::post;
 use axum::Router;
 use clap::Args;
 use clap::Parser;
 use clap::Subcommand;
+use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::Pool;
+use diesel::SqliteConnection;
 use std::env;
 use tokio::net::TcpListener;
 use tracing::info;
@@ -54,7 +57,14 @@ async fn main() -> Result<(), anyhow::Error> {
             let port = env::var("PORT").unwrap_or("8000".to_string());
             let app = Router::new()
                 .route("/", get(index))
-                .with_state(ServerState {});
+                .route(
+                    "/create-artifact",
+                    post(ingestion::create_artifact::create_artifact),
+                )
+                .with_state(ServerState {
+                    artifact_storage: create_sqlite_storage()?,
+                    auth_state: AuthState {},
+                });
             let address = format!("0.0.0.0:{}", port);
             info!("Listening on http://{}", address);
             axum::serve(TcpListener::bind(address).await?, app).await?;
@@ -66,4 +76,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
 async fn index() -> String {
     "OK".to_string()
+}
+
+fn create_sqlite_storage() -> Result<storage::ArtifactStorage, anyhow::Error> {
+    let manager = ConnectionManager::<SqliteConnection>::new("tmp/observation-tools.db");
+    let pool = Pool::builder().test_on_check_out(true).build(manager)?;
+    let storage = storage::sqlite::SqliteArtifactStorage { pool };
+    storage.init()?;
+    Ok(storage::ArtifactStorage::Local(storage))
 }

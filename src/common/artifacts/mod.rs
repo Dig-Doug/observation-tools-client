@@ -39,11 +39,11 @@
 //! conversion:
 //!
 //! ```rust
-//! # use observation_tools::anyhow::Error;
+//! # use observation_tools::ArtifactError;
 //! # use observation_tools::groups::ArtifactUploader2d;
 //! use observation_tools::artifacts::Point2;
 //!
-//! # fn implicit_object(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error>{
+//! # fn implicit_object(uploader: &ArtifactUploader2d) -> Result<(), ArtifactError>{
 //! // The Point2 will be converted to an Object2 with an identity transform
 //! uploader.create_object2("my-point", Point2::new(5.0, 3.0))?;
 //! #   Ok(())
@@ -57,12 +57,12 @@
 //! If you do not need to add metadata, [UserMetadata] can be created
 //! implicitly from a string:
 //! ```rust
-//! # use observation_tools::anyhow::Error;
+//! # use observation_tools::ArtifactError;
 //! # use observation_tools::groups::ArtifactUploader2d;
 //! use observation_tools::artifacts::Point2;
 //! use observation_tools::artifacts::UserMetadata;
 //!
-//! # fn user_metadata(uploader: &ArtifactUploader2d) -> Result<(), anyhow::Error>{
+//! # fn user_metadata(uploader: &ArtifactUploader2d) -> Result<(), ArtifactError>{
 //! // Creates an artifact with the name "my-point"
 //! uploader.create_object2("my-point", Point2::new(5.0, 3.0))?;
 //!
@@ -81,8 +81,9 @@
 mod geometry2;
 mod geometry3;
 mod image2;
+mod matrix;
 mod mesh;
-//pub mod nalegbra;
+pub mod nalegbra;
 mod number;
 mod object2;
 mod object3;
@@ -111,12 +112,13 @@ pub use geometry3::Geometry3;
 //pub use geometry3::IntoGeometry3;
 pub use image2::Image2;
 pub use image2::PerPixelTransform;
+pub use matrix::Matrix3x3;
+pub use matrix::Matrix4x4;
 pub use mesh::Mesh;
 pub use number::Number;
 //#[cfg(feature = "wasm")]
 //pub use number::NumberOrNumber;
 pub use object2::Object2;
-pub use object2::Object2Updater;
 pub use object3::Object3;
 pub use point2::Point2;
 pub use point3::Point3;
@@ -138,3 +140,26 @@ pub use user_metadata::UserMetadata;
 pub use vector2::Vector2;
 pub use vector3::Vector3;
 pub use vertex::Vertex;
+use wasm_bindgen::JsValue;
+
+#[derive(thiserror::Error, Debug)]
+pub enum ArtifactError {
+    #[error("Failed to convert {value} into a number")]
+    FailedToConvertJsValueToNumber { value: String },
+    #[error("Failed to convert type to Geometry2Builder")]
+    FailedToCreateGeometry2Builder,
+    #[error("Failed to convert type to Geometry3Builder")]
+    FailedToCreateGeometry3Builder,
+    #[error("No transforms on object: Did you forget to add one to the object?")]
+    NoTransforms,
+    #[error("Failed to create image")]
+    FailedToCreateImage,
+    #[error("Failed to write image: {message}")]
+    FailedToWriteImage { message: String },
+}
+
+impl Into<JsValue> for ArtifactError {
+    fn into(self) -> JsValue {
+        JsValue::from_str(&self.to_string())
+    }
+}

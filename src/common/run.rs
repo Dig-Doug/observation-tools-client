@@ -1,6 +1,8 @@
 use crate::artifact::ArtifactId;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RunId {
     pub id: ArtifactId,
 }

@@ -2,16 +2,18 @@ use crate::auth::principal::Principal;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_graphql::dataloader::Loader;
+use observation_tools_common::project::ProjectId;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::sync::Arc;
-use tracing::trace;
 use tracing::warn;
 
 pub trait ResourceId: Debug + Clone + Hash + Sync + Send + Eq {}
+
+impl ResourceId for ProjectId {}
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Permission<T: ResourceId> {

@@ -1,16 +1,11 @@
 use crate::auth::AuthState;
-use anyhow::anyhow;
 use axum::async_trait;
 use axum::extract::FromRef;
 use axum::extract::FromRequestParts;
-use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
-use axum::RequestPartsExt;
 use serde::Deserialize;
 use serde::Serialize;
-use std::collections::HashMap;
-use tracing::error;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Principal {

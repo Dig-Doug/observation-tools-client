@@ -2,19 +2,21 @@ use crate::artifacts::Geometry2;
 use crate::artifacts::Object2;
 use crate::artifacts::Point2;
 use crate::artifacts::PolygonEdge2;
+use serde::Deserialize;
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 /// A 2D polygon. Polygon2s are represented as an edge-loop, so an edge will be
 /// automatically created between the last and first vertex.
 //#[doc = docify::embed_run!("tests/examples.rs", polygon2_example)]
-#[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Polygon2 {
+    #[wasm_bindgen(skip)]
     pub edges: Vec<PolygonEdge2>,
 }
 
-//#[wasm_bindgen]
+#[wasm_bindgen]
 impl Polygon2 {
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new() -> Polygon2 {
@@ -24,6 +26,15 @@ impl Polygon2 {
     /// Add a vertex to the polygon.
     pub fn add_edge(&mut self, edge: PolygonEdge2) {
         self.edges.push(edge);
+    }
+}
+
+// WASM only functions
+#[cfg(feature = "wasm")]
+#[wasm_bindgen]
+impl Polygon2 {
+    pub fn into_object(self) -> Object2 {
+        self.into()
     }
 }
 

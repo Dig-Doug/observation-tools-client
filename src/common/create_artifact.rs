@@ -1,24 +1,19 @@
 use crate::artifact::ArtifactData;
 use crate::artifact::ArtifactId;
-use crate::artifact::ArtifactUpdate;
 use crate::artifacts::SeriesPoint;
 use crate::project::ProjectId;
 use crate::run::RunId;
 use anyhow::anyhow;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateArtifactRequest {
-    project_id: ProjectId,
-    run_id: RunId,
-    artifact_id: ArtifactId,
-    series_point: Option<SeriesPoint>,
-    payload: CreateArtifactPayload,
-}
-
-#[derive(Debug, Clone)]
-pub enum CreateArtifactPayload {
-    Create(ArtifactData),
-    Update(ArtifactUpdate),
+    pub project_id: ProjectId,
+    pub run_id: Option<RunId>,
+    pub artifact_id: ArtifactId,
+    pub series_point: Option<SeriesPoint>,
+    pub payload: ArtifactData,
 }
 
 impl CreateArtifactRequest {
@@ -33,6 +28,3 @@ impl CreateArtifactRequest {
         Ok(self)
     }
 }
-
-#[derive(Debug, Clone)]
-pub struct CreateArtifactResponse {}

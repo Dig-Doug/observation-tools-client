@@ -67,6 +67,8 @@ wasm-bindgen-derive = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 web-sys = { workspace = true, features = ["Window", "Performance", "PerformanceTiming"] }
 whoami = { workspace = true }
+rmp-serde = { workspace = true }
+chrono = { workspace = true }
 
 [build-dependencies]
 protobuf-codegen = { workspace = true }

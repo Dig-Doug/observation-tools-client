@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct RunId {
     pub(crate) id: String,
 }

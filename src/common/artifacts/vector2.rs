@@ -1,20 +1,30 @@
 #[cfg(feature = "wasm")]
-use crate::artifacts::number_builder::NumberOrNumber;
+use crate::artifacts::number::NumberOrNumberBuilder;
+#[cfg(feature = "wasm")]
+use crate::artifacts::ArtifactError;
 use crate::artifacts::Number;
+use nalgebra::Scalar;
+use serde::Deserialize;
+use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
-//#[wasm_bindgen]
-#[derive(Debug, Clone)]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Vector2 {
+    #[wasm_bindgen(skip)]
     pub x: Number,
+    #[wasm_bindgen(skip)]
     pub y: Number,
 }
 
-//#[wasm_bindgen]
+#[wasm_bindgen]
 impl Vector2 {
     #[cfg(feature = "wasm")]
     #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
-    pub fn new_js(x: NumberOrNumber, y: NumberOrNumber) -> Result<Vector2, anyhow::Error> {
+    pub fn new_js(
+        x: NumberOrNumberBuilder,
+        y: NumberOrNumberBuilder,
+    ) -> Result<Vector2, ArtifactError> {
         Ok(Vector2::from_number_builder(
             Number::from_js_value(x)?,
             Number::from_js_value(y)?,
@@ -39,5 +49,17 @@ where
 {
     fn from((x, y): (A, B)) -> Vector2 {
         Vector2::new(x, y)
+    }
+}
+
+impl<T: Scalar + Into<Number>> Into<Vector2> for nalgebra::Vector2<T> {
+    fn into(self) -> Vector2 {
+        Vector2::new(self.x.clone().into(), self.y.clone().into())
+    }
+}
+
+impl Into<nalgebra::Vector2<f64>> for Vector2 {
+    fn into(self) -> nalgebra::Vector2<f64> {
+        nalgebra::Vector2::new(self.x.into(), self.y.into())
     }
 }

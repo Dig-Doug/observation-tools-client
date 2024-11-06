@@ -1,5 +1,7 @@
+use chrono::DateTime;
+use chrono::Utc;
 use core::fmt::Debug;
-use observation_tools_common::proto::ArtifactId;
+use observation_tools_common::artifacts::ArtifactError;
 use prost::Message;
 use prost_types::Timestamp;
 use std::error::Error;
@@ -41,6 +43,11 @@ pub enum ClientError {
     GoogleOAuthReceivedInvalidState { expected: String, received: String },
     #[error("Failed to open OAuth2 PKCE server")]
     FailedToOpenPKCEServer,
+    #[error("Artifact error: {source}")]
+    ArtifactError {
+        #[from]
+        source: ArtifactError,
+    },
 }
 
 impl ClientError {
@@ -57,12 +64,6 @@ impl Into<JsValue> for ClientError {
     }
 }
 
-pub(crate) fn new_artifact_id() -> ArtifactId {
-    ArtifactId {
-        uuid: Some(new_uuid_proto()).into(),
-    }
-}
-
 pub(crate) fn encode_id_proto(msg: &impl Message) -> String {
     bs58::encode(msg.encode_to_vec()).into_string()
 }
@@ -72,20 +73,11 @@ pub(crate) fn decode_id_proto<M: Message + Default>(encoded: &str) -> Result<M, 
     Ok(M::decode(&mut Cursor::new(proto_bytes))?)
 }
 
-pub(crate) fn new_uuid_proto() -> observation_tools_common::proto::Uuid {
-    observation_tools_common::proto::Uuid {
-        data: Uuid::new_v4().as_bytes().to_vec(),
-    }
-}
-
-pub(crate) fn time_now() -> Timestamp {
+pub(crate) fn time_now() -> DateTime<Utc> {
     let since_the_epoch = since_epoch();
     let seconds = since_the_epoch.as_secs();
     let nanos = (since_the_epoch - Duration::from_secs(seconds)).as_nanos();
-    Timestamp {
-        seconds: seconds as i64,
-        nanos: nanos as i32,
-    }
+    DateTime::from_timestamp(seconds as i64, nanos as u32).expect("Invalid timestamp")
 }
 
 #[cfg(feature = "wasm")]

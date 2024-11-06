@@ -14,11 +14,11 @@
 //! ```rust
 //! # use observation_tools::{ArtifactUploadHandle, ClientError};
 //! # use observation_tools::groups::ArtifactUploader2d;
-//! use observation_tools::artifacts::Point2Builder;
+//! use observation_tools::artifacts::Point2;
 //!
 //! # async fn create_artifact(uploader: &ArtifactUploader2d) -> Result<(), ClientError>{
 //! // Create methods do some data validation and may return an error
-//! let upload_handle = uploader.create_object2("my-point", Point2Builder::new(5.0, 3.0))?;
+//! let upload_handle = uploader.create_object2("my-point", Point2::new(5.0, 3.0))?;
 //! // You can optionally wait for the upload to complete
 //! upload_handle.wait_for_upload().await?;
 //! #   Ok(())
@@ -29,30 +29,30 @@
 //! A [crate::ArtifactUploadHandle] returned by a creation method will
 //! also contain an **artifact updater** that you can use to submit incremental
 //! updates to the artifact. Updates are generally coupled with a
-//! [crate::artifacts::SeriesBuilder] to keep track of updates over a dimension,
+//! [crate::artifacts::Series] to keep track of updates over a dimension,
 //! e.g. time.
 //!
 //! ```rust
 //! # use observation_tools::{ArtifactUploadHandle, ClientError};
 //! # use observation_tools::groups::ArtifactUploader2d;
-//! use observation_tools::artifacts::Object2Builder;
-//! use observation_tools::artifacts::Point2Builder;
-//! use observation_tools::artifacts::SeriesBuilder;
-//! use observation_tools::artifacts::SeriesPointBuilder;
-//! use observation_tools::artifacts::Transform2Builder;
+//! use observation_tools::artifacts::Object2;
+//! use observation_tools::artifacts::Point2;
+//! use observation_tools::artifacts::Series;
+//! use observation_tools::artifacts::SeriesPoint;
+//! use observation_tools::artifacts::Transform2;
 //!
 //! # async fn update_artifact(uploader: &ArtifactUploader2d) -> Result<(), ClientError>{
 //! # // TODO(doug): This series example is pretty messy
-//! let mut series_builder = SeriesBuilder::new();
+//! let mut series_builder = Series::new();
 //! let algorithm_step_dimension_id = series_builder.add_dimension("algorithm_step");
 //! let algorithm_series_id = uploader.series("grid_algorithm", series_builder)?;
 //!
-//! let handle = uploader.create_object2("my-point", Point2Builder::new(0.0, 0.0))?;
+//! let handle = uploader.create_object2("my-point", Point2::new(0.0, 0.0))?;
 //!
 //! for i in 0..10 {
-//!     let mut object2: Object2Builder = Point2Builder::new(i as f64, 0.0).into();
-//!     object2.add_transform(Transform2Builder::identity());
-//!     object2.set_series_point(&SeriesPointBuilder::new(
+//!     let mut object2: Object2 = Point2::new(i as f64, 0.0).into();
+//!     object2.add_transform(Transform2::identity());
+//!     object2.set_series_point(&SeriesPoint::new(
 //!         &algorithm_series_id,
 //!         *algorithm_step_dimension_id,
 //!         i as f64,
@@ -72,4 +72,15 @@ mod run_uploader;
 pub use artifact_uploader_2d::ArtifactUploader2d;
 pub use artifact_uploader_3d::ArtifactUploader3d;
 pub use generic_artifact_uploader::GenericArtifactUploader;
+use observation_tools_common::artifact::ArtifactId;
 pub use run_uploader::RunUploader;
+use serde::Deserialize;
+use serde::Serialize;
+use wasm_bindgen::prelude::wasm_bindgen;
+
+/// Updater for an Object2.
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Object2Updater {
+    pub(crate) id: ArtifactId,
+}
