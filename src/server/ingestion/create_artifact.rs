@@ -4,10 +4,11 @@ use crate::auth::permission::Permission;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
 use crate::auth::AuthState;
+use crate::graphql::project::ProjectDataLoader;
 use crate::server::AppError;
 use crate::server::ServerState;
-use crate::storage::ArtifactStorage;
-use crate::storage::ArtifactVersion;
+use crate::storage::artifact::ArtifactStorage;
+use crate::storage::ArtifactVersionRow;
 use anyhow::anyhow;
 use axum::async_trait;
 use axum::extract::multipart::Field;
@@ -16,6 +17,8 @@ use axum::extract::FromRequestParts;
 use axum::extract::Multipart;
 use axum::extract::State;
 use axum::http::request::Parts;
+use axum::http::StatusCode;
+use axum::RequestPartsExt;
 use futures_util::TryStreamExt;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
 use std::convert::Infallible;
@@ -26,30 +29,42 @@ pub struct CreateArtifactState {
     pub permission_loader: PermissionDataLoader,
     pub artifact_storage: ArtifactStorage,
     pub auth_state: AuthState,
+    pub project_loader: ProjectDataLoader,
 }
 
 #[async_trait]
 impl<S> FromRequestParts<S> for CreateArtifactState
 where
-    Self: FromRef<S>,
+    ServerState: FromRef<S>,
     S: Send + Sync,
 {
-    type Rejection = Infallible;
+    type Rejection = (StatusCode, String);
 
-    async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        Ok(Self::from_ref(state))
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let server_state = parts
+            .extract_with_state::<ServerState, _>(state)
+            .await
+            .map_err(|_e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to extract auth state".to_string(),
+                )
+            })?;
+        let principal = Principal::from_request_parts(parts, &server_state).await?;
+        let permission_loader = server_state.new_permission_loader();
+        let project_loader = server_state.new_project_loader(&principal, &permission_loader);
+        Ok(CreateArtifactState {
+            permission_loader,
+            artifact_storage: server_state.artifact_storage.clone(),
+            auth_state: server_state.auth_state.clone(),
+            project_loader,
+        })
     }
 }
 
-impl FromRef<CreateArtifactState> for AuthState {
-    fn from_ref(input: &CreateArtifactState) -> Self {
-        Self::from_ref(&input.auth_state)
-    }
-}
-
-#[axum::debug_handler]
+#[axum::debug_handler(state = ServerState)]
 pub async fn create_artifact(
-    State(state): State<CreateArtifactState>,
+    state: CreateArtifactState,
     principal: Principal,
     mut multipart: Multipart,
 ) -> Result<(), AppError> {
@@ -69,7 +84,7 @@ pub async fn create_artifact(
         return Err(anyhow!("Not authorized to write to project"))?;
     }
 
-    let version = ArtifactVersion {
+    let version = ArtifactVersionRow {
         project_id: request.project_id,
         run_id: request.run_id,
         artifact_id: request.artifact_id,
@@ -78,21 +93,23 @@ pub async fn create_artifact(
         series_point: request.series_point,
     };
 
-    let field = match multipart.next_field().await? {
-        Some(field) => field,
-        None => return Err(anyhow!("Missing `raw_data` field in multipart upload"))?,
+    let payload = match multipart.next_field().await? {
+        Some(field) => {
+            let name = field.name().unwrap_or_default();
+            if name != "raw_data" {
+                return Err(anyhow!(
+                    "Second field in multipart upload must be `raw_data`, got `{}`",
+                    name
+                ))?;
+            }
+            Some(field)
+        }
+        None => None,
     };
 
-    let name = field.name().unwrap_or_default();
-    if name != "raw_data" {
-        return Err(anyhow!(
-            "Second field in multipart upload must be `raw_data`, got `{}`",
-            name
-        ))?;
-    }
     state
         .artifact_storage
-        .write_artifact_version(version, field.into_stream())
+        .write_artifact_version(version, payload)
         .await?;
 
     // TODO(doug): Setup permissions for run

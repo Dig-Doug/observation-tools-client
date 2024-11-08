@@ -22,6 +22,8 @@ thiserror = { workspace = true }
 uuid = { workspace = true, features = ["v4", "serde"] }
 wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
 wasm-bindgen-derive = { workspace = true }
+async-graphql = { workspace = true }
+rmp-serde = { workspace = true }
 
 [build-dependencies]
 prost-build = { workspace = true }

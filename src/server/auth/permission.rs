@@ -30,12 +30,20 @@ impl<T: ResourceId> Permission<T> {
             operation,
         }
     }
+
+    pub fn from_ids(principal: Principal, resource_ids: Vec<T>, operation: Operation) -> Vec<Self> {
+        resource_ids
+            .into_iter()
+            .map(|key| Permission::new(principal.clone(), key, operation))
+            .collect()
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Operation {
     Read,
     Write,
+    Owner,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -61,5 +69,18 @@ impl<T: ResourceId + 'static> Loader<Permission<T>> for PermissionLoader {
             .iter()
             .map(|key| (key.clone(), AccessResult::Allow))
             .collect())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PermissionStorage {}
+
+impl PermissionStorage {
+    pub async fn create_permission<T>(&self, permission: Permission<T>) -> Result<(), String>
+    where
+        T: ResourceId,
+    {
+        warn!("TODO(doug): PermissionStorage not implemented");
+        Ok(())
     }
 }

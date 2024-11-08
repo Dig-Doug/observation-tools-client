@@ -1,6 +1,8 @@
 use crate::artifacts::Transform3;
 use crate::artifacts::*;
 use crate::math::Graph;
+use crate::project::ProjectId;
+use crate::GlobalId;
 use chrono::DateTime;
 use chrono::Utc;
 use serde::Deserialize;
@@ -17,6 +19,18 @@ impl ArtifactId {
         Self {
             uuid: Uuid::new_v4(),
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AbsoluteArtifactId {
+    pub project_id: ProjectId,
+    pub artifact_id: ArtifactId,
+}
+
+impl From<AbsoluteArtifactId> for GlobalId {
+    fn from(value: AbsoluteArtifactId) -> Self {
+        GlobalId::Artifact(value)
     }
 }
 
@@ -38,6 +52,22 @@ pub enum ArtifactType {
     RunStage(RunStageData),
     RootGroup,
     Series(Series),
+}
+
+impl ArtifactType {
+    pub fn as_string(&self) -> String {
+        match self {
+            ArtifactType::Artifact => "Artifact",
+            ArtifactType::Generic => "Generic",
+            ArtifactType::Group2D => "Group2D",
+            ArtifactType::Group3d(_) => "Group3d",
+            ArtifactType::Group2dIn3d(_) => "Group2dIn3d",
+            ArtifactType::RunStage(_) => "RunStage",
+            ArtifactType::RootGroup => "RootGroup",
+            ArtifactType::Series(_) => "Series",
+        }
+        .to_string()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

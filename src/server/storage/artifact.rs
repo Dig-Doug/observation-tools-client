@@ -1,6 +1,10 @@
+use crate::storage::project::ProjectRow;
+use crate::storage::project::ProjectRowOrError;
 use crate::storage::sqlite::SqliteArtifactStorage;
-use crate::storage::ArtifactVersion;
+use crate::storage::ArtifactVersionRow;
 use futures_util::TryStream;
+use observation_tools_common::project::ProjectId;
+use std::collections::HashMap;
 use std::error::Error;
 use tokio_util::bytes::Bytes;
 
@@ -12,13 +16,30 @@ pub enum ArtifactStorage {
 }
 
 impl ArtifactStorage {
+    pub async fn create_project(&self, project_row: ProjectRow) -> Result<(), anyhow::Error> {
+        match self {
+            ArtifactStorage::Local(storage) => storage.create_project(project_row).await,
+        }
+    }
+
+    pub async fn read_projects(
+        &self,
+        projects: Vec<ProjectId>,
+    ) -> Result<HashMap<ProjectId, ProjectRowOrError>, anyhow::Error> {
+        match self {
+            ArtifactStorage::Local(storage) => storage.read_projects(projects).await,
+        }
+    }
+
     pub async fn write_artifact_version<E: Error + Send + Sync + 'static>(
         &self,
-        version: ArtifactVersion,
-        bytes_stream: impl TryStream<Ok = Bytes, Error = E> + Unpin,
+        version: ArtifactVersionRow,
+        bytes_stream: Option<impl TryStream<Ok = Bytes, Error = E> + Unpin>,
     ) -> Result<(), anyhow::Error> {
         match self {
-            Self::Local(storage) => storage.write_artifact_version(version, bytes_stream).await,
+            ArtifactStorage::Local(storage) => {
+                storage.write_artifact_version(version, bytes_stream).await
+            }
         }
     }
 }

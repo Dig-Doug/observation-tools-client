@@ -17,6 +17,7 @@ pub struct CreateArtifactRequest {
 }
 
 impl CreateArtifactRequest {
+    pub const HTTP_PATH: &'static str = "/create-action";
     pub const HTTP_FIELD_NAME: &'static str = "request";
 
     pub fn validate(self) -> Result<CreateArtifactRequest, anyhow::Error> {

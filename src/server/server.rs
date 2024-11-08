@@ -1,13 +1,22 @@
+use crate::auth::permission::PermissionDataLoader;
 use crate::auth::permission::PermissionLoader;
+use crate::auth::permission::PermissionStorage;
+use crate::auth::principal::Principal;
 use crate::auth::AuthState;
+use crate::graphql::project::ProjectDataLoader;
+use crate::graphql::project::ProjectLoader;
 use crate::ingestion::create_artifact::CreateArtifactState;
-use crate::storage::ArtifactStorage;
+use crate::storage::artifact::ArtifactStorage;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
+use async_trait::async_trait;
 use axum::extract::FromRef;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::response::Response;
+use std::convert::Infallible;
 use std::sync::Arc;
 use tracing::error;
 
@@ -15,25 +24,51 @@ use tracing::error;
 pub struct ServerState {
     pub artifact_storage: ArtifactStorage,
     pub auth_state: AuthState,
+    pub permission_storage: PermissionStorage,
 }
 
-impl FromRef<ServerState> for CreateArtifactState {
-    fn from_ref(input: &ServerState) -> Self {
-        CreateArtifactState {
-            permission_loader: Arc::new(DataLoader::with_cache(
-                PermissionLoader {},
-                tokio::spawn,
-                HashMapCache::default(),
-            )),
-            artifact_storage: input.artifact_storage.clone(),
-            auth_state: input.auth_state.clone(),
-        }
+impl ServerState {
+    pub fn new_project_loader(
+        &self,
+        principal: &Principal,
+        permission_loader: &PermissionDataLoader,
+    ) -> ProjectDataLoader {
+        Arc::new(DataLoader::with_cache(
+            ProjectLoader {
+                principal: principal.clone(),
+                permission_loader: permission_loader.clone(),
+                storage: self.artifact_storage.clone(),
+            },
+            tokio::spawn,
+            HashMapCache::default(),
+        ))
+    }
+
+    pub fn new_permission_loader(&self) -> PermissionDataLoader {
+        Arc::new(DataLoader::with_cache(
+            PermissionLoader {},
+            tokio::spawn,
+            HashMapCache::default(),
+        ))
     }
 }
 
 impl FromRef<ServerState> for AuthState {
     fn from_ref(input: &ServerState) -> Self {
-        AuthState::from_ref(&input.auth_state)
+        input.auth_state.clone()
+    }
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for ServerState
+where
+    Self: FromRef<S>,
+    S: Send + Sync,
+{
+    type Rejection = Infallible;
+
+    async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        Ok(Self::from_ref(state))
     }
 }
 

@@ -6,12 +6,13 @@ diesel::table! {
         run_id -> Nullable<Binary>,
         artifact_id -> Binary,
         version_id -> Binary,
-        artifact_type -> Integer,
-        proto_data -> Binary,
+        artifact_type -> Text,
+        version_data -> Binary,
         client_creation_time -> Text,
         path -> Text,
         series_id -> Nullable<Binary>,
         series_value -> Nullable<Text>,
+        series_point -> Nullable<Binary>,
     }
 }
 
@@ -23,3 +24,12 @@ diesel::table! {
         payload -> Binary,
     }
 }
+
+diesel::table! {
+    projects (id) {
+        id -> Binary,
+        data -> Binary,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(artifacts, payloads,);

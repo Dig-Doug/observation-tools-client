@@ -321,7 +321,7 @@ impl ClientInner {
         };
         trace!(
             "Submitting artifact: {} raw_data_len: {:?}",
-            task.artifact_id(),
+            &task.artifact_global_id(),
             raw_data.map(|d| d.len() as i64)
         );
 

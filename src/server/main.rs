@@ -1,10 +1,15 @@
 mod auth;
+mod graphql;
 mod ingestion;
 mod server;
 mod storage;
 
+use crate::auth::permission::PermissionStorage;
 use crate::auth::AuthState;
+use crate::graphql::graphql_handler;
+use crate::graphql::graphql_playground;
 use crate::server::ServerState;
+use crate::storage::artifact::ArtifactStorage;
 use axum::routing::get;
 use axum::routing::post;
 use axum::Router;
@@ -14,6 +19,7 @@ use clap::Subcommand;
 use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::Pool;
 use diesel::SqliteConnection;
+use observation_tools_common::create_artifact::CreateArtifactRequest;
 use std::env;
 use tokio::net::TcpListener;
 use tracing::info;
@@ -58,12 +64,14 @@ async fn main() -> Result<(), anyhow::Error> {
             let app = Router::new()
                 .route("/", get(index))
                 .route(
-                    "/create-artifact",
+                    CreateArtifactRequest::HTTP_PATH,
                     post(ingestion::create_artifact::create_artifact),
                 )
+                .route("/graphql", get(graphql_playground).post(graphql_handler))
                 .with_state(ServerState {
                     artifact_storage: create_sqlite_storage()?,
                     auth_state: AuthState {},
+                    permission_storage: PermissionStorage {},
                 });
             let address = format!("0.0.0.0:{}", port);
             info!("Listening on http://{}", address);
@@ -78,10 +86,15 @@ async fn index() -> String {
     "OK".to_string()
 }
 
-fn create_sqlite_storage() -> Result<storage::ArtifactStorage, anyhow::Error> {
-    let manager = ConnectionManager::<SqliteConnection>::new("tmp/observation-tools.db");
-    let pool = Pool::builder().test_on_check_out(true).build(manager)?;
+fn create_sqlite_storage() -> Result<ArtifactStorage, anyhow::Error> {
+    let manager = ConnectionManager::<SqliteConnection>::new(
+        "/home/doug/Development/observation-tools-client/tmp.db",
+    );
+    let pool = Pool::builder()
+        .test_on_check_out(true)
+        .max_size(1)
+        .build(manager)?;
     let storage = storage::sqlite::SqliteArtifactStorage { pool };
     storage.init()?;
-    Ok(storage::ArtifactStorage::Local(storage))
+    Ok(ArtifactStorage::Local(storage))
 }

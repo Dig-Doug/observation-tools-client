@@ -7,7 +7,9 @@ use futures::future::BoxFuture;
 use futures::future::LocalBoxFuture;
 use futures::FutureExt;
 use futures::TryFutureExt;
+use observation_tools_common::artifact::AbsoluteArtifactId;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
+use observation_tools_common::GlobalId;
 use prost::Message;
 use reqwest::multipart::Part;
 use std::task::Context;
@@ -33,8 +35,15 @@ pub struct UploadArtifactTask {
 }
 
 impl UploadArtifactTask {
-    pub fn artifact_id(&self) -> String {
-        self.request.artifact_id.uuid.simple().to_string()
+    pub fn artifact_id(&self) -> AbsoluteArtifactId {
+        AbsoluteArtifactId {
+            project_id: self.request.project_id.clone(),
+            artifact_id: self.request.artifact_id.clone(),
+        }
+    }
+
+    pub fn artifact_global_id(&self) -> GlobalId {
+        self.artifact_id().into()
     }
 }
 
@@ -56,7 +65,10 @@ impl Service<UploadArtifactTask> for UploadArtifactService {
     }
 
     fn call(&mut self, task: UploadArtifactTask) -> Self::Future {
-        trace!("Setting up task for artifact: {}", task.artifact_id());
+        trace!(
+            "Setting up task for artifact: {}",
+            &task.artifact_global_id()
+        );
 
         #[cfg(feature = "tokio")]
         {
@@ -101,7 +113,7 @@ async fn upload_artifact_impl(
     host: String,
     task: UploadArtifactTask,
 ) -> Result<(), GenericError> {
-    trace!("Uploading artifact: {:?}", task.artifact_id());
+    trace!("Uploading artifact: {}", &task.artifact_global_id());
 
     let request_bytes = rmp_serde::to_vec(&task.request).map_err(ClientError::from_string)?;
     let mut form = reqwest::multipart::Form::new().part("request", Part::bytes(request_bytes));
@@ -126,7 +138,7 @@ async fn upload_artifact_impl(
 
     let token = token_generator.token().await?;
     let response = client
-        .post(format!("{}/create-artifact", host))
+        .post(format!("{}{}", host, CreateArtifactRequest::HTTP_PATH))
         .bearer_auth(token)
         .multipart(form)
         .send()
