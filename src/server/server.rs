@@ -5,7 +5,6 @@ use crate::auth::principal::Principal;
 use crate::auth::AuthState;
 use crate::graphql::project::ProjectDataLoader;
 use crate::graphql::project::ProjectLoader;
-use crate::ingestion::create_artifact::CreateArtifactState;
 use crate::storage::artifact::ArtifactStorage;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;

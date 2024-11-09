@@ -3,6 +3,7 @@ mod graphql;
 mod ingestion;
 mod server;
 mod storage;
+mod ui;
 
 use crate::auth::permission::PermissionStorage;
 use crate::auth::AuthState;
@@ -10,6 +11,7 @@ use crate::graphql::graphql_handler;
 use crate::graphql::graphql_playground;
 use crate::server::ServerState;
 use crate::storage::artifact::ArtifactStorage;
+use crate::ui::start_embedded_ui;
 use axum::routing::get;
 use axum::routing::post;
 use axum::Router;
@@ -41,8 +43,8 @@ enum Commands {
 
 #[derive(Args)]
 struct RunArgs {
-    #[arg(long)]
-    todo: Option<u16>,
+    #[arg(long, default_value = "false")]
+    ui: bool,
 }
 
 #[tokio::main]
@@ -60,22 +62,14 @@ async fn main() -> Result<(), anyhow::Error> {
 
     match cli.command {
         Commands::Run(args) => {
+            let _ui = if args.ui {
+                Some(start_embedded_ui()?)
+            } else {
+                None
+            };
+
             let port = env::var("PORT").unwrap_or("8000".to_string());
-            let app = Router::new()
-                .route("/", get(index))
-                .route(
-                    CreateArtifactRequest::HTTP_PATH,
-                    post(ingestion::create_artifact::create_artifact),
-                )
-                .route("/graphql", get(graphql_playground).post(graphql_handler))
-                .with_state(ServerState {
-                    artifact_storage: create_sqlite_storage()?,
-                    auth_state: AuthState {},
-                    permission_storage: PermissionStorage {},
-                });
-            let address = format!("0.0.0.0:{}", port);
-            info!("Listening on http://{}", address);
-            axum::serve(TcpListener::bind(address).await?, app).await?;
+            run_server(port).await?;
         }
     }
 
@@ -86,7 +80,28 @@ async fn index() -> String {
     "OK".to_string()
 }
 
+async fn run_server(port: String) -> Result<(), anyhow::Error> {
+    let app = Router::new()
+        .route("/", get(index))
+        .route(
+            CreateArtifactRequest::HTTP_PATH,
+            post(ingestion::create_artifact::create_artifact),
+        )
+        .route("/graphql", get(graphql_playground).post(graphql_handler))
+        .with_state(ServerState {
+            artifact_storage: create_sqlite_storage()?,
+            auth_state: AuthState {},
+            permission_storage: PermissionStorage {},
+        });
+    let address = format!("0.0.0.0:{}", port);
+    info!("Listening on http://{}", address);
+    axum::serve(TcpListener::bind(address).await?, app).await?;
+
+    Ok(())
+}
+
 fn create_sqlite_storage() -> Result<ArtifactStorage, anyhow::Error> {
+    // TODO(doug): Fix path
     let manager = ConnectionManager::<SqliteConnection>::new(
         "/home/doug/Development/observation-tools-client/tmp.db",
     );

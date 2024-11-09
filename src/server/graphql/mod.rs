@@ -4,14 +4,10 @@ pub mod project;
 
 use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
-use crate::auth::permission::PermissionLoader;
 use crate::auth::permission::ResourceId;
 use crate::auth::principal::Principal;
 use crate::graphql::create_project::CreateProjectMutation;
-use crate::graphql::project::ProjectLoader;
 use crate::server::ServerState;
-use async_graphql::dataloader::DataLoader;
-use async_graphql::dataloader::HashMapCache;
 use async_graphql::http::playground_source;
 use async_graphql::http::GraphQLPlaygroundConfig;
 use async_graphql::EmptyMutation;
@@ -25,7 +21,6 @@ use axum::extract::State;
 use axum::response::Html;
 use axum::response::IntoResponse;
 use observation_tools_common::GlobalId;
-use std::sync::Arc;
 
 #[derive(Default)]
 struct QueryImpl;

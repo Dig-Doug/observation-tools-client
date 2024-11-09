@@ -15,13 +15,11 @@ use axum::extract::multipart::Field;
 use axum::extract::FromRef;
 use axum::extract::FromRequestParts;
 use axum::extract::Multipart;
-use axum::extract::State;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::RequestPartsExt;
 use futures_util::TryStreamExt;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
-use std::convert::Infallible;
 use uuid::Uuid;
 
 #[derive(Clone)]

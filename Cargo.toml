@@ -72,6 +72,11 @@ wasm-bindgen-derive = "0.3.0"
 wasm-bindgen-futures = "0.4.45"
 web-sys = "0.3.66"
 whoami = "1.4"
+tar = "0.4.43"
+flate2 = "1.0.34"
 
 [patch.crates-io]
 #reqwest = { git = "https://github.com/Dig-Doug/reqwest", branch = "wasm-cookies" }
+
+[profile.dev.build-override]
+opt-level = 3

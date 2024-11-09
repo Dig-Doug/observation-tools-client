@@ -14,6 +14,7 @@ clap = { workspace = true, features = ["derive"] }
 diesel = { workspace = true, features = ["uuid", "chrono", "r2d2"] }
 diesel-async = { workspace = true, features = ["sqlite", "r2d2"] }
 diesel_migrations = { workspace = true }
+flate2 = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true }
 itertools = { workspace = true }
@@ -21,6 +22,8 @@ observation-tools-common = { workspace = true }
 rmp-serde = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+tar = { workspace = true }
+tempfile = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 tokio-util = { workspace = true }
@@ -31,3 +34,8 @@ uuid = { workspace = true }
 [[bin]]
 name = "observation-tools-server"
 path = "main.rs"
+
+[build-dependencies]
+anyhow = { workspace = true, features = ["backtrace"] }
+flate2 = { workspace = true }
+tar = { workspace = true }

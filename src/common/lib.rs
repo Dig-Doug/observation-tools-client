@@ -11,7 +11,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::fmt;
 use std::io::Cursor;
-use uuid::Uuid;
 
 pub mod artifact;
 pub mod artifacts;
