@@ -1,0 +1,9 @@
+query ArtifactQuery($id: ID!) {
+    node(id: $id) {
+        __typename
+        ... on ArtifactVersion {
+            id
+            json
+        }
+    }
+}

@@ -24,6 +24,7 @@ wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
 wasm-bindgen-derive = { workspace = true }
 async-graphql = { workspace = true }
 rmp-serde = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
 
 [build-dependencies]
 prost-build = { workspace = true }

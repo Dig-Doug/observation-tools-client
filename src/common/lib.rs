@@ -2,9 +2,11 @@ extern crate alloc;
 extern crate core;
 
 use crate::artifact::AbsoluteArtifactId;
+use crate::artifact::AbsoluteArtifactVersionId;
 use crate::project::ProjectId;
 use anyhow::anyhow;
 use async_graphql::ID;
+use clap::Subcommand;
 use core::fmt::Display;
 use core::fmt::Formatter;
 use serde::Deserialize;
@@ -19,24 +21,28 @@ pub mod math;
 pub mod project;
 pub mod run;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Subcommand)]
 pub enum GlobalId {
     Project(ProjectId),
     Artifact(AbsoluteArtifactId),
+    ArtifactVersion(AbsoluteArtifactVersionId),
 }
 
 const GLOBAL_ID_PREFIX_PROJECT: &str = "p";
 const GLOBAL_ID_PREFIX_ARTIFACT: &str = "a";
+const GLOBAL_ID_PREFIX_ARTIFACT_VERSION: &str = "av";
 
 impl From<GlobalId> for String {
     fn from(value: GlobalId) -> Self {
         let prefix = match value {
             GlobalId::Project(_) => GLOBAL_ID_PREFIX_PROJECT,
             GlobalId::Artifact(_) => GLOBAL_ID_PREFIX_ARTIFACT,
+            GlobalId::ArtifactVersion(_) => GLOBAL_ID_PREFIX_ARTIFACT_VERSION,
         };
         let suffix = match value {
             GlobalId::Project(id) => rmp_with_bs58_encode(id),
             GlobalId::Artifact(id) => rmp_with_bs58_encode(id),
+            GlobalId::ArtifactVersion(id) => rmp_with_bs58_encode(id),
         };
         format!("{}_{}", prefix, suffix)
     }
@@ -57,6 +63,9 @@ impl TryFrom<String> for GlobalId {
         match *prefix {
             GLOBAL_ID_PREFIX_PROJECT => Ok(GlobalId::Project(bs58_with_rmp_decode(&suffix)?)),
             GLOBAL_ID_PREFIX_ARTIFACT => Ok(GlobalId::Artifact(bs58_with_rmp_decode(&suffix)?)),
+            GLOBAL_ID_PREFIX_ARTIFACT_VERSION => {
+                Ok(GlobalId::ArtifactVersion(bs58_with_rmp_decode(&suffix)?))
+            }
             _ => Err(anyhow!("Unknown prefix: {}", prefix)),
         }
     }

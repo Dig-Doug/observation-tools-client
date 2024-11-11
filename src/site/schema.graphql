@@ -1,0 +1,30 @@
+# This file was generated. Do not edit manually.
+
+schema {
+    query: Query
+}
+
+"""
+
+Indicates that an Input Object is a OneOf Input Object (and thus requires
+exactly one of its field be provided)
+"""
+directive @oneOf on INPUT_OBJECT
+
+interface Node {
+    id: ID!
+}
+
+type ArtifactVersion implements Node {
+    id: ID!
+    json: String!
+}
+
+type Project implements Node {
+    id: ID!
+}
+
+type Query {
+    createProject: Project!
+    node(id: ID!): Node!
+}

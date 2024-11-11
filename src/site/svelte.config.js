@@ -9,7 +9,10 @@ const config = {
 	kit: {
 		adapter: adapter({
 			out: process.env.OUT_DIR || 'build'
-		})
+		}),
+		alias: {
+			$houdini: './$houdini'
+		}
 	}
 };
 

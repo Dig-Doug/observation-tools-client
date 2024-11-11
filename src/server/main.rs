@@ -12,6 +12,7 @@ use crate::graphql::graphql_playground;
 use crate::server::ServerState;
 use crate::storage::artifact::ArtifactStorage;
 use crate::ui::start_embedded_ui;
+use async_graphql::ID;
 use axum::routing::get;
 use axum::routing::post;
 use axum::Router;
@@ -22,6 +23,7 @@ use diesel::r2d2::ConnectionManager;
 use diesel::r2d2::Pool;
 use diesel::SqliteConnection;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
+use observation_tools_common::GlobalId;
 use std::env;
 use tokio::net::TcpListener;
 use tracing::info;
@@ -39,12 +41,20 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Run(RunArgs),
+    #[command(subcommand)]
+    GlobalId(GlobalIdArgs),
 }
 
 #[derive(Args)]
 struct RunArgs {
     #[arg(long, default_value = "false")]
     ui: bool,
+}
+
+#[derive(Subcommand)]
+enum GlobalIdArgs {
+    #[command(subcommand)]
+    Encode(GlobalId),
 }
 
 #[tokio::main]
@@ -71,6 +81,12 @@ async fn main() -> Result<(), anyhow::Error> {
             let port = env::var("PORT").unwrap_or("8000".to_string());
             run_server(port).await?;
         }
+        Commands::GlobalId(args) => match args {
+            GlobalIdArgs::Encode(global_id) => {
+                let as_id: ID = global_id.into();
+                println!("{}", as_id.0);
+            }
+        },
     }
 
     Ok(())

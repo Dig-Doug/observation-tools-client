@@ -3,6 +3,8 @@ use crate::auth::permission::PermissionLoader;
 use crate::auth::permission::PermissionStorage;
 use crate::auth::principal::Principal;
 use crate::auth::AuthState;
+use crate::graphql::artifact::ArtifactVersionDataLoader;
+use crate::graphql::artifact::ArtifactVersionLoader;
 use crate::graphql::project::ProjectDataLoader;
 use crate::graphql::project::ProjectLoader;
 use crate::storage::artifact::ArtifactStorage;
@@ -46,6 +48,22 @@ impl ServerState {
     pub fn new_permission_loader(&self) -> PermissionDataLoader {
         Arc::new(DataLoader::with_cache(
             PermissionLoader {},
+            tokio::spawn,
+            HashMapCache::default(),
+        ))
+    }
+
+    pub fn new_artifact_version_loader(
+        &self,
+        principal: &Principal,
+        permission_loader: &PermissionDataLoader,
+    ) -> ArtifactVersionDataLoader {
+        Arc::new(DataLoader::with_cache(
+            ArtifactVersionLoader {
+                principal: principal.clone(),
+                permission_loader: permission_loader.clone(),
+                storage: self.artifact_storage.clone(),
+            },
             tokio::spawn,
             HashMapCache::default(),
         ))

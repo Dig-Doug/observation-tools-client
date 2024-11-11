@@ -1,3 +1,4 @@
+use crate::auth::permission::load_permissions_and_filter_ids;
 use crate::auth::permission::AccessResult;
 use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
@@ -45,21 +46,8 @@ impl Loader<ProjectId> for ProjectLoader {
         &self,
         keys: &[ProjectId],
     ) -> Result<HashMap<ProjectId, Self::Value>, Self::Error> {
-        let accessible_projects = self
-            .permission_loader
-            .load_many(Permission::from_ids(
-                self.principal.clone(),
-                keys.to_vec(),
-                Operation::Read,
-            ))
-            .await
-            .map_err(|e| LoaderError::Error { message: e })?;
-        let projects_to_fetch: Vec<ProjectId> = accessible_projects
-            .iter()
-            .filter(|(_, accessible)| **accessible == AccessResult::Allow)
-            .map(|(permission, _)| permission.resource_id.clone())
-            .collect();
-
+        let (accessible_projects, projects_to_fetch) =
+            load_permissions_and_filter_ids(&self.permission_loader, &self.principal, keys).await?;
         let results = self.storage.read_projects(projects_to_fetch).await?;
         let mut results: HashMap<ProjectId, Self::Value> = results
             .into_iter()

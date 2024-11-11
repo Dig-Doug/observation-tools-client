@@ -19,6 +19,7 @@ use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::RequestPartsExt;
 use futures_util::TryStreamExt;
+use observation_tools_common::artifact::ArtifactVersionId;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
 use uuid::Uuid;
 
@@ -86,7 +87,7 @@ pub async fn create_artifact(
         project_id: request.project_id,
         run_id: request.run_id,
         artifact_id: request.artifact_id,
-        version_id: Uuid::new_v4(),
+        version_id: ArtifactVersionId::new(),
         version_data: request.payload,
         series_point: request.series_point,
     };

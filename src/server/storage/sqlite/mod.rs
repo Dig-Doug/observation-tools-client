@@ -2,11 +2,13 @@ mod artifact_version_row;
 mod project_row;
 pub mod schema;
 
+use crate::storage::artifact::ArtifactStorage;
 use crate::storage::project::ProjectRow;
 use crate::storage::project::ProjectRowOrError;
 use crate::storage::sqlite::artifact_version_row::ArtifactVersionSqliteRow;
 use crate::storage::sqlite::project_row::ProjectSqliteRow;
 use crate::storage::ArtifactVersionRow;
+use crate::storage::ArtifactVersionRowOrError;
 use anyhow::anyhow;
 use axum::body::Bytes;
 use diesel::dsl::insert_into;
@@ -19,6 +21,9 @@ use diesel_migrations::MigrationHarness;
 use futures_util::TryStream;
 use futures_util::TryStreamExt;
 use itertools::Itertools;
+use observation_tools_common::artifact::AbsoluteArtifactVersionId;
+use observation_tools_common::artifact::ArtifactId;
+use observation_tools_common::artifact::ArtifactVersionId;
 use observation_tools_common::project::ProjectId;
 use std::collections::HashMap;
 use std::error::Error;
@@ -90,6 +95,65 @@ impl SqliteArtifactStorage {
         Ok(project_rows?)
     }
 
+    pub async fn read_artifact_versions(
+        &self,
+        versions: Vec<AbsoluteArtifactVersionId>,
+    ) -> Result<HashMap<AbsoluteArtifactVersionId, ArtifactVersionRowOrError>, anyhow::Error> {
+        let mut connection = self.pool.get()?;
+        let version_rows = schema::artifacts::table
+            // TODO(doug): Technically, this query could return collisions because we are not
+            // building a filter that checks for all three field values at once. However, since
+            // we're using UUIDs, this should be practically impossible.
+            .filter(
+                schema::artifacts::project_id
+                    .eq_any(
+                        versions
+                            .iter()
+                            .map(|id| id.project_id.id.as_bytes().to_vec())
+                            .collect_vec(),
+                    )
+                    .and(
+                        schema::artifacts::artifact_id.eq_any(
+                            versions
+                                .iter()
+                                .map(|id| id.artifact_id.uuid.as_bytes().to_vec())
+                                .collect_vec(),
+                        ),
+                    )
+                    .and(
+                        schema::artifacts::version_id.eq_any(
+                            versions
+                                .iter()
+                                .map(|id| id.version_id.uuid.as_bytes().to_vec())
+                                .collect_vec(),
+                        ),
+                    ),
+            )
+            .load::<ArtifactVersionSqliteRow>(&mut connection)?;
+        let version_rows: Result<
+            HashMap<AbsoluteArtifactVersionId, ArtifactVersionRowOrError>,
+            anyhow::Error,
+        > = version_rows
+            .into_iter()
+            .map(|row| {
+                let version_id = AbsoluteArtifactVersionId {
+                    project_id: ProjectId {
+                        id: Uuid::from_slice(&row.project_id)?,
+                    },
+                    artifact_id: ArtifactId {
+                        uuid: Uuid::from_slice(&row.artifact_id)?,
+                    },
+                    version_id: ArtifactVersionId {
+                        uuid: Uuid::from_slice(&row.version_id)?,
+                    },
+                };
+                let version_row = ArtifactVersionRow::try_from(row);
+                Ok((version_id, version_row))
+            })
+            .collect();
+        Ok(version_rows?)
+    }
+
     pub async fn write_artifact_version<E: Error + Send + Sync + 'static>(
         &self,
         version: ArtifactVersionRow,
@@ -107,7 +171,7 @@ impl SqliteArtifactStorage {
                 .values(PayloadRow {
                     project_id: version.project_id.id.as_bytes().to_vec(),
                     artifact_id: version.artifact_id.uuid.as_bytes().to_vec(),
-                    version_id: version.version_id.as_bytes().to_vec(),
+                    version_id: version.version_id.uuid.as_bytes().to_vec(),
                     payload: all_bytes,
                 })
                 .execute(&mut connection)?;

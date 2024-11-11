@@ -2,7 +2,9 @@ use crate::storage::project::ProjectRow;
 use crate::storage::project::ProjectRowOrError;
 use crate::storage::sqlite::SqliteArtifactStorage;
 use crate::storage::ArtifactVersionRow;
+use crate::storage::ArtifactVersionRowOrError;
 use futures_util::TryStream;
+use observation_tools_common::artifact::AbsoluteArtifactVersionId;
 use observation_tools_common::project::ProjectId;
 use std::collections::HashMap;
 use std::error::Error;
@@ -28,6 +30,15 @@ impl ArtifactStorage {
     ) -> Result<HashMap<ProjectId, ProjectRowOrError>, anyhow::Error> {
         match self {
             ArtifactStorage::Local(storage) => storage.read_projects(projects).await,
+        }
+    }
+
+    pub async fn read_artifact_versions(
+        &self,
+        versions: Vec<AbsoluteArtifactVersionId>,
+    ) -> Result<HashMap<AbsoluteArtifactVersionId, ArtifactVersionRowOrError>, anyhow::Error> {
+        match self {
+            ArtifactStorage::Local(storage) => storage.read_artifact_versions(versions).await,
         }
     }
 

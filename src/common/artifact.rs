@@ -3,14 +3,17 @@ use crate::artifacts::*;
 use crate::math::Graph;
 use crate::project::ProjectId;
 use crate::GlobalId;
+use async_graphql::ID;
 use chrono::DateTime;
 use chrono::Utc;
+use clap::Args;
 use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
 pub struct ArtifactId {
+    #[arg(id = "artifact-uuid", short = 'a', long = "artifact-id")]
     pub uuid: Uuid,
 }
 
@@ -22,15 +25,61 @@ impl ArtifactId {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
 pub struct AbsoluteArtifactId {
+    #[command(flatten)]
     pub project_id: ProjectId,
+    #[command(flatten)]
     pub artifact_id: ArtifactId,
 }
 
 impl From<AbsoluteArtifactId> for GlobalId {
     fn from(value: AbsoluteArtifactId) -> Self {
         GlobalId::Artifact(value)
+    }
+}
+
+impl From<AbsoluteArtifactId> for ID {
+    fn from(id: AbsoluteArtifactId) -> Self {
+        let global_id: GlobalId = id.into();
+        global_id.into()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
+pub struct ArtifactVersionId {
+    #[arg(id = "version-uuid", short = 'v', long = "version-id")]
+    pub uuid: Uuid,
+}
+
+impl ArtifactVersionId {
+    pub fn new() -> Self {
+        Self {
+            uuid: Uuid::new_v4(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
+pub struct AbsoluteArtifactVersionId {
+    #[command(flatten)]
+    pub project_id: ProjectId,
+    #[command(flatten)]
+    pub artifact_id: ArtifactId,
+    #[command(flatten)]
+    pub version_id: ArtifactVersionId,
+}
+
+impl From<AbsoluteArtifactVersionId> for GlobalId {
+    fn from(value: AbsoluteArtifactVersionId) -> Self {
+        GlobalId::ArtifactVersion(value)
+    }
+}
+
+impl From<AbsoluteArtifactVersionId> for ID {
+    fn from(id: AbsoluteArtifactVersionId) -> Self {
+        let global_id: GlobalId = id.into();
+        global_id.into()
     }
 }
 

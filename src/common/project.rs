@@ -1,11 +1,13 @@
 use crate::GlobalId;
 use async_graphql::ID;
+use clap::Args;
 use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
 pub struct ProjectId {
+    #[arg(id = "project-uuid", short = 'p', long = "project-id")]
     pub id: Uuid,
 }
 

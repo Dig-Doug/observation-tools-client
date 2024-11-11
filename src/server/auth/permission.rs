@@ -1,7 +1,10 @@
 use crate::auth::principal::Principal;
+use crate::graphql::LoaderError;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_graphql::dataloader::Loader;
+use observation_tools_common::artifact::AbsoluteArtifactVersionId;
+use observation_tools_common::artifact::ArtifactVersionId;
 use observation_tools_common::project::ProjectId;
 use serde::Deserialize;
 use serde::Serialize;
@@ -14,6 +17,7 @@ use tracing::warn;
 pub trait ResourceId: Debug + Clone + Hash + Sync + Send + Eq {}
 
 impl ResourceId for ProjectId {}
+impl ResourceId for AbsoluteArtifactVersionId {}
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Permission<T: ResourceId> {
@@ -53,6 +57,27 @@ pub enum AccessResult {
 }
 
 pub type PermissionDataLoader = Arc<DataLoader<PermissionLoader, HashMapCache>>;
+
+pub async fn load_permissions_and_filter_ids<T: ResourceId + 'static>(
+    permission_data_loader: &PermissionDataLoader,
+    principal: &Principal,
+    keys: &[T],
+) -> Result<(HashMap<Permission<T>, AccessResult>, Vec<T>), LoaderError> {
+    let accessible_ids = permission_data_loader
+        .load_many(Permission::from_ids(
+            principal.clone(),
+            keys.to_vec(),
+            Operation::Read,
+        ))
+        .await
+        .map_err(|e| LoaderError::Error { message: e })?;
+    let ids_to_fetch: Vec<T> = accessible_ids
+        .iter()
+        .filter(|(_, accessible)| **accessible == AccessResult::Allow)
+        .map(|(permission, _)| permission.resource_id.clone())
+        .collect();
+    Ok((accessible_ids, ids_to_fetch))
+}
 
 pub struct PermissionLoader {}
 

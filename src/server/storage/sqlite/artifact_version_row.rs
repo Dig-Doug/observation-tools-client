@@ -8,6 +8,7 @@ use diesel::Selectable;
 use itertools::Itertools;
 use observation_tools_common::artifact::ArtifactData;
 use observation_tools_common::artifact::ArtifactId;
+use observation_tools_common::artifact::ArtifactVersionId;
 use observation_tools_common::artifacts::SeriesDimensionValue;
 use observation_tools_common::artifacts::SeriesPoint;
 use observation_tools_common::project::ProjectId;
@@ -47,7 +48,7 @@ impl TryFrom<ArtifactVersionRow> for ArtifactVersionSqliteRow {
                 .run_id
                 .map(|run_id| run_id.id.uuid.as_bytes().to_vec()),
             artifact_id: value.artifact_id.uuid.as_bytes().to_vec(),
-            version_id: value.version_id.as_bytes().to_vec(),
+            version_id: value.version_id.uuid.as_bytes().to_vec(),
             artifact_type: value.version_data.artifact_type.as_string(),
             version_data: rmp_serde::to_vec(&value.version_data)?,
             client_creation_time: value.version_data.client_creation_time.to_rfc3339(),
@@ -95,7 +96,9 @@ impl TryFrom<ArtifactVersionSqliteRow> for ArtifactVersionRow {
             artifact_id: ArtifactId {
                 uuid: Uuid::from_slice(&value.artifact_id)?,
             },
-            version_id: Uuid::from_slice(&value.version_id)?,
+            version_id: ArtifactVersionId {
+                uuid: Uuid::from_slice(&value.version_id)?,
+            },
             version_data,
             series_point,
         })

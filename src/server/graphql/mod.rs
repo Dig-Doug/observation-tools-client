@@ -1,5 +1,6 @@
-mod artifact;
+pub mod artifact;
 mod create_project;
+mod node;
 pub mod project;
 
 use crate::auth::permission::Operation;
@@ -7,6 +8,7 @@ use crate::auth::permission::Permission;
 use crate::auth::permission::ResourceId;
 use crate::auth::principal::Principal;
 use crate::graphql::create_project::CreateProjectMutation;
+use crate::graphql::node::GetNodeQuery;
 use crate::server::ServerState;
 use async_graphql::http::playground_source;
 use async_graphql::http::GraphQLPlaygroundConfig;
@@ -26,7 +28,7 @@ use observation_tools_common::GlobalId;
 struct QueryImpl;
 
 #[derive(MergedObject, Default)]
-struct Query(CreateProjectMutation);
+struct Query(CreateProjectMutation, GetNodeQuery);
 
 type ServerSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 
@@ -45,6 +47,7 @@ pub async fn graphql_handler(
         .data(server_state.artifact_storage.clone())
         .data(server_state.permission_storage.clone())
         .data(server_state.new_project_loader(&principal, &permission_loader))
+        .data(server_state.new_artifact_version_loader(&principal, &permission_loader))
         .data(permission_loader)
         .extension(async_graphql::extensions::Tracing)
         .finish();
@@ -59,6 +62,8 @@ pub enum LoaderError {
     Error { message: String },
     #[error("Project not found: {project_id:?}")]
     ProjectNotFound { project_id: ID },
+    #[error("ArtifactVersion not found: {artifact_version_id:?}")]
+    ArtifactVersionNotFound { artifact_version_id: ID },
     #[error("Principal {principal:?} not authorized to {operation:?} on {resource_id:?}")]
     NotAuthorized {
         resource_id: ID,
