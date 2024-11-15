@@ -3,7 +3,8 @@
 ## Regenerating proto files
 
 Our internal API is defined using [Protocol Buffers](https://developers.google.com/protocol-buffers). We currently
-generate the Rust code using [Bazel](https://bazel.build/) and include the generated code in the repository so it can be packaged with [cargo](https://doc.rust-lang.org/cargo/).
+generate the Rust code using [Bazel](https://bazel.build/) and include the generated code in the repository so it can be
+packaged with [cargo](https://doc.rust-lang.org/cargo/).
 
 To regenerate the proto files, install `bazel` and then run the following command from the repository root:
 
@@ -28,13 +29,13 @@ pnpm dlx browser-sync start --serveStatic target/doc --server target/doc --direc
 ## Building the JS package
 
 ```sh
-./src/client/rust/wasm_pack.sh
+./src/client/wasm_pack.sh
 ```
 
 ### Test examples with local changes
 
 ```shell
-pnpm link ./src/client/rust/pkg
+pnpm link ./src/client/pkg
 
 # Undo with:
 pnpm unlink

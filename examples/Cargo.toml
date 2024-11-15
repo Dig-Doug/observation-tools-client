@@ -17,7 +17,7 @@ crate-type = ["cdylib", "lib"]
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 nalgebra = { workspace = true, features = ["serde-serialize", "mint", "convert-glam024"] }
-observation-tools = { path = "../src/client/rust"}
+observation-tools = { path = "../src/client" }
 rand = { workspace = true }
 rand_chacha = { workspace = true }
 tokio = { workspace = true, features = ["full"], optional = true }

@@ -14811,7 +14811,7 @@
     "weezl 0.1.7"
   ],
   "workspace_members": {
-    "observation-tools 0.0.5": "src/client/rust",
+    "observation-tools 0.0.5": "src/client",
     "observation-tools-client-examples 0.0.3": "examples"
   },
   "conditions": {

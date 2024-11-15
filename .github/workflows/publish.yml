@@ -4,7 +4,7 @@ on:
       - '*'
   workflow_dispatch:
 
-name: Publish 
+name: Publish
 jobs:
   publish-crate:
     name: Publish observation-tools crate
@@ -35,9 +35,9 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build
-        run: src/client/rust/wasm_pack.sh
+        run: src/client/wasm_pack.sh
       - name: Publish
-        run: npm publish src/client/rust/pkg --access public
+        run: npm publish src/client/pkg --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
  

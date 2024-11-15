@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "examples",
-    "src/client/rust",
+    "src/client",
     "src/common",
     "src/server",
 ]

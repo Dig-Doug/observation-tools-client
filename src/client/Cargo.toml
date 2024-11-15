@@ -25,7 +25,7 @@ anyhow = { workspace = true }
 async-channel = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
-observation-tools-common = { path = "../../common" }
+observation-tools-common = { workspace = true }
 bs58 = { workspace = true }
 cached = { workspace = true, features = ["async"] }
 console_error_panic_hook = { workspace = true }
