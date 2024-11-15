@@ -5,8 +5,6 @@ use crate::throttle_without_access_cookie::ThrottleWithoutAccessCookieLayer;
 use crate::upload_artifact::UploadArtifactService;
 use crate::upload_artifact::UploadArtifactTask;
 use crate::upload_artifact::UploadArtifactTaskPayload;
-use crate::util::decode_id_proto;
-use crate::util::encode_id_proto;
 use crate::util::time_now;
 use crate::util::ClientError;
 use crate::util::GenericError;
@@ -26,7 +24,10 @@ use observation_tools_common::create_artifact::CreateArtifactRequest;
 use observation_tools_common::project::ProjectId;
 use observation_tools_common::run::RunId;
 use observation_tools_common::GlobalId;
-use prost::Message;
+use pyo3::pyclass;
+use pyo3::pymethods;
+use pyo3::PyResult;
+use pyo3::Python;
 use std::io::Write;
 use std::sync::Arc;
 use std::time::Duration;
@@ -35,8 +36,10 @@ use tower::util::BoxService;
 use tower::ServiceBuilder;
 use tower::ServiceExt;
 use tower_service::Service;
+use tracing::debug;
 use tracing::error;
-use tracing::trace;
+use tracing::info;
+use tracing::warn;
 use url::Url;
 use wasm_bindgen::prelude::*;
 
@@ -66,6 +69,7 @@ impl Default for ClientOptions {
 }
 
 #[wasm_bindgen]
+#[pyclass]
 #[derive(Clone, Debug)]
 pub struct Client {
     pub(crate) inner: Arc<ClientInner>,
@@ -88,6 +92,9 @@ pub enum TaskRuntimeParams {
         /// If we create our own runtime, hold a reference to prevent it from
         /// being dropped
         runtime: Option<Arc<tokio::runtime::Runtime>>,
+        // When TaskTracker is not set, we block on the task
+        // TODO(doug): I believe that python is blocking the rust threads from running the
+        // background, but I haven't confirmed. In theory we should not need to block in python.
         task_tracker: tokio_util::task::TaskTracker,
     },
     #[cfg(not(feature = "tokio"))]
@@ -96,6 +103,30 @@ pub enum TaskRuntimeParams {
         send_task_completion: async_channel::Sender<()>,
         receive_task_completion: async_channel::Receiver<()>,
     },
+}
+
+#[pymethods]
+impl Client {
+    #[new]
+    fn py_new(project_id: String, api_host: Option<String>) -> PyResult<Self> {
+        Ok(Client::new(
+            project_id,
+            ClientOptions {
+                api_host,
+                ..Default::default()
+            },
+        )?)
+    }
+
+    #[pyo3(name = "create_run")]
+    pub fn create_run_py(&self, metadata: &UserMetadata) -> Result<RunUploader, ClientError> {
+        self.create_run(metadata.clone())
+    }
+
+    #[pyo3(name = "shutdown")]
+    pub fn shutdown_py(&mut self) {
+        self.inner.shutdown_sync()
+    }
 }
 
 #[cfg(feature = "wasm")]
@@ -120,26 +151,7 @@ impl Client {
     }
 
     pub async fn shutdown(self) -> Result<(), ClientError> {
-        trace!("Shutting down client");
-        match &self.inner.params {
-            #[cfg(feature = "tokio")]
-            TaskRuntimeParams::TokioRuntime { .. } => {
-                panic!("shutdown() is not supported in the browser")
-            }
-            #[cfg(not(feature = "tokio"))]
-            TaskRuntimeParams::WasmRuntime {
-                send_task_completion,
-                receive_task_completion,
-            } => {
-                while send_task_completion.sender_count() > 1 {
-                    trace!("Waiting for all tasks to complete...");
-                    // Do nothing, wait until all tasks are done
-                    let _unused = receive_task_completion.recv().await;
-                }
-            }
-        }
-        trace!("Finished shutting down client");
-        Ok(())
+        self.inner.shutdown_async().await
     }
 
     pub fn create_run_js(
@@ -180,7 +192,7 @@ impl Client {
     pub fn create_run<M: Into<UserMetadata>>(
         &self,
         into_metadata: M,
-    ) -> Result<RunUploaderTaskHandle, ClientError> {
+    ) -> Result<RunUploader, ClientError> {
         let artifact_id = ArtifactId::new();
         let request = CreateArtifactRequest {
             project_id: self.inner.project_id.clone(),
@@ -194,25 +206,25 @@ impl Client {
             },
             series_point: None,
         };
-        Ok(self
-            .upload_artifact(request, None)?
-            .map_handle(|run_id| RunUploader {
-                base: BaseArtifactUploader {
-                    client: self.clone(),
-                    project_id: self.inner.project_id.clone(),
-                    run_id: RunId {
-                        id: run_id.id.clone(),
-                    },
-                    id: run_id.id,
-                    ancestor_group_ids: vec![],
+        let handle = self.upload_artifact(request, None)?;
+        Ok(RunUploader {
+            base: BaseArtifactUploader {
+                client: self.clone(),
+                project_id: self.inner.project_id.clone(),
+                run_id: RunId {
+                    id: handle.id.clone(),
                 },
-            }))
+                id: handle.id.clone(),
+                ancestor_group_ids: vec![],
+            },
+            handle,
+        })
     }
 }
 
 impl ClientInner {
     pub fn new(project_id: String, options: ClientOptions) -> Result<Self, ClientError> {
-        trace!("Creating client");
+        debug!("Creating client");
 
         let api_host = options.api_host.clone().unwrap_or(API_HOST.to_string());
         //let cookie_store = Arc::new(cookie::Jar::default());
@@ -239,6 +251,7 @@ impl ClientInner {
         let params = Self::get_or_create_tokio_runtime()?;
         #[cfg(not(feature = "tokio"))]
         let params = {
+            debug!("Using wasm runtime");
             let (send_task_completion, receive_task_completion) = async_channel::unbounded();
             TaskRuntimeParams::WasmRuntime {
                 send_task_completion,
@@ -319,16 +332,18 @@ impl ClientInner {
                 }
             },
         };
-        trace!(
+        debug!(
             "Submitting artifact: {} raw_data_len: {:?}",
-            &task.artifact_global_id(),
+            task.artifact_global_id(),
             raw_data.map(|d| d.len() as i64)
         );
 
         let mut task_handler = self.task_handler.clone();
         let upload_task = async move {
+            debug!("Upload task for {} started", task.artifact_global_id());
             match task_handler.ready().await {
                 Ok(service) => {
+                    debug!("Upload task for {} ready", task.artifact_global_id());
                     if let Err(e) = service.call(task).await {
                         error!("Failed to upload artifact: {}", e);
                     }
@@ -346,6 +361,7 @@ impl ClientInner {
                 task_tracker,
                 ..
             } => {
+                debug!("Spawning task on tokio runtime");
                 task_tracker.spawn_on(upload_task, handle);
             }
             #[cfg(not(feature = "tokio"))]
@@ -371,10 +387,16 @@ impl ClientInner {
     #[cfg(feature = "tokio")]
     fn get_or_create_tokio_runtime() -> Result<TaskRuntimeParams, ClientError> {
         let (handle, runtime) = match tokio::runtime::Handle::try_current() {
-            Ok(handle) => (handle, None),
+            Ok(handle) => {
+                debug!("Using existing tokio runtime");
+                (handle, None)
+            }
             Err(_e) => {
+                debug!("No tokio runtime found, spawning one");
                 let runtime = Arc::new(
                     tokio::runtime::Builder::new_multi_thread()
+                        // TODO(doug): Figure out the best number of threads
+                        .worker_threads(4)
                         .enable_all()
                         .build()?,
                 );
@@ -386,6 +408,63 @@ impl ClientInner {
             runtime,
             task_tracker: tokio_util::task::TaskTracker::new(),
         })
+    }
+
+    fn shutdown_sync(&self) {
+        match &self.params {
+            #[cfg(feature = "tokio")]
+            TaskRuntimeParams::TokioRuntime {
+                handle,
+                task_tracker,
+                ..
+            } => {
+                debug!("Closing task tracker");
+                task_tracker.close();
+
+                let (send_tasks_done, receive_tasks_done) = std::sync::mpsc::channel();
+                let task_tracker = task_tracker.clone();
+                debug!("Spawning a task to wait for other tasks to complete");
+                handle.spawn(async move {
+                    warn!("Waiting for tasks to complete");
+                    task_tracker.wait().await;
+                    if let Err(e) = send_tasks_done.send(()) {
+                        error!("Failed to send tasks done signal: {}", e);
+                    }
+                });
+                debug!("Waiting for task completion signal");
+                if let Err(e) = receive_tasks_done.recv_timeout(Duration::from_secs(60)) {
+                    error!("Failed to wait for tasks to complete: {}", e);
+                }
+            }
+            #[cfg(not(feature = "tokio"))]
+            TaskRuntimeParams::WasmRuntime { .. } => {
+                // Do nothing, we can't do a blocking wait
+                panic!("shutdown_sync() is not supported in the browser")
+            }
+        }
+    }
+
+    async fn shutdown_async(&mut self) -> Result<(), ClientError> {
+        debug!("Shutting down client");
+        match &self.params {
+            #[cfg(feature = "tokio")]
+            TaskRuntimeParams::TokioRuntime { .. } => {
+                panic!("shutdown() is not supported in the browser")
+            }
+            #[cfg(not(feature = "tokio"))]
+            TaskRuntimeParams::WasmRuntime {
+                send_task_completion,
+                receive_task_completion,
+            } => {
+                while send_task_completion.sender_count() > 1 {
+                    debug!("Waiting for all tasks to complete...");
+                    // Do nothing, wait until all tasks are done
+                    let _unused = receive_task_completion.recv().await;
+                }
+            }
+        }
+        debug!("Finished shutting down client");
+        Ok(())
     }
 }
 
@@ -400,32 +479,6 @@ impl Debug for ClientInner {
 
 impl Drop for ClientInner {
     fn drop(&mut self) {
-        match &self.params {
-            #[cfg(feature = "tokio")]
-            TaskRuntimeParams::TokioRuntime {
-                handle,
-                task_tracker,
-                ..
-            } => {
-                task_tracker.close();
-
-                let (send_tasks_done, receive_tasks_done) = std::sync::mpsc::channel();
-                let task_tracker = task_tracker.clone();
-                handle.spawn(async move {
-                    error!("Waiting for tasks to complete");
-                    task_tracker.wait().await;
-                    if let Err(e) = send_tasks_done.send(()) {
-                        error!("Failed to send tasks done signal: {}", e);
-                    }
-                });
-                if let Err(e) = receive_tasks_done.recv_timeout(Duration::from_secs(60)) {
-                    error!("Failed to wait for tasks to complete: {}", e);
-                }
-            }
-            #[cfg(not(feature = "tokio"))]
-            TaskRuntimeParams::WasmRuntime { .. } => {
-                // Do nothing, we can't do a blocking wait
-            }
-        }
+        self.shutdown_sync();
     }
 }

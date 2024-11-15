@@ -3,8 +3,8 @@ use crate::graphql::LoaderError;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_graphql::dataloader::Loader;
+use observation_tools_common::artifact::AbsoluteArtifactId;
 use observation_tools_common::artifact::AbsoluteArtifactVersionId;
-use observation_tools_common::artifact::ArtifactVersionId;
 use observation_tools_common::project::ProjectId;
 use serde::Deserialize;
 use serde::Serialize;
@@ -17,6 +17,7 @@ use tracing::warn;
 pub trait ResourceId: Debug + Clone + Hash + Sync + Send + Eq {}
 
 impl ResourceId for ProjectId {}
+impl ResourceId for AbsoluteArtifactId {}
 impl ResourceId for AbsoluteArtifactVersionId {}
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]

@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "compression": "^1.7.5",
+    "diff2html": "^3.4.48",
     "express": "^4.21.1"
   }
 }

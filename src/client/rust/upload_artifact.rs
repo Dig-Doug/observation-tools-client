@@ -1,22 +1,17 @@
-use crate::util::encode_id_proto;
 use crate::util::GenericError;
 use crate::ClientError;
 use crate::TokenGenerator;
-use base64::Engine;
 use futures::future::BoxFuture;
-use futures::future::LocalBoxFuture;
-use futures::FutureExt;
 use futures::TryFutureExt;
 use observation_tools_common::artifact::AbsoluteArtifactId;
+use observation_tools_common::artifact::SeriesContext;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
 use observation_tools_common::GlobalId;
-use prost::Message;
 use reqwest::multipart::Part;
 use std::task::Context;
 use std::task::Poll;
 use tower_service::Service;
-use tracing::error;
-use tracing::trace;
+use tracing::debug;
 
 #[derive(Debug, Clone)]
 pub(crate) struct UploadArtifactService {
@@ -39,6 +34,8 @@ impl UploadArtifactTask {
         AbsoluteArtifactId {
             project_id: self.request.project_id.clone(),
             artifact_id: self.request.artifact_id.clone(),
+            // TODO(doug): Audit
+            series_context: SeriesContext::None,
         }
     }
 
@@ -65,7 +62,7 @@ impl Service<UploadArtifactTask> for UploadArtifactService {
     }
 
     fn call(&mut self, task: UploadArtifactTask) -> Self::Future {
-        trace!(
+        debug!(
             "Setting up task for artifact: {}",
             &task.artifact_global_id()
         );
@@ -113,7 +110,7 @@ async fn upload_artifact_impl(
     host: String,
     task: UploadArtifactTask,
 ) -> Result<(), GenericError> {
-    trace!("Uploading artifact: {}", &task.artifact_global_id());
+    debug!("Uploading artifact: {}", &task.artifact_global_id());
 
     let request_bytes = rmp_serde::to_vec(&task.request).map_err(ClientError::from_string)?;
     let mut form = reqwest::multipart::Form::new().part("request", Part::bytes(request_bytes));

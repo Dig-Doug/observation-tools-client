@@ -10,7 +10,6 @@ use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
 use anyhow::Context;
-use observation_tools_common::artifact::StructuredData;
 use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 

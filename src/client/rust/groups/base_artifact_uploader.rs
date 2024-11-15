@@ -6,14 +6,12 @@ use crate::groups::ArtifactUploader2d;
 use crate::groups::ArtifactUploader3d;
 use crate::groups::GenericArtifactUploader;
 use crate::task_handle::TaskHandle;
-use crate::util::encode_id_proto;
 use crate::util::time_now;
 use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::ArtifactUploader3dTaskHandle;
 use crate::BaseArtifactUploaderTaskHandle;
 use crate::GenericArtifactUploaderTaskHandle;
-use crate::PublicArtifactId;
 use crate::PublicArtifactIdTaskHandle;
 use crate::PublicSeriesId;
 use crate::PublicSeriesIdTaskHandle;
@@ -27,7 +25,6 @@ use observation_tools_common::artifacts::Transform3;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
 use observation_tools_common::project::ProjectId;
 use observation_tools_common::run::RunId;
-use prost::Message;
 use std::iter::once;
 
 #[derive(Debug, Clone)]

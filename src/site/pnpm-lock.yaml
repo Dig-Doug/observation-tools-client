@@ -11,6 +11,9 @@ importers:
       compression:
         specifier: ^1.7.5
         version: 1.7.5
+      diff2html:
+        specifier: ^3.4.48
+        version: 3.4.48
       express:
         specifier: ^4.21.1
         version: 4.21.1
@@ -524,6 +527,9 @@ packages:
     resolution: {integrity: sha512-r7d+i1BcCISshJ5fRnc/9JQj7bVfJmBMnKfHd8LQRkRt7Z56fFfsgwuzJ+uzJRSstMC7e7JRRlSP9TOuf1D2zQ==}
     engines: {node: '>=18.0.0'}
 
+  abbrev@1.1.1:
+    resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
+
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
     engines: {node: '>= 0.6'}
@@ -667,6 +673,14 @@ packages:
 
   devalue@5.1.1:
     resolution: {integrity: sha512-maua5KUiapvEwiEAe+XnlZ3Rh0GD+qI1J/nb9vrJc3muPXvcF/8gXYTWF76+5DAqHyDUtOIImEuo0YKE9mshVw==}
+
+  diff2html@3.4.48:
+    resolution: {integrity: sha512-1lzNSg0G0VPKZPTyi4knzV2nAWTXBy/QaWCKzDto6iEIlcuOJEG0li4bElJfpHNz+pBqPu4AcC1i9ZCo9KMUOg==}
+    engines: {node: '>=12'}
+
+  diff@5.1.0:
+    resolution: {integrity: sha512-D+mk+qE8VC/PAUrlAU34N+VfXev0ghe5ywmpqrawphmVZc1bEfn56uo9qpyGp1p4xpzOHkSW4ztBd6L7Xx4ACw==}
+    engines: {node: '>=0.3.1'}
 
   dset@3.1.4:
     resolution: {integrity: sha512-2QF/g9/zTaPDc3BjNcVTGoBbXBgYfMTTceLaYcFJ/W9kggFUkhxD/hMEeuLKbugyef9SqAx8cpgwlIP/jinUTA==}
@@ -839,6 +853,14 @@ packages:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
 
+  highlight.js@11.9.0:
+    resolution: {integrity: sha512-fJ7cW7fQGCYAkgv4CPfwFHrfd/cLS4Hau96JuJ+ZTOWhjnhoeN1ub1tFmALm/+lW5z4WCAuAV9bm05AP0mS6Gw==}
+    engines: {node: '>=12.0.0'}
+
+  hogan.js@3.0.2:
+    resolution: {integrity: sha512-RqGs4wavGYJWE07t35JQccByczmNUXQT0E12ZYV1VKYu5UiAU9lsos/yBAcf840+zrUQQxgVduCR5/B8nNtibg==}
+    hasBin: true
+
   houdini-svelte@2.0.0:
     resolution: {integrity: sha512-0ryx9HyudCUX2uD5yMH2BURAEcs3eLqnT9dSk+CZ6a5gd9qA1Us6+v5Oh8MB0NmI/pHgYM9yNeU3xQY7aCUeKA==}
 
@@ -959,6 +981,10 @@ packages:
     resolution: {integrity: sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==}
     engines: {node: '>=10'}
 
+  mkdirp@0.3.0:
+    resolution: {integrity: sha512-OHsdUcVAQ6pOtg5JYWpCBo9W/GySVuwvP9hueRMW7UqshC0tbfzLv8wjySTPm3tfUZ/21CE9E1pJagOA91Pxew==}
+    deprecated: Legacy versions of mkdirp are no longer supported. Please update to mkdirp 1.x. (Note that the API surface has changed to use Promises in 1.x.)
+
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
@@ -993,6 +1019,10 @@ packages:
   node-fetch@3.3.2:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  nopt@1.0.10:
+    resolution: {integrity: sha512-NWmpvLSqUrgrAC9HCuxEvb+PSloHpqVu+FqcO4eeF2h5qYRhA7ev6KvelyQAKtegUbC6RypJnlEOhd8vloNKYg==}
+    hasBin: true
 
   npm-run-path@5.3.0:
     resolution: {integrity: sha512-ppwTtiJZq0O/ai0z7yfudtBpWIoxM8yE6nHi1X47eFR2EWORqfbu6CnPlNsjeN683eT0qG6H/Pyf9fCcvjnnnQ==}
@@ -1728,6 +1758,8 @@ snapshots:
       '@whatwg-node/fetch': 0.10.1
       tslib: 2.8.1
 
+  abbrev@1.1.1: {}
+
   accepts@1.3.8:
     dependencies:
       mime-types: 2.1.35
@@ -1863,6 +1895,15 @@ snapshots:
   destroy@1.2.0: {}
 
   devalue@5.1.1: {}
+
+  diff2html@3.4.48:
+    dependencies:
+      diff: 5.1.0
+      hogan.js: 3.0.2
+    optionalDependencies:
+      highlight.js: 11.9.0
+
+  diff@5.1.0: {}
 
   dset@3.1.4: {}
 
@@ -2085,6 +2126,14 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
+  highlight.js@11.9.0:
+    optional: true
+
+  hogan.js@3.0.2:
+    dependencies:
+      mkdirp: 0.3.0
+      nopt: 1.0.10
+
   houdini-svelte@2.0.0(@sveltejs/vite-plugin-svelte@4.0.0(svelte@5.1.12)(vite@5.4.10(@types/node@22.9.0)))(@types/node@22.9.0):
     dependencies:
       '@kitql/helpers': 0.8.10
@@ -2230,6 +2279,8 @@ snapshots:
     dependencies:
       brace-expansion: 2.0.1
 
+  mkdirp@0.3.0: {}
+
   mri@1.2.0: {}
 
   mrmime@2.0.0: {}
@@ -2251,6 +2302,10 @@ snapshots:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
+
+  nopt@1.0.10:
+    dependencies:
+      abbrev: 1.1.1
 
   npm-run-path@5.3.0:
     dependencies:

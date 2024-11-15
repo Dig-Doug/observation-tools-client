@@ -2,12 +2,10 @@ use chrono::DateTime;
 use chrono::Utc;
 use core::fmt::Debug;
 use observation_tools_common::artifacts::ArtifactError;
-use prost::Message;
-use prost_types::Timestamp;
+use pyo3::exceptions::PyValueError;
+use pyo3::PyErr;
 use std::error::Error;
-use std::io::Cursor;
 use std::time::Duration;
-use uuid::Uuid;
 use wasm_bindgen::JsValue;
 
 pub type GenericError = Box<dyn Error + Send + Sync>;
@@ -64,13 +62,10 @@ impl Into<JsValue> for ClientError {
     }
 }
 
-pub(crate) fn encode_id_proto(msg: &impl Message) -> String {
-    bs58::encode(msg.encode_to_vec()).into_string()
-}
-
-pub(crate) fn decode_id_proto<M: Message + Default>(encoded: &str) -> Result<M, GenericError> {
-    let proto_bytes = bs58::decode(encoded).into_vec()?;
-    Ok(M::decode(&mut Cursor::new(proto_bytes))?)
+impl From<ClientError> for PyErr {
+    fn from(err: ClientError) -> PyErr {
+        PyValueError::new_err(err.to_string())
+    }
 }
 
 pub(crate) fn time_now() -> DateTime<Utc> {

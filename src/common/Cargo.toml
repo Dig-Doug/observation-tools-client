@@ -25,6 +25,7 @@ wasm-bindgen-derive = { workspace = true }
 async-graphql = { workspace = true }
 rmp-serde = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
+pyo3 = { workspace = true }
 
 [build-dependencies]
 prost-build = { workspace = true }

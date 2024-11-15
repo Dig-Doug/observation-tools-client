@@ -129,6 +129,16 @@ pub use crate::util::ClientError;
 use observation_tools_common::artifact::ArtifactId;
 pub use observation_tools_common::artifacts;
 use observation_tools_common::artifacts::SeriesId;
+use observation_tools_common::artifacts::UserMetadata;
+use pyo3::prelude::*;
+use pyo3::pymodule;
+use pyo3::types::PyModule;
+use pyo3::Bound;
+use pyo3::PyResult;
+use tracing::info;
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use tracing_wasm::WASMLayerConfigBuilder;
 use wasm_bindgen::prelude::*;
 
@@ -160,5 +170,22 @@ pub fn start() -> Result<(), JsValue> {
     };
     tracing_wasm::set_as_global_default_with_config(config);
 
+    Ok(())
+}
+
+#[pymodule]
+fn observation_tools(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // WARNING: pyo3-log requires GIL interaction, which prevents threaded code from
+    // running
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .with(tracing_subscriber::fmt::layer().with_ansi(true))
+        .init();
+    m.add_class::<Client>()?;
+    m.add_class::<UserMetadata>()?;
     Ok(())
 }

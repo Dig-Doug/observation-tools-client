@@ -3,8 +3,7 @@ pub mod project;
 pub mod sqlite;
 mod util;
 
-use crate::storage::project::ProjectRow;
-use observation_tools_common::artifact::AbsoluteArtifactId;
+use observation_tools_common::artifact::AbsoluteArtifactVersionId;
 use observation_tools_common::artifact::ArtifactData;
 use observation_tools_common::artifact::ArtifactId;
 use observation_tools_common::artifact::ArtifactVersionId;
@@ -14,7 +13,6 @@ use observation_tools_common::run::RunId;
 use observation_tools_common::GlobalId;
 use serde::Deserialize;
 use serde::Serialize;
-use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ArtifactVersionRow {
@@ -27,10 +25,11 @@ pub struct ArtifactVersionRow {
 }
 
 impl ArtifactVersionRow {
-    pub fn absolute_id(&self) -> AbsoluteArtifactId {
-        AbsoluteArtifactId {
+    pub fn absolute_id(&self) -> AbsoluteArtifactVersionId {
+        AbsoluteArtifactVersionId {
             project_id: self.project_id.clone(),
             artifact_id: self.artifact_id.clone(),
+            version_id: self.version_id.clone(),
         }
     }
 

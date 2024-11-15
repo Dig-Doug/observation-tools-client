@@ -1,23 +1,27 @@
 use crate::artifacts::Transform3;
 use crate::artifacts::UserMetadata;
-use crate::client::UI_HOST;
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
-use crate::run_id::RunId;
 use crate::util::ClientError;
 use crate::ArtifactUploader2dTaskHandle;
 use crate::ArtifactUploader3dTaskHandle;
 use crate::GenericArtifactUploaderTaskHandle;
-use prost::Message;
+use crate::PublicArtifactIdTaskHandle;
+use crate::RunUploaderTaskHandle;
+use pyo3::pyclass;
+use pyo3::pymethods;
 use wasm_bindgen::prelude::*;
 
 /// The "root" artifact group for a run.
 #[wasm_bindgen]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct RunUploader {
     pub(crate) base: BaseArtifactUploader,
+    pub(crate) handle: PublicArtifactIdTaskHandle,
 }
 
 #[wasm_bindgen]
+#[pymethods]
 impl RunUploader {
     pub fn viewer_url(&self) -> String {
         todo!("impl");

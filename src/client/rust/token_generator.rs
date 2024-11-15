@@ -37,7 +37,7 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::net::TcpListener;
 use std::time::Duration;
-use tracing::trace;
+use tracing::debug;
 use tracing::warn;
 use url::Url;
 #[cfg(feature = "wasm")]
@@ -163,11 +163,11 @@ fn get_refresh_token(
             let entry = Entry::new(keyring_key, &whoami::username());
             match entry.and_then(|e| e.get_password()) {
                 Ok(refresh_token) => {
-                    trace!("Found saved refresh token, using it first");
+                    debug!("Found saved refresh token, using it first");
                     Some(RefreshToken::new(refresh_token))
                 }
                 Err(e) => {
-                    trace!("Failed to retrieve refresh token from keyring: {}", e);
+                    debug!("Failed to retrieve refresh token from keyring: {}", e);
                     None
                 }
             }
@@ -317,7 +317,7 @@ async fn device_flow(
         }
     }
 
-    trace!("Making device code request");
+    debug!("Making device code request");
     let details: DeviceAuthorizationResponse<GoogleTokenFields> = client
         .exchange_device_code()?
         .add_scope(Scope::new("email".to_string()))

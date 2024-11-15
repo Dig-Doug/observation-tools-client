@@ -26,5 +26,6 @@ type Project implements Node {
 
 type Query {
     createProject: Project!
+    diffArtifacts(left: ID!, right: ID!): String!
     node(id: ID!): Node!
 }

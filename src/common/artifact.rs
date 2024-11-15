@@ -3,6 +3,7 @@ use crate::artifacts::*;
 use crate::math::Graph;
 use crate::project::ProjectId;
 use crate::GlobalId;
+use anyhow::anyhow;
 use async_graphql::ID;
 use chrono::DateTime;
 use chrono::Utc;
@@ -11,7 +12,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Args)]
 pub struct ArtifactId {
     #[arg(id = "artifact-uuid", short = 'a', long = "artifact-id")]
     pub uuid: Uuid,
@@ -31,6 +32,8 @@ pub struct AbsoluteArtifactId {
     pub project_id: ProjectId,
     #[command(flatten)]
     pub artifact_id: ArtifactId,
+    #[arg(skip)]
+    pub series_context: SeriesContext,
 }
 
 impl From<AbsoluteArtifactId> for GlobalId {
@@ -43,6 +46,38 @@ impl From<AbsoluteArtifactId> for ID {
     fn from(id: AbsoluteArtifactId) -> Self {
         let global_id: GlobalId = id.into();
         global_id.into()
+    }
+}
+
+impl TryFrom<ID> for AbsoluteArtifactId {
+    type Error = anyhow::Error;
+
+    fn try_from(id: ID) -> Result<Self, Self::Error> {
+        match id.try_into()? {
+            GlobalId::Artifact(artifact_id) => Ok(artifact_id),
+            _ => Err(anyhow!("Not an AbsoluteArtifactId")),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum SeriesContext {
+    None,
+    Filter { series_point: Option<SeriesPoint> },
+}
+
+impl Default for SeriesContext {
+    fn default() -> Self {
+        SeriesContext::None
+    }
+}
+
+impl SeriesContext {
+    pub fn series_point(&self) -> Option<SeriesPoint> {
+        match self {
+            SeriesContext::None => None,
+            SeriesContext::Filter { series_point } => series_point.clone(),
+        }
     }
 }
 
@@ -80,6 +115,17 @@ impl From<AbsoluteArtifactVersionId> for ID {
     fn from(id: AbsoluteArtifactVersionId) -> Self {
         let global_id: GlobalId = id.into();
         global_id.into()
+    }
+}
+
+impl TryFrom<ID> for AbsoluteArtifactVersionId {
+    type Error = anyhow::Error;
+
+    fn try_from(id: ID) -> Result<Self, Self::Error> {
+        match id.try_into()? {
+            GlobalId::ArtifactVersion(artifact_id) => Ok(artifact_id),
+            _ => Err(anyhow!("Not an AbsoluteArtifactVersionId")),
+        }
     }
 }
 

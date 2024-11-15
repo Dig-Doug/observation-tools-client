@@ -76,12 +76,6 @@ fn bs58_with_rmp_decode<T: for<'a> Deserialize<'a>>(value: &&str) -> Result<T, a
     Ok(rmp_serde::from_read(&mut Cursor::new(bytes))?)
 }
 
-impl From<GlobalId> for ID {
-    fn from(value: GlobalId) -> Self {
-        ID(String::from(value))
-    }
-}
-
 impl TryFrom<ID> for GlobalId {
     type Error = anyhow::Error;
 
@@ -91,9 +85,9 @@ impl TryFrom<ID> for GlobalId {
     }
 }
 
-impl Display for &GlobalId {
+impl Display for GlobalId {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let s: String = (*self).clone().into();
+        let s: String = self.clone().into();
         write!(f, "{}", s)
     }
 }

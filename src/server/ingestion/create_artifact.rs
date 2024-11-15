@@ -21,7 +21,6 @@ use axum::RequestPartsExt;
 use futures_util::TryStreamExt;
 use observation_tools_common::artifact::ArtifactVersionId;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct CreateArtifactState {

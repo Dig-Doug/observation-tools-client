@@ -7,7 +7,7 @@ use crate::groups::RunUploader;
 use crate::PublicArtifactId;
 use crate::PublicSeriesId;
 use async_channel::Receiver;
-use async_trait::async_trait;
+use pyo3::pyclass;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -23,6 +23,7 @@ pub trait ArtifactUploadHandle<T>: Deref<Target = T> {
 macro_rules! task_handle_impl {
     ($sub:ident $res:ident) => {
         #[wasm_bindgen]
+        #[pyclass]
         #[derive(Debug, Clone)]
         pub struct $sub {
             #[wasm_bindgen(getter_with_clone)]

@@ -2,7 +2,6 @@ mod artifact_version_row;
 mod project_row;
 pub mod schema;
 
-use crate::storage::artifact::ArtifactStorage;
 use crate::storage::project::ProjectRow;
 use crate::storage::project::ProjectRowOrError;
 use crate::storage::sqlite::artifact_version_row::ArtifactVersionSqliteRow;
@@ -24,6 +23,7 @@ use itertools::Itertools;
 use observation_tools_common::artifact::AbsoluteArtifactVersionId;
 use observation_tools_common::artifact::ArtifactId;
 use observation_tools_common::artifact::ArtifactVersionId;
+use observation_tools_common::artifact::StructuredData;
 use observation_tools_common::project::ProjectId;
 use std::collections::HashMap;
 use std::error::Error;
@@ -68,7 +68,7 @@ impl SqliteArtifactStorage {
 
     pub async fn read_projects(
         &self,
-        projects: Vec<ProjectId>,
+        projects: &Vec<ProjectId>,
     ) -> Result<HashMap<ProjectId, ProjectRowOrError>, anyhow::Error> {
         let mut connection = self.pool.get()?;
         let project_rows = schema::projects::table
@@ -97,7 +97,7 @@ impl SqliteArtifactStorage {
 
     pub async fn read_artifact_versions(
         &self,
-        versions: Vec<AbsoluteArtifactVersionId>,
+        versions: &Vec<AbsoluteArtifactVersionId>,
     ) -> Result<HashMap<AbsoluteArtifactVersionId, ArtifactVersionRowOrError>, anyhow::Error> {
         let mut connection = self.pool.get()?;
         let version_rows = schema::artifacts::table
@@ -180,5 +180,38 @@ impl SqliteArtifactStorage {
             .values(ArtifactVersionSqliteRow::try_from(version)?)
             .execute(&mut connection)?;
         Ok(())
+    }
+
+    pub async fn read_artifact_version_payload(
+        &self,
+        version_id: &AbsoluteArtifactVersionId,
+    ) -> Result<Option<StructuredData>, anyhow::Error> {
+        let mut connection = self.pool.get()?;
+        let payload = schema::payloads::table
+            .filter(
+                schema::payloads::project_id
+                    .eq(version_id.project_id.id.as_bytes().to_vec())
+                    .and(
+                        schema::payloads::artifact_id.eq(version_id
+                            .artifact_id
+                            .uuid
+                            .as_bytes()
+                            .to_vec()),
+                    )
+                    .and(
+                        schema::payloads::version_id.eq(version_id
+                            .version_id
+                            .uuid
+                            .as_bytes()
+                            .to_vec()),
+                    ),
+            )
+            .select(schema::payloads::payload)
+            .first::<Vec<u8>>(&mut connection)
+            .optional()?;
+        match payload {
+            Some(payload) => Ok(Some(rmp_serde::from_slice(&payload)?)),
+            None => Ok(None),
+        }
     }
 }

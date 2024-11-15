@@ -10,6 +10,7 @@ use tower::limit::concurrency::future::ResponseFuture;
 use tower::limit::ConcurrencyLimit;
 use tower::Layer;
 use tower_service::Service;
+use tracing::debug;
 use url::Url;
 
 #[derive(Debug)]
@@ -103,13 +104,16 @@ where
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         if self.has_access_token_cookie() {
+            debug!("Access token cookie found, bypassing throttle");
             self.inner.poll_ready(cx)
         } else {
+            debug!("No access token cookie found, throttling");
             self.concurrency_limiter.poll_ready(cx)
         }
     }
 
     fn call(&mut self, request: Request) -> Self::Future {
+        debug!("Calling inner service");
         if self.has_access_token_cookie() {
             ThrottleWithoutAccessCookieFuture::InnerFuture(self.inner.call(request))
         } else {

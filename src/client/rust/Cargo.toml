@@ -42,11 +42,8 @@ itertools = { workspace = true }
 js-sys = { workspace = true }
 keyring = { workspace = true }
 nalgebra = { workspace = true }
-prost = { workspace = true }
-prost-types = { workspace = true }
 oauth2 = { workspace = true }
 pin-project = { workspace = true }
-protobuf = { workspace = true }
 reqwest = { workspace = true, features = ["rustls-tls", "json", "multipart"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -60,6 +57,7 @@ tower-layer = { workspace = true }
 tower-service = { workspace = true }
 tracing = { workspace = true }
 tracing-wasm = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
@@ -69,9 +67,7 @@ web-sys = { workspace = true, features = ["Window", "Performance", "PerformanceT
 whoami = { workspace = true }
 rmp-serde = { workspace = true }
 chrono = { workspace = true }
-
-[build-dependencies]
-protobuf-codegen = { workspace = true }
+pyo3 = { workspace = true, features = ["abi3-py312", "auto-initialize"] }
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }
@@ -79,6 +75,7 @@ tracing-subscriber = { workspace = true }
 [features]
 files = ["tempfile"]
 rust = ["tokio", "tokio-util", "files", "reqwest/stream"]
+python = ["rust"]
 wasm = []
 default = ["rust"]
 

@@ -1,9 +1,8 @@
-use crate::graphql::artifact::ArtifactVersion;
-use crate::graphql::artifact::ArtifactVersionDataLoader;
+use crate::graphql::artifact_version::ArtifactVersion;
+use crate::graphql::artifact_version::ArtifactVersionDataLoader;
 use crate::graphql::project::Project;
 use crate::graphql::project::ProjectDataLoader;
 use anyhow::anyhow;
-use async_graphql::dataloader::DataLoader;
 use async_graphql::Context;
 use async_graphql::Interface;
 use async_graphql::Object;

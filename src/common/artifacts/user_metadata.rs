@@ -1,15 +1,26 @@
+use pyo3::pyclass;
+use pyo3::pymethods;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserMetadata {
     #[wasm_bindgen(skip)]
     pub name: String,
     #[wasm_bindgen(skip)]
     pub metadata: HashMap<String, String>,
+}
+
+#[pymethods]
+impl UserMetadata {
+    #[new]
+    pub fn new_py(name: &str) -> Self {
+        UserMetadata::new(name)
+    }
 }
 
 #[wasm_bindgen]

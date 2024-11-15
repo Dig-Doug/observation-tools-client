@@ -30,6 +30,7 @@ tokio-util = { workspace = true }
 tracing = { workspace = true, features = ["log"] }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 uuid = { workspace = true }
+similar = { workspace = true }
 
 [[bin]]
 name = "observation-tools-server"

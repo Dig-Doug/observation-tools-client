@@ -8,14 +8,14 @@ use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesId {
     #[wasm_bindgen(skip)]
     pub artifact_id: ArtifactId,
 }
 
 #[wasm_bindgen]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Series {
     #[wasm_bindgen(skip)]
     pub dimensions: Vec<SeriesDimensionData>,
@@ -43,21 +43,21 @@ impl Series {
 }
 
 #[wasm_bindgen]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesDimensionId {
     #[wasm_bindgen(skip)]
     pub artifact_id: ArtifactId,
 }
 
 #[wasm_bindgen]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesDimension {
     #[wasm_bindgen(skip)]
     pub data: SeriesDimensionData,
 }
 
 #[wasm_bindgen]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesPoint {
     #[wasm_bindgen(skip)]
     pub series_id: SeriesId,
@@ -116,13 +116,13 @@ impl SeriesPoint {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesDimensionData {
     pub id: SeriesDimensionId,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesDimensionValue {
     pub dimension_id: SeriesDimensionId,
     pub value: Number,

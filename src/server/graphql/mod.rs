@@ -1,5 +1,7 @@
-pub mod artifact;
+mod artifact;
+pub mod artifact_version;
 mod create_project;
+mod diff;
 mod node;
 pub mod project;
 
@@ -8,6 +10,7 @@ use crate::auth::permission::Permission;
 use crate::auth::permission::ResourceId;
 use crate::auth::principal::Principal;
 use crate::graphql::create_project::CreateProjectMutation;
+use crate::graphql::diff::DiffArtifactsQuery;
 use crate::graphql::node::GetNodeQuery;
 use crate::server::ServerState;
 use async_graphql::http::playground_source;
@@ -28,7 +31,7 @@ use observation_tools_common::GlobalId;
 struct QueryImpl;
 
 #[derive(MergedObject, Default)]
-struct Query(CreateProjectMutation, GetNodeQuery);
+struct Query(CreateProjectMutation, GetNodeQuery, DiffArtifactsQuery);
 
 type ServerSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 

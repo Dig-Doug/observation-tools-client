@@ -2,19 +2,16 @@
 use crate::artifacts::ArtifactError;
 use serde::Deserialize;
 use serde::Serialize;
+use std::cmp::Ordering;
+use std::hash::Hash;
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
 #[wasm_bindgen]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Number {
     #[wasm_bindgen(skip)]
     pub data: NumberData,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum NumberData {
-    Double(f64),
 }
 
 #[cfg(feature = "wasm")]
@@ -54,8 +51,43 @@ impl Into<Number> for f64 {
 
 impl Into<f64> for Number {
     fn into(self) -> f64 {
-        match self.data {
+        self.data.into()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum NumberData {
+    Double(f64),
+}
+
+impl Into<f64> for NumberData {
+    fn into(self) -> f64 {
+        match self {
             NumberData::Double(d) => d,
+        }
+    }
+}
+
+impl Eq for NumberData {}
+
+impl PartialOrd for NumberData {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for NumberData {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let a: f64 = self.clone().into();
+        let b: f64 = other.clone().into();
+        a.total_cmp(&b)
+    }
+}
+
+impl Hash for NumberData {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            NumberData::Double(d) => d.to_bits().hash(state),
         }
     }
 }
