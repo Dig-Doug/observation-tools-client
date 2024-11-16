@@ -13,6 +13,7 @@ use wasm_bindgen::prelude::*;
 /// An image.
 //#[doc = docify::embed_run!("tests/examples.rs", image2_example)]
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Image2 {
     #[wasm_bindgen(skip)]

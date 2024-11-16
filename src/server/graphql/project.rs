@@ -1,5 +1,4 @@
 use crate::auth::permission::load_permissions_and_filter_ids;
-use crate::auth::permission::AccessResult;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
 use crate::graphql::LoaderError;
@@ -8,6 +7,7 @@ use crate::storage::project::ProjectRow;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_graphql::dataloader::Loader;
+use async_graphql::Interface;
 use async_graphql::Object;
 use async_graphql::ID;
 use observation_tools_common::project::ProjectId;
@@ -25,6 +25,30 @@ impl Project {
     pub async fn id(&self) -> async_graphql::Result<ID> {
         let global_id: GlobalId = self.row.id.clone().try_into()?;
         Ok(global_id.into())
+    }
+}
+
+#[derive(Interface, Clone, Debug)]
+#[graphql(field(name = "id", ty = "ID"))]
+pub enum ProjectOrProjectError {
+    Project(Project),
+    Error(ProjectError),
+}
+
+#[derive(Clone, Debug)]
+pub struct ProjectError {
+    pub id: ID,
+    pub message: String,
+}
+
+#[Object]
+impl ProjectError {
+    pub async fn id(&self) -> ID {
+        self.id.clone()
+    }
+
+    pub async fn message(&self) -> String {
+        self.message.clone()
     }
 }
 
@@ -54,17 +78,15 @@ impl Loader<ProjectId> for ProjectLoader {
                 (k, v)
             })
             .collect();
-        for (permission, accessible) in accessible_projects.into_iter() {
-            if accessible == AccessResult::Allow {
-                results
-                    .entry(permission.resource_id.clone())
-                    .or_insert_with(|| {
-                        Err(LoaderError::ProjectNotFound {
-                            project_id: permission.resource_id.into(),
-                        })
-                    });
+        for (project_id, accessible) in accessible_projects.into_iter() {
+            if accessible.allow {
+                results.entry(project_id.clone()).or_insert_with(|| {
+                    Err(LoaderError::ProjectNotFound {
+                        project_id: project_id.into(),
+                    })
+                });
             } else {
-                results.insert(permission.resource_id.clone(), Err(permission.into()));
+                results.insert(project_id.clone(), Err(accessible.permission.into()));
             }
         }
         Ok(results)

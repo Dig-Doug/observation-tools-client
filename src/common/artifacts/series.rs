@@ -8,6 +8,7 @@ use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesId {
     #[wasm_bindgen(skip)]
@@ -15,6 +16,7 @@ pub struct SeriesId {
 }
 
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Series {
     #[wasm_bindgen(skip)]
@@ -43,13 +45,15 @@ impl Series {
 }
 
 #[wasm_bindgen]
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[pyo3::pyclass]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesDimensionId {
     #[wasm_bindgen(skip)]
     pub artifact_id: ArtifactId,
 }
 
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesDimension {
     #[wasm_bindgen(skip)]
@@ -57,6 +61,7 @@ pub struct SeriesDimension {
 }
 
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesPoint {
     #[wasm_bindgen(skip)]

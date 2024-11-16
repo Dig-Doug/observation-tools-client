@@ -32,4 +32,12 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    permissions (resource_id) {
+        principal_id -> Text,
+        resource_id -> Text,
+        relation -> Text,
+    }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(artifacts, payloads,);

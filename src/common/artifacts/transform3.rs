@@ -9,6 +9,7 @@ use serde::Serialize;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Transform3 {
     #[wasm_bindgen(skip)]

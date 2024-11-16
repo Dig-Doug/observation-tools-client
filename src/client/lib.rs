@@ -116,26 +116,21 @@ mod util;
 
 pub use crate::client::Client;
 pub use crate::client::ClientOptions;
-//pub use crate::task_handle::ArtifactUploadHandle;
-pub use crate::task_handle::ArtifactUploader2dTaskHandle;
-pub use crate::task_handle::ArtifactUploader3dTaskHandle;
-pub(crate) use crate::task_handle::BaseArtifactUploaderTaskHandle;
-pub use crate::task_handle::GenericArtifactUploaderTaskHandle;
 pub use crate::task_handle::PublicArtifactIdTaskHandle;
 pub use crate::task_handle::PublicSeriesIdTaskHandle;
-pub use crate::task_handle::RunUploaderTaskHandle;
 pub use crate::token_generator::TokenGenerator;
 pub use crate::util::ClientError;
 use observation_tools_common::artifact::ArtifactId;
 pub use observation_tools_common::artifacts;
+use observation_tools_common::artifacts::Object1;
 use observation_tools_common::artifacts::SeriesId;
+use observation_tools_common::artifacts::Text;
 use observation_tools_common::artifacts::UserMetadata;
 use pyo3::prelude::*;
 use pyo3::pymodule;
 use pyo3::types::PyModule;
 use pyo3::Bound;
 use pyo3::PyResult;
-use tracing::info;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -187,5 +182,7 @@ fn observation_tools(m: &Bound<'_, PyModule>) -> PyResult<()> {
         .init();
     m.add_class::<Client>()?;
     m.add_class::<UserMetadata>()?;
+    m.add_class::<Text>()?;
+    m.add_class::<Object1>()?;
     Ok(())
 }

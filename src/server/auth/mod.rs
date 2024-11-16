@@ -6,6 +6,7 @@ use std::convert::Infallible;
 
 pub mod permission;
 pub mod principal;
+pub mod resource_id;
 
 #[derive(Clone)]
 pub struct AuthState {}

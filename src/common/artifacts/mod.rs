@@ -85,6 +85,7 @@ mod matrix;
 mod mesh;
 pub mod nalegbra;
 mod number;
+mod object1;
 mod object2;
 mod object3;
 mod point2;
@@ -97,6 +98,7 @@ mod rect2;
 mod segment2;
 mod series;
 mod sphere;
+mod text;
 mod transform2;
 mod transform3;
 mod user_metadata;
@@ -118,6 +120,7 @@ pub use mesh::Mesh;
 pub use number::Number;
 //#[cfg(feature = "wasm")]
 //pub use number::NumberOrNumber;
+pub use object1::Object1;
 pub use object2::Object2;
 pub use object3::Object3;
 pub use point2::Point2;
@@ -126,10 +129,13 @@ pub use polygon2::Polygon2;
 pub use polygon3::Polygon3;
 pub use polygon_edge2::PolygonEdge2;
 pub use polygon_edge3::PolygonEdge3;
+use pyo3::exceptions::PyValueError;
+use pyo3::PyErr;
 pub use rect2::Rect2;
 pub use segment2::Segment2;
 pub use series::*;
 pub use sphere::Sphere;
+pub use text::Text;
 pub use transform2::Transform2;
 pub use transform3::Transform3;
 pub use user_metadata::UserMetadata;
@@ -142,6 +148,8 @@ use wasm_bindgen::JsValue;
 pub enum ArtifactError {
     #[error("Failed to convert {value} into a number")]
     FailedToConvertJsValueToNumber { value: String },
+    #[error("Failed to convert type to Object1Data")]
+    FailedToCreateObject1,
     #[error("Failed to convert type to Geometry2Builder")]
     FailedToCreateGeometry2Builder,
     #[error("Failed to convert type to Geometry3Builder")]
@@ -157,5 +165,11 @@ pub enum ArtifactError {
 impl Into<JsValue> for ArtifactError {
     fn into(self) -> JsValue {
         JsValue::from_str(&self.to_string())
+    }
+}
+
+impl From<ArtifactError> for PyErr {
+    fn from(err: ArtifactError) -> PyErr {
+        PyValueError::new_err(err.to_string())
     }
 }

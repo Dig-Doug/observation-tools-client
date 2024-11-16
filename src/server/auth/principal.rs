@@ -13,6 +13,17 @@ pub enum Principal {
     Anonymous,
 }
 
+impl Principal {
+    pub fn id(&self) -> PrincipalId {
+        match self {
+            Principal::Anonymous => PrincipalId("anonymous".to_string()),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PrincipalId(String);
+
 #[async_trait]
 impl<S> FromRequestParts<S> for Principal
 where

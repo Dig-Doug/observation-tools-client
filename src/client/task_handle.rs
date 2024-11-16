@@ -79,11 +79,7 @@ macro_rules! task_handle_impl {
 // wasm-bindgen can't handle generics, so we have to implement each task handle
 // manually
 task_handle_impl!(PublicArtifactIdTaskHandle PublicArtifactId);
-task_handle_impl!(GenericArtifactUploaderTaskHandle GenericArtifactUploader);
-task_handle_impl!(ArtifactUploader2dTaskHandle ArtifactUploader2d);
-task_handle_impl!(ArtifactUploader3dTaskHandle ArtifactUploader3d);
 task_handle_impl!(PublicSeriesIdTaskHandle PublicSeriesId);
-task_handle_impl!(RunUploaderTaskHandle RunUploader);
 task_handle_impl!(Object2UpdaterTaskHandle Object2Updater);
 
 #[derive(Debug, Clone)]

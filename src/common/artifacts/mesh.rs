@@ -8,6 +8,7 @@ use wasm_bindgen::prelude::*;
 /// A 3D mesh
 //#[doc = docify::embed_run!("tests/examples.rs", mesh3_example)]
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Mesh {
     #[wasm_bindgen(skip)]

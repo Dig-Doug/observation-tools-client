@@ -34,7 +34,7 @@ impl CreateProjectMutation {
         let permission_storage = ctx.data::<PermissionStorage>()?;
         permission_storage
             .create_permission(Permission {
-                principal: principal.clone(),
+                principal: principal.id(),
                 resource_id: project_id.clone(),
                 operation: Operation::Owner,
             })

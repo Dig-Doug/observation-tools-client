@@ -1,4 +1,5 @@
 mod artifact_version_row;
+mod permission_row;
 mod project_row;
 pub mod schema;
 

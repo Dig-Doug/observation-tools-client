@@ -10,7 +10,6 @@ use crate::util::ClientError;
 use crate::util::GenericError;
 use crate::PublicArtifactId;
 use crate::PublicArtifactIdTaskHandle;
-use crate::RunUploaderTaskHandle;
 use crate::TokenGenerator;
 use anyhow::anyhow;
 use core::fmt::Debug;
@@ -27,7 +26,6 @@ use observation_tools_common::GlobalId;
 use pyo3::pyclass;
 use pyo3::pymethods;
 use pyo3::PyResult;
-use pyo3::Python;
 use std::io::Write;
 use std::sync::Arc;
 use std::time::Duration;
@@ -38,7 +36,6 @@ use tower::ServiceExt;
 use tower_service::Service;
 use tracing::debug;
 use tracing::error;
-use tracing::info;
 use tracing::warn;
 use url::Url;
 use wasm_bindgen::prelude::*;
@@ -150,14 +147,11 @@ impl Client {
         .map_err(|e| JsValue::from_str(&format!("{}", e)))
     }
 
-    pub async fn shutdown(self) -> Result<(), ClientError> {
+    pub async fn shutdown(mut self) -> Result<(), ClientError> {
         self.inner.shutdown_async().await
     }
 
-    pub fn create_run_js(
-        &self,
-        metadata: &UserMetadata,
-    ) -> Result<RunUploaderTaskHandle, ClientError> {
+    pub fn create_run_js(&self, metadata: &UserMetadata) -> Result<RunUploader, ClientError> {
         self.create_run(metadata.clone())
     }
 }
@@ -216,8 +210,8 @@ impl Client {
                 },
                 id: handle.id.clone(),
                 ancestor_group_ids: vec![],
+                handle,
             },
-            handle,
         })
     }
 }

@@ -10,6 +10,7 @@ use wasm_bindgen::prelude::*;
 /// automatically created between the last and first vertex.
 //#[doc = docify::embed_run!("tests/examples.rs", polygon2_example)]
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Polygon2 {
     #[wasm_bindgen(skip)]

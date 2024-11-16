@@ -71,10 +71,10 @@ impl ArtifactLoader {
     async fn load_artifact(
         &self,
         permission: Permission<AbsoluteArtifactId>,
-        access_result: AccessResult,
+        access_result: AccessResult<AbsoluteArtifactId>,
     ) -> (AbsoluteArtifactId, Result<Artifact, LoaderError>) {
         let artifact_id = permission.resource_id.clone();
-        if access_result != AccessResult::Allow {
+        if !access_result.allow {
             return (artifact_id, Err(permission.into()));
         }
 

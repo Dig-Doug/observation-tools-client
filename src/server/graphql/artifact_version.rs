@@ -1,5 +1,4 @@
 use crate::auth::permission::load_permissions_and_filter_ids;
-use crate::auth::permission::AccessResult;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
 use crate::graphql::LoaderError;
@@ -61,17 +60,20 @@ impl Loader<AbsoluteArtifactVersionId> for ArtifactVersionLoader {
                 (k, v)
             })
             .collect();
-        for (permission, accessible) in accessible_artifacts.into_iter() {
-            if accessible == AccessResult::Allow {
+        for (artifact_version_id, accessible) in accessible_artifacts.into_iter() {
+            if accessible.allow {
                 results
-                    .entry(permission.resource_id.clone())
+                    .entry(artifact_version_id.clone())
                     .or_insert_with(|| {
                         Err(LoaderError::ArtifactVersionNotFound {
-                            artifact_version_id: permission.resource_id.into(),
+                            artifact_version_id: artifact_version_id.into(),
                         })
                     });
             } else {
-                results.insert(permission.resource_id.clone(), Err(permission.into()));
+                results.insert(
+                    artifact_version_id.clone(),
+                    Err(accessible.permission.into()),
+                );
             }
         }
         Ok(results)

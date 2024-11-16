@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Args)]
 pub struct ProjectId {
     #[arg(id = "project-uuid", short = 'p', long = "project-id")]
     pub id: Uuid,

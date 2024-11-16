@@ -80,6 +80,7 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 /// Updater for an Object2.
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Object2Updater {
     pub(crate) id: ArtifactId,

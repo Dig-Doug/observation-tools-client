@@ -9,6 +9,7 @@ use wasm_bindgen::prelude::*;
 
 /// A 2D object.
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Object2 {
     #[wasm_bindgen(skip)]

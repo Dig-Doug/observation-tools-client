@@ -8,6 +8,7 @@ use wasm_bindgen::prelude::*;
 
 /// A 3D point.
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Point3 {
     #[wasm_bindgen(skip)]

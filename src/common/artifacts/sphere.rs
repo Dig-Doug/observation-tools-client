@@ -7,6 +7,7 @@ use wasm_bindgen::prelude::*;
 
 /// A 3D sphere.
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Sphere {
     #[wasm_bindgen(skip)]

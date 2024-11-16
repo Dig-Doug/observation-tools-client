@@ -7,22 +7,25 @@ use crate::groups::Object2Updater;
 use crate::task_handle::Object2UpdaterTaskHandle;
 use crate::task_handle::TaskHandle;
 use crate::util::ClientError;
-use crate::ArtifactUploader2dTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
 use anyhow::Context;
+use pyo3::pyclass;
 use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 
 /// An artifact group representing a 2-dimensional world. This group can only
 /// contain [Object2](Object2) artifacts.
 #[wasm_bindgen]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct ArtifactUploader2d {
     pub(crate) base: BaseArtifactUploader,
 }
 
 #[wasm_bindgen]
+#[pyo3::pymethods]
 impl ArtifactUploader2d {
+    #[pyo3(name = "create_object2")]
     pub fn create_object2_js(
         &self,
         metadata: &UserMetadata,
@@ -31,6 +34,7 @@ impl ArtifactUploader2d {
         self.create_object2(metadata.clone(), data.clone())
     }
 
+    #[pyo3(name = "update_object2")]
     pub fn update_object2_js(
         &self,
         artifact: &Object2Updater,
@@ -40,6 +44,7 @@ impl ArtifactUploader2d {
     }
 
     // TODO(doug): Where in the artifact hierarchy should series be defined?
+    #[pyo3(name = "series")]
     pub fn series_js(
         &self,
         metadata: &UserMetadata,
@@ -55,23 +60,7 @@ impl ArtifactUploader2d {
         metadata: M,
         data: D,
     ) -> Result<Object2UpdaterTaskHandle, ClientError> {
-        let metadata = metadata.into();
-        let mut data = data.into();
-        if TypeId::of::<D>() != TypeId::of::<Object2>() {
-            // #implicit-transform
-            data.add_transform(Transform2::identity());
-        }
-
-        Ok(self
-            .base
-            .upload_raw(
-                metadata.clone(),
-                data.clone()
-                    .try_into()
-                    .with_context(|| format!("Failed to parse object `{}`", metadata.name))?,
-                data.series_point.as_ref(),
-            )?
-            .map_handle(|id| Object2Updater { id: id.id }))
+        self.base.create_object2(metadata, data)
     }
 
     pub fn update_object2<D: Into<Object2>>(
@@ -79,11 +68,7 @@ impl ArtifactUploader2d {
         artifact: &Object2Updater,
         data: D,
     ) -> Result<(), ClientError> {
-        let data = data.into();
-        let series_point = data.series_point.clone();
-        self.base
-            .update_raw(artifact.id.clone(), data.try_into()?, series_point.as_ref())?;
-        Ok(())
+        self.base.update_object2(artifact, data)
     }
 
     pub fn series<M: Into<UserMetadata>, D: Into<Series>>(
@@ -97,7 +82,7 @@ impl ArtifactUploader2d {
     pub fn child_uploader_2d<M: Into<UserMetadata>>(
         &self,
         metadata: M,
-    ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
+    ) -> Result<ArtifactUploader2d, ClientError> {
         self.base.child_uploader_2d(metadata, None)
     }
 }

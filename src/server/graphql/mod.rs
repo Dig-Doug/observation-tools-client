@@ -2,15 +2,20 @@ mod artifact;
 pub mod artifact_version;
 mod create_project;
 mod diff;
+mod get_projects;
 mod node;
 pub mod project;
+mod util;
 
+use crate::auth::permission::IntoResourceId;
 use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
-use crate::auth::permission::ResourceId;
 use crate::auth::principal::Principal;
+use crate::auth::principal::PrincipalId;
+use crate::auth::resource_id::ResourceId;
 use crate::graphql::create_project::CreateProjectMutation;
 use crate::graphql::diff::DiffArtifactsQuery;
+use crate::graphql::get_projects::GetProjectsQuery;
 use crate::graphql::node::GetNodeQuery;
 use crate::server::ServerState;
 use async_graphql::http::playground_source;
@@ -31,9 +36,12 @@ use observation_tools_common::GlobalId;
 struct QueryImpl;
 
 #[derive(MergedObject, Default)]
-struct Query(CreateProjectMutation, GetNodeQuery, DiffArtifactsQuery);
+struct Query(GetNodeQuery, DiffArtifactsQuery, GetProjectsQuery);
 
-type ServerSchema = Schema<Query, EmptyMutation, EmptySubscription>;
+#[derive(MergedObject, Default)]
+struct MutationRoot(CreateProjectMutation);
+
+type ServerSchema = Schema<Query, MutationRoot, EmptySubscription>;
 
 pub async fn graphql_playground() -> impl IntoResponse {
     Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
@@ -71,7 +79,7 @@ pub enum LoaderError {
     NotAuthorized {
         resource_id: ID,
         operation: Operation,
-        principal: Principal,
+        principal: PrincipalId,
     },
 }
 
@@ -85,11 +93,13 @@ impl From<anyhow::Error> for LoaderError {
 
 impl<T> From<Permission<T>> for LoaderError
 where
-    T: ResourceId + Into<GlobalId>,
+    T: IntoResourceId,
 {
     fn from(permission: Permission<T>) -> Self {
+        let resource_id: ResourceId = permission.resource_id.into();
+        let resource_id: GlobalId = resource_id.into();
         Self::NotAuthorized {
-            resource_id: permission.resource_id.into().into(),
+            resource_id: resource_id.into(),
             operation: permission.operation,
             principal: permission.principal,
         }

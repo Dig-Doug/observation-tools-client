@@ -8,6 +8,7 @@ use wasm_bindgen::prelude::*;
 
 #[cfg_attr(feature = "wasm", derive(wasm_bindgen_derive::TryFromJsValue))]
 #[wasm_bindgen]
+#[pyo3::pyclass]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Number {
     #[wasm_bindgen(skip)]

@@ -81,7 +81,7 @@ impl SeriesContext {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Args)]
 pub struct ArtifactVersionId {
     #[arg(id = "version-uuid", short = 'v', long = "version-id")]
     pub uuid: Uuid,
@@ -95,7 +95,7 @@ impl ArtifactVersionId {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Args)]
 pub struct AbsoluteArtifactVersionId {
     #[command(flatten)]
     pub project_id: ProjectId,
@@ -184,6 +184,7 @@ pub struct Group3d {
 pub enum StructuredData {
     Graph(Graph),
     Image2(Image2),
+    Object1(Object1),
     Object2(Object2),
     Object3(Object3),
 }

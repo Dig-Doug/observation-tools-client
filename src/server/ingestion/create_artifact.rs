@@ -1,4 +1,3 @@
-use crate::auth::permission::AccessResult;
 use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
 use crate::auth::permission::PermissionDataLoader;
@@ -68,7 +67,7 @@ pub async fn create_artifact(
 ) -> Result<(), AppError> {
     let request = read_and_validate_request(multipart.next_field().await?).await?;
 
-    let allowed = state
+    let access_result = state
         .permission_loader
         .load_one(Permission::new(
             principal,
@@ -78,7 +77,7 @@ pub async fn create_artifact(
         .await
         .map_err(|e| anyhow!("Error loading permission: {}", e))?;
 
-    if allowed.unwrap_or(AccessResult::Deny) != AccessResult::Allow {
+    if !access_result.map(|result| result.allow).unwrap_or(false) {
         return Err(anyhow!("Not authorized to write to project"))?;
     }
 

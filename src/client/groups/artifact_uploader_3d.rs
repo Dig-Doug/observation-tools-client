@@ -7,25 +7,27 @@ use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::groups::ArtifactUploader2d;
 use crate::task_handle::TaskHandle;
 use crate::util::ClientError;
-use crate::ArtifactUploader2dTaskHandle;
-use crate::ArtifactUploader3dTaskHandle;
 use crate::PublicArtifactIdTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
 use observation_tools_common::artifact::ArtifactType;
 use observation_tools_common::artifact::Map2dTo3dData;
+use pyo3::pyclass;
 use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 
 /// An artifact group representing a 3-dimensional world. This group can only
 /// contain [Object3](Object3) artifacts.
 #[wasm_bindgen]
+#[pyclass]
 #[derive(Debug, Clone)]
 pub struct ArtifactUploader3d {
     pub(crate) base: BaseArtifactUploader,
 }
 
 #[wasm_bindgen]
+#[pyo3::pymethods]
 impl ArtifactUploader3d {
+    #[pyo3(name = "create_object3")]
     pub fn create_object3_js(
         &self,
         metadata: &UserMetadata,
@@ -43,11 +45,12 @@ impl ArtifactUploader3d {
         self.base.series(metadata.clone(), series)
     }
 
+    #[pyo3(name = "child_uploader_3d")]
     pub fn child_uploader_3d(
         &self,
         metadata: &UserMetadata,
         base_transform: Transform3,
-    ) -> Result<ArtifactUploader3dTaskHandle, ClientError> {
+    ) -> Result<ArtifactUploader3d, ClientError> {
         self.base
             .child_uploader_3d(metadata.clone(), base_transform, None)
     }
@@ -59,19 +62,14 @@ impl ArtifactUploader3d {
         metadata: M,
         data: D,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        let mut object3 = data.into();
-        if TypeId::of::<D>() != TypeId::of::<Object2>() {
-            // #implicit-transform
-            object3.add_transform(Transform3::identity());
-        }
-        self.base.upload_raw(metadata, object3.try_into()?, None)
+        self.base.create_object3(metadata, data)
     }
 
     pub fn child_uploader_2d<M: Into<UserMetadata>, T: Into<Transform3>>(
         &self,
         metadata: M,
         to_3d_transform: T,
-    ) -> Result<ArtifactUploader2dTaskHandle, ClientError> {
+    ) -> Result<ArtifactUploader2d, ClientError> {
         let request = self.base.base_create_artifact_request(
             metadata,
             ArtifactType::Group2dIn3d(Map2dTo3dData {
@@ -79,9 +77,8 @@ impl ArtifactUploader3d {
             }),
             None,
         );
-        Ok(self
-            .base
-            .create_child_group(request)?
-            .map_handle(|base| ArtifactUploader2d { base }))
+        Ok(ArtifactUploader2d {
+            base: self.base.create_child_group(request)?,
+        })
     }
 }

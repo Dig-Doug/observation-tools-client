@@ -7,12 +7,13 @@ use observation_tools::artifacts::Polygon2;
 use observation_tools::artifacts::PolygonEdge2;
 use observation_tools::artifacts::Rect2;
 use observation_tools::artifacts::Segment2;
+use observation_tools::artifacts::Text;
 use observation_tools::artifacts::Transform2;
 use observation_tools::artifacts::Vertex;
+use observation_tools::groups::RunUploader;
 use observation_tools::Client;
 use observation_tools::ClientError;
 use observation_tools::ClientOptions;
-use observation_tools::RunUploaderTaskHandle;
 
 #[test]
 fn run_examples() -> Result<(), ClientError> {
@@ -31,6 +32,8 @@ fn run_examples() -> Result<(), ClientError> {
 
     let run = client.create_run("examples")?;
 
+    run.create_object1("test", "Hello, world!")?;
+
     point2_example(&run)?;
     return Ok(());
     image2_example(&run)?;
@@ -45,7 +48,7 @@ fn run_examples() -> Result<(), ClientError> {
 }
 
 #[docify::export]
-fn point2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
+fn point2_example(run: &RunUploader) -> Result<(), ClientError> {
     // Set up a 2D group:
     let group2d = run.child_uploader_2d("point2_world")?;
 
@@ -63,7 +66,7 @@ fn point2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
 }
 
 #[docify::export]
-fn image2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
+fn image2_example(run: &RunUploader) -> Result<(), ClientError> {
     // Set up a 2D group:
     let group2d = run.child_uploader_2d("image2_world")?;
 
@@ -93,7 +96,7 @@ fn image2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
 }
 
 #[docify::export]
-fn mesh3_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
+fn mesh3_example(run: &RunUploader) -> Result<(), ClientError> {
     // Set up a 3D group:
     let group3d = run.child_uploader_3d("mesh3_world")?;
 
@@ -109,7 +112,7 @@ fn mesh3_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
 }
 
 #[docify::export]
-fn polygon2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
+fn polygon2_example(run: &RunUploader) -> Result<(), ClientError> {
     // Set up a 2D group:
     let group2d = run.child_uploader_2d("polygon2_world")?;
 
@@ -133,7 +136,7 @@ fn polygon2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
 }
 
 #[docify::export]
-fn rect2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
+fn rect2_example(run: &RunUploader) -> Result<(), ClientError> {
     // Set up a 2D group:
     let group2d = run.child_uploader_2d("rect2_world")?;
 
@@ -149,7 +152,7 @@ fn rect2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
 }
 
 #[docify::export]
-fn segment2_example(run: &RunUploaderTaskHandle) -> Result<(), ClientError> {
+fn segment2_example(run: &RunUploader) -> Result<(), ClientError> {
     // Set up a 2D group:
     let group2d = run.child_uploader_2d("segment2_world")?;
 
