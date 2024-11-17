@@ -1,4 +1,5 @@
 pub mod artifact;
+mod permissions;
 pub mod project;
 pub mod sqlite;
 mod util;

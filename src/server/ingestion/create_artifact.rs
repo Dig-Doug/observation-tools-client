@@ -6,7 +6,7 @@ use crate::auth::AuthState;
 use crate::graphql::project::ProjectDataLoader;
 use crate::server::AppError;
 use crate::server::ServerState;
-use crate::storage::artifact::ArtifactStorage;
+use crate::storage::artifact::Storage;
 use crate::storage::ArtifactVersionRow;
 use anyhow::anyhow;
 use axum::async_trait;
@@ -24,7 +24,7 @@ use observation_tools_common::create_artifact::CreateArtifactRequest;
 #[derive(Clone)]
 pub struct CreateArtifactState {
     pub permission_loader: PermissionDataLoader,
-    pub artifact_storage: ArtifactStorage,
+    pub artifact_storage: Storage,
     pub auth_state: AuthState,
     pub project_loader: ProjectDataLoader,
 }
@@ -52,7 +52,7 @@ where
         let project_loader = server_state.new_project_loader(&principal, &permission_loader);
         Ok(CreateArtifactState {
             permission_loader,
-            artifact_storage: server_state.artifact_storage.clone(),
+            artifact_storage: server_state.storage.clone(),
             auth_state: server_state.auth_state.clone(),
             project_loader,
         })

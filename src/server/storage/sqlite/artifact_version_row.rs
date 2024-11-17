@@ -43,7 +43,7 @@ impl TryFrom<ArtifactVersionRow> for ArtifactVersionSqliteRow {
             .map(|id| id.uuid.simple().to_string())
             .join(ID_PART_SEPARATOR);
         Ok(ArtifactVersionSqliteRow {
-            project_id: value.project_id.id.as_bytes().to_vec(),
+            project_id: value.project_id.uuid.as_bytes().to_vec(),
             run_id: value
                 .run_id
                 .map(|run_id| run_id.id.uuid.as_bytes().to_vec()),
@@ -81,7 +81,7 @@ impl TryFrom<ArtifactVersionSqliteRow> for ArtifactVersionRow {
             .transpose()?;
         Ok(ArtifactVersionRow {
             project_id: ProjectId {
-                id: Uuid::from_slice(&value.project_id)?,
+                uuid: Uuid::from_slice(&value.project_id)?,
             },
             run_id: value
                 .run_id

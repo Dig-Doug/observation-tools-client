@@ -32,6 +32,12 @@ pub struct AbsoluteArtifactId {
     pub project_id: ProjectId,
     #[command(flatten)]
     pub artifact_id: ArtifactId,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Args)]
+pub struct AbsoluteArtifactIdWithState {
+    #[command(flatten)]
+    pub id: AbsoluteArtifactId,
     #[arg(skip)]
     pub series_context: SeriesContext,
 }
@@ -103,6 +109,15 @@ pub struct AbsoluteArtifactVersionId {
     pub artifact_id: ArtifactId,
     #[command(flatten)]
     pub version_id: ArtifactVersionId,
+}
+
+impl From<AbsoluteArtifactVersionId> for AbsoluteArtifactId {
+    fn from(value: AbsoluteArtifactVersionId) -> Self {
+        AbsoluteArtifactId {
+            project_id: value.project_id,
+            artifact_id: value.artifact_id,
+        }
+    }
 }
 
 impl From<AbsoluteArtifactVersionId> for GlobalId {

@@ -8,12 +8,14 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Args)]
 pub struct ProjectId {
     #[arg(id = "project-uuid", short = 'p', long = "project-id")]
-    pub id: Uuid,
+    pub uuid: Uuid,
 }
 
 impl ProjectId {
     pub fn new() -> Self {
-        ProjectId { id: Uuid::new_v4() }
+        ProjectId {
+            uuid: Uuid::new_v4(),
+        }
     }
 }
 

@@ -1,10 +1,10 @@
 use crate::auth::permission::Operation;
-use crate::auth::permission::PermissionStorage;
 use crate::auth::principal::Principal;
 use crate::graphql::project::ProjectDataLoader;
 use crate::graphql::project::ProjectError;
 use crate::graphql::project::ProjectOrProjectError;
 use crate::graphql::util::calculate_start_and_length;
+use crate::storage::artifact::Storage;
 use async_graphql::connection;
 use async_graphql::connection::Connection;
 use async_graphql::connection::Edge;
@@ -42,8 +42,8 @@ impl GetProjectsQuery {
                 )?;
 
                 let principal = ctx.data::<Principal>()?;
-                let permission_storage = ctx.data::<PermissionStorage>()?;
-                let project_ids = permission_storage
+                let storage = ctx.data::<Storage>()?;
+                let project_ids = storage
                     .get_resources::<ProjectId>(
                         principal,
                         Operation::Read,

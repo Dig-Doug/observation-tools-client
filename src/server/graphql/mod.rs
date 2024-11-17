@@ -7,12 +7,10 @@ mod node;
 pub mod project;
 mod util;
 
-use crate::auth::permission::IntoResourceId;
 use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
 use crate::auth::principal::Principal;
 use crate::auth::principal::PrincipalId;
-use crate::auth::resource_id::ResourceId;
 use crate::graphql::create_project::CreateProjectMutation;
 use crate::graphql::diff::DiffArtifactsQuery;
 use crate::graphql::get_projects::GetProjectsQuery;
@@ -55,8 +53,7 @@ pub async fn graphql_handler(
     let permission_loader = server_state.new_permission_loader();
     let schema = Schema::build(Query::default(), EmptyMutation, EmptySubscription)
         .data(principal.clone())
-        .data(server_state.artifact_storage.clone())
-        .data(server_state.permission_storage.clone())
+        .data(server_state.storage.clone())
         .data(server_state.new_project_loader(&principal, &permission_loader))
         .data(server_state.new_artifact_version_loader(&principal, &permission_loader))
         .data(permission_loader)
@@ -75,6 +72,8 @@ pub enum LoaderError {
     ProjectNotFound { project_id: ID },
     #[error("ArtifactVersion not found: {artifact_version_id:?}")]
     ArtifactVersionNotFound { artifact_version_id: ID },
+    #[error("Permission error for: {id:?}")]
+    PermissionError { id: ID },
     #[error("Principal {principal:?} not authorized to {operation:?} on {resource_id:?}")]
     NotAuthorized {
         resource_id: ID,
@@ -93,13 +92,12 @@ impl From<anyhow::Error> for LoaderError {
 
 impl<T> From<Permission<T>> for LoaderError
 where
-    T: IntoResourceId,
+    T: Into<GlobalId>,
 {
     fn from(permission: Permission<T>) -> Self {
-        let resource_id: ResourceId = permission.resource_id.into();
-        let resource_id: GlobalId = resource_id.into();
+        let global_id: GlobalId = permission.resource_id.into();
         Self::NotAuthorized {
-            resource_id: resource_id.into(),
+            resource_id: global_id.into(),
             operation: permission.operation,
             principal: permission.principal,
         }

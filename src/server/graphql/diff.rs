@@ -1,5 +1,5 @@
 use crate::graphql::artifact_version::ArtifactVersionDataLoader;
-use crate::storage::artifact::ArtifactStorage;
+use crate::storage::artifact::Storage;
 use async_graphql::Context;
 use async_graphql::Object;
 use async_graphql::ID;
@@ -30,7 +30,7 @@ impl DiffArtifactsQuery {
         let left_version = doc.remove(&left_id).ok_or("Left not found")??;
         let right_version = doc.remove(&right_id).ok_or("Right not found")??;
 
-        let storage = ctx.data::<ArtifactStorage>()?;
+        let storage = ctx.data::<Storage>()?;
         let left_payload = storage
             .read_artifact_version_payload(&left_version.row.absolute_id())
             .await?;

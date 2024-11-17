@@ -4,7 +4,7 @@ use crate::auth::permission::Permission;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
 use crate::graphql::LoaderError;
-use crate::storage::artifact::ArtifactStorage;
+use crate::storage::artifact::Storage;
 use crate::storage::ArtifactVersionRow;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
@@ -14,6 +14,7 @@ use async_graphql::ID;
 use futures_util::future::join_all;
 use itertools::Itertools;
 use observation_tools_common::artifact::AbsoluteArtifactId;
+use observation_tools_common::artifact::AbsoluteArtifactIdWithState;
 use observation_tools_common::artifacts::SeriesId;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -35,7 +36,7 @@ pub type ArtifactDataLoader = Arc<DataLoader<ArtifactLoader, HashMapCache>>;
 pub struct ArtifactLoader {
     pub principal: Principal,
     pub permission_loader: PermissionDataLoader,
-    pub storage: ArtifactStorage,
+    pub storage: Storage,
 }
 
 impl Loader<AbsoluteArtifactId> for ArtifactLoader {
@@ -130,7 +131,7 @@ impl ArtifactLoader {
 
     fn pick_series_to_return(
         &self,
-        id: &AbsoluteArtifactId,
+        id: &AbsoluteArtifactIdWithState,
         last_artifact_states_by_series: LastArtifactStateBySeries,
     ) -> Option<SeriesId> {
         if last_artifact_states_by_series.contains_key(&None) {

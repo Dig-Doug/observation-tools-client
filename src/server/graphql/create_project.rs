@@ -1,10 +1,9 @@
 use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
-use crate::auth::permission::PermissionStorage;
 use crate::auth::principal::Principal;
 use crate::graphql::project::Project;
 use crate::graphql::project::ProjectDataLoader;
-use crate::storage::artifact::ArtifactStorage;
+use crate::storage::artifact::Storage;
 use crate::storage::project::ProjectData;
 use crate::storage::project::ProjectRow;
 use async_graphql::Context;
@@ -20,7 +19,7 @@ impl CreateProjectMutation {
         let principal = ctx.data::<Principal>()?;
         // TODO(doug): Add max # of projects?
 
-        let storage = ctx.data::<ArtifactStorage>()?;
+        let storage = ctx.data::<Storage>()?;
         let project_id = ProjectId::new();
         storage
             .create_project(ProjectRow {
@@ -31,7 +30,7 @@ impl CreateProjectMutation {
             })
             .await?;
 
-        let permission_storage = ctx.data::<PermissionStorage>()?;
+        let permission_storage = ctx.data::<Storage>()?;
         permission_storage
             .create_permission(Permission {
                 principal: principal.id(),

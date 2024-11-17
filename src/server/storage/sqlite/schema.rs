@@ -33,10 +33,12 @@ diesel::table! {
 }
 
 diesel::table! {
-    permissions (resource_id) {
+    permissions (principal_id, resource_type, relation, project_id, artifact_id) {
         principal_id -> Text,
-        resource_id -> Text,
-        relation -> Text,
+        resource_type -> Integer,
+        relation -> Integer,
+        project_id -> Binary,
+        artifact_id -> Nullable<Binary>,
     }
 }
 

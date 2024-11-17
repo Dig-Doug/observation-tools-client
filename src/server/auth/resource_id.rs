@@ -1,23 +1,38 @@
-use crate::auth::permission::IntoResourceId;
 use observation_tools_common::artifact::AbsoluteArtifactId;
-use observation_tools_common::artifact::AbsoluteArtifactVersionId;
 use observation_tools_common::project::ProjectId;
-use observation_tools_common::GlobalId;
 use serde::Deserialize;
 use serde::Serialize;
+use std::fmt::Debug;
+use std::hash::Hash;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[repr(i32)]
 pub enum ResourceType {
-    Project,
-    Artifact,
-    ArtifactVersion,
+    Project = 1,
+    Artifact = 2,
 }
 
+pub trait ResourceId: Debug + Clone + Hash + Sync + Send + Eq + 'static {
+    fn resource_type() -> ResourceType;
+}
+
+impl ResourceId for ProjectId {
+    fn resource_type() -> ResourceType {
+        ResourceType::Project
+    }
+}
+
+impl ResourceId for AbsoluteArtifactId {
+    fn resource_type() -> ResourceType {
+        ResourceType::Artifact
+    }
+}
+
+/*
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ResourceId {
     Project(ProjectId),
     Artifact(AbsoluteArtifactId),
-    ArtifactVersion(AbsoluteArtifactVersionId),
 }
 
 impl ResourceId {
@@ -25,14 +40,10 @@ impl ResourceId {
         match self {
             ResourceId::Project(_) => ResourceType::Project,
             ResourceId::Artifact(_) => ResourceType::Artifact,
-            ResourceId::ArtifactVersion(_) => ResourceType::ArtifactVersion,
         }
     }
 }
 
-impl IntoResourceId for ProjectId {}
-impl IntoResourceId for AbsoluteArtifactId {}
-impl IntoResourceId for AbsoluteArtifactVersionId {}
 
 impl From<ProjectId> for ResourceId {
     fn from(value: ProjectId) -> Self {
@@ -46,18 +57,12 @@ impl From<AbsoluteArtifactId> for ResourceId {
     }
 }
 
-impl From<AbsoluteArtifactVersionId> for ResourceId {
-    fn from(value: AbsoluteArtifactVersionId) -> Self {
-        ResourceId::ArtifactVersion(value)
-    }
-}
-
 impl From<ResourceId> for GlobalId {
     fn from(value: ResourceId) -> Self {
         match value {
             ResourceId::Project(project_id) => project_id.into(),
             ResourceId::Artifact(artifact_id) => artifact_id.into(),
-            ResourceId::ArtifactVersion(artifact_version_id) => artifact_version_id.into(),
         }
     }
 }
+*/

@@ -2,9 +2,14 @@ use crate::auth::principal::Principal;
 use crate::auth::principal::PrincipalId;
 use crate::auth::resource_id::ResourceId;
 use crate::graphql::LoaderError;
+use crate::storage::artifact::Storage;
+use anyhow::anyhow;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_graphql::dataloader::Loader;
+use num_derive::FromPrimitive;
+use num_derive::ToPrimitive;
+use num_traits::FromPrimitive;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -20,14 +25,9 @@ pub struct Permission<T> {
     pub operation: Operation,
 }
 
-pub trait IntoResourceId:
-    Into<ResourceId> + Debug + Clone + Hash + Sync + Send + Eq + 'static
-{
-}
-
 impl<T> Permission<T>
 where
-    T: IntoResourceId,
+    T: ResourceId,
 {
     pub fn new(principal: Principal, resource_id: T, operation: Operation) -> Self {
         Permission {
@@ -45,11 +45,36 @@ where
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Serialize,
+    Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    FromPrimitive,
+    ToPrimitive,
+)]
+#[repr(i32)]
 pub enum Operation {
-    Read,
-    Write,
-    Owner,
+    Read = 1,
+    Write = 2,
+    Owner = 3,
+}
+
+impl TryFrom<i32> for Operation {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match Operation::from_i32(value) {
+            Some(operation) => Ok(operation),
+            None => Err(anyhow!("Invalid Operation: {}", value)),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
@@ -60,7 +85,7 @@ pub struct AccessResult<T> {
 
 pub type PermissionDataLoader = Arc<DataLoader<PermissionLoader, HashMapCache>>;
 
-pub async fn load_permissions_and_filter_ids<T: IntoResourceId>(
+pub async fn load_permissions_and_filter_ids<T: ResourceId>(
     permission_data_loader: &PermissionDataLoader,
     principal: &Principal,
     keys: &[T],
@@ -92,11 +117,13 @@ pub async fn load_permissions_and_filter_ids<T: IntoResourceId>(
     Ok((key_to_result, ids_to_fetch))
 }
 
-pub struct PermissionLoader {}
+pub struct PermissionLoader {
+    pub storage: Storage,
+}
 
 impl<T> Loader<Permission<T>> for PermissionLoader
 where
-    T: IntoResourceId,
+    T: ResourceId,
 {
     type Value = AccessResult<T>;
     type Error = String;
@@ -118,26 +145,5 @@ where
                 )
             })
             .collect())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct PermissionStorage {}
-
-impl PermissionStorage {
-    pub async fn create_permission<T>(&self, permission: Permission<T>) -> Result<(), String> {
-        warn!("TODO(doug): PermissionStorage not implemented");
-        Ok(())
-    }
-
-    pub async fn get_resources<T>(
-        &self,
-        principal: &Principal,
-        operation: Operation,
-        from: usize,
-        count: usize,
-    ) -> Result<Vec<T>, String> {
-        warn!("TODO(doug): PermissionStorage not implemented");
-        Ok(vec![])
     }
 }

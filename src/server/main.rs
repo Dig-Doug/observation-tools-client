@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate num_derive;
+
 mod auth;
 mod graphql;
 mod ingestion;
@@ -5,12 +8,11 @@ mod server;
 mod storage;
 mod ui;
 
-use crate::auth::permission::PermissionStorage;
 use crate::auth::AuthState;
 use crate::graphql::graphql_handler;
 use crate::graphql::graphql_playground;
 use crate::server::ServerState;
-use crate::storage::artifact::ArtifactStorage;
+use crate::storage::artifact::Storage;
 use crate::ui::start_embedded_ui;
 use async_graphql::ID;
 use axum::routing::get;
@@ -105,9 +107,8 @@ async fn run_server(port: String) -> Result<(), anyhow::Error> {
         )
         .route("/graphql", get(graphql_playground).post(graphql_handler))
         .with_state(ServerState {
-            artifact_storage: create_sqlite_storage()?,
+            storage: create_sqlite_storage()?,
             auth_state: AuthState {},
-            permission_storage: PermissionStorage {},
         });
     let address = format!("0.0.0.0:{}", port);
     info!("Listening on http://{}", address);
@@ -116,7 +117,7 @@ async fn run_server(port: String) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn create_sqlite_storage() -> Result<ArtifactStorage, anyhow::Error> {
+fn create_sqlite_storage() -> Result<Storage, anyhow::Error> {
     // TODO(doug): Fix path
     let manager = ConnectionManager::<SqliteConnection>::new(
         "/home/doug/Development/observation-tools-client/tmp.db",
@@ -125,7 +126,7 @@ fn create_sqlite_storage() -> Result<ArtifactStorage, anyhow::Error> {
         .test_on_check_out(true)
         .max_size(1)
         .build(manager)?;
-    let storage = storage::sqlite::SqliteArtifactStorage { pool };
+    let storage = storage::sqlite::SqliteStorage { pool };
     storage.init()?;
-    Ok(ArtifactStorage::Local(storage))
+    Ok(Storage::Local(storage))
 }

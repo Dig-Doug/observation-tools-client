@@ -2,7 +2,7 @@ use crate::auth::permission::load_permissions_and_filter_ids;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
 use crate::graphql::LoaderError;
-use crate::storage::artifact::ArtifactStorage;
+use crate::storage::artifact::Storage;
 use crate::storage::project::ProjectRow;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
@@ -57,7 +57,7 @@ pub type ProjectDataLoader = Arc<DataLoader<ProjectLoader, HashMapCache>>;
 pub struct ProjectLoader {
     pub principal: Principal,
     pub permission_loader: PermissionDataLoader,
-    pub storage: ArtifactStorage,
+    pub storage: Storage,
 }
 
 impl Loader<ProjectId> for ProjectLoader {

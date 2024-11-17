@@ -31,6 +31,8 @@ tracing = { workspace = true, features = ["log"] }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 uuid = { workspace = true }
 similar = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
 
 [[bin]]
 name = "observation-tools-server"

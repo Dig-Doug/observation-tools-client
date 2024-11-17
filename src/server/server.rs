@@ -1,13 +1,12 @@
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::permission::PermissionLoader;
-use crate::auth::permission::PermissionStorage;
 use crate::auth::principal::Principal;
 use crate::auth::AuthState;
 use crate::graphql::artifact_version::ArtifactVersionDataLoader;
 use crate::graphql::artifact_version::ArtifactVersionLoader;
 use crate::graphql::project::ProjectDataLoader;
 use crate::graphql::project::ProjectLoader;
-use crate::storage::artifact::ArtifactStorage;
+use crate::storage::artifact::Storage;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_trait::async_trait;
@@ -23,9 +22,8 @@ use tracing::error;
 
 #[derive(Clone)]
 pub struct ServerState {
-    pub artifact_storage: ArtifactStorage,
+    pub storage: Storage,
     pub auth_state: AuthState,
-    pub permission_storage: PermissionStorage,
 }
 
 impl ServerState {
@@ -38,7 +36,7 @@ impl ServerState {
             ProjectLoader {
                 principal: principal.clone(),
                 permission_loader: permission_loader.clone(),
-                storage: self.artifact_storage.clone(),
+                storage: self.storage.clone(),
             },
             tokio::spawn,
             HashMapCache::default(),
@@ -47,7 +45,9 @@ impl ServerState {
 
     pub fn new_permission_loader(&self) -> PermissionDataLoader {
         Arc::new(DataLoader::with_cache(
-            PermissionLoader {},
+            PermissionLoader {
+                storage: self.storage.clone(),
+            },
             tokio::spawn,
             HashMapCache::default(),
         ))
@@ -62,7 +62,7 @@ impl ServerState {
             ArtifactVersionLoader {
                 principal: principal.clone(),
                 permission_loader: permission_loader.clone(),
-                storage: self.artifact_storage.clone(),
+                storage: self.storage.clone(),
             },
             tokio::spawn,
             HashMapCache::default(),

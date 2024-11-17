@@ -22,7 +22,13 @@ impl Principal {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct PrincipalId(String);
+pub struct PrincipalId(pub String);
+
+impl From<String> for PrincipalId {
+    fn from(value: String) -> Self {
+        PrincipalId(value)
+    }
+}
 
 #[async_trait]
 impl<S> FromRequestParts<S> for Principal
