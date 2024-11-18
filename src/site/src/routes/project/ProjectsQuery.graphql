@@ -1,0 +1,25 @@
+query ProjectsQuery(
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int) {
+    getProjects(
+        after: $after
+        before: $before
+        first: $first
+        last: $last
+    ) {
+        __typename
+        edges {
+            node {
+                id
+            }
+        }
+        pageInfo {
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            startCursor
+        }
+    }
+}

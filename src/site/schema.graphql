@@ -2,6 +2,7 @@
 
 schema {
     query: Query
+    mutation: MutationRoot
 }
 
 """
@@ -15,17 +16,59 @@ interface Node {
     id: ID!
 }
 
+interface ProjectOrProjectError {
+    id: ID!
+}
+
 type ArtifactVersion implements Node {
     id: ID!
     json: String!
 }
 
-type Project implements Node {
+type MutationRoot {
+    createProject: Project!
+}
+
+"Information about pagination in a connection"
+type PageInfo {
+    "When paginating forwards, the cursor to continue."
+    endCursor: String
+    "When paginating forwards, are there more items?"
+    hasNextPage: Boolean!
+    "When paginating backwards, are there more items?"
+    hasPreviousPage: Boolean!
+    "When paginating backwards, the cursor to continue."
+    startCursor: String
+}
+
+type Project implements Node & ProjectOrProjectError {
     id: ID!
 }
 
+type ProjectError implements ProjectOrProjectError {
+    id: ID!
+    message: String!
+}
+
+type ProjectOrProjectErrorConnection {
+    "A list of edges."
+    edges: [ProjectOrProjectErrorEdge!]!
+    "A list of nodes."
+    nodes: [ProjectOrProjectError!]!
+    "Information to aid in pagination."
+    pageInfo: PageInfo!
+}
+
+"An edge in a connection."
+type ProjectOrProjectErrorEdge {
+    "A cursor for use in pagination"
+    cursor: String!
+    "The item at the end of the edge"
+    node: ProjectOrProjectError!
+}
+
 type Query {
-    createProject: Project!
     diffArtifacts(left: ID!, right: ID!): String!
+    getProjects(after: String, before: String, first: Int, last: Int): ProjectOrProjectErrorConnection!
     node(id: ID!): Node!
 }
