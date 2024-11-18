@@ -26,13 +26,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    projects (id) {
-        id -> Binary,
-        data -> Binary,
-    }
-}
-
-diesel::table! {
     permissions (principal_id, resource_type, relation, project_id, artifact_id) {
         principal_id -> Text,
         resource_type -> Integer,
@@ -42,4 +35,16 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(artifacts, payloads,);
+diesel::table! {
+    projects (id) {
+        id -> Binary,
+        data -> Binary,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(
+    artifacts,
+    payloads,
+    permissions,
+    projects,
+);

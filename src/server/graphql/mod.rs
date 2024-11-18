@@ -18,7 +18,6 @@ use crate::graphql::node::GetNodeQuery;
 use crate::server::ServerState;
 use async_graphql::http::playground_source;
 use async_graphql::http::GraphQLPlaygroundConfig;
-use async_graphql::EmptyMutation;
 use async_graphql::EmptySubscription;
 use async_graphql::MergedObject;
 use async_graphql::Schema;
@@ -39,8 +38,6 @@ struct Query(GetNodeQuery, DiffArtifactsQuery, GetProjectsQuery);
 #[derive(MergedObject, Default)]
 struct MutationRoot(CreateProjectMutation);
 
-type ServerSchema = Schema<Query, MutationRoot, EmptySubscription>;
-
 pub async fn graphql_playground() -> impl IntoResponse {
     Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
 }
@@ -51,7 +48,7 @@ pub async fn graphql_handler(
     req: GraphQLRequest,
 ) -> GraphQLResponse {
     let permission_loader = server_state.new_permission_loader();
-    let schema = Schema::build(Query::default(), EmptyMutation, EmptySubscription)
+    let schema = Schema::build(Query::default(), MutationRoot::default(), EmptySubscription)
         .data(principal.clone())
         .data(server_state.storage.clone())
         .data(server_state.new_project_loader(&principal, &permission_loader))

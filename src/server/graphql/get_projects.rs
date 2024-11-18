@@ -46,7 +46,7 @@ impl GetProjectsQuery {
                 let project_ids = storage
                     .get_resources::<ProjectId>(
                         principal,
-                        Operation::Read,
+                        vec![Operation::Read, Operation::Owner],
                         first_index,
                         // Fetch one extra result to see if there is another page
                         result_count + 1,
