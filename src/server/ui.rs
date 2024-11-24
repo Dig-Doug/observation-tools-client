@@ -27,7 +27,7 @@ impl Drop for EmbeddedUi {
     }
 }
 
-pub fn start_embedded_ui() -> Result<EmbeddedUi, anyhow::Error> {
+pub fn start_embedded_ui(server_port: &str) -> Result<EmbeddedUi, anyhow::Error> {
     let temp_dir = TempDir::new()?;
     let site_archive = include_bytes!(concat!(env!("OUT_DIR"), "/site.tar.gz"));
     let mut cursor = Cursor::new(site_archive);
@@ -48,6 +48,10 @@ pub fn start_embedded_ui() -> Result<EmbeddedUi, anyhow::Error> {
     let mut process = Command::new(NODE)
         .current_dir(temp_dir.path())
         .arg("site/index.js")
+        .env(
+            "PUBLIC_GRAPHQL_ENDPOINT",
+            format!("http://localhost:{}/graphql", server_port),
+        )
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

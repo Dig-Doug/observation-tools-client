@@ -59,7 +59,7 @@ impl GetProjectsQuery {
                 let has_previous_page = first_index > 0;
                 let has_next_page = projects.len() > result_count;
                 let mut connection = Connection::new(has_previous_page, has_next_page);
-                for (index, project_id) in project_ids.into_iter().enumerate() {
+                for (index, project_id) in project_ids.into_iter().take(result_count).enumerate() {
                     let edge = projects
                         .remove(&project_id)
                         .map(|project_or_error| match project_or_error {

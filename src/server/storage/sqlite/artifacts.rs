@@ -10,8 +10,10 @@ use diesel::prelude::*;
 use futures_util::TryStream;
 use futures_util::TryStreamExt;
 use itertools::Itertools;
+use observation_tools_common::artifact::AbsoluteArtifactId;
 use observation_tools_common::artifact::AbsoluteArtifactVersionId;
 use observation_tools_common::artifact::ArtifactId;
+use observation_tools_common::artifact::ArtifactType;
 use observation_tools_common::artifact::ArtifactVersionId;
 use observation_tools_common::artifact::StructuredData;
 use observation_tools_common::project::ProjectId;
@@ -138,5 +140,36 @@ impl SqliteStorage {
             Some(payload) => Ok(Some(rmp_serde::from_slice(&payload)?)),
             None => Ok(None),
         }
+    }
+
+    // TODO(doug): Return artifact ids instead of versions once artifact resolution
+    // is done
+    pub async fn get_run_ids(
+        &self,
+        project_id: &ProjectId,
+        from: usize,
+        count: usize,
+    ) -> Result<Vec<AbsoluteArtifactVersionId>, anyhow::Error> {
+        let mut connection = self.pool.get()?;
+        let rows = schema::artifacts::table
+            .select(ArtifactVersionSqliteRow::as_select())
+            .filter(
+                schema::artifacts::project_id
+                    .eq(project_id.uuid.as_bytes().to_vec())
+                    .and(schema::artifacts::artifact_type.eq(ArtifactType::RootGroup.as_string())),
+            )
+            .order_by((
+                schema::artifacts::client_creation_time.desc(),
+                schema::artifacts::version_id.desc(),
+            ))
+            .offset(from as i64)
+            .limit(count as i64)
+            .load::<ArtifactVersionSqliteRow>(&mut connection)?;
+        let rows: Result<Vec<_>, _> = rows
+            .into_iter()
+            .map(|row| ArtifactVersionRow::try_from(row))
+            .collect();
+        let run_ids = rows?.into_iter().map(|row| row.absolute_id()).collect();
+        Ok(run_ids)
     }
 }

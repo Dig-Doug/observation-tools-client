@@ -12,6 +12,10 @@ exactly one of its field be provided)
 """
 directive @oneOf on INPUT_OBJECT
 
+interface ArtifactVersionOrArtifactVersionError {
+    id: ID!
+}
+
 interface Node {
     id: ID!
 }
@@ -20,9 +24,31 @@ interface ProjectOrProjectError {
     id: ID!
 }
 
-type ArtifactVersion implements Node {
+type ArtifactVersion implements ArtifactVersionOrArtifactVersionError & Node {
     id: ID!
     json: String!
+}
+
+type ArtifactVersionError implements ArtifactVersionOrArtifactVersionError {
+    id: ID!
+    message: String!
+}
+
+type ArtifactVersionOrArtifactVersionErrorConnection {
+    "A list of edges."
+    edges: [ArtifactVersionOrArtifactVersionErrorEdge!]!
+    "A list of nodes."
+    nodes: [ArtifactVersionOrArtifactVersionError!]!
+    "Information to aid in pagination."
+    pageInfo: PageInfo!
+}
+
+"An edge in a connection."
+type ArtifactVersionOrArtifactVersionErrorEdge {
+    "A cursor for use in pagination"
+    cursor: String!
+    "The item at the end of the edge"
+    node: ArtifactVersionOrArtifactVersionError!
 }
 
 type MutationRoot {
@@ -43,6 +69,7 @@ type PageInfo {
 
 type Project implements Node & ProjectOrProjectError {
     id: ID!
+    runs(after: String, before: String, first: Int, last: Int): ArtifactVersionOrArtifactVersionErrorConnection!
 }
 
 type ProjectError implements ProjectOrProjectError {

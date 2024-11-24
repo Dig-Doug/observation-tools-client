@@ -10,15 +10,12 @@ logging.getLogger().setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 logger.info("Starting example")
-client = Client("p_Tgm2pnqoeBFAe3fwTMSmeiCsxP", api_host="http://localhost:8000")
+client = Client("p_Tgm3GjQSZPkPWkFcjnQBAuYVNY", api_host="http://localhost:8000")
 
 logger.info("Creating run")
 run_uploader = client.create_run(UserMetadata("py_example"))
 
 run_uploader.create_object1(UserMetadata("object1"), Object1(Text("Hello, world!")))
-
-# logger.info("Sleeping")
-# time.sleep(10)
 
 logger.info("Shutting down client")
 client.shutdown()

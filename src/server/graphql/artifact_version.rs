@@ -9,6 +9,7 @@ use crate::storage::ArtifactVersionRow;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_graphql::dataloader::Loader;
+use async_graphql::Interface;
 use async_graphql::Object;
 use async_graphql::ID;
 use itertools::Itertools;
@@ -30,6 +31,30 @@ impl ArtifactVersion {
 
     pub async fn json(&self) -> async_graphql::Result<String> {
         Ok(serde_json::to_string(&self.row)?)
+    }
+}
+
+#[derive(Interface, Clone, Debug)]
+#[graphql(field(name = "id", ty = "ID"))]
+pub enum ArtifactVersionOrArtifactVersionError {
+    ArtifactVersion(ArtifactVersion),
+    Error(ArtifactVersionError),
+}
+
+#[derive(Clone, Debug)]
+pub struct ArtifactVersionError {
+    pub id: ID,
+    pub message: String,
+}
+
+#[Object]
+impl ArtifactVersionError {
+    pub async fn id(&self) -> ID {
+        self.id.clone()
+    }
+
+    pub async fn message(&self) -> String {
+        self.message.clone()
     }
 }
 

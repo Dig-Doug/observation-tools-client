@@ -59,12 +59,23 @@
 </form>
 
 
-<pre>
-{JSON.stringify(data, null, 2)}
-</pre>
+<ul>
+    {#each data.edges as edge}
+        <li>
+            <a class="link" href={`/project/${edge.node.id}`}>
+                Project  {edge.node.id}
+            </a>
+        </li>
+    {/each}
+</ul>
 
 {#if previousPageUrl || nextPageUrl}
     <div class="pagination p-4">
         <Pagination {previousPageUrl} {nextPageUrl}/>
     </div>
 {/if}
+
+<pre>
+{JSON.stringify(data, null, 2)}
+</pre>
+

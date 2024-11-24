@@ -3,12 +3,14 @@ use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
+use crate::graphql::project::Project;
 use crate::graphql::LoaderError;
 use crate::storage::artifact::Storage;
 use crate::storage::ArtifactVersionRow;
 use async_graphql::dataloader::DataLoader;
 use async_graphql::dataloader::HashMapCache;
 use async_graphql::dataloader::Loader;
+use async_graphql::Interface;
 use async_graphql::Object;
 use async_graphql::ID;
 use futures_util::future::join_all;
@@ -28,6 +30,30 @@ pub struct Artifact {
 impl Artifact {
     pub async fn id(&self) -> async_graphql::Result<ID> {
         todo!("Implement Artifact::id")
+    }
+}
+
+#[derive(Interface, Clone, Debug)]
+#[graphql(field(name = "id", ty = "ID"))]
+pub enum ArtifactOrArtifactError {
+    Artifact(Artifact),
+    Error(ArtifactError),
+}
+
+#[derive(Clone, Debug)]
+pub struct ArtifactError {
+    pub id: ID,
+    pub message: String,
+}
+
+#[Object]
+impl ArtifactError {
+    pub async fn id(&self) -> ID {
+        self.id.clone()
+    }
+
+    pub async fn message(&self) -> String {
+        self.message.clone()
     }
 }
 

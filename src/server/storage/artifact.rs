@@ -85,4 +85,15 @@ impl Storage {
             Storage::Local(storage) => storage.read_artifact_version_payload(version_id).await,
         }
     }
+
+    pub async fn get_run_ids(
+        &self,
+        project_id: &ProjectId,
+        from: usize,
+        count: usize,
+    ) -> Result<Vec<AbsoluteArtifactVersionId>, anyhow::Error> {
+        match self {
+            Storage::Local(storage) => storage.get_run_ids(project_id, from, count).await,
+        }
+    }
 }

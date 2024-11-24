@@ -1,0 +1,30 @@
+query RunsQuery(
+    $projectId: ID!,
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int) {
+    node(id: $projectId) {
+        ... on Project {
+            runs(
+                after: $after
+                before: $before
+                first: $first
+                last: $last
+            ) {
+                edges {
+                    cursor
+                    node {
+                        id
+                    }
+                }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
+            }
+        }
+    }
+}

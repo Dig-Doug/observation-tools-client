@@ -13,8 +13,8 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 		variables: {
 			after: after,
 			before: before,
-			first: !before ? 10 : null,
-			last: before ? 10 : null
+			first: !before ? 5 : null,
+			last: before ? 5 : null
 		}
 	});
 	if (!data) {

@@ -74,13 +74,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
     match cli.command {
         Commands::Run(args) => {
+            let port = env::var("PORT").unwrap_or("8000".to_string());
             let _ui = if args.ui {
-                Some(start_embedded_ui()?)
+                Some(start_embedded_ui(&port)?)
             } else {
                 None
             };
-
-            let port = env::var("PORT").unwrap_or("8000".to_string());
             run_server(port).await?;
         }
         Commands::GlobalId(args) => match args {
