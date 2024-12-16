@@ -7,7 +7,7 @@ use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[pyo3::pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Text {
     #[wasm_bindgen(skip)]
@@ -21,10 +21,11 @@ pub enum TextType {
     Plain,
 }
 
+#[cfg(feature = "python")]
 #[pyo3::pymethods]
 impl Text {
     #[new]
-    pub fn new(text: String) -> Text {
+    pub fn py_new(text: String) -> Text {
         text.into()
     }
 }

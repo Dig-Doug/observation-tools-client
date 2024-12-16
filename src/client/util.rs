@@ -2,8 +2,6 @@ use chrono::DateTime;
 use chrono::Utc;
 use core::fmt::Debug;
 use observation_tools_common::artifacts::ArtifactError;
-use pyo3::exceptions::PyValueError;
-use pyo3::PyErr;
 use std::error::Error;
 use std::time::Duration;
 use wasm_bindgen::JsValue;
@@ -62,8 +60,10 @@ impl Into<JsValue> for ClientError {
     }
 }
 
-impl From<ClientError> for PyErr {
-    fn from(err: ClientError) -> PyErr {
+#[cfg(feature = "python")]
+impl From<ClientError> for pyo3::PyErr {
+    fn from(err: ClientError) -> pyo3::PyErr {
+        use pyo3::exceptions::PyValueError;
         PyValueError::new_err(err.to_string())
     }
 }

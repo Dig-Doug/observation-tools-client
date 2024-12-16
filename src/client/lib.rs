@@ -126,11 +126,6 @@ use observation_tools_common::artifacts::Object1;
 use observation_tools_common::artifacts::SeriesId;
 use observation_tools_common::artifacts::Text;
 use observation_tools_common::artifacts::UserMetadata;
-use pyo3::prelude::*;
-use pyo3::pymodule;
-use pyo3::types::PyModule;
-use pyo3::Bound;
-use pyo3::PyResult;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -168,8 +163,10 @@ pub fn start() -> Result<(), JsValue> {
     Ok(())
 }
 
-#[pymodule]
-fn observation_tools(m: &Bound<'_, PyModule>) -> PyResult<()> {
+#[cfg(feature = "python")]
+#[pyo3::pymodule]
+fn observation_tools(m: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> {
+    use pyo3::prelude::*;
     // WARNING: pyo3-log requires GIL interaction, which prevents threaded code from
     // running
     tracing_subscriber::registry()

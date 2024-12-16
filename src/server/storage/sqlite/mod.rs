@@ -18,6 +18,7 @@ use futures_util::TryStreamExt;
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("storage/sqlite/migrations");
 const ID_PART_SEPARATOR: &str = ",";
 const ANCESTORS_SEPARATOR: &str = "-";
+const ANCESTORS_SEPARATOR_NEXT: &str = ".";
 
 #[derive(Queryable, Selectable, Insertable)]
 #[diesel(table_name = schema::payloads)]

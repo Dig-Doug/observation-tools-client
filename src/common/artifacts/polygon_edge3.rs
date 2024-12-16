@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 /// An edge of a [Polygon3](crate::artifacts::Polygon3).
 #[wasm_bindgen]
-#[pyo3::pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PolygonEdge3 {
     #[wasm_bindgen(skip)]

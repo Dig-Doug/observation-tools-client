@@ -37,6 +37,12 @@ impl ArtifactVersionRow {
     pub fn global_id(&self) -> GlobalId {
         self.absolute_id().into()
     }
+
+    pub fn path_components(&self) -> Vec<ArtifactId> {
+        let mut components = self.version_data.ancestor_group_ids.clone();
+        components.push(self.artifact_id.clone());
+        components
+    }
 }
 
 pub type ArtifactVersionRowOrError = Result<ArtifactVersionRow, anyhow::Error>;

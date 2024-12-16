@@ -11,7 +11,7 @@ use wasm_bindgen::prelude::*;
 /// A 2D point.
 ////#[doc = docify::embed_run!("tests/examples.rs", point2_example)]
 #[wasm_bindgen]
-#[pyo3::pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Point2 {
     #[wasm_bindgen(skip)]

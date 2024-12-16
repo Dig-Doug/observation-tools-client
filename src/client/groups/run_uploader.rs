@@ -10,20 +10,17 @@ use crate::groups::GenericArtifactUploader;
 use crate::util::ClientError;
 use crate::PublicArtifactIdTaskHandle;
 use observation_tools_common::artifacts::Object1;
-use pyo3::pyclass;
-use pyo3::pymethods;
 use wasm_bindgen::prelude::*;
 
 /// The "root" artifact group for a run.
 #[wasm_bindgen]
-#[pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Debug, Clone)]
 pub struct RunUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
 #[wasm_bindgen]
-#[pymethods]
 impl RunUploader {
     pub fn viewer_url(&self) -> String {
         todo!("impl");
@@ -43,7 +40,6 @@ impl RunUploader {
          */
     }
 
-    #[pyo3(name = "child_uploader")]
     pub fn child_uploader_js(
         &self,
         metadata: &UserMetadata,
@@ -51,8 +47,28 @@ impl RunUploader {
         self.child_uploader(metadata.clone())
     }
 
-    #[pyo3(name = "create_object1")]
     pub fn create_object1_js(
+        &self,
+        metadata: UserMetadata,
+        data: Object1,
+    ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
+        self.base.create_object1(metadata, data)
+    }
+}
+
+#[cfg(feature = "python")]
+#[pyo3::pymethods]
+impl RunUploader {
+    #[pyo3(name = "child_uploader")]
+    pub fn child_uploader_py(
+        &self,
+        metadata: &UserMetadata,
+    ) -> Result<GenericArtifactUploader, ClientError> {
+        self.child_uploader(metadata.clone())
+    }
+
+    #[pyo3(name = "create_object1")]
+    pub fn create_object1_py(
         &self,
         metadata: UserMetadata,
         data: Object1,

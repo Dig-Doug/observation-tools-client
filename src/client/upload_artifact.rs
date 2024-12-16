@@ -4,7 +4,6 @@ use crate::TokenGenerator;
 use futures::future::BoxFuture;
 use futures::TryFutureExt;
 use observation_tools_common::artifact::AbsoluteArtifactId;
-use observation_tools_common::artifact::SeriesContext;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
 use observation_tools_common::GlobalId;
 use reqwest::multipart::Part;
@@ -35,7 +34,7 @@ impl UploadArtifactTask {
             project_id: self.request.project_id.clone(),
             artifact_id: self.request.artifact_id.clone(),
             // TODO(doug): Audit
-            series_context: SeriesContext::None,
+            //series_context: SeriesContext::None,
         }
     }
 

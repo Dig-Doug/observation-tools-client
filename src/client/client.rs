@@ -23,9 +23,6 @@ use observation_tools_common::create_artifact::CreateArtifactRequest;
 use observation_tools_common::project::ProjectId;
 use observation_tools_common::run::RunId;
 use observation_tools_common::GlobalId;
-use pyo3::pyclass;
-use pyo3::pymethods;
-use pyo3::PyResult;
 use std::io::Write;
 use std::sync::Arc;
 use std::time::Duration;
@@ -66,7 +63,7 @@ impl Default for ClientOptions {
 }
 
 #[wasm_bindgen]
-#[pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Clone, Debug)]
 pub struct Client {
     pub(crate) inner: Arc<ClientInner>,
@@ -102,10 +99,11 @@ pub enum TaskRuntimeParams {
     },
 }
 
-#[pymethods]
+#[cfg(feature = "python")]
+#[pyo3::pymethods]
 impl Client {
     #[new]
-    fn py_new(project_id: String, api_host: Option<String>) -> PyResult<Self> {
+    fn py_new(project_id: String, api_host: Option<String>) -> pyo3::PyResult<Self> {
         Ok(Client::new(
             project_id,
             ClientOptions {

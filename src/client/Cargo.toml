@@ -25,9 +25,9 @@ anyhow = { workspace = true }
 async-channel = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
-observation-tools-common = { workspace = true }
 bs58 = { workspace = true }
 cached = { workspace = true, features = ["async"] }
+chrono = { workspace = true }
 console_error_panic_hook = { workspace = true }
 crossbeam-channel = { workspace = true }
 custom_error = { workspace = true }
@@ -43,8 +43,11 @@ js-sys = { workspace = true }
 keyring = { workspace = true }
 nalgebra = { workspace = true }
 oauth2 = { workspace = true }
+observation-tools-common = { workspace = true }
 pin-project = { workspace = true }
+pyo3 = { workspace = true, features = ["abi3-py312", "auto-initialize"], optional = true}
 reqwest = { workspace = true, features = ["rustls-tls", "json", "multipart"] }
+rmp-serde = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -56,8 +59,8 @@ tower = { workspace = true, features = ["limit", "util", "buffer"] }
 tower-layer = { workspace = true }
 tower-service = { workspace = true }
 tracing = { workspace = true }
-tracing-wasm = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
+tracing-wasm = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
@@ -65,9 +68,6 @@ wasm-bindgen-derive = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 web-sys = { workspace = true, features = ["Window", "Performance", "PerformanceTiming"] }
 whoami = { workspace = true }
-rmp-serde = { workspace = true }
-chrono = { workspace = true }
-pyo3 = { workspace = true, features = ["abi3-py312", "auto-initialize"] }
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }
@@ -75,7 +75,7 @@ tracing-subscriber = { workspace = true }
 [features]
 files = ["tempfile"]
 rust = ["tokio", "tokio-util", "files", "reqwest/stream"]
-python = ["rust"]
+python = ["rust", "pyo3", "observation-tools-common/python"]
 wasm = []
 default = ["rust"]
 

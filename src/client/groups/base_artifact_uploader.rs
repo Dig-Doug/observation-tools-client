@@ -132,7 +132,7 @@ impl BaseArtifactUploader {
         metadata: M,
         data: D,
     ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
-        let mut object1 = data.into();
+        let object1 = data.into();
         self.upload_raw(metadata, object1.try_into()?, None)
     }
 

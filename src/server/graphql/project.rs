@@ -3,9 +3,11 @@ use crate::auth::permission::Operation;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
 use crate::graphql::artifact::ArtifactOrArtifactError;
-use crate::graphql::artifact_version::ArtifactVersionDataLoader;
 use crate::graphql::artifact_version::ArtifactVersionError;
 use crate::graphql::artifact_version::ArtifactVersionOrArtifactVersionError;
+use crate::graphql::artifact_version::{
+    create_artifact_version_connection, ArtifactVersionDataLoader,
+};
 use crate::graphql::util::calculate_start_and_length;
 use crate::graphql::LoaderError;
 use crate::storage::artifact::Storage;
@@ -37,6 +39,10 @@ impl Project {
     pub async fn id(&self) -> async_graphql::Result<ID> {
         let global_id: GlobalId = self.row.id.clone().try_into()?;
         Ok(global_id.into())
+    }
+    
+    pub async fn name(&self) -> String {
+        self.row.data.name.clone()
     }
 
     pub async fn runs(
@@ -73,37 +79,7 @@ impl Project {
                     )
                     .await?;
 
-                let artifact_version_loader = ctx.data::<ArtifactVersionDataLoader>()?;
-                let mut projects = artifact_version_loader.load_many(run_ids.clone()).await?;
-
-                let has_previous_page = first_index > 0;
-                let has_next_page = projects.len() > result_count;
-                let mut connection = Connection::new(has_previous_page, has_next_page);
-                for (index, run_id) in run_ids.into_iter().take(result_count).enumerate() {
-                    let edge = projects
-                        .remove(&run_id)
-                        .map(|project_or_error| match project_or_error {
-                            Ok(project) => {
-                                ArtifactVersionOrArtifactVersionError::ArtifactVersion(project)
-                            }
-                            Err(err) => {
-                                ArtifactVersionOrArtifactVersionError::Error(ArtifactVersionError {
-                                    id: run_id.clone().into(),
-                                    message: err.to_string(),
-                                })
-                            }
-                        })
-                        .unwrap_or_else(|| {
-                            ArtifactVersionOrArtifactVersionError::Error(ArtifactVersionError {
-                                id: run_id.into(),
-                                message: "Artifact version not found".to_string(),
-                            })
-                        });
-                    connection
-                        .edges
-                        .push(Edge::new((first_index + index) as i32, edge));
-                }
-                Ok::<_, async_graphql::Error>(connection)
+                create_artifact_version_connection(ctx, run_ids, first_index, result_count).await
             },
         )
         .await?;

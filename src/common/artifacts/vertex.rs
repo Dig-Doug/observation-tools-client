@@ -5,7 +5,7 @@ use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[pyo3::pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Vertex {
     #[wasm_bindgen(skip)]

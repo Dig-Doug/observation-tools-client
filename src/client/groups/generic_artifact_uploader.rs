@@ -9,22 +9,19 @@ use crate::groups::ArtifactUploader2d;
 use crate::groups::ArtifactUploader3d;
 use crate::util::ClientError;
 use crate::PublicSeriesIdTaskHandle;
-use pyo3::pyclass;
 use wasm_bindgen::prelude::*;
 
 /// An artifact group that can contain any type of artifact and create
 /// specialized child groups.
 #[wasm_bindgen]
-#[pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Debug, Clone)]
 pub struct GenericArtifactUploader {
     pub(crate) base: BaseArtifactUploader,
 }
 
 #[wasm_bindgen]
-#[pyo3::pymethods]
 impl GenericArtifactUploader {
-    #[pyo3(name = "child_uploader")]
     pub fn child_uploader_js(
         &self,
         metadata: &UserMetadata,
@@ -32,7 +29,6 @@ impl GenericArtifactUploader {
         self.child_uploader(metadata.clone())
     }
 
-    #[pyo3(name = "child_uploader_2d")]
     pub fn child_uploader_2d_js(
         &self,
         metadata: &UserMetadata,
@@ -40,7 +36,6 @@ impl GenericArtifactUploader {
         self.child_uploader_2d(metadata.clone())
     }
 
-    #[pyo3(name = "child_uploader_3d")]
     pub fn child_uploader_3d_js(
         &self,
         metadata: &UserMetadata,
@@ -49,8 +44,45 @@ impl GenericArtifactUploader {
         self.child_uploader_3d(metadata.clone(), base_transform)
     }
 
-    #[pyo3(name = "series")]
     pub fn series_js(
+        &self,
+        metadata: &UserMetadata,
+        series: Series,
+    ) -> Result<PublicSeriesIdTaskHandle, ClientError> {
+        self.series(metadata.clone(), series)
+    }
+}
+
+#[cfg(feature = "python")]
+#[pyo3::pymethods]
+impl GenericArtifactUploader {
+    #[pyo3(name = "child_uploader")]
+    pub fn child_uploader_py(
+        &self,
+        metadata: &UserMetadata,
+    ) -> Result<GenericArtifactUploader, ClientError> {
+        self.child_uploader(metadata.clone())
+    }
+
+    #[pyo3(name = "child_uploader_2d")]
+    pub fn child_uploader_2d_py(
+        &self,
+        metadata: &UserMetadata,
+    ) -> Result<ArtifactUploader2d, ClientError> {
+        self.child_uploader_2d(metadata.clone())
+    }
+
+    #[pyo3(name = "child_uploader_3d")]
+    pub fn child_uploader_3d_py(
+        &self,
+        metadata: &UserMetadata,
+        base_transform: Transform3,
+    ) -> Result<ArtifactUploader3d, ClientError> {
+        self.child_uploader_3d(metadata.clone(), base_transform)
+    }
+
+    #[pyo3(name = "series")]
+    pub fn series_py(
         &self,
         metadata: &UserMetadata,
         series: Series,

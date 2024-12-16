@@ -36,12 +36,6 @@ impl TryFrom<ArtifactVersionRow> for ArtifactVersionSqliteRow {
     type Error = anyhow::Error;
 
     fn try_from(value: ArtifactVersionRow) -> Result<Self, Self::Error> {
-        let ancestors_list = value
-            .version_data
-            .ancestor_group_ids
-            .iter()
-            .map(|id| id.uuid.simple().to_string())
-            .join(ID_PART_SEPARATOR);
         Ok(ArtifactVersionSqliteRow {
             project_id: value.project_id.uuid.as_bytes().to_vec(),
             run_id: value
@@ -52,8 +46,10 @@ impl TryFrom<ArtifactVersionRow> for ArtifactVersionSqliteRow {
             artifact_type: value.version_data.artifact_type.as_string(),
             version_data: rmp_serde::to_vec(&value.version_data)?,
             client_creation_time: value.version_data.client_creation_time.to_rfc3339(),
-            path: [ancestors_list, value.artifact_id.uuid.simple().to_string()]
-                .join(ANCESTORS_SEPARATOR),
+            path: ArtifactVersionSqliteRow::path(
+                &value.version_data.ancestor_group_ids,
+                &Some(value.artifact_id),
+            ),
             series_id: value
                 .series_point
                 .as_ref()
@@ -67,6 +63,39 @@ impl TryFrom<ArtifactVersionRow> for ArtifactVersionSqliteRow {
                 .map(|series_point| rmp_serde::to_vec(&series_point))
                 .transpose()?,
         })
+    }
+}
+
+impl ArtifactVersionSqliteRow {
+    pub fn to_path_part(id: &ArtifactId) -> String {
+        id.uuid.simple().to_string()
+    }
+
+    pub fn ancestor_path(ancestors: &Vec<ArtifactId>) -> String {
+        ancestors
+            .iter()
+            .map(ArtifactVersionSqliteRow::to_path_part)
+            .join(ID_PART_SEPARATOR)
+    }
+
+    pub fn path(ancestors: &Vec<ArtifactId>, primary: &Option<ArtifactId>) -> String {
+        [
+            ArtifactVersionSqliteRow::ancestor_path(ancestors),
+            primary
+                .as_ref()
+                .map(ArtifactVersionSqliteRow::to_path_part)
+                .unwrap_or_default(),
+        ]
+        .join(ANCESTORS_SEPARATOR)
+    }
+
+    pub fn ancestor_path_list(value: &ArtifactVersionRow) -> String {
+        value
+            .version_data
+            .ancestor_group_ids
+            .iter()
+            .map(|id| ArtifactVersionSqliteRow::to_path_part(id))
+            .join(ID_PART_SEPARATOR)
     }
 }
 

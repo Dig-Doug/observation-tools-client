@@ -121,6 +121,7 @@ pub use number::Number;
 //#[cfg(feature = "wasm")]
 //pub use number::NumberOrNumber;
 pub use object1::Object1;
+pub use object1::Object1Data;
 pub use object2::Object2;
 pub use object3::Object3;
 pub use point2::Point2;
@@ -129,8 +130,6 @@ pub use polygon2::Polygon2;
 pub use polygon3::Polygon3;
 pub use polygon_edge2::PolygonEdge2;
 pub use polygon_edge3::PolygonEdge3;
-use pyo3::exceptions::PyValueError;
-use pyo3::PyErr;
 pub use rect2::Rect2;
 pub use segment2::Segment2;
 pub use series::*;
@@ -168,8 +167,9 @@ impl Into<JsValue> for ArtifactError {
     }
 }
 
-impl From<ArtifactError> for PyErr {
-    fn from(err: ArtifactError) -> PyErr {
-        PyValueError::new_err(err.to_string())
+#[cfg(feature = "python")]
+impl From<ArtifactError> for pyo3::PyErr {
+    fn from(err: ArtifactError) -> pyo3::PyErr {
+        pyo3::exceptions::PyValueError::new_err(err.to_string())
     }
 }

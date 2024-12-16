@@ -2,16 +2,13 @@ use crate::artifact::StructuredData;
 use crate::artifacts::text::Text;
 use crate::artifacts::ArtifactError;
 use crate::artifacts::SeriesPoint;
-use pyo3::PyObject;
-use pyo3::PyResult;
-use pyo3::Python;
 use serde::Deserialize;
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 /// A 2D object.
 #[wasm_bindgen]
-#[pyo3::pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Object1 {
     #[wasm_bindgen(skip)]
@@ -41,10 +38,11 @@ impl Object1 {
     }
 }
 
+#[cfg(feature="python")]
 #[pyo3::pymethods]
 impl Object1 {
     #[new]
-    pub fn new_py(py: Python<'_>, data: PyObject) -> PyResult<Object1> {
+    pub fn new_py(py: pyo3::Python<'_>, data: pyo3::PyObject) -> pyo3::PyResult<Object1> {
         if let Ok(data) = data.extract::<Text>(py) {
             Ok(Object1::new(Object1Data::Text(data)))
         } else {

@@ -14,11 +14,14 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 	if (!data) {
 		throw new Error(`No data: ${JSON.stringify(errors)}`);
 	}
+	console.time("diff2html");
 	const diffJson = Diff2html.parse(data.diffArtifacts);
 	const diffHtml = Diff2html.html(diffJson, {
-		outputFormat: 'side-by-side',
-		drawFileList: false
+		outputFormat: event.url.searchParams.get('type') === "unified" ? 'line-by-line' : 'side-by-side',
+		drawFileList: false,
+		matching: "words",
 	});
+	console.timeEnd("diff2html");
 	return {
 		diffHtml
 	};

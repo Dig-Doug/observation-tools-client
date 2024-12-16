@@ -1,12 +1,10 @@
-use pyo3::pyclass;
-use pyo3::pymethods;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserMetadata {
     #[wasm_bindgen(skip)]
@@ -15,7 +13,8 @@ pub struct UserMetadata {
     pub metadata: HashMap<String, String>,
 }
 
-#[pymethods]
+#[cfg(feature = "python")]
+#[pyo3::pymethods]
 impl UserMetadata {
     #[new]
     pub fn new_py(name: &str) -> Self {

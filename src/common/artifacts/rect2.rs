@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 /// An axis-aligned rectangle.
 ////#[doc = docify::embed_run!("tests/examples.rs", rect2_example)]
 #[wasm_bindgen]
-#[pyo3::pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Rect2 {
     #[wasm_bindgen(skip)]

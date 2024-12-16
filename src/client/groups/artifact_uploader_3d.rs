@@ -1,4 +1,3 @@
-use crate::artifacts::Object2;
 use crate::artifacts::Object3;
 use crate::artifacts::Series;
 use crate::artifacts::Transform3;
@@ -11,23 +10,19 @@ use crate::PublicArtifactIdTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
 use observation_tools_common::artifact::ArtifactType;
 use observation_tools_common::artifact::Map2dTo3dData;
-use pyo3::pyclass;
-use std::any::TypeId;
 use wasm_bindgen::prelude::*;
 
 /// An artifact group representing a 3-dimensional world. This group can only
 /// contain [Object3](Object3) artifacts.
 #[wasm_bindgen]
-#[pyclass]
+#[cfg_attr(feature="python", pyo3::pyclass)]
 #[derive(Debug, Clone)]
 pub struct ArtifactUploader3d {
     pub(crate) base: BaseArtifactUploader,
 }
 
 #[wasm_bindgen]
-#[pyo3::pymethods]
 impl ArtifactUploader3d {
-    #[pyo3(name = "create_object3")]
     pub fn create_object3_js(
         &self,
         metadata: &UserMetadata,
@@ -45,8 +40,39 @@ impl ArtifactUploader3d {
         self.base.series(metadata.clone(), series)
     }
 
-    #[pyo3(name = "child_uploader_3d")]
     pub fn child_uploader_3d(
+        &self,
+        metadata: &UserMetadata,
+        base_transform: Transform3,
+    ) -> Result<ArtifactUploader3d, ClientError> {
+        self.base
+            .child_uploader_3d(metadata.clone(), base_transform, None)
+    }
+}
+
+#[cfg(feature = "python")]
+#[pyo3::pymethods]
+impl ArtifactUploader3d {
+    #[pyo3(name = "create_object3")]
+    pub fn create_object3_py(
+        &self,
+        metadata: &UserMetadata,
+        data: Object3,
+    ) -> Result<PublicArtifactIdTaskHandle, ClientError> {
+        self.create_object3(metadata.clone(), data)
+    }
+
+    // TODO(doug): Where in the artifact hierarchy should series be defined?
+    pub fn series_py(
+        &self,
+        metadata: &UserMetadata,
+        series: Series,
+    ) -> Result<PublicSeriesIdTaskHandle, ClientError> {
+        self.base.series(metadata.clone(), series)
+    }
+
+    #[pyo3(name = "child_uploader_3d")]
+    pub fn child_uploader_3d_py(
         &self,
         metadata: &UserMetadata,
         base_transform: Transform3,

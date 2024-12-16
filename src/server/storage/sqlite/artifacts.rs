@@ -1,7 +1,9 @@
 use crate::storage::sqlite::artifact_version_row::ArtifactVersionSqliteRow;
-use crate::storage::sqlite::schema;
 use crate::storage::sqlite::PayloadRow;
 use crate::storage::sqlite::SqliteStorage;
+use crate::storage::sqlite::{
+    schema, ANCESTORS_SEPARATOR, ANCESTORS_SEPARATOR_NEXT, ID_PART_SEPARATOR,
+};
 use crate::storage::ArtifactVersionRow;
 use crate::storage::ArtifactVersionRowOrError;
 use axum::body::Bytes;
@@ -171,5 +173,48 @@ impl SqliteStorage {
             .collect();
         let run_ids = rows?.into_iter().map(|row| row.absolute_id()).collect();
         Ok(run_ids)
+    }
+
+    pub async fn get_child_artifacts(
+        &self,
+        artifact: &ArtifactVersionRow,
+        direct_descendants_only: bool,
+        from: usize,
+        count: usize,
+    ) -> Result<Vec<AbsoluteArtifactVersionId>, anyhow::Error> {
+        let ancestor_path = ArtifactVersionSqliteRow::ancestor_path(&artifact.path_components());
+        let path = if direct_descendants_only {
+            ArtifactVersionSqliteRow::path(&artifact.path_components(), &None)
+        } else {
+            ancestor_path.clone()
+        };
+
+        let mut connection = self.pool.get()?;
+        let rows = schema::artifacts::table
+            // TODO(doug): #optimization - We could retrieve multiple versions of the same artifact, we should de-dupe
+            .select(ArtifactVersionSqliteRow::as_select())
+            .filter(
+                schema::artifacts::project_id
+                    .eq(artifact.project_id.uuid.as_bytes().to_vec())
+                    .and(
+                        schema::artifacts::run_id.eq(artifact
+                            .run_id
+                            .as_ref()
+                            .map(|id| id.id.uuid.as_bytes().to_vec())),
+                    )
+                    .and(schema::artifacts::path.ge(path))
+                    .and(schema::artifacts::path.lt(ancestor_path + ANCESTORS_SEPARATOR_NEXT)),
+            )
+            .order_by((
+                schema::artifacts::path.asc(),
+                schema::artifacts::artifact_id.asc(),
+            ))
+            .limit(count as i64)
+            .offset(from as i64)
+            .load::<ArtifactVersionSqliteRow>(&mut connection)?;
+        let rows: Result<Vec<ArtifactVersionRow>, _> =
+            rows.into_iter().map(|row| row.try_into()).collect();
+        let ids = rows?.into_iter().map(|row| row.absolute_id()).collect();
+        Ok(ids)
     }
 }

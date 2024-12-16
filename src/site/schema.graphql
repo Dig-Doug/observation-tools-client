@@ -8,7 +8,7 @@ schema {
 """
 
 Indicates that an Input Object is a OneOf Input Object (and thus requires
-exactly one of its field be provided)
+                        exactly one of its field be provided)
 """
 directive @oneOf on INPUT_OBJECT
 
@@ -25,8 +25,12 @@ interface ProjectOrProjectError {
 }
 
 type ArtifactVersion implements ArtifactVersionOrArtifactVersionError & Node {
+    children(after: String, before: String, directDescendantsOnly: Boolean!, first: Int, last: Int): ArtifactVersionOrArtifactVersionErrorConnection!
+    clientCreationTime: DateTime!
     id: ID!
     json: String!
+    name: String!
+    payload: String
 }
 
 type ArtifactVersionError implements ArtifactVersionOrArtifactVersionError {
@@ -69,6 +73,7 @@ type PageInfo {
 
 type Project implements Node & ProjectOrProjectError {
     id: ID!
+    name: String!
     runs(after: String, before: String, first: Int, last: Int): ArtifactVersionOrArtifactVersionErrorConnection!
 }
 
@@ -99,3 +104,11 @@ type Query {
     getProjects(after: String, before: String, first: Int, last: Int): ProjectOrProjectErrorConnection!
     node(id: ID!): Node!
 }
+
+"""
+
+Implement the DateTime<Utc> scalar
+
+The input/output is a string in RFC3339 format.
+"""
+scalar DateTime

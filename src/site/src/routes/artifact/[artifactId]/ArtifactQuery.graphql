@@ -4,6 +4,19 @@ query ArtifactQuery($id: ID!) {
         ... on ArtifactVersion {
             id
             json
+            name
+            payload
+          children(directDescendantsOnly: true) {
+            edges {
+              node {
+                id
+                __typename
+                ... on ArtifactVersion {
+                  name
+                }
+              }
+            }
+          }
         }
     }
 }

@@ -96,4 +96,20 @@ impl Storage {
             Storage::Local(storage) => storage.get_run_ids(project_id, from, count).await,
         }
     }
+
+    pub async fn get_child_artifacts(
+        &self,
+        artifact: &ArtifactVersionRow,
+        direct_descendants_only: bool,
+        from: usize,
+        count: usize,
+    ) -> Result<Vec<AbsoluteArtifactVersionId>, anyhow::Error> {
+        match self {
+            Storage::Local(storage) => {
+                storage
+                    .get_child_artifacts(artifact, direct_descendants_only, from, count)
+                    .await
+            }
+        }
+    }
 }

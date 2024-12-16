@@ -5,4 +5,10 @@
     export let data: PageData;
 </script>
 
+<style>
+    :global(.d2h-code-line), :global(.d2h-code-line-ctn) {
+        white-space: normal;
+    }
+</style>
+
 {@html data.diffHtml}

@@ -3,14 +3,17 @@ use crate::storage::artifact::Storage;
 use async_graphql::Context;
 use async_graphql::Object;
 use async_graphql::ID;
-use observation_tools_common::artifact::AbsoluteArtifactVersionId;
+use observation_tools_common::artifact::{AbsoluteArtifactVersionId, StructuredData};
+use observation_tools_common::artifacts::Object1Data;
 use similar::TextDiff;
+use tracing::{info, trace};
 
 #[derive(Default)]
 pub struct DiffArtifactsQuery {}
 
 #[Object]
 impl DiffArtifactsQuery {
+    #[tracing::instrument(skip_all)]
     async fn diff_artifacts(
         &self,
         ctx: &Context<'_>,
@@ -34,23 +37,38 @@ impl DiffArtifactsQuery {
         let left_payload = storage
             .read_artifact_version_payload(&left_version.row.absolute_id())
             .await?;
-        let left_text = left_payload
-            .map(|p| serde_json::to_string_pretty(&p))
-            .transpose()?;
         let right_payload = storage
             .read_artifact_version_payload(&right_version.row.absolute_id())
             .await?;
-        let right_text = right_payload
-            .map(|p| serde_json::to_string_pretty(&p))
-            .transpose()?;
-
-        let text_diff = TextDiff::from_lines(
-            &left_text.unwrap_or_default(),
-            &right_text.unwrap_or_default(),
-        )
-        .unified_diff()
-        .header(&left.0, &right.0)
-        .to_string();
-        Ok(text_diff)
+        Ok(diff_structured_data(left_payload, right_payload)?)
     }
+}
+
+pub fn get_text_content(structured_data: StructuredData) -> Result<String, anyhow::Error> {
+    match &structured_data {
+        StructuredData::Object1(obj) => match &obj.data {
+            Object1Data::Text(t) => return Ok(t.text.clone()),
+            _ => {}
+        },
+        _ => {}
+    };
+    Ok(serde_json::to_string_pretty(&structured_data)?)
+}
+
+#[tracing::instrument(skip_all)]
+fn diff_structured_data(
+    left: Option<StructuredData>,
+    right: Option<StructuredData>,
+) -> Result<String, anyhow::Error> {
+    trace!("Generating diff...");
+    let left_text = left.map(|p| get_text_content(p)).transpose()?;
+    let right_text = right.map(|p| get_text_content(p)).transpose()?;
+    let text_diff = TextDiff::from_lines(
+        &left_text.unwrap_or_default(),
+        &right_text.unwrap_or_default(),
+    )
+    .unified_diff()
+    .header("left", "right")
+    .to_string();
+    Ok(text_diff)
 }
