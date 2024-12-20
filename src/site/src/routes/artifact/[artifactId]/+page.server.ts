@@ -15,7 +15,8 @@ export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
     if (data.node.__typename !== 'ArtifactVersion') {
         throw new Error(`Invalid typename: ${data.node.__typename}`);
     }
-    const children = data.node.children.edges.map((edge) => edge.node);
+    const children = data.node.children.edges.map((edge) => edge.node).filter((node) =>
+        node.__typename === 'ArtifactVersion');
     return {
         node: data.node,
         children,

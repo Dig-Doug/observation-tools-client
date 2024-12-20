@@ -4,7 +4,6 @@ use crate::artifacts::UserMetadata;
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::groups::Object2Updater;
 use crate::task_handle::Object2UpdaterTaskHandle;
-use crate::task_handle::TaskHandle;
 use crate::util::ClientError;
 use crate::PublicSeriesIdTaskHandle;
 use wasm_bindgen::prelude::*;

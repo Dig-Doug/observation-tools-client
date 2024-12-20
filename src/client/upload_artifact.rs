@@ -2,7 +2,6 @@ use crate::util::GenericError;
 use crate::ClientError;
 use crate::TokenGenerator;
 use futures::future::BoxFuture;
-use futures::TryFutureExt;
 use observation_tools_common::artifact::AbsoluteArtifactId;
 use observation_tools_common::create_artifact::CreateArtifactRequest;
 use observation_tools_common::GlobalId;

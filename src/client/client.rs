@@ -1,6 +1,5 @@
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::groups::RunUploader;
-use crate::task_handle::TaskHandle;
 use crate::throttle_without_access_cookie::ThrottleWithoutAccessCookieLayer;
 use crate::upload_artifact::UploadArtifactService;
 use crate::upload_artifact::UploadArtifactTask;

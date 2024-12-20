@@ -122,13 +122,7 @@ pub use crate::token_generator::TokenGenerator;
 pub use crate::util::ClientError;
 use observation_tools_common::artifact::ArtifactId;
 pub use observation_tools_common::artifacts;
-use observation_tools_common::artifacts::Object1;
 use observation_tools_common::artifacts::SeriesId;
-use observation_tools_common::artifacts::Text;
-use observation_tools_common::artifacts::UserMetadata;
-use tracing_subscriber::filter::LevelFilter;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
 use tracing_wasm::WASMLayerConfigBuilder;
 use wasm_bindgen::prelude::*;
 

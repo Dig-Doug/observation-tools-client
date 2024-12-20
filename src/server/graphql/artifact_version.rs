@@ -3,6 +3,7 @@ use crate::auth::permission::Operation;
 use crate::auth::permission::Permission;
 use crate::auth::permission::PermissionDataLoader;
 use crate::auth::principal::Principal;
+use crate::graphql::diff::get_text_content;
 use crate::graphql::util::calculate_start_and_length;
 use crate::graphql::LoaderError;
 use crate::storage::artifact::Storage;
@@ -20,7 +21,6 @@ use observation_tools_common::artifact::AbsoluteArtifactVersionId;
 use observation_tools_common::artifact::{AbsoluteArtifactId, ArtifactVersionId};
 use std::collections::HashMap;
 use std::sync::Arc;
-use crate::graphql::diff::get_text_content;
 
 #[derive(Clone, Debug)]
 pub struct ArtifactVersion {

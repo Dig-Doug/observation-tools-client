@@ -4,7 +4,6 @@ use crate::artifacts::Transform3;
 use crate::artifacts::UserMetadata;
 use crate::groups::base_artifact_uploader::BaseArtifactUploader;
 use crate::groups::ArtifactUploader2d;
-use crate::task_handle::TaskHandle;
 use crate::util::ClientError;
 use crate::PublicArtifactIdTaskHandle;
 use crate::PublicSeriesIdTaskHandle;
