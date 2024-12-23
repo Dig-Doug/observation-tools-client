@@ -1,11 +1,11 @@
-query ArtifactQuery($id: ID!) {
+query ArtifactQuery($id: ID!, $fetchSelected: Boolean!, $selectedId: ID!) {
     node(id: $id) {
         __typename
         ... on ArtifactVersion {
             id
             json
             name
-            payload
+            payload @skip(if: $fetchSelected )
           children(directDescendantsOnly: true) {
             edges {
               node {
@@ -18,5 +18,11 @@ query ArtifactQuery($id: ID!) {
             }
           }
         }
+    }
+    selectedNode: node(id: $selectedId) @include(if: $fetchSelected ) {
+      __typename
+      ... on ArtifactVersion {
+        payload
+      }
     }
 }

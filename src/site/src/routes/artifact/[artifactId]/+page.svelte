@@ -18,7 +18,7 @@
         <ul class="border-r">
             {#each data.children as child}
                 <li>
-                    <a class="hover:bg-base-200 p-4 grid grid-cols-2" href={`/artifact/${child.id}`}>
+                    <a class="hover:bg-base-200 p-4 grid grid-cols-2" href={`/artifact/${data.node.id}?selected=${child.id}`}>
                         <p class="font-bold text-sm">
                             {child.name}
                         </p>
