@@ -1,0 +1,79 @@
+//! HTTP server implementation
+
+use crate::{
+    api::{self, AppState},
+    config::Config,
+    storage::{LocalBlobStorage, SledStorage},
+    ui,
+};
+use axum::{routing::get, Router};
+use std::sync::Arc;
+use tower_http::{services::ServeDir, trace::TraceLayer};
+
+/// The Observation Tools server
+pub struct Server {
+    config: Config,
+}
+
+impl Server {
+    /// Create a new server with the given configuration
+    pub fn new(config: Config) -> Self {
+        Self { config }
+    }
+
+    /// Run the server
+    pub async fn run(self) -> anyhow::Result<()> {
+        tracing::info!("Starting Observation Tools server");
+        tracing::debug!(data_dir = ?self.config.data_dir, "Initializing storage");
+
+        // Initialize storage
+        let metadata = Arc::new(SledStorage::new(&self.config.data_dir.join("metadata"))?);
+        tracing::info!("Metadata storage initialized");
+
+        let blobs = Arc::new(LocalBlobStorage::new(&self.config.blob_dir)?);
+        tracing::info!(blob_dir = ?self.config.blob_dir, "Blob storage initialized");
+
+        // Initialize template environment
+        let templates = ui::init_templates();
+        tracing::debug!("Template environment initialized");
+
+        let state = AppState {
+            metadata: metadata.clone(),
+            blobs,
+            templates,
+        };
+
+        // Build UI router
+        let ui_router = Router::new()
+            .route("/", get(ui::index))
+            .route("/exe", get(ui::list_executions))
+            .route("/exe/{id}", get(ui::execution_detail))
+            .route(
+                "/exe/{execution_id}/obs/{observation_id}",
+                get(ui::observation_detail),
+            )
+            .with_state(state.clone());
+
+        // Serve static files
+        let static_dir = std::env::current_dir()?.join("crates/observation-tools-server/static");
+        tracing::debug!(static_dir = ?static_dir, "Serving static files from directory");
+        let serve_static = ServeDir::new(static_dir);
+
+        // Build the main router
+        let app = Router::new()
+            .merge(ui_router)
+            .nest("/api", api::build_router(state))
+            .nest_service("/static", serve_static)
+            .layer(TraceLayer::new_for_http());
+
+        tracing::debug!("Router configured");
+
+        // Start the server
+        let listener = tokio::net::TcpListener::bind(&self.config.bind_addr).await?;
+        tracing::info!("Server listening on http://{}", self.config.bind_addr);
+
+        axum::serve(listener, app).await?;
+
+        Ok(())
+    }
+}

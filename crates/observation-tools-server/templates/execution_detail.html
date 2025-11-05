@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ execution.name }}{% endblock %}
+
+{% block content %}
+<p class="meta">
+    <a href="/">home</a> /
+    <a href="/exe">executions</a> /
+    {{ execution.name }}
+</p>
+
+<h1>{{ execution.name }}</h1>
+
+<p><span class="meta">id:</span> <code>{{ execution.id }}</code></p>
+<p><span class="meta">created:</span> {{ execution.created_at }}</p>
+
+{% if execution.metadata %}
+<h3>metadata</h3>
+<ul>
+    {% for key, value in execution.metadata %}
+    <li>{{ key }}: {{ value }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<hr>
+
+<h2>observations</h2>
+
+<div id="observations-list">
+    {% if observations %}
+    <ul>
+        {% for obs in observations %}
+        <li>
+            <a href="/exe/{{ execution.id }}/obs/{{ obs.id }}">{{ obs.name }}</a>
+            <span class="meta">
+                — {{ obs.payload.mime_type }}
+                {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
+                — {{ obs.created_at }}
+            </span>
+            {% if obs.labels %}
+            <br><span class="meta">labels: {{ obs.labels|join(", ") }}</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+
+    {% if has_next_page %}
+    <p><a href="#">load more →</a></p>
+    {% endif %}
+
+    {% else %}
+    <p>no observations found.</p>
+    {% endif %}
+</div>
+{% endblock %}

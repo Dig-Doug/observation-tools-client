@@ -1,5 +1,0 @@
-import dev/bazel/base.bazelproject
-
-additional_languages:
-  kotlin
-

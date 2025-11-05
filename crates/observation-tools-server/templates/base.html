@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>{% block title %}Observation Tools{% endblock %}</title>
+    <link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+
+    <!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <style>
+        :root {
+            /* Light mode colors */
+            --bg-color: #fff;
+            --text-color: #000;
+            --link-color: #000;
+            --link-hover-color: #00f;
+            --border-color: #000;
+            --code-bg: #f0f0f0;
+            --input-bg: #fff;
+            --meta-color: #666;
+            --logo-display: block;
+            --logo-dark-display: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Dark mode colors */
+                --bg-color: #1a1a1a;
+                --text-color: #e0e0e0;
+                --link-color: #e0e0e0;
+                --link-hover-color: #6b9eff;
+                --border-color: #e0e0e0;
+                --code-bg: #2a2a2a;
+                --input-bg: #2a2a2a;
+                --meta-color: #999;
+                --logo-display: none;
+                --logo-dark-display: block;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+        a {
+            color: var(--link-color);
+            text-decoration: underline;
+        }
+        a:hover { color: var(--link-hover-color); }
+        nav {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .logo {
+            width: 24px;
+            height: 24px;
+            display: var(--logo-display);
+        }
+        .logo-dark {
+            width: 24px;
+            height: 24px;
+            display: var(--logo-dark-display);
+        }
+        h1 { font-size: 1.5rem; font-weight: bold; margin: 1rem 0; }
+        h2 { font-size: 1.2rem; font-weight: bold; margin: 1rem 0; }
+        h3 { font-size: 1rem; font-weight: bold; margin: 0.5rem 0; }
+        input[type="text"] {
+            font-family: monospace;
+            font-size: 14px;
+            padding: 0.25rem;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 400px;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+        button, .button {
+            font-family: monospace;
+            font-size: 14px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        button:hover, .button:hover {
+            color: var(--link-hover-color);
+        }
+        ul { list-style: none; }
+        li { margin: 0.5rem 0; }
+        code, pre {
+            font-family: monospace;
+            background: var(--code-bg);
+            color: var(--text-color);
+            padding: 0.125rem 0.25rem;
+        }
+        pre {
+            padding: 1rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .meta { color: var(--meta-color); font-size: 0.9em; }
+        hr { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <nav>
+        <img src="/static/logo.svg" alt="Observation Tools" class="logo">
+        <img src="/static/logo_dark.svg" alt="Observation Tools" class="logo-dark">
+        <a href="/">home</a>
+        <a href="/exe">executions</a>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
