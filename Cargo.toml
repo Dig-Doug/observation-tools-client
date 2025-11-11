@@ -28,7 +28,7 @@ object_store = "0.12.4"
 observation-tools-client = { path = "crates/observation-tools-client" }
 observation-tools-server = { path = "crates/observation-tools-server" }
 observation-tools-shared = { path = "crates/observation-tools-shared" }
-reqwest = "0.12.24"
+reqwest = { version = "0.12.24", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sled = "0.34"
@@ -38,4 +38,5 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["fs", "trace", "cors"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-uuid = { version = "1.11", features = ["v7", "serde"] }
+uuid = { version = "1.11", features = ["v7", "serde", "js"] }
+wasm-bindgen = "0.2.105"

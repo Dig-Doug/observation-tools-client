@@ -1,0 +1,18 @@
+{
+  "name": "observation-tools-integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for observation-tools",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug"
+  },
+  "dependencies": {
+    "observation-tools-client": "file:../crates/observation-tools-client"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.0.0"
+  }
+}

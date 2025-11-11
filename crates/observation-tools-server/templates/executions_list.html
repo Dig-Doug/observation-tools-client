@@ -1,31 +1,27 @@
-{% extends "base.html" %}
-
-{% block title %}Executions{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Executions{% endblock %} {% block content %}
 <h1>executions</h1>
 
-<div id="executions-list"
-     hx-get="/exe"
-     hx-trigger="every 2s"
-     hx-select="#executions-list"
-     hx-swap="outerHTML">
-    {% if executions %}
-    <ul>
-        {% for execution in executions %}
-        <li>
-            <a href="/exe/{{ execution.id }}">{{ execution.name }}</a>
-            <span class="meta">— {{ execution.created_at }}</span>
-        </li>
-        {% endfor %}
-    </ul>
+<div
+  id="executions-list"
+  hx-get="/exe"
+  hx-trigger="every 2s"
+  hx-select="#executions-list"
+  hx-swap="outerHTML"
+>
+  {% if executions %}
+  <ul>
+    {% for execution in executions %}
+    <li>
+      <a href="/exe/{{ execution.id }}" data-testid="ExecutionLink">{{ execution.name }}</a>
+      <span class="meta">— {{ execution.created_at }}</span>
+    </li>
+    {% endfor %}
+  </ul>
 
-    {% if has_next_page %}
-    <p><a href="#">load more →</a></p>
-    {% endif %}
-
-    {% else %}
-    <p>no executions found.</p>
-    {% endif %}
+  {% if has_next_page %}
+  <p><a href="#">load more →</a></p>
+  {% endif %} {% else %}
+  <p>no executions found.</p>
+  {% endif %}
 </div>
 {% endblock %}

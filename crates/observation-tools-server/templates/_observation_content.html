@@ -1,0 +1,29 @@
+<h1>{{ observation.name }}</h1>
+
+<p><span class="meta">id:</span> <code>{{ observation.id }}</code></p>
+<p><span class="meta">created:</span> {{ observation.created_at }}</p>
+
+{% if observation.source %}
+<p>
+  <span class="meta">source:</span>
+  <code>{{ observation.source.file }}:{{ observation.source.line }}</code>
+</p>
+{% endif %} {% if observation.parent_span_id %}
+<p><span class="meta">parent span:</span> <code>{{ observation.parent_span_id }}</code></p>
+{% endif %} {% if observation.labels %}
+<p><span class="meta">labels:</span> {{ observation.labels|join(", ") }}</p>
+{% endif %} {% if observation.metadata %}
+<h3>metadata</h3>
+<ul>
+  {% for key, value in observation.metadata %}
+  <li>{{ key }}: {{ value }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<hr />
+
+<h2>payload</h2>
+<p><span class="meta">type:</span> {{ observation.payload.mime_type }}</p>
+
+<pre>{{ observation.payload.data }}</pre>
