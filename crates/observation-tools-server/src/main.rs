@@ -1,9 +1,11 @@
 //! Observation Tools Server
 //!
-//! HTTP API backend that collects, stores, indexes, and serves logged observations.
+//! HTTP API backend that collects, stores, indexes, and serves logged
+//! observations.
 
 use clap::Parser;
-use observation_tools_server::{Config, Server};
+use observation_tools_server::Config;
+use observation_tools_server::Server;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 

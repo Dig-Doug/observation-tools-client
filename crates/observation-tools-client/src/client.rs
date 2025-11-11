@@ -1,12 +1,14 @@
 //! Client for communicating with the observation-tools server
 
-use crate::{error::Result, execution::ExecutionHandle, Error};
-use observation_tools_shared::{
-    api::{CreateExecutionRequest, CreateObservationsRequest},
-    models::{Execution, Observation},
-};
-use std::sync::Arc;
+use crate::error::Result;
+use crate::execution::ExecutionHandle;
+use crate::Error;
 use log::trace;
+use observation_tools_shared::api::CreateExecutionRequest;
+use observation_tools_shared::api::CreateObservationsRequest;
+use observation_tools_shared::models::Execution;
+use observation_tools_shared::models::Observation;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 
 /// Message types for the background uploader task
@@ -24,7 +26,6 @@ pub struct Client {
 }
 
 struct ClientInner {
-    http_client: reqwest::Client,
     base_url: String,
     uploader_tx: mpsc::UnboundedSender<UploaderMessage>,
 }
@@ -112,15 +113,13 @@ impl ClientBuilder {
         let (tx, rx) = mpsc::unbounded_channel();
 
         // Spawn background uploader task
-        let uploader_client = http_client.clone();
         let uploader_base_url = base_url.clone();
         tokio::spawn(async move {
-            uploader_task(uploader_client, uploader_base_url, rx).await;
+            uploader_task(http_client, uploader_base_url, rx).await;
         });
 
         Ok(Client {
             inner: Arc::new(ClientInner {
-                http_client,
                 base_url,
                 uploader_tx: tx,
             }),
@@ -228,10 +227,7 @@ async fn upload_observations(
     // Group by execution_id
     let mut by_execution: std::collections::HashMap<_, Vec<_>> = std::collections::HashMap::new();
     for obs in observations {
-        by_execution
-            .entry(obs.execution_id)
-            .or_default()
-            .push(obs);
+        by_execution.entry(obs.execution_id).or_default().push(obs);
     }
 
     // Upload each batch

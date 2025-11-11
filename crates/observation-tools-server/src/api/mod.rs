@@ -3,14 +3,16 @@
 pub mod executions;
 pub mod observations;
 
-use crate::storage::{BlobStorage, MetadataStorage};
-use axum::{
-    extract::FromRef,
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    routing::{get, post},
-    Json, Router,
-};
+use crate::storage::BlobStorage;
+use crate::storage::MetadataStorage;
+use axum::extract::FromRef;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::response::Response;
+use axum::routing::get;
+use axum::routing::post;
+use axum::Json;
+use axum::Router;
 use minijinja_autoreload::AutoReloader;
 use std::sync::Arc;
 

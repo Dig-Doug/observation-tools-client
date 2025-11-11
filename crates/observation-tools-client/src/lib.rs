@@ -9,11 +9,10 @@ mod error;
 mod execution;
 mod observation;
 
-#[cfg(feature = "axum-integration")]
-pub mod middleware;
-
-pub use client::{Client, ClientBuilder};
-pub use error::{Error, Result};
+pub use client::Client;
+pub use client::ClientBuilder;
+pub use error::Error;
+pub use error::Result;
 pub use execution::ExecutionHandle;
 pub use observation::ObservationBuilder;
 

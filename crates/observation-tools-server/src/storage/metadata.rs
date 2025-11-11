@@ -1,7 +1,11 @@
 //! Metadata storage for executions and observations
 
-use super::{StorageError, StorageResult};
-use observation_tools_shared::{Execution, ExecutionId, Observation, ObservationId};
+use super::StorageError;
+use super::StorageResult;
+use observation_tools_shared::Execution;
+use observation_tools_shared::ExecutionId;
+use observation_tools_shared::Observation;
+use observation_tools_shared::ObservationId;
 use std::path::Path;
 use tracing::trace;
 
@@ -102,20 +106,14 @@ impl MetadataStorage for SledStorage {
         let mut executions: Vec<Execution> = tree
             .iter()
             .values()
-            .filter_map(|result| {
-                result.ok().and_then(|v| serde_json::from_slice(&v).ok())
-            })
+            .filter_map(|result| result.ok().and_then(|v| serde_json::from_slice(&v).ok()))
             .collect();
 
         // Sort by created_at descending (most recent first)
         executions.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
         // Apply pagination after sorting
-        let executions: Vec<Execution> = executions
-            .into_iter()
-            .skip(offset)
-            .take(limit)
-            .collect();
+        let executions: Vec<Execution> = executions.into_iter().skip(offset).take(limit).collect();
 
         Ok(executions)
     }
@@ -186,11 +184,8 @@ impl MetadataStorage for SledStorage {
         observations.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
         // Apply pagination after sorting
-        let observations: Vec<Observation> = observations
-            .into_iter()
-            .skip(offset)
-            .take(limit)
-            .collect();
+        let observations: Vec<Observation> =
+            observations.into_iter().skip(offset).take(limit).collect();
 
         Ok(observations)
     }

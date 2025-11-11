@@ -1,17 +1,17 @@
 //! Execution API handlers
 
-use crate::{api::AppError, storage::MetadataStorage};
-use axum::{
-    extract::{Path, Query, State},
-    Json,
-};
-use observation_tools_shared::{
-    api::{
-        CreateExecutionRequest, CreateExecutionResponse, GetExecutionResponse,
-        ListExecutionsQuery, ListExecutionsResponse,
-    },
-    models::ExecutionId,
-};
+use crate::api::AppError;
+use crate::storage::MetadataStorage;
+use axum::extract::Path;
+use axum::extract::Query;
+use axum::extract::State;
+use axum::Json;
+use observation_tools_shared::api::CreateExecutionRequest;
+use observation_tools_shared::api::CreateExecutionResponse;
+use observation_tools_shared::api::GetExecutionResponse;
+use observation_tools_shared::api::ListExecutionsQuery;
+use observation_tools_shared::api::ListExecutionsResponse;
+use observation_tools_shared::models::ExecutionId;
 use std::sync::Arc;
 
 /// Create a new execution
@@ -51,7 +51,11 @@ pub async fn list_executions(
         executions.pop(); // Remove the extra record
     }
 
-    tracing::debug!(count = executions.len(), has_next_page = has_next_page, "Executions listed");
+    tracing::debug!(
+        count = executions.len(),
+        has_next_page = has_next_page,
+        "Executions listed"
+    );
 
     Ok(Json(ListExecutionsResponse {
         executions,

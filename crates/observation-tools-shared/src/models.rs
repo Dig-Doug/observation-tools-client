@@ -1,7 +1,9 @@
 //! Core data models for observation-tools
 
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::DateTime;
+use chrono::Utc;
+use serde::Deserialize;
+use serde::Serialize;
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -47,8 +49,7 @@ impl ObservationId {
 
     /// Parse from a string
     pub fn parse(s: &str) -> crate::Result<Self> {
-        let uuid = Uuid::parse_str(s)
-            .map_err(crate::Error::InvalidObservationId)?;
+        let uuid = Uuid::parse_str(s).map_err(crate::Error::InvalidObservationId)?;
         Ok(Self(uuid))
     }
 }
@@ -212,11 +213,7 @@ pub struct Observation {
 
 impl Observation {
     /// Create a new observation
-    pub fn new(
-        execution_id: ExecutionId,
-        name: impl Into<String>,
-        payload: Payload,
-    ) -> Self {
+    pub fn new(execution_id: ExecutionId, name: impl Into<String>, payload: Payload) -> Self {
         Self {
             id: ObservationId::new(),
             execution_id,

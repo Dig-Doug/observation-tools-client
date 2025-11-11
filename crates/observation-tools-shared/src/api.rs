@@ -1,7 +1,9 @@
 //! API request and response types
 
-use crate::models::{Execution, Observation};
-use serde::{Deserialize, Serialize};
+use crate::models::Execution;
+use crate::models::Observation;
+use serde::Deserialize;
+use serde::Serialize;
 
 // ============================================================================
 // Execution API types

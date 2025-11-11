@@ -1,6 +1,7 @@
 //! Basic usage example for observation-tools-client
 
-use observation_tools_client::{observe, Client};
+use observation_tools_client::observe;
+use observation_tools_client::Client;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -35,7 +36,11 @@ async fn main() -> anyhow::Result<()> {
     observe!("user_event", data)?;
 
     // With labels
-    observe!(name = "api_call", label = "http/request", payload = "GET /api/users")?;
+    observe!(
+        name = "api_call",
+        label = "http/request",
+        payload = "GET /api/users"
+    )?;
 
     println!("Logged observations. Check the web UI at http://localhost:3000");
 

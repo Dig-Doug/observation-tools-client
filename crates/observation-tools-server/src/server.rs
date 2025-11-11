@@ -1,14 +1,16 @@
 //! HTTP server implementation
 
-use crate::{
-    api::{self, AppState},
-    config::Config,
-    storage::{LocalBlobStorage, SledStorage},
-    ui,
-};
-use axum::{routing::get, Router};
+use crate::api::AppState;
+use crate::api::{self};
+use crate::config::Config;
+use crate::storage::LocalBlobStorage;
+use crate::storage::SledStorage;
+use crate::ui;
+use axum::routing::get;
+use axum::Router;
 use std::sync::Arc;
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::services::ServeDir;
+use tower_http::trace::TraceLayer;
 
 /// The Observation Tools server
 pub struct Server {

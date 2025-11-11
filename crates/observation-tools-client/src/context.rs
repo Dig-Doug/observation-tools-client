@@ -1,6 +1,8 @@
 //! Execution context propagation
 
-use crate::{execution::ExecutionHandle, error::Result, Error};
+use crate::error::Result;
+use crate::execution::ExecutionHandle;
+use crate::Error;
 use std::cell::RefCell;
 
 thread_local! {
@@ -22,11 +24,4 @@ pub(crate) fn set_global_execution(execution: ExecutionHandle) -> Result<()> {
 /// Get the current execution from context
 pub(crate) fn get_current_execution() -> Option<ExecutionHandle> {
     EXECUTION_CONTEXT.with(|ctx| ctx.borrow().clone())
-}
-
-/// Clear the current execution context
-pub(crate) fn clear_execution() {
-    EXECUTION_CONTEXT.with(|ctx| {
-        *ctx.borrow_mut() = None;
-    });
 }

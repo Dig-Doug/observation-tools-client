@@ -3,9 +3,10 @@
 pub mod blob;
 pub mod metadata;
 
-pub use blob::{BlobStorage, LocalBlobStorage};
-pub use metadata::{MetadataStorage, SledStorage};
-
+pub use blob::BlobStorage;
+pub use blob::LocalBlobStorage;
+pub use metadata::MetadataStorage;
+pub use metadata::SledStorage;
 use thiserror::Error;
 
 /// Storage errors

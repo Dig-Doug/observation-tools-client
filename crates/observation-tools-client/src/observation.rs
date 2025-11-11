@@ -1,7 +1,12 @@
 //! Observation builder API
 
-use crate::{context, error::Result, Error};
-use observation_tools_shared::models::{Observation, ObservationId, Payload, SourceInfo};
+use crate::context;
+use crate::error::Result;
+use crate::Error;
+use observation_tools_shared::models::Observation;
+use observation_tools_shared::models::ObservationId;
+use observation_tools_shared::models::Payload;
+use observation_tools_shared::models::SourceInfo;
 use std::collections::HashMap;
 
 /// Builder for creating observations

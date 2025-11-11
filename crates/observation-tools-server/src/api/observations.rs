@@ -1,22 +1,22 @@
 //! Observation API handlers
 
-use crate::{
-    api::AppError,
-    storage::{BlobStorage, MetadataStorage},
-};
-use axum::{
-    extract::{Path, Query, State},
-    http::{header, StatusCode},
-    response::IntoResponse,
-    Json,
-};
-use observation_tools_shared::{
-    api::{
-        CreateObservationsRequest, CreateObservationsResponse, GetObservationResponse,
-        ListObservationsQuery, ListObservationsResponse,
-    },
-    models::{ExecutionId, ObservationId},
-};
+use crate::api::AppError;
+use crate::storage::BlobStorage;
+use crate::storage::MetadataStorage;
+use axum::extract::Path;
+use axum::extract::Query;
+use axum::extract::State;
+use axum::http::header;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::Json;
+use observation_tools_shared::api::CreateObservationsRequest;
+use observation_tools_shared::api::CreateObservationsResponse;
+use observation_tools_shared::api::GetObservationResponse;
+use observation_tools_shared::api::ListObservationsQuery;
+use observation_tools_shared::api::ListObservationsResponse;
+use observation_tools_shared::models::ExecutionId;
+use observation_tools_shared::models::ObservationId;
 use std::sync::Arc;
 use tracing::trace;
 
@@ -36,7 +36,8 @@ pub async fn create_observations(
 
     let _execution_id = ExecutionId::parse(&execution_id)?;
 
-    // Store observations (don't check if execution exists - uploads may be out of order)
+    // Store observations (don't check if execution exists - uploads may be out of
+    // order)
     metadata.store_observations(&req.observations).await?;
 
     tracing::info!(
@@ -104,15 +105,9 @@ pub async fn get_observation(
 
     let observations = metadata.get_observations(&[observation_id]).await?;
 
-    let observation = observations
-        .into_iter()
-        .next()
-        .ok_or_else(|| {
-            crate::storage::StorageError::NotFound(format!(
-                "Observation {} not found",
-                observation_id
-            ))
-        })?;
+    let observation = observations.into_iter().next().ok_or_else(|| {
+        crate::storage::StorageError::NotFound(format!("Observation {} not found", observation_id))
+    })?;
 
     tracing::debug!(name = %observation.name, "Observation retrieved");
 

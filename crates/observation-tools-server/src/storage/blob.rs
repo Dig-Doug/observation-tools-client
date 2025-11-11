@@ -1,8 +1,11 @@
 //! Blob storage for observation payloads
 
-use super::{StorageError, StorageResult};
+use super::StorageError;
+use super::StorageResult;
 use bytes::Bytes;
-use object_store::{local::LocalFileSystem, path::Path as ObjectPath, ObjectStore};
+use object_store::local::LocalFileSystem;
+use object_store::path::Path as ObjectPath;
+use object_store::ObjectStore;
 use observation_tools_shared::ObservationId;
 use std::path::Path;
 use std::sync::Arc;

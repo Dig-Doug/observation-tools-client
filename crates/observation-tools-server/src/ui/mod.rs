@@ -1,17 +1,21 @@
 //! Web UI handlers
 
-use crate::{api::AppError, storage::MetadataStorage};
-use axum::{
-    extract::{Path, Query, State},
-    response::{Html, IntoResponse},
-};
-use minijinja::{context, path_loader, Environment};
+use crate::api::AppError;
+use crate::storage::MetadataStorage;
+use axum::extract::Path;
+use axum::extract::Query;
+use axum::extract::State;
+use axum::response::Html;
+use axum::response::IntoResponse;
+use minijinja::context;
+use minijinja::path_loader;
+use minijinja::Environment;
 use minijinja_autoreload::AutoReloader;
-use observation_tools_shared::{
-    api::{ListExecutionsQuery, ListObservationsQuery},
-    models::ExecutionId,
-};
-use std::{path::PathBuf, sync::Arc};
+use observation_tools_shared::api::ListExecutionsQuery;
+use observation_tools_shared::api::ListObservationsQuery;
+use observation_tools_shared::models::ExecutionId;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 /// Initialize the template auto-reloader
 pub fn init_templates() -> Arc<AutoReloader> {
@@ -138,10 +142,7 @@ pub async fn observation_detail(
     let observations = metadata.get_observations(&[observation_id]).await?;
 
     let observation = observations.into_iter().next().ok_or_else(|| {
-        crate::storage::StorageError::NotFound(format!(
-            "Observation {} not found",
-            observation_id
-        ))
+        crate::storage::StorageError::NotFound(format!("Observation {} not found", observation_id))
     })?;
 
     tracing::debug!(observation_name = %observation.name, "Retrieved observation for UI");

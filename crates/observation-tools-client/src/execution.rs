@@ -1,7 +1,10 @@
 //! Execution handle for managing observation context
 
-use crate::{client::UploaderMessage, error::Result, Error};
-use observation_tools_shared::models::{ExecutionId, Observation};
+use crate::client::UploaderMessage;
+use crate::error::Result;
+use crate::Error;
+use observation_tools_shared::models::ExecutionId;
+use observation_tools_shared::models::Observation;
 use tokio::sync::mpsc;
 
 /// Handle to an execution that can be used to send observations
