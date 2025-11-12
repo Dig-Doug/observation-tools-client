@@ -25,3 +25,4 @@ For more details refer to [Design](docs/design.md)
 ## Coding Guidelines
 
 - Always use workspace imports for dependencies to ensure consistency across crates.
+- Never use `unwrap()`. Always handle or propagate errors.

@@ -36,7 +36,9 @@ struct ClientInner {
 impl Client {
   #[napi(js_name = "beginExecution")]
   pub fn begin_execution_wasm(&self, name: String) -> napi::Result<ExecutionHandle> {
-    self.begin_execution(name).map_err(|e| napi::Error::from_reason(e.to_string()))
+    self
+      .begin_execution(name)
+      .map_err(|e| napi::Error::from_reason(e.to_string()))
   }
 }
 
@@ -120,21 +122,28 @@ impl ClientBuilder {
     let (tx, rx) = async_channel::unbounded();
     let uploader_base_url = base_url.clone();
 
-    tokio::spawn(async move {
-      uploader_task(http_client, uploader_base_url, rx).await;
-    });
-
-    // Spawn timer task for periodic flushes
+    // Clone sender for timer task before moving
     let timer_tx = tx.clone();
-    tokio::spawn(async move {
-      let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
-      interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-      loop {
-        interval.tick().await;
-        if timer_tx.send(UploaderMessage::Flush).await.is_err() {
-          break; // Channel closed, stop timer
-        }
-      }
+
+    // Create a Tokio runtime in a background thread for the uploader
+    std::thread::spawn(move || {
+      let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
+      rt.block_on(async move {
+        // Spawn timer task for periodic flushes
+        tokio::spawn(async move {
+          let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(100));
+          interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+          loop {
+            interval.tick().await;
+            if timer_tx.send(UploaderMessage::Flush).await.is_err() {
+              break; // Channel closed, stop timer
+            }
+          }
+        });
+
+        // Run the uploader task
+        uploader_task(http_client, uploader_base_url, rx).await;
+      });
     });
 
     Ok(Client {

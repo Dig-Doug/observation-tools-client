@@ -8,8 +8,24 @@ export enum TestId {
 
   // Executions List
   ExecutionLink = "ExecutionLink",
+  ExecutionsListEmpty = "ExecutionsListEmpty",
 
   // Execution Detail
   ExecutionDetailTitle = "ExecutionDetailTitle",
   ExecutionDetailId = "ExecutionDetailId",
+
+  // Observations
+  ObservationListItem = "ObservationListItem",
+  ObservationListItemLink = "ObservationListItemLink",
+  ObservationId = "ObservationId",
+  ObservationPayload = "ObservationPayload",
+  ObservationLabels = "ObservationLabels",
+  ObservationSourceFile = "ObservationSourceFile",
+  ObservationSourceLine = "ObservationSourceLine",
+
+  // Pagination
+  PaginationNext = "PaginationNext",
+  PaginationPrev = "PaginationPrev",
+  PaginationInfo = "PaginationInfo",
+  PaginationPage = "PaginationPage",
 }

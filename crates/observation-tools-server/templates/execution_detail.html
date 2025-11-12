@@ -1,43 +1,6 @@
 {% extends "base.html" %} {% block title %}{{ execution.name }}{% endblock %} {% block content %}
-<script>
-  // Handle side panel
-  function closeSidePanel() {
-    const container = document.querySelector(".panel-container");
-    const panel = document.querySelector(".side-panel");
-    const content = document.querySelector("#side-panel-content");
 
-    container.classList.remove("with-sidebar");
-    panel.classList.remove("active");
-
-    // Only clear the content, not the entire panel structure
-    if (content) {
-      content.innerHTML = "";
-    }
-
-    // Remove active class from all links
-    document.querySelectorAll(".observation-link").forEach((link) => {
-      link.classList.remove("active");
-    });
-  }
-
-  // Add event listener after HTMX loads content
-  document.body.addEventListener("htmx:afterSwap", function (event) {
-    if (event.detail.target.id === "side-panel-content") {
-      const container = document.querySelector(".panel-container");
-      const panel = document.querySelector(".side-panel");
-      container.classList.add("with-sidebar");
-      panel.classList.add("active");
-
-      // Remove active class from all links and add to clicked one
-      document.querySelectorAll(".observation-link").forEach((link) => {
-        link.classList.remove("active");
-      });
-      event.detail.elt.classList.add("active");
-    }
-  });
-</script>
-
-<div class="panel-container">
+<div class="panel-container {% if selected_observation %}with-sidebar{% endif %}">
   <div class="main-content">
     <p class="meta"><a href="/">home</a> / <a href="/exe">executions</a> / {{ execution.name }}</p>
 
@@ -65,13 +28,11 @@
       {% if observations %}
       <ul>
         {% for obs in observations %}
-        <li>
+        <li data-testid="ObservationListItem">
           <a
-            href="/exe/{{ execution.id }}/obs/{{ obs.id }}"
-            class="observation-link"
-            hx-get="/exe/{{ execution.id }}/obs/{{ obs.id }}"
-            hx-target="#side-panel-content"
-            hx-swap="innerHTML"
+            data-testid="ObservationListItemLink"
+            href="/exe/{{ execution.id }}?obs={{ obs.id }}"
+            class="observation-link {% if selected_observation and selected_observation.id == obs.id %}active{% endif %}"
             >{{ obs.name }}</a
           >
           <span class="meta">
@@ -85,17 +46,49 @@
         {% endfor %}
       </ul>
 
-      {% if has_next_page %}
-      <p><a href="#">load more →</a></p>
+      {% if total_count %}
+      <div class="pagination">
+        <p data-testid="PaginationInfo">
+          <span class="meta">
+            showing {{ offset + 1 }}-{{ offset + observations|length }} of {{ total_count }} (page
+            {{ page }})
+          </span>
+        </p>
+        <div>
+          {% if offset > 0 %}
+          <button
+            data-testid="PaginationPrev"
+            onclick="window.location.href='/exe/{{ execution.id }}?offset={{ offset - limit }}&limit={{ limit }}'"
+          >
+            ← prev
+          </button>
+          {% else %}
+          <button data-testid="PaginationPrev" disabled>← prev</button>
+          {% endif %} {% if has_next_page %}
+          <button
+            data-testid="PaginationNext"
+            onclick="window.location.href='/exe/{{ execution.id }}?offset={{ offset + limit }}&limit={{ limit }}'"
+          >
+            next →
+          </button>
+          {% else %}
+          <button data-testid="PaginationNext" disabled>next →</button>
+          {% endif %}
+        </div>
+      </div>
       {% endif %} {% else %}
       <p>no observations found.</p>
       {% endif %}
     </div>
   </div>
 
-  <div class="side-panel" id="side-panel">
-    <div class="side-panel-close" onclick="closeSidePanel()">×</div>
-    <div id="side-panel-content"></div>
+  {% if selected_observation %}
+  <div class="side-panel active" id="side-panel">
+    <a href="/exe/{{ execution.id }}" class="side-panel-close">×</a>
+    <div id="side-panel-content">
+      {% set observation = selected_observation %} {% include "_observation_content.html" %}
+    </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

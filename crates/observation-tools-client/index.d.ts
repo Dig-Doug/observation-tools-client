@@ -2,21 +2,40 @@
 /* eslint-disable */
 /** Client for observation-tools */
 export declare class Client {
-  beginExecution(name: string): ExecutionHandle
+  beginExecution(name: string): ExecutionHandle;
 }
 
 /** Builder for Client */
 export declare class ClientBuilder {
   /** Create a new client builder */
-  constructor()
+  constructor();
   /** Set the base URL for the server */
-  setBaseUrl(url: string): void
+  setBaseUrl(url: string): void;
   /** Build the client */
-  build(): Client
+  build(): Client;
 }
 
 /** Handle to an execution that can be used to send observations */
 export declare class ExecutionHandle {
   /** Get the execution ID as a string */
-  get idString(): string
+  get idString(): string;
+  /** Get the URL to the execution page */
+  get url(): string;
+  /**
+   * Create and send an observation
+   *
+   * # Arguments
+   * * `name` - The name of the observation
+   * * `payload_json` - The data to observe as a JSON string
+   * * `labels` - Optional array of labels for categorization
+   * * `source_file` - Optional source file path
+   * * `source_line` - Optional source line number
+   */
+  observe(
+    name: string,
+    payloadJson: string,
+    labels?: Array<string> | undefined | null,
+    sourceFile?: string | undefined | null,
+    sourceLine?: number | undefined | null,
+  ): string;
 }
