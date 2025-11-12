@@ -25,6 +25,9 @@ pub trait MetadataStorage: Send + Sync {
     offset: Option<usize>,
   ) -> StorageResult<Vec<Execution>>;
 
+  /// Count total number of executions
+  async fn count_executions(&self) -> StorageResult<usize>;
+
   /// Store multiple observations in a batch
   async fn store_observations(&self, observations: &[Observation]) -> StorageResult<()>;
 
@@ -38,6 +41,9 @@ pub trait MetadataStorage: Send + Sync {
     limit: Option<usize>,
     offset: Option<usize>,
   ) -> StorageResult<Vec<Observation>>;
+
+  /// Count total number of observations for an execution
+  async fn count_observations(&self, execution_id: ExecutionId) -> StorageResult<usize>;
 }
 
 /// Sled-based metadata storage implementation
@@ -110,6 +116,11 @@ impl MetadataStorage for SledStorage {
     Ok(executions)
   }
 
+  async fn count_executions(&self) -> StorageResult<usize> {
+    let tree = self.executions_tree()?;
+    Ok(tree.len())
+  }
+
   async fn store_observations(&self, observations: &[Observation]) -> StorageResult<()> {
     let obs_tree = self.observations_tree()?;
     let exec_obs_tree = self.execution_observations_tree()?;
@@ -163,5 +174,14 @@ impl MetadataStorage for SledStorage {
       .take(limit.unwrap_or(100))
       .collect();
     Ok(observations)
+  }
+
+  async fn count_observations(&self, execution_id: ExecutionId) -> StorageResult<usize> {
+    let exec_obs_tree = self.execution_observations_tree()?;
+    let prefix = format!("{}:", execution_id);
+    let count = exec_obs_tree
+      .scan_prefix(prefix.as_bytes())
+      .count();
+    Ok(count)
   }
 }

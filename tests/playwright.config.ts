@@ -1,9 +1,10 @@
-import { defineConfig } from "@playwright/test";
+import {defineConfig} from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./specs",
-  use: {
-    video: "retain-on-failure",
-  },
-  timeout: 60000,
+    fullyParallel: !process.env.SERVER_URL,
+    testDir: "./specs",
+    use: {
+        video: "retain-on-failure",
+    },
+    timeout: 60000,
 });

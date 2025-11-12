@@ -3,7 +3,7 @@
 
 <div
   id="executions-list"
-  hx-get="/exe"
+  hx-get="/exe?offset={{ offset }}&limit={{ limit }}"
   hx-trigger="every 2s"
   hx-select="#executions-list"
   hx-swap="outerHTML"
@@ -18,10 +18,30 @@
     {% endfor %}
   </ul>
 
-  {% if has_next_page %}
-  <p><a href="#">load more →</a></p>
-  {% endif %} {% else %}
-  <p>no executions found.</p>
+  {% if total_count %}
+  <div class="pagination">
+    <p data-testid="PaginationInfo">
+      <span class="meta">
+        showing {{ offset + 1 }}-{{ offset + executions|length }} of {{ total_count }}
+        (page {{ page }})
+      </span>
+    </p>
+    <div>
+      {% if offset > 0 %}
+      <button data-testid="PaginationPrev" onclick="window.location.href='/exe?offset={{ offset - limit }}&limit={{ limit }}'">← prev</button>
+      {% else %}
+      <button data-testid="PaginationPrev" disabled>← prev</button>
+      {% endif %}
+      {% if has_next_page %}
+      <button data-testid="PaginationNext" onclick="window.location.href='/exe?offset={{ offset + limit }}&limit={{ limit }}'">next →</button>
+      {% else %}
+      <button data-testid="PaginationNext" disabled>next →</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <p data-testid="ExecutionsListEmpty">no executions found.</p>
   {% endif %}
 </div>
 {% endblock %}

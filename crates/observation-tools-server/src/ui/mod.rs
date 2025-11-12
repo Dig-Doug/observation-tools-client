@@ -52,11 +52,12 @@ pub async fn list_executions(
     Query(query): Query<ListExecutionsQuery>,
 ) -> Result<Html<String>, AppError> {
     let limit = query.limit.unwrap_or(100);
-    tracing::debug!(limit = limit, offset = ?query.offset, "Rendering executions list page");
+    let offset = query.offset.unwrap_or(0);
+    tracing::debug!(limit = limit, offset = offset, "Rendering executions list page");
 
     // Fetch one extra to determine if there are more pages
     let mut executions = metadata
-        .list_executions(Some(limit + 1), query.offset)
+        .list_executions(Some(limit + 1), Some(offset))
         .await?;
 
     let has_next_page = executions.len() > limit;
@@ -64,7 +65,11 @@ pub async fn list_executions(
         executions.pop();
     }
 
-    tracing::debug!(count = executions.len(), "Retrieved executions for UI");
+    // Get total count for pagination info
+    let total_count = metadata.count_executions().await?;
+    let page = (offset / limit) + 1;
+
+    tracing::debug!(count = executions.len(), total_count = total_count, page = page, "Retrieved executions for UI");
 
     let env = templates.acquire_env().unwrap();
     let tmpl = env.get_template("executions_list.html").unwrap();
@@ -73,10 +78,23 @@ pub async fn list_executions(
         .render(context! {
             executions => executions,
             has_next_page => has_next_page,
+            total_count => total_count,
+            offset => offset,
+            limit => limit,
+            page => page,
         })
         .unwrap();
 
     Ok(Html(html))
+}
+
+/// Query parameters for execution detail page
+#[derive(Debug, serde::Deserialize)]
+pub struct ExecutionDetailQuery {
+    #[serde(flatten)]
+    list_query: ListObservationsQuery,
+    /// Optional observation ID to display in side panel
+    obs: Option<String>,
 }
 
 /// Execution detail page
@@ -85,18 +103,19 @@ pub async fn execution_detail(
     State(metadata): State<Arc<dyn MetadataStorage>>,
     State(templates): State<Arc<AutoReloader>>,
     Path(id): Path<String>,
-    Query(query): Query<ListObservationsQuery>,
+    Query(query): Query<ExecutionDetailQuery>,
 ) -> Result<Html<String>, AppError> {
     tracing::debug!(execution_id = %id, "Rendering execution detail page");
 
     let execution_id = ExecutionId::parse(&id)?;
     let execution = metadata.get_execution(execution_id).await?;
 
-    let limit = query.limit.unwrap_or(100);
+    let limit = query.list_query.limit.unwrap_or(100);
+    let offset = query.list_query.offset.unwrap_or(0);
 
     // Fetch observations with one extra to check for more pages
     let mut observations = metadata
-        .list_observations(execution_id, Some(limit + 1), query.offset)
+        .list_observations(execution_id, Some(limit + 1), Some(offset))
         .await?;
 
     let has_next_page = observations.len() > limit;
@@ -104,8 +123,24 @@ pub async fn execution_detail(
         observations.pop();
     }
 
+    // Get total count for pagination info
+    let total_count = metadata.count_observations(execution_id).await?;
+    let page = (offset / limit) + 1;
+
+    // If observation ID is provided, load the observation for the side panel
+    let selected_observation = if let Some(obs_id) = query.obs {
+        let observation_id = observation_tools_shared::ObservationId::parse(&obs_id)?;
+        let obs_list = metadata.get_observations(&[observation_id]).await?;
+        obs_list.into_iter().next()
+    } else {
+        None
+    };
+
     tracing::debug!(
         observation_count = observations.len(),
+        total_count = total_count,
+        page = page,
+        has_selected_obs = selected_observation.is_some(),
         execution_name = %execution.name,
         "Retrieved execution details for UI"
     );
@@ -118,6 +153,11 @@ pub async fn execution_detail(
             execution => execution,
             observations => observations,
             has_next_page => has_next_page,
+            total_count => total_count,
+            offset => offset,
+            limit => limit,
+            page => page,
+            selected_observation => selected_observation,
         })
         .unwrap();
 

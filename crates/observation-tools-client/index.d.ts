@@ -19,4 +19,15 @@ export declare class ClientBuilder {
 export declare class ExecutionHandle {
   /** Get the execution ID as a string */
   get idString(): string
+  /**
+   * Create and send an observation
+   *
+   * # Arguments
+   * * `name` - The name of the observation
+   * * `payload_json` - The data to observe as a JSON string
+   * * `labels` - Optional array of labels for categorization
+   * * `source_file` - Optional source file path
+   * * `source_line` - Optional source line number
+   */
+  observe(name: string, payloadJson: string, labels?: Array<string> | undefined | null, sourceFile?: string | undefined | null, sourceLine?: number | undefined | null): string
 }

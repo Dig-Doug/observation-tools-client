@@ -8,9 +8,18 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Unique identifier for an execution (UUIDv7)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[serde(transparent)]
-pub struct ExecutionId(pub Uuid);
+pub struct ExecutionId(Uuid);
+
+impl Serialize for ExecutionId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
 
 impl ExecutionId {
     /// Generate a new UUIDv7 execution ID
@@ -32,14 +41,23 @@ impl Default for ExecutionId {
 
 impl std::fmt::Display for ExecutionId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.0.as_simple().to_string())
     }
 }
 
 /// Unique identifier for an observation (UUIDv7)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[serde(transparent)]
-pub struct ObservationId(pub Uuid);
+pub struct ObservationId(Uuid);
+
+impl Serialize for ObservationId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
 
 impl ObservationId {
     /// Generate a new UUIDv7 observation ID
@@ -62,7 +80,7 @@ impl Default for ObservationId {
 
 impl std::fmt::Display for ObservationId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.0.as_simple().to_string())
     }
 }
 

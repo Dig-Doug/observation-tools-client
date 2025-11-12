@@ -179,6 +179,7 @@
         cursor: pointer;
         font-size: 1.2rem;
         margin-bottom: 1rem;
+        text-decoration: none;
       }
 
       .observation-link {
@@ -187,6 +188,26 @@
 
       .observation-link.active {
         font-weight: bold;
+      }
+
+      .pagination {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .pagination p {
+        margin-bottom: 0.5rem;
+      }
+
+      .pagination div {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
     </style>
   </head>
