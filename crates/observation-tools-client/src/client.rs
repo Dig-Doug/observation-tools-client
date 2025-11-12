@@ -36,7 +36,9 @@ struct ClientInner {
 impl Client {
   #[napi(js_name = "beginExecution")]
   pub fn begin_execution_wasm(&self, name: String) -> napi::Result<ExecutionHandle> {
-    self.begin_execution(name).map_err(|e| napi::Error::from_reason(e.to_string()))
+    self
+      .begin_execution(name)
+      .map_err(|e| napi::Error::from_reason(e.to_string()))
   }
 }
 

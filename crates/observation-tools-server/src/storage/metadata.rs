@@ -179,9 +179,7 @@ impl MetadataStorage for SledStorage {
   async fn count_observations(&self, execution_id: ExecutionId) -> StorageResult<usize> {
     let exec_obs_tree = self.execution_observations_tree()?;
     let prefix = format!("{}:", execution_id);
-    let count = exec_obs_tree
-      .scan_prefix(prefix.as_bytes())
-      .count();
+    let count = exec_obs_tree.scan_prefix(prefix.as_bytes()).count();
     Ok(count)
   }
 }

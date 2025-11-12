@@ -6,12 +6,19 @@
 {% if observation.source %}
 <p>
   <span class="meta">source:</span>
-  <code><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span data-testid="ObservationSourceLine">{{ observation.source.line }}</span></code>
+  <code
+    ><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span
+      data-testid="ObservationSourceLine"
+      >{{ observation.source.line }}</span
+    ></code
+  >
 </p>
 {% endif %} {% if observation.parent_span_id %}
 <p><span class="meta">parent span:</span> <code>{{ observation.parent_span_id }}</code></p>
 {% endif %} {% if observation.labels %}
-<p data-testid="ObservationLabels"><span class="meta">labels:</span> {{ observation.labels|join(", ") }}</p>
+<p data-testid="ObservationLabels">
+  <span class="meta">labels:</span> {{ observation.labels|join(", ") }}
+</p>
 {% endif %} {% if observation.metadata %}
 <h3>metadata</h3>
 <ul>

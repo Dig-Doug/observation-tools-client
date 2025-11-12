@@ -30,6 +30,8 @@ tower-http.workspace = true
 tower.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
+utoipa.workspace = true
+utoipa-swagger-ui.workspace = true
 
 [build-dependencies]
 minijinja-embed.workspace = true

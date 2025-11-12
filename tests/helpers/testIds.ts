@@ -16,6 +16,7 @@ export enum TestId {
 
   // Observations
   ObservationListItem = "ObservationListItem",
+  ObservationListItemLink = "ObservationListItemLink",
   ObservationId = "ObservationId",
   ObservationPayload = "ObservationPayload",
   ObservationLabels = "ObservationLabels",

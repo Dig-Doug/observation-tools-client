@@ -50,10 +50,10 @@ macro_rules! observe {
 
 /// Register a global execution for the current thread
 pub fn register_global_execution(execution: ExecutionHandle) -> Result<()> {
-    context::set_global_execution(execution)
+  context::set_global_execution(execution)
 }
 
 /// Get the current execution from context
 pub fn current_execution() -> Option<ExecutionHandle> {
-    context::get_current_execution()
+  context::get_current_execution()
 }
