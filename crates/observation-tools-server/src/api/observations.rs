@@ -32,7 +32,6 @@ pub async fn create_observations(
         count = req.observations.len(),
         "Creating observations batch"
     );
-    trace!("{:#?}", req);
 
     let _execution_id = ExecutionId::parse(&execution_id)?;
 

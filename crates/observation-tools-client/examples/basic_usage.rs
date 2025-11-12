@@ -1,6 +1,6 @@
 //! Basic usage example for observation-tools-client
 
-use observation_tools_client::observe;
+use observation_tools_client::{observe, ClientBuilder};
 use observation_tools_client::Client;
 
 #[tokio::main]
@@ -14,7 +14,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     // Create a client
-    let client = Client::builder()
+    let client = ClientBuilder::default()
         .base_url("http://localhost:3000")
         .build()?;
 

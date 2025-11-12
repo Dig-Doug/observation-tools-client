@@ -5,6 +5,7 @@ use crate::storage::MetadataStorage;
 use axum::extract::Path;
 use axum::extract::Query;
 use axum::extract::State;
+use axum::http::HeaderMap;
 use axum::response::Html;
 use axum::response::IntoResponse;
 use minijinja::context;
@@ -124,11 +125,12 @@ pub async fn execution_detail(
 }
 
 /// Observation detail (for the side panel)
-#[tracing::instrument(skip(metadata, templates))]
+#[tracing::instrument(skip(metadata, templates, headers))]
 pub async fn observation_detail(
     State(metadata): State<Arc<dyn MetadataStorage>>,
     State(templates): State<Arc<AutoReloader>>,
     Path((execution_id, observation_id)): Path<(String, String)>,
+    headers: HeaderMap,
 ) -> Result<Html<String>, AppError> {
     tracing::debug!(
         execution_id = %execution_id,
@@ -148,7 +150,22 @@ pub async fn observation_detail(
     tracing::debug!(observation_name = %observation.name, "Retrieved observation for UI");
 
     let env = templates.acquire_env().unwrap();
-    let tmpl = env.get_template("observation_detail.html").unwrap();
+
+    // Check if this is an HTMX request (for side panel)
+    let is_htmx_request = headers
+        .get("hx-request")
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v == "true")
+        .unwrap_or(false);
+
+    // Use partial template for HTMX requests, full template otherwise
+    let template_name = if is_htmx_request {
+        "observation_detail_partial.html"
+    } else {
+        "observation_detail.html"
+    };
+
+    let tmpl = env.get_template(template_name).unwrap();
 
     let html = tmpl
         .render(context! {

@@ -1,56 +1,101 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}{{ execution.name }}{% endblock %} {% block content %}
+<script>
+  // Handle side panel
+  function closeSidePanel() {
+    const container = document.querySelector(".panel-container");
+    const panel = document.querySelector(".side-panel");
+    const content = document.querySelector("#side-panel-content");
 
-{% block title %}{{ execution.name }}{% endblock %}
+    container.classList.remove("with-sidebar");
+    panel.classList.remove("active");
 
-{% block content %}
-<p class="meta">
-    <a href="/">home</a> /
-    <a href="/exe">executions</a> /
-    {{ execution.name }}
-</p>
+    // Only clear the content, not the entire panel structure
+    if (content) {
+      content.innerHTML = "";
+    }
 
-<h1>{{ execution.name }}</h1>
+    // Remove active class from all links
+    document.querySelectorAll(".observation-link").forEach((link) => {
+      link.classList.remove("active");
+    });
+  }
 
-<p><span class="meta">id:</span> <code>{{ execution.id }}</code></p>
-<p><span class="meta">created:</span> {{ execution.created_at }}</p>
+  // Add event listener after HTMX loads content
+  document.body.addEventListener("htmx:afterSwap", function (event) {
+    if (event.detail.target.id === "side-panel-content") {
+      const container = document.querySelector(".panel-container");
+      const panel = document.querySelector(".side-panel");
+      container.classList.add("with-sidebar");
+      panel.classList.add("active");
 
-{% if execution.metadata %}
-<h3>metadata</h3>
-<ul>
-    {% for key, value in execution.metadata %}
-    <li>{{ key }}: {{ value }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
+      // Remove active class from all links and add to clicked one
+      document.querySelectorAll(".observation-link").forEach((link) => {
+        link.classList.remove("active");
+      });
+      event.detail.elt.classList.add("active");
+    }
+  });
+</script>
 
-<hr>
+<div class="panel-container">
+  <div class="main-content">
+    <p class="meta"><a href="/">home</a> / <a href="/exe">executions</a> / {{ execution.name }}</p>
 
-<h2>observations</h2>
+    <h1 data-testid="ExecutionDetailTitle">{{ execution.name }}</h1>
 
-<div id="observations-list">
-    {% if observations %}
+    <p>
+      <span class="meta">id:</span> <code data-testid="ExecutionDetailId">{{ execution.id }}</code>
+    </p>
+    <p><span class="meta">created:</span> {{ execution.created_at }}</p>
+
+    {% if execution.metadata %}
+    <h3>metadata</h3>
     <ul>
+      {% for key, value in execution.metadata %}
+      <li>{{ key }}: {{ value }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <hr />
+
+    <h2>observations</h2>
+
+    <div id="observations-list">
+      {% if observations %}
+      <ul>
         {% for obs in observations %}
         <li>
-            <a href="/exe/{{ execution.id }}/obs/{{ obs.id }}">{{ obs.name }}</a>
-            <span class="meta">
-                — {{ obs.payload.mime_type }}
-                {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
-                — {{ obs.created_at }}
-            </span>
-            {% if obs.labels %}
-            <br><span class="meta">labels: {{ obs.labels|join(", ") }}</span>
-            {% endif %}
+          <a
+            href="/exe/{{ execution.id }}/obs/{{ obs.id }}"
+            class="observation-link"
+            hx-get="/exe/{{ execution.id }}/obs/{{ obs.id }}"
+            hx-target="#side-panel-content"
+            hx-swap="innerHTML"
+            >{{ obs.name }}</a
+          >
+          <span class="meta">
+            — {{ obs.payload.mime_type }} {% if obs.source %}— {{ obs.source.file }}:{{
+            obs.source.line }}{% endif %} — {{ obs.created_at }}
+          </span>
+          {% if obs.labels %}
+          <br /><span class="meta">labels: {{ obs.labels|join(", ") }}</span>
+          {% endif %}
         </li>
         {% endfor %}
-    </ul>
+      </ul>
 
-    {% if has_next_page %}
-    <p><a href="#">load more →</a></p>
-    {% endif %}
+      {% if has_next_page %}
+      <p><a href="#">load more →</a></p>
+      {% endif %} {% else %}
+      <p>no observations found.</p>
+      {% endif %}
+    </div>
+  </div>
 
-    {% else %}
-    <p>no observations found.</p>
-    {% endif %}
+  <div class="side-panel" id="side-panel">
+    <div class="side-panel-close" onclick="closeSidePanel()">×</div>
+    <div id="side-panel-content"></div>
+  </div>
 </div>
 {% endblock %}

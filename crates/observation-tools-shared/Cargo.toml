@@ -10,4 +10,8 @@ chrono = { workspace = true, features = ["serde"] }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-uuid.workspace = true
+uuid = { workspace = true, features = ["v7"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+uuid = { workspace = true, features = ["v7", "rng-getrandom"] }
+getrandom = { version = "0.3.4", features = ["wasm_js"] }
