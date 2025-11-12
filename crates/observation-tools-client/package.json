@@ -1,5 +1,5 @@
 {
-  "name": "observation-tools-client",
+  "name": "@observation-tools/client",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "repository": {

@@ -13,8 +13,8 @@ anyhow.workspace = true
 async-channel = "2.3"
 chrono.workspace = true
 log.workspace = true
-napi = { version = "2", features = ["async", "tokio_rt"] }
-napi-derive = "2"
+napi = { version = "3", features = ["async", "tokio_rt"] }
+napi-derive = { version = "3", features = ["type-def"] }
 observation-tools-shared.workspace = true
 reqwest = { workspace = true, features = ["json"] }
 serde.workspace = true
