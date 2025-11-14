@@ -15,7 +15,6 @@ async-trait.workspace = true
 axum.workspace = true
 bytes.workspace = true
 clap.workspace = true
-futures.workspace = true
 minijinja-autoreload = { workspace = true }
 minijinja-embed = {workspace = true}
 minijinja.workspace = true
@@ -27,7 +26,6 @@ sled.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tower-http.workspace = true
-tower.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
 utoipa.workspace = true
@@ -35,3 +33,5 @@ utoipa-swagger-ui.workspace = true
 
 [build-dependencies]
 minijinja-embed.workspace = true
+serde_json.workspace = true
+

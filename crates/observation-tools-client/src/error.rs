@@ -26,10 +26,6 @@ pub enum Error {
   #[error("Failed to send observation: channel closed")]
   ChannelClosed,
 
-  /// Global execution already registered
-  #[error("Global execution already registered")]
-  GlobalExecutionAlreadyRegistered,
-
   /// No execution context available
   #[error("No execution context available")]
   NoExecutionContext,

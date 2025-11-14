@@ -1,7 +1,6 @@
 //! Basic usage example for observation-tools-client
 
 use observation_tools_client::observe;
-use observation_tools_client::Client;
 use observation_tools_client::ClientBuilder;
 
 #[tokio::main]

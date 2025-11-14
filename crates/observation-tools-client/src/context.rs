@@ -2,26 +2,39 @@
 
 use crate::error::Result;
 use crate::execution::ExecutionHandle;
-use crate::Error;
-use std::cell::RefCell;
+use std::sync::{OnceLock, RwLock};
 
-thread_local! {
-    static EXECUTION_CONTEXT: RefCell<Option<ExecutionHandle>> = RefCell::new(None);
+static EXECUTION_CONTEXT: OnceLock<RwLock<Option<ExecutionHandle>>> = OnceLock::new();
+
+fn get_context() -> &'static RwLock<Option<ExecutionHandle>> {
+  EXECUTION_CONTEXT.get_or_init(|| RwLock::new(None))
 }
 
-/// Set the global execution for the current thread
+/// Set the global execution shared across all threads
+///
+/// This replaces any previously set execution context.
+/// The execution context is shared across all threads in the process.
 pub(crate) fn set_global_execution(execution: ExecutionHandle) -> Result<()> {
-  EXECUTION_CONTEXT.with(|ctx| {
-    let mut ctx = ctx.borrow_mut();
-    if ctx.is_some() {
-      return Err(Error::GlobalExecutionAlreadyRegistered);
-    }
-    *ctx = Some(execution);
-    Ok(())
-  })
+  let context = get_context();
+  let mut ctx = context.write().expect("Failed to acquire write lock");
+  *ctx = Some(execution);
+  Ok(())
 }
 
 /// Get the current execution from context
+///
+/// This returns a clone of the execution handle that is shared across all threads.
 pub(crate) fn get_current_execution() -> Option<ExecutionHandle> {
-  EXECUTION_CONTEXT.with(|ctx| ctx.borrow().clone())
+  let context = get_context();
+  let ctx = context.read().expect("Failed to acquire read lock");
+  ctx.clone()
+}
+
+/// Clear the global execution context
+///
+/// This clears the execution context that is shared across all threads.
+pub(crate) fn clear_global_execution() {
+  let context = get_context();
+  let mut ctx = context.write().expect("Failed to acquire write lock");
+  *ctx = None;
 }

@@ -4,10 +4,12 @@
 //! observations.
 
 use clap::Parser;
+use observation_tools_server::api::ApiDoc;
 use observation_tools_server::Config;
 use observation_tools_server::Server;
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use utoipa::OpenApi;
 
 #[derive(Parser, Debug)]
 #[command(name = "observation-tools")]
@@ -24,6 +26,12 @@ enum Commands {
     /// Directory for storing data
     #[arg(short, long, default_value = ".observation-tools")]
     data_dir: PathBuf,
+  },
+  /// Export the OpenAPI spec to a file
+  ExportOpenapi {
+    /// Output file path for the OpenAPI spec
+    #[arg(short, long, default_value = "openapi.json")]
+    output: PathBuf,
   },
 }
 
@@ -54,8 +62,16 @@ async fn main() -> anyhow::Result<()> {
         .with_bind_addr(bind_addr)
         .with_data_dir(data_dir);
 
+      let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
       let server = Server::new(config);
-      server.run().await?;
+      server.run(listener).await?;
+    }
+    Commands::ExportOpenapi { output } => {
+      let openapi = ApiDoc::openapi();
+      let json = serde_json::to_string_pretty(&openapi)?;
+      std::fs::write(&output, json)?;
+      tracing::info!("OpenAPI spec exported to {}", output.display());
+      println!("OpenAPI spec exported to {}", output.display());
     }
   }
 

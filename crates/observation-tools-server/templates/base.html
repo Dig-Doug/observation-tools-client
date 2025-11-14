@@ -50,9 +50,15 @@
         font-family: monospace;
         font-size: 14px;
         line-height: 1.5;
-        padding: 2rem;
         background: var(--bg-color);
         color: var(--text-color);
+        overflow-x: hidden;
+      }
+      body > nav {
+        padding: 1rem 2rem;
+      }
+      body > main {
+        padding: 2rem;
       }
       a {
         color: var(--link-color);
@@ -157,25 +163,30 @@
       }
 
       .panel-container.with-sidebar {
-        grid-template-columns: 1fr 400px;
+        margin-right: 50%;
       }
 
       .side-panel {
         display: none;
         border-left: 1px solid var(--border-color);
-        padding-left: 2rem;
-        position: sticky;
-        top: 2rem;
-        max-height: calc(100vh - 4rem);
-        overflow-y: auto;
+        padding: 2rem;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 50%;
+        overflow: hidden;
+        background: var(--bg-color);
       }
 
       .side-panel.active {
-        display: block;
+        display: flex;
+        flex-direction: column;
       }
 
       .side-panel-close {
-        float: right;
+        display: block;
+        text-align: right;
         cursor: pointer;
         font-size: 1.2rem;
         margin-bottom: 1rem;
