@@ -13,7 +13,7 @@ anyhow.workspace = true
 async-channel = "2.3"
 chrono.workspace = true
 log.workspace = true
-napi = { version = "3", features = ["async", "tokio_rt"] }
+napi = { version = "3", features = ["async", "tokio_rt", "anyhow"] }
 napi-derive = { version = "3", features = ["type-def"] }
 observation-tools-shared.workspace = true
 progenitor-client.workspace = true
@@ -38,4 +38,5 @@ utoipa.workspace = true
 anyhow.workspace = true
 observation-tools-server.workspace = true
 tempfile = { workspace = true }
+test-log.workspace = true
 tracing-subscriber.workspace = true

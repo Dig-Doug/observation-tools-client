@@ -58,17 +58,13 @@ impl TestServer {
   }
 
   /// Create an OpenAPI client connected to this test server
-  fn create_api_client(&self) -> observation_tools_client::server_client::Client {
-    let base_url = format!("http://{}", self.addr);
-    observation_tools_client::server_client::Client::new_with_client(
-      &base_url,
-      reqwest::Client::new(),
-      observation_tools_client::server_client::ObservationToolsServerClientOpts {},
-    )
+  fn create_api_client(&self) -> anyhow::Result<observation_tools_client::server_client::Client> {
+      let base_url = format!("http://{}", self.addr);
+      observation_tools_client::server_client::create_client(&base_url)
   }
 }
 
-#[tokio::test]
+#[test_log::test(tokio::test)]
 async fn test_create_execution_with_client() -> anyhow::Result<()> {
   let server = TestServer::new().await;
   let client = server.create_client()?;
@@ -79,7 +75,7 @@ async fn test_create_execution_with_client() -> anyhow::Result<()> {
     .await?;
 
   let execution_id = execution_handle.id();
-  let api_client = server.create_api_client();
+  let api_client = server.create_api_client()?;
   let get_response = api_client
     .get_execution()
     .id(&execution_id.to_string())
@@ -94,7 +90,7 @@ async fn test_create_execution_with_client() -> anyhow::Result<()> {
   Ok(())
 }
 
-#[tokio::test]
+#[test_log::test(tokio::test)]
 async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
   let server = TestServer::new().await;
   let client = server.create_client()?;
@@ -123,7 +119,7 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client();
+    let api_client = server.create_api_client()?;
   let list_response = api_client
     .list_observations()
     .execution_id(&execution_id.to_string())
@@ -145,7 +141,7 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
   Ok(())
 }
 
-#[tokio::test]
+#[test_log::test(tokio::test)]
 async fn test_create_many_observations() -> anyhow::Result<()> {
   let server = TestServer::new().await;
   let client = server.create_client()?;
@@ -169,7 +165,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   .await?;
   client.shutdown().await?;
 
-  let api_client = server.create_api_client();
+    let api_client = server.create_api_client()?;
   let list_response = api_client
     .list_observations()
     .execution_id(&execution.id().to_string())
@@ -185,7 +181,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   Ok(())
 }
 
-#[tokio::test]
+#[test_log::test(tokio::test)]
 async fn test_list_executions() -> anyhow::Result<()> {
   let server = TestServer::new().await;
   let client = server.create_client()?;
@@ -200,7 +196,7 @@ async fn test_list_executions() -> anyhow::Result<()> {
     expected_names.insert(exec_name);
   }
 
-  let api_client = server.create_api_client();
+    let api_client = server.create_api_client()?;
   let list_response = api_client.list_executions().send().await?;
   assert_eq!(list_response.executions.len(), expected_names.len());
   let exec_names: HashSet<String> = list_response
@@ -214,7 +210,7 @@ async fn test_list_executions() -> anyhow::Result<()> {
   Ok(())
 }
 
-#[tokio::test]
+#[test_log::test(tokio::test)]
 async fn test_concurrent_executions() -> anyhow::Result<()> {
   const TASK_1_NAME: &str = "concurrent/task1";
   const TASK_2_NAME: &str = "concurrent/task2";
@@ -267,7 +263,7 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client();
+    let api_client = server.create_api_client()?;
   let count_observations_with_name =
     async |execution_id: ExecutionId, name: &str| -> anyhow::Result<usize> {
       let response = api_client

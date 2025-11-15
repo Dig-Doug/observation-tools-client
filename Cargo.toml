@@ -39,6 +39,7 @@ sled = "0.34"
 syn = "2.0.110"
 napi-build = "2.3.1"
 tempfile = "3.17"
+test-log = { version = "0.2", features = ["trace"] }
 thiserror = "2.0"
 tokio = { version = "1.42", features = ["full"] }
 tower = "0.5"
