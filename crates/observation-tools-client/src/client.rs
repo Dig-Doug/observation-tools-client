@@ -3,11 +3,15 @@
 use crate::error::Result;
 use crate::execution::{BeginExecution, ExecutionHandle};
 use async_channel;
-use log::{error, trace};
+use log::{error, info, trace};
 use napi_derive::napi;
 use observation_tools_shared::models::Execution;
 use observation_tools_shared::models::Observation;
 use std::sync::Arc;
+
+// Re-export constants from shared crate for convenience
+pub use observation_tools_shared::BATCH_SIZE;
+pub use observation_tools_shared::BLOB_THRESHOLD_BYTES;
 
 /// Message types for the background uploader task
 pub(crate) enum UploaderMessage {
@@ -189,7 +193,7 @@ impl ClientBuilder {
         base_url,
         uploader_tx: tx,
         shutdown_rx: std::sync::Mutex::new(Some(shutdown_rx)),
-          _runtime: runtime,
+        _runtime: runtime,
       }),
     })
   }
@@ -199,13 +203,13 @@ async fn uploader_task(
   api_client: crate::server_client::Client,
   rx: async_channel::Receiver<UploaderMessage>,
 ) {
+  info!("Uploader task started");
   let flush_observations =
     async |buffer: &mut Vec<Observation>, senders: &mut Vec<tokio::sync::oneshot::Sender<()>>| {
       if buffer.is_empty() {
         return;
       }
-      let result =
-        upload_observations(&api_client, buffer.drain(..).collect()).await;
+      let result = upload_observations(&api_client, buffer.drain(..).collect()).await;
       match result {
         Ok(()) => {
           // Signal all senders that observations were uploaded
@@ -222,7 +226,6 @@ async fn uploader_task(
     };
   let mut observation_buffer: Vec<Observation> = Vec::new();
   let mut sender_buffer: Vec<tokio::sync::oneshot::Sender<()>> = Vec::new();
-  const BATCH_SIZE: usize = 100;
   loop {
     let msg = rx.recv().await.ok();
     match msg {
@@ -299,7 +302,54 @@ async fn upload_observations(
   }
 
   // Upload each batch
-  for (execution_id, observations) in by_execution {
+  for (execution_id, mut observations) in by_execution {
+    // Check each observation's payload size and upload large payloads as blobs
+    for obs in &mut observations {
+      trace!(
+        "Processing observation {} with payload size {} bytes",
+        obs.id,
+        obs.payload.size
+      );
+
+      if obs.payload.size >= BLOB_THRESHOLD_BYTES && !obs.payload.data.is_empty() {
+        trace!(
+          "Uploading large payload ({} bytes) for observation {} as blob",
+          obs.payload.size,
+          obs.id
+        );
+
+        // Upload the payload data as a blob
+        let blob_data = obs.payload.data.as_bytes().to_vec();
+        if let Err(e) = client
+          .upload_observation_blob(&execution_id.to_string(), &obs.id.to_string(), blob_data)
+          .await
+        {
+          error!(
+            "Failed to upload blob for observation {}: {}",
+            obs.id, e
+          );
+          return Err(crate::error::Error::Config(format!(
+            "Failed to upload blob for observation {}: {}",
+            obs.id, e
+          )));
+        }
+
+        // Clear the payload data since it's now stored as a blob
+        obs.payload.data = String::new();
+
+        trace!(
+          "Successfully uploaded blob for observation {}, payload.data now empty",
+          obs.id
+        );
+      } else {
+        trace!(
+          "Observation {} has small payload ({} bytes), keeping data inline",
+          obs.id,
+          obs.payload.size
+        );
+      }
+    }
+
     // Convert from shared type to OpenAPI type via serde
     let observations_json = serde_json::to_value(&observations)?;
     let openapi_observations: Vec<crate::server_client::types::Observation> =

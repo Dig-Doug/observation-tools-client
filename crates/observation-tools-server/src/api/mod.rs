@@ -6,6 +6,7 @@ pub mod types;
 
 use crate::storage::BlobStorage;
 use crate::storage::MetadataStorage;
+use axum::extract::DefaultBodyLimit;
 use axum::extract::FromRef;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -142,16 +143,34 @@ pub struct ApiDoc;
 
 /// Build the API router
 pub fn build_router(state: AppState) -> Router {
+  use observation_tools_shared::{MAX_BLOB_SIZE, MAX_OBSERVATION_BATCH_SIZE};
+
+  // Blob upload endpoint with calculated body size limit
+  // Based on MAX_BLOB_SIZE (500MB) for very large payloads
+  let blob_upload_route = Router::new()
+    .route(
+      "/exe/{execution_id}/obs/{observation_id}/blob",
+      post(observations::upload_observation_blob),
+    )
+    .layer(DefaultBodyLimit::max(MAX_BLOB_SIZE));
+
+  // Observation creation endpoint with calculated body size limit
+  // Based on BATCH_SIZE * MAX_OBSERVATION_SIZE
+  // = 100 observations * (64KB payload + 4KB metadata) ≈ 6.8MB
+  let observation_create_route = Router::new()
+    .route(
+      "/exe/{execution_id}/obs",
+      post(observations::create_observations),
+    )
+    .layer(DefaultBodyLimit::max(MAX_OBSERVATION_BATCH_SIZE));
+
   Router::new()
     // Execution routes
     .route("/exe", post(executions::create_execution))
     .route("/exe", get(executions::list_executions))
     .route("/exe/{id}", get(executions::get_execution))
     // Observation routes
-    .route(
-      "/exe/{execution_id}/obs",
-      post(observations::create_observations),
-    )
+    .merge(observation_create_route) // Merge observation create route with custom body limit
     .route(
       "/exe/{execution_id}/obs",
       get(observations::list_observations),
@@ -160,6 +179,7 @@ pub fn build_router(state: AppState) -> Router {
       "/exe/{execution_id}/obs/{observation_id}",
       get(observations::get_observation),
     )
+    .merge(blob_upload_route) // Merge blob upload route with custom body limit
     .route(
       "/exe/{execution_id}/obs/{observation_id}/content",
       get(observations::get_observation_blob),

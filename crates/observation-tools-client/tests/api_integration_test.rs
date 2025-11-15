@@ -59,8 +59,8 @@ impl TestServer {
 
   /// Create an OpenAPI client connected to this test server
   fn create_api_client(&self) -> anyhow::Result<observation_tools_client::server_client::Client> {
-      let base_url = format!("http://{}", self.addr);
-      observation_tools_client::server_client::create_client(&base_url)
+    let base_url = format!("http://{}", self.addr);
+    observation_tools_client::server_client::create_client(&base_url)
   }
 }
 
@@ -119,7 +119,7 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-    let api_client = server.create_api_client()?;
+  let api_client = server.create_api_client()?;
   let list_response = api_client
     .list_observations()
     .execution_id(&execution_id.to_string())
@@ -150,12 +150,26 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
 
+  // Create a payload that is exactly 1 byte smaller than the blob threshold
+  // When serialized as JSON, a string becomes "string" (adds 2 bytes for quotes)
+  // So we need a string of length BLOB_THRESHOLD_BYTES - 1 - 2 = 65533
+  let payload_data = "x".repeat(observation_tools_client::BLOB_THRESHOLD_BYTES - 1 - 2);
+
+  // Verify the serialized size is exactly what we expect
+  let serialized_size = serde_json::to_string(&payload_data)?.len();
+  assert_eq!(
+    serialized_size,
+    observation_tools_client::BLOB_THRESHOLD_BYTES - 1,
+    "Payload should be exactly 1 byte smaller than blob threshold"
+  );
+
   let expected_names = observation_tools_client::with_execution(execution.clone(), async {
     let mut expected_names = HashSet::new();
-    for i in 0..50 {
+    // Create BATCH_SIZE observations to test batching behavior
+    for i in 0..observation_tools_client::BATCH_SIZE {
       let obs_name = format!("observation-{}", i);
       observation_tools_client::ObservationBuilder::new(&obs_name)
-        .payload(format!("data {}", i))
+        .payload(&payload_data)
         .build()?;
       expected_names.insert(obs_name);
     }
@@ -165,13 +179,29 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   .await?;
   client.shutdown().await?;
 
-    let api_client = server.create_api_client()?;
+  let api_client = server.create_api_client()?;
   let list_response = api_client
     .list_observations()
     .execution_id(&execution.id().to_string())
     .send()
     .await?;
   assert_eq!(list_response.observations.len(), expected_names.len());
+
+  // Verify all payloads are stored inline (not as blobs) since they're under the threshold
+  for obs in &list_response.observations {
+    assert!(
+      !obs.payload.data.is_empty(),
+      "Observation {} should have inline payload data (not stored as blob)",
+      obs.name
+    );
+    assert_eq!(
+      obs.payload.size,
+      observation_tools_client::BLOB_THRESHOLD_BYTES as u64 - 1,
+      "Observation {} payload size should be exactly 1 byte under threshold",
+      obs.name
+    );
+  }
+
   let obs_names: HashSet<String> = list_response
     .observations
     .iter()
@@ -196,7 +226,7 @@ async fn test_list_executions() -> anyhow::Result<()> {
     expected_names.insert(exec_name);
   }
 
-    let api_client = server.create_api_client()?;
+  let api_client = server.create_api_client()?;
   let list_response = api_client.list_executions().send().await?;
   assert_eq!(list_response.executions.len(), expected_names.len());
   let exec_names: HashSet<String> = list_response
@@ -263,7 +293,7 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-    let api_client = server.create_api_client()?;
+  let api_client = server.create_api_client()?;
   let count_observations_with_name =
     async |execution_id: ExecutionId, name: &str| -> anyhow::Result<usize> {
       let response = api_client
@@ -287,6 +317,98 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
   assert_eq!(
     count_observations_with_name(execution2.id(), TASK_2_NAME).await?,
     NUM_OBSERVATIONS
+  );
+
+  Ok(())
+}
+
+#[test_log::test(tokio::test)]
+async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
+  let server = TestServer::new().await;
+  let client = server.create_client()?;
+
+  let execution = client
+    .begin_execution("test-execution-with-large-payload")?
+    .wait_for_upload()
+    .await?;
+
+  let execution_id = execution.id();
+
+  // Create a large payload (>64KB threshold)
+  let large_data = "x".repeat(70_000);
+  let large_payload = serde_json::json!({
+    "data": large_data,
+    "size": large_data.len(),
+    "description": "This is a large payload that should be stored as a blob"
+  });
+
+  // Calculate the expected size (serialized JSON)
+  let expected_size = serde_json::to_string(&large_payload)?.len();
+
+  let observation_id = observation_tools_client::with_execution(execution, async {
+    observation_tools_client::ObservationBuilder::new("large-observation")
+      .payload(large_payload)
+      .label("test/large-payload")
+      .build()?
+      .wait_for_upload()
+      .await
+  })
+  .await?;
+
+  client.shutdown().await?;
+
+  // Verify the observation metadata was stored
+  let api_client = server.create_api_client()?;
+  let list_response = api_client
+    .list_observations()
+    .execution_id(&execution_id.to_string())
+    .send()
+    .await?;
+
+  assert_eq!(list_response.observations.len(), 1);
+  let obs = &list_response.observations[0];
+  assert_eq!(obs.name, "large-observation");
+  assert_eq!(obs.id.to_string(), observation_id.to_string());
+
+  // The payload.data should be empty because it was uploaded as a blob
+  assert_eq!(
+    obs.payload.data, "",
+    "Large payload data should be empty in metadata (stored as blob)"
+  );
+
+  // But the size should still be recorded
+  assert_eq!(
+    obs.payload.size, expected_size as u64,
+    "Payload size should be recorded correctly"
+  );
+
+  // Verify the blob can be retrieved via the content endpoint
+  let blob_url = format!(
+    "http://{}/api/exe/{}/obs/{}/content",
+    server.addr,
+    execution_id,
+    observation_id
+  );
+
+  let response = reqwest::get(&blob_url).await?;
+  assert!(
+    response.status().is_success(),
+    "Blob retrieval should succeed"
+  );
+
+  let content = response.text().await?;
+  let retrieved_payload: serde_json::Value = serde_json::from_str(&content)?;
+
+  // Verify the retrieved content matches what we uploaded
+  assert_eq!(
+    retrieved_payload["data"].as_str().unwrap().len(),
+    70_000,
+    "Retrieved blob should have the correct data length"
+  );
+  assert_eq!(
+    retrieved_payload["size"].as_u64().unwrap(),
+    70_000,
+    "Retrieved blob should have the correct size field"
   );
 
   Ok(())

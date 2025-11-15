@@ -12,6 +12,8 @@ pub mod server_client;
 
 pub use client::Client;
 pub use client::ClientBuilder;
+pub use client::BATCH_SIZE;
+pub use client::BLOB_THRESHOLD_BYTES;
 pub use context::with_execution;
 pub use error::Error;
 pub use error::Result;

@@ -37,6 +37,16 @@
     <p><span class="meta">size:</span> {{ observation.payload.size }} bytes</p>
   </div>
 
+  {% if observation.payload.size > display_threshold %}
+  <div style="flex-grow: 1;">
+    <p>Payload is too large to display inline ({{ observation.payload.size }} bytes). <a
+      href="/api/exe/{{ observation.execution_id }}/obs/{{ observation.id }}/content"
+      target="_blank"
+      rel="noopener noreferrer"
+      data-testid="ObservationPayload"
+    >Open in new tab</a></p>
+  </div>
+  {% else %}
   <iframe
     id="observation-iframe"
     data-testid="ObservationPayload"
@@ -44,4 +54,5 @@
     style="width: 100%; border: 1px solid #ccc; flex-grow: 1; min-height: 0;"
     sandbox="allow-same-origin"
   ></iframe>
+  {% endif %}
 </div>
