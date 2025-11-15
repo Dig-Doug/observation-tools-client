@@ -1,7 +1,9 @@
 //! Observation builder API
 
+use crate::client::UploaderMessage;
 use crate::context;
 use crate::error::Result;
+use crate::execution::SendObservation;
 use crate::Error;
 use observation_tools_shared::models::Observation;
 use observation_tools_shared::models::ObservationId;
@@ -86,38 +88,38 @@ impl ObservationBuilder {
   }
 
   /// Build and send the observation using the current execution context
-  pub fn build(self) -> Result<ObservationId> {
+  ///
+  /// Returns a `SendObservation` which allows you to wait for the observation
+  /// to be uploaded before proceeding, or to get the observation ID immediately.
+  pub fn build(self) -> Result<SendObservation> {
     let execution = context::get_current_execution().ok_or(Error::NoExecutionContext)?;
-
-    // Require a payload
-    let payload = self.payload.ok_or(Error::MissingPayload)?;
-
     let observation_id = ObservationId::new();
-    let execution_id = execution.id();
-    let base_url = execution.base_url();
     let observation = Observation {
       id: observation_id,
-      execution_id,
-      name: self.name.clone(),
+      execution_id: execution.id(),
+      name: self.name,
       labels: self.labels,
       metadata: self.metadata,
       source: self.source,
       parent_span_id: self.parent_span_id,
-      payload,
+      payload: self.payload.ok_or(Error::MissingPayload)?,
       created_at: chrono::Utc::now(),
     };
-
-    execution.send_observation(observation)?;
-
-    // Log the observation URL
+    let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
+    // Log before sending so any error comes afterward
     log::info!(
-      "Observation '{}' created: {}/exe/{}/obs/{}",
-      self.name,
-      base_url,
-      execution_id,
+      "Sending: {}/exe/{}/obs/{}",
+      execution.base_url(),
+      execution.id(),
       observation_id
     );
-
-    Ok(observation_id)
+    execution
+      .uploader_tx
+      .try_send(UploaderMessage::Observations {
+        observations: vec![observation],
+        uploaded_tx,
+      })
+      .map_err(|_| Error::ChannelClosed)?;
+    Ok(SendObservation::new(observation_id, uploaded_rx))
   }
 }

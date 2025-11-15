@@ -54,8 +54,9 @@ async fn main() -> anyhow::Result<()> {
         .with_bind_addr(bind_addr)
         .with_data_dir(data_dir);
 
+      let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
       let server = Server::new(config);
-      server.run().await?;
+      server.run(listener).await?;
     }
   }
 

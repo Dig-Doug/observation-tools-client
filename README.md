@@ -4,6 +4,14 @@
 
 Export, visualize, and inspect data from anywhere in your program.
 
+## Building from source
+
+### Generating an OpenAPI spec
+
+```bash
+cargo run --bin observation-tools -- export-openapi --output ./crates/observation-tools-client/openapi.json
+```
+
 ## License
 
 All code, except the client library, is distributed under the GNU AGPLv3 license. The client library is licensed under

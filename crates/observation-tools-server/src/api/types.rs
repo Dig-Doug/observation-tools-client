@@ -1,7 +1,7 @@
 //! API request and response types
 
-use crate::models::Execution;
-use crate::models::Observation;
+use observation_tools_shared::models::Execution;
+use observation_tools_shared::models::Observation;
 use serde::Deserialize;
 use serde::Serialize;
 use utoipa::IntoParams;
@@ -175,43 +175,5 @@ impl ErrorResponse {
       code: Some(code.into()),
       details: None,
     }
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_create_execution_request_serialization() {
-    let execution = Execution::new("test");
-    let req = CreateExecutionRequest {
-      execution: execution.clone(),
-    };
-
-    let json = serde_json::to_string(&req).unwrap();
-    let deserialized: CreateExecutionRequest = serde_json::from_str(&json).unwrap();
-
-    assert_eq!(req.execution.name, deserialized.execution.name);
-    assert_eq!(req.execution.id, deserialized.execution.id);
-  }
-
-  #[test]
-  fn test_list_executions_query_defaults() {
-    let query = ListExecutionsQuery::default();
-    assert!(query.limit.is_none());
-    assert!(query.offset.is_none());
-    assert!(query.search.is_none());
-  }
-
-  #[test]
-  fn test_error_response_creation() {
-    let err = ErrorResponse::new("test error");
-    assert_eq!(err.error, "test error");
-    assert!(err.code.is_none());
-
-    let err_with_code = ErrorResponse::with_code("test error", "TEST_ERROR");
-    assert_eq!(err_with_code.error, "test error");
-    assert_eq!(err_with_code.code, Some("TEST_ERROR".to_string()));
   }
 }

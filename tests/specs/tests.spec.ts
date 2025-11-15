@@ -135,3 +135,39 @@ test("Execution list auto-refresh", async ({ page, server }) => {
   await expect(executionLink).toBeVisible();
   await expect(page.getByTestId(TestId.ExecutionsListEmpty)).not.toBeVisible();
 });
+
+test("Large payload is uploaded as blob", async ({ page, server }) => {
+  const client = server.createClient();
+  const executionName = "execution-with-large-payload";
+  const exe = client.beginExecution(executionName);
+  const observationName = "large-observation";
+
+  // Create a payload larger than 64KB (the blob threshold)
+  // The payload must be valid JSON, so we create an object with a large string field
+  const largeData = "x".repeat(70000);
+  const largePayload = { data: largeData, size: largeData.length };
+  const observationId = exe.observe(
+    observationName,
+    JSON.stringify(largePayload),
+    ["test", "large-payload"],
+  );
+
+  // Wait a moment for the blob upload to complete
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Navigate to the observation page
+  await page.goto(server.baseUrl);
+  await page.getByTestId(TestId.NavExecutionsList).click();
+  await page.getByTestId(TestId.ExecutionLink).filter({ hasText: executionName }).first().click();
+  await page
+    .getByTestId(TestId.ObservationListItemLink)
+    .filter({ hasText: observationName })
+    .click();
+
+  // Verify the observation details are visible
+  await expect(page.getByTestId(TestId.ObservationId)).toContainText(observationId);
+
+  // The payload should be retrieved from blob storage and displayed
+  // Even though it was stored as a blob, the UI should still show it
+  await expect(page.getByTestId(TestId.ObservationPayload)).toBeVisible();
+});

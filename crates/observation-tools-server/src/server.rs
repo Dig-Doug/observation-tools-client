@@ -26,8 +26,8 @@ impl Server {
     Self { config }
   }
 
-  /// Run the server
-  pub async fn run(self) -> anyhow::Result<()> {
+  /// Run the server with the given TCP listener
+  pub async fn run(self, listener: tokio::net::TcpListener) -> anyhow::Result<()> {
     tracing::info!("Starting Observation Tools server");
     tracing::debug!(data_dir = ?self.config.data_dir, "Initializing storage");
 
@@ -74,11 +74,12 @@ impl Server {
 
     tracing::debug!("Router configured");
 
-    // Start the server
-    let listener = tokio::net::TcpListener::bind(&self.config.bind_addr).await?;
-    tracing::info!("Server listening on http://{}", self.config.bind_addr);
+    // Log the actual bound address
+    let bound_addr = listener.local_addr()?;
+    tracing::info!("Server listening on http://{}", bound_addr);
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .await?;
 
     Ok(())
   }

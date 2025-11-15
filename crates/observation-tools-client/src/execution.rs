@@ -8,6 +8,97 @@ use napi_derive::napi;
 use observation_tools_shared::models::ExecutionId;
 use observation_tools_shared::models::Observation;
 
+/// Result of beginning a new execution
+///
+/// This type is returned when you start a new execution and allows you to
+/// wait for the execution to be uploaded to the server before proceeding.
+pub struct BeginExecution {
+  handle: ExecutionHandle,
+  uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+}
+
+/// Result of sending observation(s)
+///
+/// This type is returned when you send observations and allows you to
+/// wait for the observations to be uploaded to the server before proceeding.
+pub struct SendObservation {
+  observation_id: observation_tools_shared::models::ObservationId,
+  uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+}
+
+impl SendObservation {
+  pub(crate) fn new(
+    observation_id: observation_tools_shared::models::ObservationId,
+    uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+  ) -> Self {
+    Self {
+      observation_id,
+      uploaded_rx,
+    }
+  }
+
+  /// Wait for the observations to be uploaded to the server
+  ///
+  /// This consumes the SendObservation and returns the observation ID
+  /// after the observations have been successfully uploaded.
+  ///
+  /// # Returns
+  /// - `Ok(ObservationId)` if the observations were successfully uploaded
+  /// - `Err(Error::ChannelClosed)` if the upload task failed
+  pub async fn wait_for_upload(
+    self,
+  ) -> Result<observation_tools_shared::models::ObservationId> {
+    self.uploaded_rx.await.map_err(|_| Error::ChannelClosed)?;
+    Ok(self.observation_id)
+  }
+
+  /// Get the observation ID without waiting for upload
+  pub fn observation_id(&self) -> observation_tools_shared::models::ObservationId {
+    self.observation_id
+  }
+}
+
+impl BeginExecution {
+  pub(crate) fn new(
+    handle: ExecutionHandle,
+    uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+  ) -> Self {
+    Self {
+      handle,
+      uploaded_rx,
+    }
+  }
+
+  /// Wait for the execution to be uploaded to the server
+  ///
+  /// This consumes the BeginExecution and returns the ExecutionHandle
+  /// after the execution has been successfully uploaded.
+  ///
+  /// # Returns
+  /// - `Ok(ExecutionHandle)` if the execution was successfully uploaded
+  /// - `Err(Error::ChannelClosed)` if the upload task failed
+  pub async fn wait_for_upload(self) -> Result<ExecutionHandle> {
+    self.uploaded_rx.await.map_err(|_| Error::ChannelClosed)?;
+    Ok(self.handle)
+  }
+
+  /// Get a reference to the execution handle without waiting for upload
+  ///
+  /// This is useful if you want to start sending observations immediately
+  /// without waiting for the execution creation to complete.
+  pub fn handle(&self) -> &ExecutionHandle {
+    &self.handle
+  }
+
+  /// Consume this and return the execution handle without waiting for upload
+  ///
+  /// This is useful if you don't care about waiting for the execution
+  /// to be uploaded before proceeding.
+  pub fn into_handle(self) -> ExecutionHandle {
+    self.handle
+  }
+}
+
 /// Handle to an execution that can be used to send observations
 #[napi]
 #[derive(Clone)]
@@ -40,12 +131,41 @@ impl ExecutionHandle {
     &self.base_url
   }
 
-  /// Send an observation
+  /// Send an observation (internal use, doesn't wait for upload)
   pub(crate) fn send_observation(&self, observation: Observation) -> Result<()> {
+    // Create a oneshot channel but drop the receiver since we don't wait
+    let (uploaded_tx, _uploaded_rx) = tokio::sync::oneshot::channel();
+
     self
       .uploader_tx
-      .try_send(UploaderMessage::Observations(vec![observation]))
+      .try_send(UploaderMessage::Observations {
+        observations: vec![observation],
+        uploaded_tx,
+      })
       .map_err(|_| Error::ChannelClosed)
+  }
+
+  /// Send a pre-built observation
+  ///
+  /// Returns a `SendObservation` which allows you to wait for the observation
+  /// to be uploaded before proceeding, or to get the observation ID immediately.
+  pub fn send_observation_data(&self, mut observation: Observation) -> Result<SendObservation> {
+    // Ensure the observation belongs to this execution
+    observation.execution_id = self.execution_id;
+    let obs_id = observation.id;
+
+    // Create a oneshot channel to signal when observations are uploaded
+    let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
+
+    self
+      .uploader_tx
+      .try_send(UploaderMessage::Observations {
+        observations: vec![observation],
+        uploaded_tx,
+      })
+      .map_err(|_| Error::ChannelClosed)?;
+
+    Ok(SendObservation::new(obs_id, uploaded_rx))
   }
 }
 

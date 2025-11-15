@@ -26,3 +26,4 @@ For more details refer to [Design](docs/design.md)
 
 - Always use workspace imports for dependencies to ensure consistency across crates.
 - Never use `unwrap()`. Always handle or propagate errors.
+- Only comment code when necessary. Prefer self-documenting code.
