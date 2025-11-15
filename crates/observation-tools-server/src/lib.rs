@@ -1,6 +1,7 @@
 //! Observation Tools Server library
 
 pub mod api;
+pub mod auth;
 pub mod config;
 pub mod csrf;
 pub mod server;

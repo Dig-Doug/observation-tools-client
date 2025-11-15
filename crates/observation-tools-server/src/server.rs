@@ -4,11 +4,9 @@ use crate::api::ApiDoc;
 use crate::api::AppState;
 use crate::api::{self};
 use crate::config::Config;
-use crate::csrf;
 use crate::storage::LocalBlobStorage;
 use crate::storage::SledStorage;
 use crate::ui;
-use axum::middleware;
 use axum::routing::get;
 use axum::Router;
 use std::sync::Arc;
@@ -50,7 +48,7 @@ impl Server {
       templates,
     };
 
-    // Build UI router with CSRF middleware
+    // Build UI router
     let ui_router = Router::new()
       .route("/", get(ui::index))
       .route("/exe", get(ui::list_executions))
@@ -66,6 +64,17 @@ impl Server {
     let static_dir = std::env::current_dir()?.join("crates/observation-tools-server/static");
     tracing::debug!(static_dir = ?static_dir, "Serving static files from directory");
     let serve_static = ServeDir::new(static_dir);
+
+    // Build API router with optional authentication
+    let api_router = if let Some(ref secret) = self.config.api_secret {
+      let secret_clone = secret.clone();
+      api::build_router(state)
+        .layer(axum::middleware::from_fn(move |req, next| {
+          crate::auth::api_key_middleware(secret_clone.clone(), req, next)
+        }))
+    } else {
+      api::build_router(state)
+    };
 
     // Build the main router
     let app = Router::new()

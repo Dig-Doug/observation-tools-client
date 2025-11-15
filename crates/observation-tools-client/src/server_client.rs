@@ -5,7 +5,7 @@ use std::time::Duration;
 
 include!(concat!(env!("OUT_DIR"), "/observation_tools_openapi.rs"));
 
-pub fn create_client(base_url: &str) -> anyhow::Result<Client> {
+pub fn create_client(base_url: &str, api_key: Option<String>) -> anyhow::Result<Client> {
   Ok(Client::new_with_client(
     &base_url,
     reqwest::ClientBuilder::new()
@@ -14,17 +14,25 @@ pub fn create_client(base_url: &str) -> anyhow::Result<Client> {
       // payloads)
       .timeout(Duration::from_secs(300)) // 5 minutes for uploads
       .build()?,
-    ObservationToolsServerClientOpts {},
+    ObservationToolsServerClientOpts { api_key },
   ))
 }
 
 #[derive(Clone, Debug)]
-pub struct ObservationToolsServerClientOpts {}
+pub struct ObservationToolsServerClientOpts {
+  pub api_key: Option<String>,
+}
 
 pub async fn pre_hook_async(
-  _client: &ObservationToolsServerClientOpts,
-  _req: &mut reqwest::Request,
+  client: &ObservationToolsServerClientOpts,
+  req: &mut reqwest::Request,
 ) -> anyhow::Result<()> {
+  if let Some(ref api_key) = client.api_key {
+    req.headers_mut().insert(
+      "authorization",
+      format!("Bearer {}", api_key).parse()?,
+    );
+  }
   Ok(())
 }
 
@@ -53,10 +61,17 @@ impl Client {
       data_size
     );
 
-    let response = match self
+    let mut request_builder = self
       .client
       .post(&url)
-      .header("Content-Type", "application/octet-stream")
+      .header("Content-Type", "application/octet-stream");
+
+    // Add Authorization header if API key is configured
+    if let Some(ref api_key) = self.inner.api_key {
+      request_builder = request_builder.header("Authorization", format!("Bearer {}", api_key));
+    }
+
+    let response = match request_builder
       .body(data)
       .send()
       .await

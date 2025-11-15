@@ -350,6 +350,14 @@
         ],
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "bearer_auth": {
+        "bearerFormat": "API Key",
+        "description": "API key authentication. Set OBSERVATION_TOOLS_API_SECRET on the server to enable.",
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {

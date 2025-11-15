@@ -14,15 +14,19 @@ anyhow.workspace = true
 async-trait.workspace = true
 axum.workspace = true
 axum-extra.workspace = true
+base64.workspace = true
 bytes.workspace = true
 clap.workspace = true
+hmac.workspace = true
 minijinja-autoreload = { workspace = true }
 minijinja-embed = {workspace = true}
 minijinja.workspace = true
 object_store.workspace = true
 observation-tools-shared.workspace = true
+rand.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 sled.workspace = true
 thiserror.workspace = true
 tokio.workspace = true

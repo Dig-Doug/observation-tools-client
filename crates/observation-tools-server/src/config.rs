@@ -14,6 +14,9 @@ pub struct Config {
 
   /// Directory for storing blobs
   pub blob_dir: PathBuf,
+
+  /// Optional API secret for authentication
+  pub api_secret: Option<String>,
 }
 
 impl Config {
@@ -26,6 +29,7 @@ impl Config {
       bind_addr: "127.0.0.1:3000".parse().unwrap(),
       data_dir,
       blob_dir,
+      api_secret: None,
     }
   }
 
@@ -39,6 +43,12 @@ impl Config {
   pub fn with_data_dir(mut self, dir: PathBuf) -> Self {
     self.data_dir = dir.clone();
     self.blob_dir = dir.join("blobs");
+    self
+  }
+
+  /// Set the API secret for authentication
+  pub fn with_api_secret(mut self, secret: Option<String>) -> Self {
+    self.api_secret = secret;
     self
   }
 }

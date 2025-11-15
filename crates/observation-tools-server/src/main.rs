@@ -25,6 +25,8 @@ enum Commands {
     #[arg(short, long, default_value = ".observation-tools")]
     data_dir: PathBuf,
   },
+  /// Generate an API key using the secret from OBSERVATION_TOOLS_API_SECRET
+  GenerateKey,
 }
 
 #[tokio::main]
@@ -50,13 +52,30 @@ async fn main() -> anyhow::Result<()> {
 
       let bind_addr: SocketAddr = ([0, 0, 0, 0], port).into();
 
+      // Read API secret from environment
+      let api_secret = std::env::var("OBSERVATION_TOOLS_API_SECRET").ok();
+
+      if api_secret.is_some() {
+        tracing::info!("API key authentication enabled");
+      } else {
+        tracing::warn!("API key authentication disabled - set OBSERVATION_TOOLS_API_SECRET to enable");
+      }
+
       let config = Config::new()
         .with_bind_addr(bind_addr)
-        .with_data_dir(data_dir);
+        .with_data_dir(data_dir)
+        .with_api_secret(api_secret);
 
       let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
       let server = Server::new(config);
       server.run(listener).await?;
+    }
+    Commands::GenerateKey => {
+      let secret = std::env::var("OBSERVATION_TOOLS_API_SECRET")
+        .map_err(|_| anyhow::anyhow!("OBSERVATION_TOOLS_API_SECRET environment variable not set"))?;
+
+      let api_key = observation_tools_server::auth::generate_api_key(&secret);
+      println!("{}", api_key);
     }
   }
 
