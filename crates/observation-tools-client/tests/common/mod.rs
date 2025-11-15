@@ -1,3 +1,4 @@
+#[allow(unused)]
 use observation_tools_client::Client;
 use observation_tools_client::ClientBuilder;
 use observation_tools_server::auth::{generate_api_key, ApiKeySecret};

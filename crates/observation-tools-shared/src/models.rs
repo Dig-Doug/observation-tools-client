@@ -213,6 +213,42 @@ impl Payload {
   }
 }
 
+/// Type of observation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
+pub enum ObservationType {
+  /// A log entry observation
+  LogEntry,
+  /// A payload observation
+  Payload,
+}
+
+/// Log level for observations
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
+pub enum LogLevel {
+  /// Trace level logging
+  Trace,
+  /// Debug level logging
+  Debug,
+  /// Info level logging
+  Info,
+  /// Warning level logging
+  Warning,
+  /// Error level logging
+  Error,
+}
+
+impl From<log::Level> for LogLevel {
+  fn from(level: log::Level) -> Self {
+    match level {
+      log::Level::Trace => LogLevel::Trace,
+      log::Level::Debug => LogLevel::Debug,
+      log::Level::Info => LogLevel::Info,
+      log::Level::Warn => LogLevel::Warning,
+      log::Level::Error => LogLevel::Error,
+    }
+  }
+}
+
 /// Trait for types that can be converted into an observation payload.
 pub trait IntoPayload {
   /// Convert this value into a payload
@@ -258,6 +294,12 @@ pub struct Observation {
   /// User-defined name for this observation
   pub name: String,
 
+  /// Type of observation
+  pub observation_type: ObservationType,
+
+  /// Log level for this observation
+  pub log_level: LogLevel,
+
   /// Source location where this observation was created
   #[serde(skip_serializing_if = "Option::is_none")]
   pub source: Option<SourceInfo>,
@@ -284,11 +326,19 @@ pub struct Observation {
 
 impl Observation {
   /// Create a new observation
-  pub fn new(execution_id: ExecutionId, name: impl Into<String>, payload: Payload) -> Self {
+  pub fn new(
+    execution_id: ExecutionId,
+    name: impl Into<String>,
+    payload: Payload,
+    observation_type: ObservationType,
+    log_level: LogLevel,
+  ) -> Self {
     Self {
       id: ObservationId::new(),
       execution_id,
       name: name.into(),
+      observation_type,
+      log_level,
       source: None,
       payload,
       metadata: HashMap::new(),

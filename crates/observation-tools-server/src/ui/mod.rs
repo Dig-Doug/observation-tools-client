@@ -15,6 +15,7 @@ use minijinja::Environment;
 use minijinja::Value;
 use minijinja_autoreload::AutoReloader;
 use observation_tools_shared::models::ExecutionId;
+use observation_tools_shared::ObservationType;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::error;
@@ -151,16 +152,47 @@ pub struct ExecutionDetailQuery {
   obs: Option<String>,
 }
 
-/// Execution detail page
+/// View type for execution detail page
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExecutionView {
+  Log,
+  Payload,
+}
+
+/// Execution detail page - Log view (shows all observations)
 #[tracing::instrument(skip(metadata, templates))]
-pub async fn execution_detail(
+pub async fn execution_detail_log(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   State(templates): State<Arc<AutoReloader>>,
   Path(id): Path<String>,
   Query(query): Query<ExecutionDetailQuery>,
   csrf: CsrfToken,
 ) -> Result<Html<String>, AppError> {
-  tracing::debug!(execution_id = %id, "Rendering execution detail page");
+  execution_detail_view(metadata, templates, id, query, csrf, ExecutionView::Log).await
+}
+
+/// Execution detail page - Payload view (shows only payload observations)
+#[tracing::instrument(skip(metadata, templates))]
+pub async fn execution_detail_payload(
+  State(metadata): State<Arc<dyn MetadataStorage>>,
+  State(templates): State<Arc<AutoReloader>>,
+  Path(id): Path<String>,
+  Query(query): Query<ExecutionDetailQuery>,
+  csrf: CsrfToken,
+) -> Result<Html<String>, AppError> {
+  execution_detail_view(metadata, templates, id, query, csrf, ExecutionView::Payload).await
+}
+
+/// Shared implementation for execution detail views
+async fn execution_detail_view(
+  metadata: Arc<dyn MetadataStorage>,
+  templates: Arc<AutoReloader>,
+  id: String,
+  query: ExecutionDetailQuery,
+  csrf: CsrfToken,
+  view: ExecutionView,
+) -> Result<Html<String>, AppError> {
+  tracing::debug!(execution_id = %id, ?view, "Rendering execution detail page");
 
   let execution_id = ExecutionId::parse(&id)?;
 
@@ -176,18 +208,33 @@ pub async fn execution_detail(
 
   // Only fetch observations if execution exists
   let (observations, has_next_page, total_count, page) = if execution.is_some() {
-    // Fetch observations with one extra to check for more pages
-    let mut observations = metadata
-      .list_observations(execution_id, Some(limit + 1), Some(offset))
+    // Fetch all observations for the execution
+    // We need to fetch more than the limit to properly paginate filtered results
+    let all_observations = metadata
+      .list_observations(execution_id, None, None)
       .await?;
 
-    let has_next_page = observations.len() > limit;
-    if has_next_page {
-      observations.pop();
-    }
+    // Filter observations based on view type
+    let filtered_observations: Vec<_> = match view {
+      ExecutionView::Log => all_observations,
+      ExecutionView::Payload => all_observations
+        .into_iter()
+        .filter(|obs| obs.observation_type == ObservationType::Payload)
+        .collect(),
+    };
 
-    // Get total count for pagination info
-    let total_count = metadata.count_observations(execution_id).await?;
+    let total_count = filtered_observations.len();
+
+    // Apply pagination to filtered results
+    let observations: Vec<_> = filtered_observations
+      .into_iter()
+      .skip(offset)
+      .take(limit + 1)
+      .collect();
+
+    let has_next_page = observations.len() > limit;
+    let observations: Vec<_> = observations.into_iter().take(limit).collect();
+
     let page = (offset / limit) + 1;
 
     (observations, has_next_page, total_count, page)
@@ -196,8 +243,8 @@ pub async fn execution_detail(
   };
 
   // If observation ID is provided, load the observation for the side panel
-  let selected_observation = if let Some(obs_id) = query.obs {
-    let observation_id = observation_tools_shared::ObservationId::parse(&obs_id)?;
+  let selected_observation = if let Some(obs_id) = &query.obs {
+    let observation_id = observation_tools_shared::ObservationId::parse(obs_id)?;
     let obs_list = metadata.get_observations(&[observation_id]).await?;
     obs_list.into_iter().next()
   } else {
@@ -220,6 +267,11 @@ pub async fn execution_detail(
   let env = templates.acquire_env()?;
   let tmpl = env.get_template("execution_detail.html")?;
 
+  let (view_name, base_path) = match view {
+    ExecutionView::Log => ("log", format!("/exe/{}", id)),
+    ExecutionView::Payload => ("payload", format!("/exe/{}/payload", id)),
+  };
+
   let html = tmpl.render(context! {
       execution => execution,
       execution_id => id,
@@ -232,6 +284,8 @@ pub async fn execution_detail(
       selected_observation => selected_observation,
       display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
       csrf_token => csrf.0,
+      view => view_name,
+      base_path => base_path,
   })?;
 
   Ok(Html(html))

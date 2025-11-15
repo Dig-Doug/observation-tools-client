@@ -203,3 +203,94 @@ test("Navigate to execution page before execution exists, then create it", async
   await expect(page.getByTestId(TestId.ExecutionDetailTitle)).toContainText(executionName);
   await expect(page.getByTestId(TestId.ExecutionDetailId)).toContainText(executionId);
 });
+
+test("Log and payload view tabs", async ({ page, server }) => {
+  const client = server.createClient();
+  const executionName = "execution-with-views";
+  const exe = client.beginExecution(executionName);
+
+  // Create some observations
+  exe.observe("observation-1", JSON.stringify({ data: "test1" }));
+  exe.observe("observation-2", JSON.stringify({ data: "test2" }));
+  exe.observe("observation-3", JSON.stringify({ data: "test3" }));
+
+  // Navigate to execution detail page (defaults to log view)
+  await page.goto(exe.url);
+
+  // Verify we're on the log view by default
+  await expect(page.getByTestId(TestId.ViewTabLog)).toBeVisible();
+  await expect(page.getByTestId(TestId.ViewTabPayload)).toBeVisible();
+
+  // Log tab should be active (has different styling)
+  const logTab = page.getByTestId(TestId.ViewTabLog);
+  await expect(logTab).toHaveClass(/bg-black/);
+
+  // Verify observations are displayed in log view
+  await expect(page.getByTestId(TestId.ObservationListItem).first()).toBeVisible();
+
+  // Click on payload view tab
+  await page.getByTestId(TestId.ViewTabPayload).click();
+
+  // URL should change to /payload
+  await expect(page).toHaveURL(/\/payload$/);
+
+  // Payload tab should now be active
+  const payloadTab = page.getByTestId(TestId.ViewTabPayload);
+  await expect(payloadTab).toHaveClass(/bg-black/);
+
+  // Observations should still be visible in payload view
+  await expect(page.getByTestId(TestId.ObservationListItem).first()).toBeVisible();
+
+  // Click back to log view
+  await page.getByTestId(TestId.ViewTabLog).click();
+
+  // URL should not have /payload
+  await expect(page).not.toHaveURL(/\/payload$/);
+
+  // Log tab should be active again
+  await expect(logTab).toHaveClass(/bg-black/);
+});
+
+test("Log view displays observations in console format", async ({ page, server }) => {
+  const client = server.createClient();
+  const executionName = "execution-console-format";
+  const exe = client.beginExecution(executionName);
+
+  const observationName = "test-log-observation";
+  const observationPayload = { message: "Hello from console" };
+  exe.observe(observationName, JSON.stringify(observationPayload));
+
+  // Navigate to execution detail page (log view)
+  await page.goto(exe.url);
+
+  // Verify log view styling - should have dark background console-style container
+  const logContainer = page.locator(".bg-neutral-900");
+  await expect(logContainer).toBeVisible();
+
+  // Verify observation is clickable and opens side panel
+  await page.getByTestId(TestId.ObservationListItemLink).first().click();
+
+  // Side panel should show observation details
+  await expect(page.getByTestId(TestId.ObservationPayload)).toBeVisible();
+});
+
+test("Payload view maintains observation selection", async ({ page, server }) => {
+  const client = server.createClient();
+  const executionName = "execution-payload-selection";
+  const exe = client.beginExecution(executionName);
+
+  const observationName = "selectable-observation";
+  const observationId = exe.observe(observationName, JSON.stringify({ data: "test" }));
+
+  // Navigate to payload view
+  await page.goto(`${exe.url}/payload`);
+
+  // Click on observation to select it
+  await page.getByTestId(TestId.ObservationListItemLink).first().click();
+
+  // URL should include obs query param
+  await expect(page).toHaveURL(/\?obs=/);
+
+  // Side panel should be visible with observation details
+  await expect(page.getByTestId(TestId.ObservationId)).toContainText(observationId);
+});

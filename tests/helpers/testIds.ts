@@ -15,6 +15,8 @@ export enum TestId {
   // Execution Detail
   ExecutionDetailTitle = "ExecutionDetailTitle",
   ExecutionDetailId = "ExecutionDetailId",
+  ViewTabLog = "ViewTabLog",
+  ViewTabPayload = "ViewTabPayload",
 
   // Observations
   ObservationListItem = "ObservationListItem",

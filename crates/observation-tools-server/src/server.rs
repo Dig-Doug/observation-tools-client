@@ -36,7 +36,8 @@ impl Server {
     let ui_router = Router::new()
       .route("/", get(ui::index))
       .route("/exe", get(ui::list_executions))
-      .route("/exe/{id}", get(ui::execution_detail))
+      .route("/exe/{id}", get(ui::execution_detail_log))
+      .route("/exe/{id}/payload", get(ui::execution_detail_payload))
       .route(
         "/exe/{execution_id}/obs/{observation_id}",
         get(ui::observation_detail),
