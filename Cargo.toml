@@ -18,11 +18,15 @@ anyhow = "1.0"
 async-trait = "0.1"
 axum = { version = "0.8", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9", features = ["cookie"] }
+base64 = "0.22"
 bytes = "1.9"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.5", features = ["derive"] }
 futures = "0.3"
+hmac = "0.12"
 log = "0.4"
+rand = "0.8"
+sha2 = "0.10"
 minijinja = { version = "2.12", features = ["loader"] }
 minijinja-autoreload = "2.12.0"
 minijinja-embed = "2.12.0"

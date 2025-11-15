@@ -56,6 +56,7 @@ pub struct Client {
 
 struct ClientInner {
   base_url: String,
+  api_key: Option<String>,
   uploader_tx: async_channel::Sender<UploaderMessage>,
   shutdown_rx: std::sync::Mutex<Option<tokio::sync::oneshot::Receiver<()>>>,
   // If we create a runtime for the uploader, we hold it here to keep it alive
@@ -119,11 +120,15 @@ impl Drop for ClientInner {
 #[napi]
 pub struct ClientBuilder {
   base_url: Option<String>,
+  api_key: Option<String>,
 }
 
 impl Default for ClientBuilder {
   fn default() -> Self {
-    Self { base_url: None }
+    Self {
+      base_url: None,
+      api_key: None,
+    }
   }
 }
 
@@ -140,12 +145,24 @@ impl ClientBuilder {
   pub fn set_base_url(&mut self, url: String) {
     self.base_url = Some(url);
   }
+
+  /// Set the API key for authentication
+  #[napi]
+  pub fn set_api_key(&mut self, api_key: String) {
+    self.api_key = Some(api_key);
+  }
 }
 
 impl ClientBuilder {
   /// Set the base URL for the server
   pub fn base_url(mut self, url: impl Into<String>) -> Self {
     self.base_url = Some(url.into());
+    self
+  }
+
+  /// Set the API key for authentication
+  pub fn api_key(mut self, api_key: impl Into<String>) -> Self {
+    self.api_key = Some(api_key.into());
     self
   }
 }
@@ -163,6 +180,7 @@ impl ClientBuilder {
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
     let timer_tx = tx.clone();
     let uploader_base_url = base_url.clone();
+    let api_key = self.api_key.clone();
     let (handle, runtime) = match tokio::runtime::Handle::try_current() {
       Ok(handle) => (handle, None),
       Err(_) => {
@@ -175,7 +193,7 @@ impl ClientBuilder {
         (runtime.handle().clone(), Some(runtime))
       }
     };
-    let api_client = crate::server_client::create_client(&uploader_base_url)?;
+    let api_client = crate::server_client::create_client(&uploader_base_url, api_key.clone())?;
     handle.spawn(async move {
       tokio::spawn(async move {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(100));
@@ -193,6 +211,7 @@ impl ClientBuilder {
     Ok(Client {
       inner: Arc::new(ClientInner {
         base_url,
+        api_key,
         uploader_tx: tx,
         shutdown_rx: std::sync::Mutex::new(Some(shutdown_rx)),
         _runtime: runtime,

@@ -148,6 +148,7 @@ impl IntoResponse for AppError {
             ErrorResponse,
         )
     ),
+    modifiers(&SecurityAddon),
     tags(
         (name = "executions", description = "Execution management endpoints"),
         (name = "observations", description = "Observation management endpoints")
@@ -159,6 +160,27 @@ impl IntoResponse for AppError {
     )
 )]
 pub struct ApiDoc;
+
+struct SecurityAddon;
+
+impl utoipa::Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        if let Some(components) = openapi.components.as_mut() {
+            use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
+
+            components.add_security_scheme(
+                "bearer_auth",
+                SecurityScheme::Http(
+                    HttpBuilder::new()
+                        .scheme(HttpAuthScheme::Bearer)
+                        .bearer_format("API Key")
+                        .description(Some("API key authentication. Set OBSERVATION_TOOLS_API_SECRET on the server to enable."))
+                        .build(),
+                ),
+            );
+        }
+    }
+}
 
 /// Build the API router
 pub fn build_router(state: AppState) -> Router {
