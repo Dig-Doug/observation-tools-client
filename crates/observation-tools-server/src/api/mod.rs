@@ -8,7 +8,6 @@ use crate::storage::MetadataStorage;
 use axum::extract::FromRef;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::response::Redirect;
 use axum::response::Response;
 use axum::routing::get;
 use axum::routing::post;
@@ -19,7 +18,6 @@ use observation_tools_shared::api::*;
 use observation_tools_shared::models::*;
 use std::sync::Arc;
 use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 
 /// Shared application state
 #[derive(Clone)]

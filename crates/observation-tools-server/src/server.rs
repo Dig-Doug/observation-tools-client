@@ -78,7 +78,8 @@ impl Server {
     let bound_addr = listener.local_addr()?;
     tracing::info!("Server listening on http://{}", bound_addr);
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .await?;
 
     Ok(())
   }

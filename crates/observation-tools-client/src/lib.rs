@@ -8,13 +8,16 @@ pub(crate) mod context;
 mod error;
 mod execution;
 mod observation;
-mod server_client;
+pub mod server_client;
 
 pub use client::Client;
 pub use client::ClientBuilder;
+pub use context::with_execution;
 pub use error::Error;
 pub use error::Result;
+pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
+pub use execution::SendObservation;
 pub use observation::ObservationBuilder;
 
 // Re-export macros

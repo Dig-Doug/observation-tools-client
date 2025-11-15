@@ -19,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
     .build()?;
 
   // Begin an execution
-  let execution = client.begin_execution("example_program")?;
+  let execution = client.begin_execution("example_program")?.into_handle();
   println!("Started execution with ID {}", execution.id());
 
   // Register it globally so observe! macro can use it

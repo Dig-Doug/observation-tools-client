@@ -1,7 +1,7 @@
 //! Client for communicating with the observation-tools server
 
 use crate::error::Result;
-use crate::execution::ExecutionHandle;
+use crate::execution::{BeginExecution, ExecutionHandle};
 use async_channel;
 use log::trace;
 use napi_derive::napi;
@@ -12,12 +12,35 @@ use observation_tools_shared::models::Observation;
 use std::sync::Arc;
 
 /// Message types for the background uploader task
-#[derive(Debug, Clone)]
 pub(crate) enum UploaderMessage {
-  Execution(Execution),
-  Observations(Vec<Observation>),
+  Execution {
+    execution: Execution,
+    uploaded_tx: tokio::sync::oneshot::Sender<()>,
+  },
+  Observations {
+    observations: Vec<Observation>,
+    uploaded_tx: tokio::sync::oneshot::Sender<()>,
+  },
   Flush,
   Shutdown,
+}
+
+// Manual Debug implementation since oneshot::Sender doesn't implement Debug
+impl std::fmt::Debug for UploaderMessage {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Self::Execution { execution, .. } => f
+        .debug_struct("Execution")
+        .field("execution", execution)
+        .finish(),
+      Self::Observations { observations, .. } => f
+        .debug_struct("Observations")
+        .field("observations", observations)
+        .finish(),
+      Self::Flush => write!(f, "Flush"),
+      Self::Shutdown => write!(f, "Shutdown"),
+    }
+  }
 }
 
 /// Client for observation-tools
@@ -38,24 +61,38 @@ impl Client {
   pub fn begin_execution_wasm(&self, name: String) -> napi::Result<ExecutionHandle> {
     self
       .begin_execution(name)
+      .map(|begin| begin.into_handle())
       .map_err(|e| napi::Error::from_reason(e.to_string()))
   }
 }
 
 impl Client {
   /// Begin a new execution
-  pub fn begin_execution(&self, name: impl Into<String>) -> Result<ExecutionHandle> {
+  ///
+  /// Returns a `BeginExecution` which allows you to wait for the execution
+  /// to be uploaded before proceeding, or to get the handle immediately.
+  pub fn begin_execution(&self, name: impl Into<String>) -> Result<BeginExecution> {
     let execution = Execution::new(name.into());
     trace!("Beginning new execution with ID {}", execution.id);
+
+    // Create a oneshot channel to signal when the execution is uploaded
+    let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
+
     self
       .inner
       .uploader_tx
-      .try_send(UploaderMessage::Execution(execution.clone()))?;
-    Ok(ExecutionHandle::new(
+      .try_send(UploaderMessage::Execution {
+        execution: execution.clone(),
+        uploaded_tx,
+      })?;
+
+    let handle = ExecutionHandle::new(
       execution.id,
       self.inner.uploader_tx.clone(),
       self.inner.base_url.clone(),
-    ))
+    );
+
+    Ok(BeginExecution::new(handle, uploaded_rx))
   }
 
   /// Shutdown the client and wait for pending uploads
@@ -160,35 +197,62 @@ async fn uploader_task(
   base_url: String,
   rx: async_channel::Receiver<UploaderMessage>,
 ) {
-  let flush_observations = async |buffer: &mut Vec<Observation>| {
+  let flush_observations = async |buffer: &mut Vec<Observation>,
+                                  senders: &mut Vec<tokio::sync::oneshot::Sender<()>>| {
     if buffer.is_empty() {
       return;
     }
-    if let Err(e) = upload_observations(&client, &base_url, buffer.drain(..).collect()).await {
-      tracing::error!("Failed to upload observations: {}", e);
+    let result = upload_observations(&client, &base_url, buffer.drain(..).collect()).await;
+    match result {
+      Ok(()) => {
+        // Signal all senders that observations were uploaded
+        for sender in senders.drain(..) {
+          let _ = sender.send(());
+        }
+      }
+      Err(e) => {
+        tracing::error!("Failed to upload observations: {}", e);
+        // Clear senders on error (they won't receive notification)
+        senders.clear();
+      }
     }
   };
   let mut observation_buffer: Vec<Observation> = Vec::new();
+  let mut sender_buffer: Vec<tokio::sync::oneshot::Sender<()>> = Vec::new();
   const BATCH_SIZE: usize = 100;
   loop {
     let msg = rx.recv().await.ok();
     match msg {
-      Some(UploaderMessage::Execution(execution)) => {
-        if let Err(e) = upload_execution(&client, &base_url, execution).await {
-          tracing::error!("Failed to upload execution: {}", e);
+      Some(UploaderMessage::Execution {
+        execution,
+        uploaded_tx,
+      }) => {
+        let result = upload_execution(&client, &base_url, execution).await;
+        match result {
+          Ok(()) => {
+            // Signal successful upload
+            let _ = uploaded_tx.send(());
+          }
+          Err(e) => {
+            tracing::error!("Failed to upload execution: {}", e);
+          }
         }
       }
-      Some(UploaderMessage::Observations(observations)) => {
+      Some(UploaderMessage::Observations {
+        observations,
+        uploaded_tx,
+      }) => {
         observation_buffer.extend(observations);
+        sender_buffer.push(uploaded_tx);
         if observation_buffer.len() >= BATCH_SIZE {
-          flush_observations(&mut observation_buffer).await;
+          flush_observations(&mut observation_buffer, &mut sender_buffer).await;
         }
       }
       Some(UploaderMessage::Flush) => {
-        flush_observations(&mut observation_buffer).await;
+        flush_observations(&mut observation_buffer, &mut sender_buffer).await;
       }
       Some(UploaderMessage::Shutdown) | None => {
-        flush_observations(&mut observation_buffer).await;
+        flush_observations(&mut observation_buffer, &mut sender_buffer).await;
         break;
       }
     }
