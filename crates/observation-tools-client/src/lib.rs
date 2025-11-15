@@ -7,6 +7,7 @@ mod client;
 pub(crate) mod context;
 mod error;
 mod execution;
+mod logger;
 mod observation;
 pub mod server_client;
 
@@ -20,6 +21,7 @@ pub use error::Result;
 pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
 pub use execution::SendObservation;
+pub use logger::ObservationLogger;
 pub use observation::ObservationBuilder;
 
 // Re-export macros
