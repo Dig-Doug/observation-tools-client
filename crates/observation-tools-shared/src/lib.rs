@@ -1,6 +1,5 @@
 //! Shared types and models for observation-tools
 
-pub mod api;
 pub mod error;
 pub mod models;
 

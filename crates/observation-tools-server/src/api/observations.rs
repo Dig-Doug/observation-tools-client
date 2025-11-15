@@ -1,5 +1,10 @@
 //! Observation API handlers
 
+use crate::api::types::CreateObservationsRequest;
+use crate::api::types::CreateObservationsResponse;
+use crate::api::types::GetObservationResponse;
+use crate::api::types::ListObservationsQuery;
+use crate::api::types::ListObservationsResponse;
 use crate::api::AppError;
 use crate::storage::BlobStorage;
 use crate::storage::MetadataStorage;
@@ -11,11 +16,6 @@ use axum::http::HeaderValue;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use observation_tools_shared::api::CreateObservationsRequest;
-use observation_tools_shared::api::CreateObservationsResponse;
-use observation_tools_shared::api::GetObservationResponse;
-use observation_tools_shared::api::ListObservationsQuery;
-use observation_tools_shared::api::ListObservationsResponse;
 use observation_tools_shared::models::ExecutionId;
 use observation_tools_shared::models::ObservationId;
 use std::sync::Arc;

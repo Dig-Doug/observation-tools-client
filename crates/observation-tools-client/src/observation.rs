@@ -87,45 +87,32 @@ impl ObservationBuilder {
     self
   }
 
-  /// Build the observation without sending it
-  pub fn build_observation(self) -> Result<Observation> {
-    // Require a payload
-    let payload = self.payload.ok_or(Error::MissingPayload)?;
-
-    let observation_id = ObservationId::new();
-
-    // Use a dummy execution ID - it will be set by ExecutionHandle when sent
-    let execution_id = observation_tools_shared::models::ExecutionId::new();
-
-    Ok(Observation {
-      id: observation_id,
-      execution_id,
-      name: self.name,
-      labels: self.labels,
-      metadata: self.metadata,
-      source: self.source,
-      parent_span_id: self.parent_span_id,
-      payload,
-      created_at: chrono::Utc::now(),
-    })
-  }
-
   /// Build and send the observation using the current execution context
   ///
   /// Returns a `SendObservation` which allows you to wait for the observation
   /// to be uploaded before proceeding, or to get the observation ID immediately.
   pub fn build(self) -> Result<SendObservation> {
     let execution = context::get_current_execution().ok_or(Error::NoExecutionContext)?;
-
-    let mut observation = self.build_observation()?;
-    let observation_id = observation.id;
-
-    // Ensure the observation belongs to this execution
-    observation.execution_id = execution.id();
-
-    // Create a oneshot channel to signal when observations are uploaded
+    let observation_id = ObservationId::new();
+    let observation = Observation {
+      id: observation_id,
+      execution_id: execution.id(),
+      name: self.name,
+      labels: self.labels,
+      metadata: self.metadata,
+      source: self.source,
+      parent_span_id: self.parent_span_id,
+      payload: self.payload.ok_or(Error::MissingPayload)?,
+      created_at: chrono::Utc::now(),
+    };
     let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
-
+    // Log before sending so any error comes afterward
+    log::info!(
+      "Sending: {}/exe/{}/obs/{}",
+      execution.base_url(),
+      execution.id(),
+      observation_id
+    );
     execution
       .uploader_tx
       .try_send(UploaderMessage::Observations {
@@ -133,15 +120,6 @@ impl ObservationBuilder {
         uploaded_tx,
       })
       .map_err(|_| Error::ChannelClosed)?;
-
-    // Log the observation URL
-    log::info!(
-      "Observation created: {}/exe/{}/obs/{}",
-      execution.base_url(),
-      execution.id(),
-      observation_id
-    );
-
     Ok(SendObservation::new(observation_id, uploaded_rx))
   }
 }

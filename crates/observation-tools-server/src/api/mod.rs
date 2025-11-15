@@ -2,6 +2,7 @@
 
 pub mod executions;
 pub mod observations;
+pub mod types;
 
 use crate::storage::BlobStorage;
 use crate::storage::MetadataStorage;
@@ -14,9 +15,9 @@ use axum::routing::post;
 use axum::Json;
 use axum::Router;
 use minijinja_autoreload::AutoReloader;
-use observation_tools_shared::api::*;
 use observation_tools_shared::models::*;
 use std::sync::Arc;
+use types::*;
 use utoipa::OpenApi;
 
 /// Shared application state

@@ -1,5 +1,7 @@
 //! Web UI handlers
 
+use crate::api::types::ListExecutionsQuery;
+use crate::api::types::ListObservationsQuery;
 use crate::api::AppError;
 use crate::storage::MetadataStorage;
 use axum::extract::Path;
@@ -12,8 +14,6 @@ use minijinja::context;
 use minijinja::path_loader;
 use minijinja::Environment;
 use minijinja_autoreload::AutoReloader;
-use observation_tools_shared::api::ListExecutionsQuery;
-use observation_tools_shared::api::ListObservationsQuery;
 use observation_tools_shared::models::ExecutionId;
 use std::path::PathBuf;
 use std::sync::Arc;
