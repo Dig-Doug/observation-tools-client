@@ -120,7 +120,7 @@ pub async fn validate_csrf(req: Request, next: Next) -> Response {
 /// CSRF token extractor for use in handlers
 ///
 /// This can be used to access the current CSRF token in UI handlers
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CsrfToken(pub String);
 
 impl<S> FromRequestParts<S> for CsrfToken
@@ -133,17 +133,45 @@ where
     parts: &mut axum::http::request::Parts,
     _state: &S,
   ) -> Result<Self, Self::Rejection> {
-    // Try to extract from cookie first
+    // Try to get from extensions (set by UI middleware)
+    if let Some(token) = parts.extensions.get::<CsrfToken>() {
+      return Ok(token.clone());
+    }
+
+    // Fallback: try to extract from cookie
     let req = Request::from_parts(parts.clone(), Body::empty());
     if let Some(token) = extract_cookie_token(&req) {
       return Ok(CsrfToken(token));
     }
 
     // If not in cookie, generate a new one
-    // This happens on the first request
     let token = generate_token();
     Ok(CsrfToken(token))
   }
+}
+
+/// Middleware for UI routes that automatically generates and sets CSRF tokens
+///
+/// This middleware:
+/// - Generates or extracts a CSRF token
+/// - Sets the CSRF cookie in the response
+/// - Stores the token in request extensions for handlers to use
+pub async fn ui_csrf_middleware(mut req: Request, next: Next) -> Response {
+  // Extract or generate token
+  let token = extract_cookie_token(&req).unwrap_or_else(generate_token);
+
+  // Store token in request extensions for handlers to access
+  req.extensions_mut().insert(CsrfToken(token.clone()));
+
+  // Get response from handler
+  let mut response = next.run(req).await;
+
+  // Set CSRF cookie in response
+  response
+    .headers_mut()
+    .insert(header::SET_COOKIE, create_csrf_cookie(&token).parse().unwrap());
+
+  response
 }
 
 /// Helper to create a Set-Cookie header for CSRF token

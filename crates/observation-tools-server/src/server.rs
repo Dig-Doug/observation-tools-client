@@ -50,7 +50,7 @@ impl Server {
       templates,
     };
 
-    // Build UI router
+    // Build UI router with CSRF middleware
     let ui_router = Router::new()
       .route("/", get(ui::index))
       .route("/exe", get(ui::list_executions))
@@ -59,6 +59,7 @@ impl Server {
         "/exe/{execution_id}/obs/{observation_id}",
         get(ui::observation_detail),
       )
+      .layer(middleware::from_fn(csrf::ui_csrf_middleware))
       .with_state(state.clone());
 
     // Serve static files
