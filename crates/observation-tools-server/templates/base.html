@@ -11,6 +11,18 @@
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
+    <!-- Configure HTMX to include CSRF token in all requests -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.addEventListener('htmx:configRequest', function(event) {
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+          if (csrfToken) {
+            event.detail.headers['X-CSRF-Token'] = csrfToken;
+          }
+        });
+      });
+    </script>
+
     <style>
       :root {
         /* Light mode colors */
