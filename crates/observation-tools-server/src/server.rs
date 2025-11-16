@@ -4,9 +4,11 @@ use crate::api::ApiDoc;
 use crate::api::AppState;
 use crate::api::{self};
 use crate::config::Config;
+use crate::csrf;
 use crate::storage::LocalBlobStorage;
 use crate::storage::SledStorage;
 use crate::ui;
+use axum::middleware;
 use axum::routing::get;
 use axum::Router;
 use std::sync::Arc;
@@ -67,7 +69,10 @@ impl Server {
     // Build the main router
     let app = Router::new()
       .merge(ui_router)
-      .nest("/api", api::build_router(state))
+      .nest(
+        "/api",
+        api::build_router(state).layer(middleware::from_fn(csrf::validate_csrf)),
+      )
       .merge(SwaggerUi::new("/api/swagger-ui").url("/api/openapi.json", ApiDoc::openapi()))
       .nest_service("/static", serve_static)
       .layer(TraceLayer::new_for_http());

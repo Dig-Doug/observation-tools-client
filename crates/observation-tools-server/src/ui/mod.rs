@@ -3,11 +3,12 @@
 use crate::api::types::ListExecutionsQuery;
 use crate::api::types::ListObservationsQuery;
 use crate::api::AppError;
+use crate::csrf::{create_csrf_cookie, CsrfToken};
 use crate::storage::MetadataStorage;
 use axum::extract::Path;
 use axum::extract::Query;
 use axum::extract::State;
-use axum::http::HeaderMap;
+use axum::http::{header, HeaderMap};
 use axum::response::Html;
 use axum::response::IntoResponse;
 use minijinja::context;
@@ -37,11 +38,21 @@ pub fn init_templates() -> Arc<AutoReloader> {
 
 /// Home page
 #[tracing::instrument(skip(templates))]
-pub async fn index(State(templates): State<Arc<AutoReloader>>) -> impl IntoResponse {
+pub async fn index(
+  State(templates): State<Arc<AutoReloader>>,
+  csrf: CsrfToken,
+) -> impl IntoResponse {
   tracing::debug!("Rendering home page");
   let env = templates.acquire_env().unwrap();
   let tmpl = env.get_template("index.html").unwrap();
-  Html(tmpl.render(context! {}).unwrap())
+  let html = tmpl.render(context! { csrf_token => csrf.0 }).unwrap();
+
+  // Create response with CSRF cookie
+  (
+    [(header::SET_COOKIE, create_csrf_cookie(&csrf.0))],
+    Html(html),
+  )
+    .into_response()
 }
 
 /// List executions page
@@ -50,7 +61,8 @@ pub async fn list_executions(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   State(templates): State<Arc<AutoReloader>>,
   Query(query): Query<ListExecutionsQuery>,
-) -> Result<Html<String>, AppError> {
+  csrf: CsrfToken,
+) -> Result<impl IntoResponse, AppError> {
   let limit = query.limit.unwrap_or(100);
   let offset = query.offset.unwrap_or(0);
   tracing::debug!(
@@ -91,10 +103,18 @@ pub async fn list_executions(
         offset => offset,
         limit => limit,
         page => page,
+        csrf_token => csrf.0,
     })
     .unwrap();
 
-  Ok(Html(html))
+  // Create response with CSRF cookie
+  Ok(
+    (
+      [(header::SET_COOKIE, create_csrf_cookie(&csrf.0))],
+      Html(html),
+    )
+      .into_response(),
+  )
 }
 
 /// Query parameters for execution detail page
@@ -113,7 +133,8 @@ pub async fn execution_detail(
   State(templates): State<Arc<AutoReloader>>,
   Path(id): Path<String>,
   Query(query): Query<ExecutionDetailQuery>,
-) -> Result<Html<String>, AppError> {
+  csrf: CsrfToken,
+) -> Result<impl IntoResponse, AppError> {
   tracing::debug!(execution_id = %id, "Rendering execution detail page");
 
   let execution_id = ExecutionId::parse(&id)?;
@@ -168,10 +189,18 @@ pub async fn execution_detail(
         page => page,
         selected_observation => selected_observation,
         display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
+        csrf_token => csrf.0,
     })
     .unwrap();
 
-  Ok(Html(html))
+  // Create response with CSRF cookie
+  Ok(
+    (
+      [(header::SET_COOKIE, create_csrf_cookie(&csrf.0))],
+      Html(html),
+    )
+      .into_response(),
+  )
 }
 
 /// Observation detail (for the side panel)
@@ -181,7 +210,8 @@ pub async fn observation_detail(
   State(templates): State<Arc<AutoReloader>>,
   Path((execution_id, observation_id)): Path<(String, String)>,
   headers: HeaderMap,
-) -> Result<Html<String>, AppError> {
+  csrf: CsrfToken,
+) -> Result<impl IntoResponse, AppError> {
   tracing::debug!(
       execution_id = %execution_id,
       observation_id = %observation_id,
@@ -221,8 +251,16 @@ pub async fn observation_detail(
     .render(context! {
         observation => observation,
         display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
+        csrf_token => csrf.0,
     })
     .unwrap();
 
-  Ok(Html(html))
+  // Create response with CSRF cookie
+  Ok(
+    (
+      [(header::SET_COOKIE, create_csrf_cookie(&csrf.0))],
+      Html(html),
+    )
+      .into_response(),
+  )
 }
