@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,18 +10,6 @@
 
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-
-    <!-- Configure HTMX to include CSRF token in all requests -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        document.body.addEventListener('htmx:configRequest', function(event) {
-          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-          if (csrfToken) {
-            event.detail.headers['X-CSRF-Token'] = csrfToken;
-          }
-        });
-      });
-    </script>
 
     <style>
       :root {
