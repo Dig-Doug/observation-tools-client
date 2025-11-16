@@ -1,78 +1,80 @@
 {% extends "base.html" %} {% block title %}{{ execution.name }}{% endblock %} {% block content %}
 
-<div class="panel-container {% if selected_observation %}with-sidebar{% endif %}">
-  <div class="main-content">
-    <p class="meta"><a href="/">home</a> / <a href="/exe">executions</a> / {{ execution.name }}</p>
+<div class="grid grid-cols-1 gap-8 {% if selected_observation %}mr-[50%]{% endif %}">
+  <div>
+    <p class="text-neutral-600 dark:text-neutral-400 text-sm"><a href="/" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">home</a> / <a href="/exe" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">executions</a> / {{ execution.name }}</p>
 
-    <h1 data-testid="ExecutionDetailTitle">{{ execution.name }}</h1>
+    <h1 data-testid="ExecutionDetailTitle" class="text-2xl font-bold my-4">{{ execution.name }}</h1>
 
-    <p>
-      <span class="meta">id:</span> <code data-testid="ExecutionDetailId">{{ execution.id }}</code>
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span> <code data-testid="ExecutionDetailId" class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5">{{ execution.id }}</code>
     </p>
-    <p><span class="meta">created:</span> {{ execution.created_at }}</p>
+    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span> {{ execution.created_at }}</p>
 
     {% if execution.metadata %}
-    <h3>metadata</h3>
-    <ul>
+    <h3 class="text-base font-bold my-2">metadata</h3>
+    <ul class="list-none">
       {% for key, value in execution.metadata %}
-      <li>{{ key }}: {{ value }}</li>
+      <li class="my-2">{{ key }}: {{ value }}</li>
       {% endfor %}
     </ul>
     {% endif %}
 
-    <hr />
+    <hr class="border-t border-black dark:border-neutral-200 my-4" />
 
-    <h2>observations</h2>
+    <h2 class="text-xl font-bold my-4">observations</h2>
 
     <div id="observations-list">
       {% if observations %}
-      <ul>
+      <ul class="list-none">
         {% for obs in observations %}
-        <li data-testid="ObservationListItem">
+        <li data-testid="ObservationListItem" class="my-2">
           <a
             data-testid="ObservationListItemLink"
             href="/exe/{{ execution.id }}?obs={{ obs.id }}"
-            class="observation-link {% if selected_observation and selected_observation.id == obs.id %}active{% endif %}"
+            class="underline cursor-pointer text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 {% if selected_observation and selected_observation.id == obs.id %}font-bold{% endif %}"
             >{{ obs.name }}</a
           >
-          <span class="meta">
+          <span class="text-neutral-600 dark:text-neutral-400 text-sm">
             — {{ obs.payload.mime_type }} {% if obs.source %}— {{ obs.source.file }}:{{
             obs.source.line }}{% endif %} — {{ obs.created_at }}
           </span>
           {% if obs.labels %}
-          <br /><span class="meta">labels: {{ obs.labels|join(", ") }}</span>
+          <br /><span class="text-neutral-600 dark:text-neutral-400 text-sm">labels: {{ obs.labels|join(", ") }}</span>
           {% endif %}
         </li>
         {% endfor %}
       </ul>
 
       {% if total_count %}
-      <div class="pagination">
-        <p data-testid="PaginationInfo">
-          <span class="meta">
+      <div class="mt-4 pt-4 border-t border-black dark:border-neutral-200">
+        <p data-testid="PaginationInfo" class="mb-2">
+          <span class="text-neutral-600 dark:text-neutral-400 text-sm">
             showing {{ offset + 1 }}-{{ offset + observations|length }} of {{ total_count }} (page
             {{ page }})
           </span>
         </p>
-        <div>
+        <div class="flex gap-2">
           {% if offset > 0 %}
           <button
             data-testid="PaginationPrev"
             onclick="window.location.href='/exe/{{ execution.id }}?offset={{ offset - limit }}&limit={{ limit }}'"
+            class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
           >
             ← prev
           </button>
           {% else %}
-          <button data-testid="PaginationPrev" disabled>← prev</button>
+          <button data-testid="PaginationPrev" disabled class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed">← prev</button>
           {% endif %} {% if has_next_page %}
           <button
             data-testid="PaginationNext"
             onclick="window.location.href='/exe/{{ execution.id }}?offset={{ offset + limit }}&limit={{ limit }}'"
+            class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
           >
             next →
           </button>
           {% else %}
-          <button data-testid="PaginationNext" disabled>next →</button>
+          <button data-testid="PaginationNext" disabled class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed">next →</button>
           {% endif %}
         </div>
       </div>
@@ -83,14 +85,11 @@
   </div>
 
   {% if selected_observation %}
-  <div class="side-panel active" id="side-panel">
-    <div style="flex-shrink: 0">
-      <a href="/exe/{{ execution.id }}" class="side-panel-close">×</a>
+  <div class="hidden {% if selected_observation %}!flex{% endif %} border-l border-black dark:border-neutral-200 px-8 py-8 fixed top-0 right-0 bottom-0 w-[50%] overflow-hidden bg-white dark:bg-neutral-900 flex-col" id="side-panel">
+    <div class="flex-shrink-0">
+      <a href="/exe/{{ execution.id }}" class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">×</a>
     </div>
-    <div
-      id="side-panel-content"
-      style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column"
-    >
+    <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
       {% set observation = selected_observation %} {% include "_observation_content.html" %}
     </div>
   </div>

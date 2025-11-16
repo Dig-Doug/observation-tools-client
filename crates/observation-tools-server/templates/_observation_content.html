@@ -1,16 +1,14 @@
-<div style="display: flex; flex-direction: column; height: 100%">
-  <div style="flex-shrink: 0">
-    <h1>{{ observation.name }}</h1>
+<div class="flex flex-col h-full">
+  <div class="flex-shrink-0">
+    <h1 class="text-2xl font-bold my-4">{{ observation.name }}</h1>
 
-    <p>
-      <span class="meta">id:</span> <code data-testid="ObservationId">{{ observation.id }}</code>
-    </p>
-    <p><span class="meta">created:</span> {{ observation.created_at }}</p>
+    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span> <code data-testid="ObservationId" class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5">{{ observation.id }}</code></p>
+    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span> {{ observation.created_at }}</p>
 
     {% if observation.source %}
-    <p>
-      <span class="meta">source:</span>
-      <code
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">source:</span>
+      <code class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
         ><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span
           data-testid="ObservationSourceLine"
           >{{ observation.source.line }}</span
@@ -18,37 +16,37 @@
       >
     </p>
     {% endif %} {% if observation.parent_span_id %}
-    <p><span class="meta">parent span:</span> <code>{{ observation.parent_span_id }}</code></p>
+    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">parent span:</span> <code class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5">{{ observation.parent_span_id }}</code></p>
     {% endif %} {% if observation.labels %}
-    <p data-testid="ObservationLabels">
-      <span class="meta">labels:</span> {{ observation.labels|join(", ") }}
+    <p data-testid="ObservationLabels" class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">labels:</span> {{ observation.labels|join(", ") }}
     </p>
     {% endif %} {% if observation.metadata %}
-    <h3>metadata</h3>
-    <ul>
+    <h3 class="text-base font-bold my-2">metadata</h3>
+    <ul class="list-none">
       {% for key, value in observation.metadata %}
-      <li>{{ key }}: {{ value }}</li>
+      <li class="my-2">{{ key }}: {{ value }}</li>
       {% endfor %}
     </ul>
     {% endif %}
 
-    <hr />
+    <hr class="border-t border-black dark:border-neutral-200 my-4" />
 
-    <h2>payload</h2>
-    <p><span class="meta">type:</span> {{ observation.payload.mime_type }}</p>
-    <p><span class="meta">size:</span> {{ observation.payload.size }} bytes</p>
-    <p>
+    <h2 class="text-xl font-bold my-4">payload</h2>
+    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">type:</span> {{ observation.payload.mime_type }}</p>
+    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">size:</span> {{ observation.payload.size }} bytes</p>
+    <p class="mb-2">
       <a
         href="/api/exe/{{ observation.execution_id }}/obs/{{ observation.id }}/content"
         target="_blank"
         rel="noopener noreferrer"
-        >Open raw content in new tab</a
-      >
+        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+      >Open raw content in new tab</a>
     </p>
   </div>
 
   {% if observation.payload.size > display_threshold %}
-  <div style="flex-grow: 1">
+  <div class="flex-grow">
     <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
   </div>
   {% else %}
