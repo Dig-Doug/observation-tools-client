@@ -5,17 +5,47 @@ on:
       - main
   workflow_dispatch:
 
-name: Build
+name: Build and Test
 jobs:
-  setup:
-    name: Build
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install node
-        uses: actions/setup-node@v3
-      - name: Install rust
-        run: rustup install stable
-      - name: Build rust
-        run: cargo build
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Rust workspace
+        run: cargo build --workspace
+
+      - name: Run Rust tests
+        run: cargo test --workspace
+
+      - name: Install Node.js dependencies for client
+        working-directory: crates/observation-tools-client
+        run: npm install
+
+      - name: Build Node.js client
+        working-directory: crates/observation-tools-client
+        run: npm run build:debug
+
+      - name: Install Playwright dependencies
+        working-directory: tests
+        run: npm install
+
+      - name: Install Playwright browsers
+        working-directory: tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run integration tests
+        working-directory: tests
+        run: npm test
