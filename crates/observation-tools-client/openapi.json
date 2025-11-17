@@ -9,7 +9,9 @@
             "description": "The execution to create"
           }
         },
-        "required": ["execution"],
+        "required": [
+          "execution"
+        ],
         "type": "object"
       },
       "CreateExecutionResponse": {
@@ -27,7 +29,9 @@
             "type": "array"
           }
         },
-        "required": ["observations"],
+        "required": [
+          "observations"
+        ],
         "type": "object"
       },
       "CreateObservationsResponse": {
@@ -50,7 +54,9 @@
             "type": "string"
           }
         },
-        "required": ["error"],
+        "required": [
+          "error"
+        ],
         "type": "object"
       },
       "Execution": {
@@ -85,7 +91,12 @@
             "type": "string"
           }
         },
-        "required": ["id", "name", "created_at", "updated_at"],
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
         "type": "object"
       },
       "ExecutionId": {
@@ -101,7 +112,9 @@
             "description": "The execution"
           }
         },
-        "required": ["execution"],
+        "required": [
+          "execution"
+        ],
         "type": "object"
       },
       "GetObservationResponse": {
@@ -112,7 +125,9 @@
             "description": "The observation"
           }
         },
-        "required": ["observation"],
+        "required": [
+          "observation"
+        ],
         "type": "object"
       },
       "ListExecutionsQuery": {
@@ -153,7 +168,10 @@
             "type": "boolean"
           }
         },
-        "required": ["executions", "has_next_page"],
+        "required": [
+          "executions",
+          "has_next_page"
+        ],
         "type": "object"
       },
       "ListObservationsQuery": {
@@ -209,7 +227,10 @@
             "type": "array"
           }
         },
-        "required": ["observations", "has_next_page"],
+        "required": [
+          "observations",
+          "has_next_page"
+        ],
         "type": "object"
       },
       "Observation": {
@@ -264,7 +285,13 @@
             "nullable": true
           }
         },
-        "required": ["id", "execution_id", "name", "payload", "created_at"],
+        "required": [
+          "id",
+          "execution_id",
+          "name",
+          "payload",
+          "created_at"
+        ],
         "type": "object"
       },
       "ObservationId": {
@@ -289,7 +316,11 @@
             "type": "integer"
           }
         },
-        "required": ["data", "mime_type", "size"],
+        "required": [
+          "data",
+          "mime_type",
+          "size"
+        ],
         "type": "object"
       },
       "SourceInfo": {
@@ -313,7 +344,10 @@
             "type": "integer"
           }
         },
-        "required": ["file", "line"],
+        "required": [
+          "file",
+          "line"
+        ],
         "type": "object"
       }
     }
@@ -382,7 +416,9 @@
           }
         },
         "summary": "List all executions",
-        "tags": ["executions"]
+        "tags": [
+          "executions"
+        ]
       },
       "post": {
         "operationId": "create_execution",
@@ -412,7 +448,9 @@
           }
         },
         "summary": "Create a new execution",
-        "tags": ["executions"]
+        "tags": [
+          "executions"
+        ]
       }
     },
     "/api/exe/{execution_id}/obs": {
@@ -507,7 +545,9 @@
           }
         },
         "summary": "List observations for an execution",
-        "tags": ["observations"]
+        "tags": [
+          "observations"
+        ]
       },
       "post": {
         "operationId": "create_observations",
@@ -548,7 +588,9 @@
           }
         },
         "summary": "Create observations (batch)",
-        "tags": ["observations"]
+        "tags": [
+          "observations"
+        ]
       }
     },
     "/api/exe/{execution_id}/obs/{observation_id}": {
@@ -593,7 +635,9 @@
           }
         },
         "summary": "Get a single observation",
-        "tags": ["observations"]
+        "tags": [
+          "observations"
+        ]
       }
     },
     "/api/exe/{execution_id}/obs/{observation_id}/content": {
@@ -643,7 +687,9 @@
           }
         },
         "summary": "Get observation blob content",
-        "tags": ["observations"]
+        "tags": [
+          "observations"
+        ]
       }
     },
     "/api/exe/{id}": {
@@ -679,7 +725,9 @@
           }
         },
         "summary": "Get a single execution",
-        "tags": ["executions"]
+        "tags": [
+          "executions"
+        ]
       }
     }
   },
