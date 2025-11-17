@@ -1,1 +1,12 @@
-{}
+{
+  "name": "observation-tools",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./crates/observation-tools-server/styles/input.css -o ./crates/observation-tools-server/static/styles.css",
+    "watch:css": "tailwindcss -i ./crates/observation-tools-server/styles/input.css -o ./crates/observation-tools-server/static/styles.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}

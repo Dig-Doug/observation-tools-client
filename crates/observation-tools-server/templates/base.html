@@ -7,229 +7,38 @@
     <title>{% block title %}Observation Tools{% endblock %}</title>
     <link rel="icon" href="/static/logo.svg" type="image/svg+xml" />
 
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="/static/styles.css" />
+
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
     <style>
-      :root {
-        /* Light mode colors */
-        --bg-color: #fff;
-        --text-color: #000;
-        --link-color: #000;
-        --link-hover-color: #00f;
-        --border-color: #000;
-        --code-bg: #f0f0f0;
-        --input-bg: #fff;
-        --meta-color: #666;
-        --logo-display: block;
-        --logo-dark-display: none;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        :root {
-          /* Dark mode colors */
-          --bg-color: #1a1a1a;
-          --text-color: #e0e0e0;
-          --link-color: #e0e0e0;
-          --link-hover-color: #6b9eff;
-          --border-color: #e0e0e0;
-          --code-bg: #2a2a2a;
-          --input-bg: #2a2a2a;
-          --meta-color: #999;
-          --logo-display: none;
-          --logo-dark-display: block;
-        }
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        font-family: monospace;
-        font-size: 14px;
-        line-height: 1.5;
-        background: var(--bg-color);
-        color: var(--text-color);
-        overflow-x: hidden;
-      }
-      body > nav {
-        padding: 1rem 2rem;
-      }
-      body > main {
-        padding: 2rem;
-      }
-      a {
-        color: var(--link-color);
-        text-decoration: underline;
-      }
-      a:hover {
-        color: var(--link-hover-color);
-      }
-      nav {
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
+      /* Logo dark mode toggle */
       .logo {
-        width: 24px;
-        height: 24px;
-        display: var(--logo-display);
+        display: block;
       }
       .logo-dark {
-        width: 24px;
-        height: 24px;
-        display: var(--logo-dark-display);
-      }
-      h1 {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin: 1rem 0;
-      }
-      h2 {
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin: 1rem 0;
-      }
-      h3 {
-        font-size: 1rem;
-        font-weight: bold;
-        margin: 0.5rem 0;
-      }
-      input[type="text"] {
-        font-family: monospace;
-        font-size: 14px;
-        padding: 0.25rem;
-        border: 1px solid var(--border-color);
-        width: 100%;
-        max-width: 400px;
-        background: var(--input-bg);
-        color: var(--text-color);
-      }
-      button,
-      .button {
-        font-family: monospace;
-        font-size: 14px;
-        padding: 0.25rem 0.5rem;
-        border: 1px solid var(--border-color);
-        background: var(--input-bg);
-        color: var(--text-color);
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-      }
-      button:hover,
-      .button:hover {
-        color: var(--link-hover-color);
-      }
-      ul {
-        list-style: none;
-      }
-      li {
-        margin: 0.5rem 0;
-      }
-      code,
-      pre {
-        font-family: monospace;
-        background: var(--code-bg);
-        color: var(--text-color);
-        padding: 0.125rem 0.25rem;
-      }
-      pre {
-        padding: 1rem;
-        overflow-x: auto;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-      }
-      .meta {
-        color: var(--meta-color);
-        font-size: 0.9em;
-      }
-      hr {
-        border: none;
-        border-top: 1px solid var(--border-color);
-        margin: 1rem 0;
-      }
-
-      /* Side panel layout */
-      .panel-container {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
-
-      .panel-container.with-sidebar {
-        margin-right: 50%;
-      }
-
-      .side-panel {
         display: none;
-        border-left: 1px solid var(--border-color);
-        padding: 2rem;
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 50%;
-        overflow: hidden;
-        background: var(--bg-color);
       }
-
-      .side-panel.active {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .side-panel-close {
-        display: block;
-        text-align: right;
-        cursor: pointer;
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-        text-decoration: none;
-      }
-
-      .observation-link {
-        cursor: pointer;
-      }
-
-      .observation-link.active {
-        font-weight: bold;
-      }
-
-      .pagination {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
-      }
-
-      .pagination p {
-        margin-bottom: 0.5rem;
-      }
-
-      .pagination div {
-        display: flex;
-        gap: 0.5rem;
-      }
-
-      .pagination button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+      @media (prefers-color-scheme: dark) {
+        .logo {
+          display: none;
+        }
+        .logo-dark {
+          display: block;
+        }
       }
     </style>
   </head>
   <body>
-    <nav>
-      <img src="/static/logo.svg" alt="Observation Tools" class="logo" />
-      <img src="/static/logo_dark.svg" alt="Observation Tools" class="logo-dark" />
-      <a href="/" data-testid="NavHome">home</a>
-      <a href="/exe" data-testid="NavExecutionsList">executions</a>
+    <nav class="px-8 py-4 pb-4 border-b border-black dark:border-neutral-200 flex items-center gap-4">
+      <img src="/static/logo.svg" alt="Observation Tools" class="logo w-6 h-6" />
+      <img src="/static/logo_dark.svg" alt="Observation Tools" class="logo-dark w-6 h-6" />
+      <a href="/" data-testid="NavHome" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">home</a>
+      <a href="/exe" data-testid="NavExecutionsList" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">executions</a>
     </nav>
 
-    <main>{% block content %}{% endblock %}</main>
+    <main class="px-8 py-8">{% block content %}{% endblock %}</main>
   </body>
 </html>
