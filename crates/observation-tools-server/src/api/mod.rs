@@ -53,6 +53,7 @@ pub enum AppError {
   Storage(crate::storage::StorageError),
   Shared(observation_tools_shared::Error),
   BadRequest(String),
+  Template(minijinja::Error),
 }
 
 impl From<crate::storage::StorageError> for AppError {
@@ -64,6 +65,12 @@ impl From<crate::storage::StorageError> for AppError {
 impl From<observation_tools_shared::Error> for AppError {
   fn from(err: observation_tools_shared::Error) -> Self {
     AppError::Shared(err)
+  }
+}
+
+impl From<minijinja::Error> for AppError {
+  fn from(err: minijinja::Error) -> Self {
+    AppError::Template(err)
   }
 }
 
@@ -85,6 +92,10 @@ impl IntoResponse for AppError {
       AppError::BadRequest(msg) => {
         tracing::warn!(error = %msg, "Bad request");
         (StatusCode::BAD_REQUEST, msg.clone())
+      }
+      AppError::Template(err) => {
+        tracing::error!(error = %err, "Template rendering error");
+        (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
       }
     };
 

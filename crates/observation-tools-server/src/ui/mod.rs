@@ -22,6 +22,16 @@ use std::sync::Arc;
 pub fn init_templates() -> Arc<AutoReloader> {
   Arc::new(AutoReloader::new(move |notifier| {
     let mut env = Environment::new();
+
+    // Add custom filter to unescape common escape sequences
+    env.add_filter("unescape", |value: String| -> String {
+      value
+        .replace("\\n", "\n")
+        .replace("\\r", "\r")
+        .replace("\\t", "\t")
+        .replace("\\\\", "\\")
+    });
+
     if cfg!(debug_assertions) {
       tracing::info!("Running in local development mode, enabling autoreload for templates");
       let template_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("templates");
@@ -40,12 +50,12 @@ pub fn init_templates() -> Arc<AutoReloader> {
 pub async fn index(
   State(templates): State<Arc<AutoReloader>>,
   csrf: CsrfToken,
-) -> Html<String> {
+) -> Result<Html<String>, AppError> {
   tracing::debug!("Rendering home page");
-  let env = templates.acquire_env().unwrap();
-  let tmpl = env.get_template("index.html").unwrap();
-  let html = tmpl.render(context! { csrf_token => csrf.0 }).unwrap();
-  Html(html)
+  let env = templates.acquire_env()?;
+  let tmpl = env.get_template("index.html")?;
+  let html = tmpl.render(context! { csrf_token => csrf.0 })?;
+  Ok(Html(html))
 }
 
 /// List executions page
@@ -85,8 +95,8 @@ pub async fn list_executions(
     "Retrieved executions for UI"
   );
 
-  let env = templates.acquire_env().unwrap();
-  let tmpl = env.get_template("executions_list.html").unwrap();
+  let env = templates.acquire_env()?;
+  let tmpl = env.get_template("executions_list.html")?;
 
   let html = tmpl
     .render(context! {
@@ -97,8 +107,7 @@ pub async fn list_executions(
         limit => limit,
         page => page,
         csrf_token => csrf.0,
-    })
-    .unwrap();
+    })?;
 
   Ok(Html(html))
 }
@@ -161,8 +170,8 @@ pub async fn execution_detail(
       "Retrieved execution details for UI"
   );
 
-  let env = templates.acquire_env().unwrap();
-  let tmpl = env.get_template("execution_detail.html").unwrap();
+  let env = templates.acquire_env()?;
+  let tmpl = env.get_template("execution_detail.html")?;
 
   let html = tmpl
     .render(context! {
@@ -176,8 +185,7 @@ pub async fn execution_detail(
         selected_observation => selected_observation,
         display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
         csrf_token => csrf.0,
-    })
-    .unwrap();
+    })?;
 
   Ok(Html(html))
 }
@@ -208,7 +216,7 @@ pub async fn observation_detail(
 
   tracing::debug!(observation_name = %observation.name, "Retrieved observation for UI");
 
-  let env = templates.acquire_env().unwrap();
+  let env = templates.acquire_env()?;
 
   // Check if this is an HTMX request (for side panel)
   let is_htmx_request = headers
@@ -224,15 +232,14 @@ pub async fn observation_detail(
     "observation_detail.html"
   };
 
-  let tmpl = env.get_template(template_name).unwrap();
+  let tmpl = env.get_template(template_name)?;
 
   let html = tmpl
     .render(context! {
         observation => observation,
         display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
         csrf_token => csrf.0,
-    })
-    .unwrap();
+    })?;
 
   Ok(Html(html))
 }

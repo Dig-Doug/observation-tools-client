@@ -16,6 +16,7 @@ repository = "https://github.com/Dig-Doug/observation-tools-client"
 anyhow = "1.0"
 async-trait = "0.1"
 axum = { version = "0.8", features = ["macros", "multipart"] }
+axum-extra = { version = "0.9", features = ["cookie"] }
 bytes = "1.9"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.5", features = ["derive"] }
@@ -48,4 +49,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
 utoipa-swagger-ui = { version = "9", features = ["axum"] }
-uuid = { version = "1.11", features = ["v7", "serde", "js"] }
+uuid = { version = "1.11", features = ["v4", "v7", "serde", "js"] }
