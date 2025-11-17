@@ -89,7 +89,7 @@
     <div class="flex-shrink-0">
       <a href="/exe/{{ execution.id }}" class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">×</a>
     </div>
-    <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
+    <div id="side-panel-content" class="flex-grow min-h-0 overflow-auto">
       {% set observation = selected_observation %} {% include "_observation_content.html" %}
     </div>
   </div>
