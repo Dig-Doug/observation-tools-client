@@ -90,7 +90,8 @@ impl ObservationBuilder {
   /// Build and send the observation using the current execution context
   ///
   /// Returns a `SendObservation` which allows you to wait for the observation
-  /// to be uploaded before proceeding, or to get the observation ID immediately.
+  /// to be uploaded before proceeding, or to get the observation ID
+  /// immediately.
   pub fn build(self) -> Result<SendObservation> {
     let execution = context::get_current_execution().ok_or(Error::NoExecutionContext)?;
     let observation_id = ObservationId::new();

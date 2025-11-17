@@ -10,7 +10,8 @@ pub fn create_client(base_url: &str) -> anyhow::Result<Client> {
     &base_url,
     reqwest::ClientBuilder::new()
       .connect_timeout(Duration::from_secs(30))
-      // Increase timeout for large blob uploads (default is 30s which is too short for large payloads)
+      // Increase timeout for large blob uploads (default is 30s which is too short for large
+      // payloads)
       .timeout(Duration::from_secs(300)) // 5 minutes for uploads
       .build()?,
     ObservationToolsServerClientOpts {},
@@ -111,9 +112,10 @@ impl Client {
 
     let status = response.status();
     if !status.is_success() {
-      let error_text = response.text().await.unwrap_or_else(|e| {
-        format!("(failed to read error response body: {})", e)
-      });
+      let error_text = response
+        .text()
+        .await
+        .unwrap_or_else(|e| format!("(failed to read error response body: {})", e));
       log::error!(
         "Blob upload failed with HTTP error: url={}, observation_id={}, status={}, body={}",
         url,

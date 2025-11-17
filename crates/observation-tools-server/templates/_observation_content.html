@@ -1,8 +1,10 @@
-<div style="display: flex; flex-direction: column; height: 100%;">
-  <div style="flex-shrink: 0;">
+<div style="display: flex; flex-direction: column; height: 100%">
+  <div style="flex-shrink: 0">
     <h1>{{ observation.name }}</h1>
 
-    <p><span class="meta">id:</span> <code data-testid="ObservationId">{{ observation.id }}</code></p>
+    <p>
+      <span class="meta">id:</span> <code data-testid="ObservationId">{{ observation.id }}</code>
+    </p>
     <p><span class="meta">created:</span> {{ observation.created_at }}</p>
 
     {% if observation.source %}
@@ -40,18 +42,29 @@
         href="/api/exe/{{ observation.execution_id }}/obs/{{ observation.id }}/content"
         target="_blank"
         rel="noopener noreferrer"
-      >Open raw content in new tab</a>
+        >Open raw content in new tab</a
+      >
     </p>
   </div>
 
   {% if observation.payload.size > display_threshold %}
-  <div style="flex-grow: 1;">
+  <div style="flex-grow: 1">
     <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
   </div>
   {% else %}
   <pre
     data-testid="ObservationPayload"
-    style="flex-grow: 1; min-height: 0; overflow: auto; border: 1px solid var(--border-color); padding: 1rem; margin: 0; background-color: var(--code-bg);"
-  >{{ observation.payload.data|unescape }}</pre>
+    style="
+      flex-grow: 1;
+      min-height: 0;
+      overflow: auto;
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      margin: 0;
+      background-color: var(--code-bg);
+    "
+  >
+{{ observation.payload.data|unescape }}</pre
+  >
   {% endif %}
 </div>

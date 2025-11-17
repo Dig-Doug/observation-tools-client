@@ -146,11 +146,10 @@ test("Large payload is uploaded as blob", async ({ page, server }) => {
   // The payload must be valid JSON, so we create an object with a large string field
   const largeData = "x".repeat(70000);
   const largePayload = { data: largeData, size: largeData.length };
-  const observationId = exe.observe(
-    observationName,
-    JSON.stringify(largePayload),
-    ["test", "large-payload"],
-  );
+  const observationId = exe.observe(observationName, JSON.stringify(largePayload), [
+    "test",
+    "large-payload",
+  ]);
 
   // Wait a moment for the blob upload to complete
   await new Promise((resolve) => setTimeout(resolve, 1000));

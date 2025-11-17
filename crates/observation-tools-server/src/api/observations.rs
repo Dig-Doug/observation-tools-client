@@ -240,9 +240,5 @@ pub async fn get_observation_blob(
 
   tracing::debug!(size = blob.len(), "Blob retrieved from storage");
 
-  Ok((
-    StatusCode::OK,
-    [(header::CONTENT_TYPE, content_type)],
-    blob,
-  ))
+  Ok((StatusCode::OK, [(header::CONTENT_TYPE, content_type)], blob))
 }

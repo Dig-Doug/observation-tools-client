@@ -98,16 +98,15 @@ pub async fn list_executions(
   let env = templates.acquire_env()?;
   let tmpl = env.get_template("executions_list.html")?;
 
-  let html = tmpl
-    .render(context! {
-        executions => executions,
-        has_next_page => has_next_page,
-        total_count => total_count,
-        offset => offset,
-        limit => limit,
-        page => page,
-        csrf_token => csrf.0,
-    })?;
+  let html = tmpl.render(context! {
+      executions => executions,
+      has_next_page => has_next_page,
+      total_count => total_count,
+      offset => offset,
+      limit => limit,
+      page => page,
+      csrf_token => csrf.0,
+  })?;
 
   Ok(Html(html))
 }
@@ -173,19 +172,18 @@ pub async fn execution_detail(
   let env = templates.acquire_env()?;
   let tmpl = env.get_template("execution_detail.html")?;
 
-  let html = tmpl
-    .render(context! {
-        execution => execution,
-        observations => observations,
-        has_next_page => has_next_page,
-        total_count => total_count,
-        offset => offset,
-        limit => limit,
-        page => page,
-        selected_observation => selected_observation,
-        display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
-        csrf_token => csrf.0,
-    })?;
+  let html = tmpl.render(context! {
+      execution => execution,
+      observations => observations,
+      has_next_page => has_next_page,
+      total_count => total_count,
+      offset => offset,
+      limit => limit,
+      page => page,
+      selected_observation => selected_observation,
+      display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
+      csrf_token => csrf.0,
+  })?;
 
   Ok(Html(html))
 }
@@ -234,12 +232,11 @@ pub async fn observation_detail(
 
   let tmpl = env.get_template(template_name)?;
 
-  let html = tmpl
-    .render(context! {
-        observation => observation,
-        display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
-        csrf_token => csrf.0,
-    })?;
+  let html = tmpl.render(context! {
+      observation => observation,
+      display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
+      csrf_token => csrf.0,
+  })?;
 
   Ok(Html(html))
 }

@@ -1,10 +1,12 @@
-use axum::{
-  extract::{FromRequestParts, Request},
-  http::{header, StatusCode},
-  middleware::Next,
-  response::{IntoResponse, Response},
-};
-use axum_extra::extract::cookie::{Cookie, SameSite};
+use axum::extract::FromRequestParts;
+use axum::extract::Request;
+use axum::http::header;
+use axum::http::StatusCode;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
+use axum::response::Response;
+use axum_extra::extract::cookie::Cookie;
+use axum_extra::extract::cookie::SameSite;
 use uuid::Uuid;
 
 pub const CSRF_COOKIE_NAME: &str = "csrf_token";

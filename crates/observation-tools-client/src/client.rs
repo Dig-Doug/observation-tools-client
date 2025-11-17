@@ -1,17 +1,19 @@
 //! Client for communicating with the observation-tools server
 
 use crate::error::Result;
-use crate::execution::{BeginExecution, ExecutionHandle};
+use crate::execution::BeginExecution;
+use crate::execution::ExecutionHandle;
 use async_channel;
-use log::{error, info, trace};
+use log::error;
+use log::info;
+use log::trace;
 use napi_derive::napi;
 use observation_tools_shared::models::Execution;
 use observation_tools_shared::models::Observation;
-use std::sync::Arc;
-
 // Re-export constants from shared crate for convenience
 pub use observation_tools_shared::BATCH_SIZE;
 pub use observation_tools_shared::BLOB_THRESHOLD_BYTES;
+use std::sync::Arc;
 
 /// Message types for the background uploader task
 pub(crate) enum UploaderMessage {
@@ -324,10 +326,7 @@ async fn upload_observations(
           .upload_observation_blob(&execution_id.to_string(), &obs.id.to_string(), blob_data)
           .await
         {
-          error!(
-            "Failed to upload blob for observation {}: {}",
-            obs.id, e
-          );
+          error!("Failed to upload blob for observation {}: {}", obs.id, e);
           return Err(crate::error::Error::Config(format!(
             "Failed to upload blob for observation {}: {}",
             obs.id, e

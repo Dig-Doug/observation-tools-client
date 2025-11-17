@@ -70,7 +70,8 @@ pub fn register_global_execution(execution: ExecutionHandle) -> Result<()> {
 
 /// Get the current execution from the global context
 ///
-/// This returns a clone of the execution handle that is shared across all threads.
+/// This returns a clone of the execution handle that is shared across all
+/// threads.
 pub fn current_execution() -> Option<ExecutionHandle> {
   context::get_current_execution()
 }

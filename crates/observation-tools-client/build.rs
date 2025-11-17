@@ -29,11 +29,7 @@ fn main() {
   );
 }
 
-fn run_progenitor(
-  spec: serde_json::Value,
-  output_name: &str,
-  settings: &mut GenerationSettings,
-) {
+fn run_progenitor(spec: serde_json::Value, output_name: &str, settings: &mut GenerationSettings) {
   // Trigger rebuild if the server crate changes
   println!("cargo:rerun-if-changed=../observation-tools-server/src");
 
@@ -57,8 +53,8 @@ fn run_progenitor(
   );
   let content = content.replace("pub async fn ", "#[allow(dead_code)] pub async fn ");
 
-  let mut out_file = std::path::Path::new(&std::env::var("OUT_DIR").expect("OUT_DIR not set"))
-    .to_path_buf();
+  let mut out_file =
+    std::path::Path::new(&std::env::var("OUT_DIR").expect("OUT_DIR not set")).to_path_buf();
   out_file.push(output_name);
 
   std::fs::write(out_file, content).expect("Failed to write generated code");
@@ -89,10 +85,7 @@ fn convert_nullable_types(value: &mut serde_json::Value) {
             let has_null = type_array.iter().any(|v| v.as_str() == Some("null"));
             if has_null {
               // Find the non-null type
-              if let Some(actual_type) = type_array
-                .iter()
-                .find(|v| v.as_str() != Some("null"))
-              {
+              if let Some(actual_type) = type_array.iter().find(|v| v.as_str() != Some("null")) {
                 // Replace type array with single type and add nullable
                 map.insert("type".to_string(), actual_type.clone());
                 map.insert("nullable".to_string(), serde_json::Value::Bool(true));

@@ -84,10 +84,13 @@
 
   {% if selected_observation %}
   <div class="side-panel active" id="side-panel">
-    <div style="flex-shrink: 0;">
+    <div style="flex-shrink: 0">
       <a href="/exe/{{ execution.id }}" class="side-panel-close">×</a>
     </div>
-    <div id="side-panel-content" style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column;">
+    <div
+      id="side-panel-content"
+      style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column"
+    >
       {% set observation = selected_observation %} {% include "_observation_content.html" %}
     </div>
   </div>

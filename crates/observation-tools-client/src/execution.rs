@@ -45,9 +45,7 @@ impl SendObservation {
   /// # Returns
   /// - `Ok(ObservationId)` if the observations were successfully uploaded
   /// - `Err(Error::ChannelClosed)` if the upload task failed
-  pub async fn wait_for_upload(
-    self,
-  ) -> Result<observation_tools_shared::models::ObservationId> {
+  pub async fn wait_for_upload(self) -> Result<observation_tools_shared::models::ObservationId> {
     self.uploaded_rx.await.map_err(|_| Error::ChannelClosed)?;
     Ok(self.observation_id)
   }
@@ -148,7 +146,8 @@ impl ExecutionHandle {
   /// Send a pre-built observation
   ///
   /// Returns a `SendObservation` which allows you to wait for the observation
-  /// to be uploaded before proceeding, or to get the observation ID immediately.
+  /// to be uploaded before proceeding, or to get the observation ID
+  /// immediately.
   pub fn send_observation_data(&self, mut observation: Observation) -> Result<SendObservation> {
     // Ensure the observation belongs to this execution
     observation.execution_id = self.execution_id;

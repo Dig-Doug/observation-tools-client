@@ -4,7 +4,8 @@
 //! work correctly using both the client library and the OpenAPI client.
 
 use anyhow::anyhow;
-use observation_tools_client::{Client, ClientBuilder};
+use observation_tools_client::Client;
+use observation_tools_client::ClientBuilder;
 use observation_tools_shared::ExecutionId;
 use std::collections::HashSet;
 use std::net::SocketAddr;
@@ -187,7 +188,8 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     .await?;
   assert_eq!(list_response.observations.len(), expected_names.len());
 
-  // Verify all payloads are stored inline (not as blobs) since they're under the threshold
+  // Verify all payloads are stored inline (not as blobs) since they're under the
+  // threshold
   for obs in &list_response.observations {
     assert!(
       !obs.payload.data.is_empty(),
@@ -385,9 +387,7 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   // Verify the blob can be retrieved via the content endpoint
   let blob_url = format!(
     "http://{}/api/exe/{}/obs/{}/content",
-    server.addr,
-    execution_id,
-    observation_id
+    server.addr, execution_id, observation_id
   );
 
   let response = reqwest::get(&blob_url).await?;

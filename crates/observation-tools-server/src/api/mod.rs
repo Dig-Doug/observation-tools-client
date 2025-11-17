@@ -154,7 +154,8 @@ pub struct ApiDoc;
 
 /// Build the API router
 pub fn build_router(state: AppState) -> Router {
-  use observation_tools_shared::{MAX_BLOB_SIZE, MAX_OBSERVATION_BATCH_SIZE};
+  use observation_tools_shared::MAX_BLOB_SIZE;
+  use observation_tools_shared::MAX_OBSERVATION_BATCH_SIZE;
 
   // Blob upload endpoint with calculated body size limit
   // Based on MAX_BLOB_SIZE (500MB) for very large payloads
