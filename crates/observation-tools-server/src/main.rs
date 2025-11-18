@@ -50,9 +50,32 @@ async fn main() -> anyhow::Result<()> {
 
       let bind_addr: SocketAddr = ([0, 0, 0, 0], port).into();
 
-      let config = Config::new()
+      // Read BASE_URL from environment
+      let base_url = std::env::var("BASE_URL")
+        .unwrap_or_else(|_| format!("http://localhost:{}", port));
+
+      let mut config = Config::new()
         .with_bind_addr(bind_addr)
-        .with_data_dir(data_dir);
+        .with_data_dir(data_dir)
+        .with_base_url(base_url);
+
+      // Configure Google OAuth if credentials are provided
+      if let (Ok(client_id), Ok(client_secret)) = (
+        std::env::var("GOOGLE_CLIENT_ID"),
+        std::env::var("GOOGLE_CLIENT_SECRET"),
+      ) {
+        tracing::info!("Configuring Google OAuth");
+        config = config.with_google_oauth(client_id, client_secret);
+      }
+
+      // Configure GitHub OAuth if credentials are provided
+      if let (Ok(client_id), Ok(client_secret)) = (
+        std::env::var("GITHUB_CLIENT_ID"),
+        std::env::var("GITHUB_CLIENT_SECRET"),
+      ) {
+        tracing::info!("Configuring GitHub OAuth");
+        config = config.with_github_oauth(client_id, client_secret);
+      }
 
       let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
       let server = Server::new(config);

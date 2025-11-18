@@ -49,6 +49,17 @@
         class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
         >executions</a
       >
+      <div class="ml-auto flex items-center gap-4">
+        {% if user %}
+          <span class="text-black dark:text-neutral-200">{{ user.email }}</span>
+          <form method="post" action="/auth/logout">
+            <button type="submit" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">logout</button>
+          </form>
+        {% else %}
+          <a href="/auth/google" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">sign in with google</a>
+          <a href="/auth/github" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">sign in with github</a>
+        {% endif %}
+      </div>
     </nav>
 
     <main class="px-8 py-8">{% block content %}{% endblock %}</main>

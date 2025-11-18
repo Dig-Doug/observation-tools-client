@@ -3,6 +3,7 @@
 use crate::api::types::ListExecutionsQuery;
 use crate::api::types::ListObservationsQuery;
 use crate::api::AppError;
+use crate::auth::AuthUser;
 use crate::csrf::CsrfToken;
 use crate::storage::MetadataStorage;
 use axum::extract::Path;
@@ -10,6 +11,7 @@ use axum::extract::Query;
 use axum::extract::State;
 use axum::http::HeaderMap;
 use axum::response::Html;
+use axum::Extension;
 use minijinja::context;
 use minijinja::path_loader;
 use minijinja::Environment;
@@ -49,12 +51,16 @@ pub fn init_templates() -> Arc<AutoReloader> {
 #[tracing::instrument(skip(templates))]
 pub async fn index(
   State(templates): State<Arc<AutoReloader>>,
+  auth_user: Option<Extension<AuthUser>>,
   csrf: CsrfToken,
 ) -> Result<Html<String>, AppError> {
   tracing::debug!("Rendering home page");
   let env = templates.acquire_env()?;
   let tmpl = env.get_template("index.html")?;
-  let html = tmpl.render(context! { csrf_token => csrf.0 })?;
+  let html = tmpl.render(context! {
+    csrf_token => csrf.0,
+    user => auth_user.as_ref().map(|u| &u.user),
+  })?;
   Ok(Html(html))
 }
 
@@ -64,6 +70,7 @@ pub async fn list_executions(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   State(templates): State<Arc<AutoReloader>>,
   Query(query): Query<ListExecutionsQuery>,
+  auth_user: Option<Extension<AuthUser>>,
   csrf: CsrfToken,
 ) -> Result<Html<String>, AppError> {
   let limit = query.limit.unwrap_or(100);
@@ -106,6 +113,7 @@ pub async fn list_executions(
       limit => limit,
       page => page,
       csrf_token => csrf.0,
+      user => auth_user.as_ref().map(|u| &u.user),
   })?;
 
   Ok(Html(html))
@@ -127,6 +135,7 @@ pub async fn execution_detail(
   State(templates): State<Arc<AutoReloader>>,
   Path(id): Path<String>,
   Query(query): Query<ExecutionDetailQuery>,
+  auth_user: Option<Extension<AuthUser>>,
   csrf: CsrfToken,
 ) -> Result<Html<String>, AppError> {
   tracing::debug!(execution_id = %id, "Rendering execution detail page");
@@ -183,6 +192,7 @@ pub async fn execution_detail(
       selected_observation => selected_observation,
       display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
       csrf_token => csrf.0,
+      user => auth_user.as_ref().map(|u| &u.user),
   })?;
 
   Ok(Html(html))
@@ -195,6 +205,7 @@ pub async fn observation_detail(
   State(templates): State<Arc<AutoReloader>>,
   Path((execution_id, observation_id)): Path<(String, String)>,
   headers: HeaderMap,
+  auth_user: Option<Extension<AuthUser>>,
   csrf: CsrfToken,
 ) -> Result<Html<String>, AppError> {
   tracing::debug!(
@@ -236,6 +247,7 @@ pub async fn observation_detail(
       observation => observation,
       display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
       csrf_token => csrf.0,
+      user => auth_user.as_ref().map(|u| &u.user),
   })?;
 
   Ok(Html(html))
