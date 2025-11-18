@@ -63,8 +63,15 @@ impl Server {
       .with_state(state.clone());
 
     // Serve static files
-    let static_dir = std::env::current_dir()?.join("crates/observation-tools-server/static");
-    tracing::debug!(static_dir = ?static_dir, "Serving static files from directory");
+    let static_dir = std::env::var("STATIC_DIR")
+      .ok()
+      .map(std::path::PathBuf::from)
+      .unwrap_or_else(|| {
+        std::env::current_dir()
+          .unwrap_or_else(|_| std::path::PathBuf::from("."))
+          .join("crates/observation-tools-server/static")
+      });
+    tracing::info!(static_dir = ?static_dir, "Serving static files from directory");
     let serve_static = ServeDir::new(static_dir);
 
     // Build the main router

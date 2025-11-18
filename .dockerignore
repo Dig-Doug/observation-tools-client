@@ -1,0 +1,43 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Build artifacts
+target/
+*.exe
+*.wasm
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data directories
+.observation-tools/
+data/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# CI/CD
+.github/
+
+# Node (if any frontend tooling)
+node_modules/
+npm-debug.log
+
+# Environment files (use example instead)
+.env
+.env.local
+
+# Docker
+docker-compose.override.yml

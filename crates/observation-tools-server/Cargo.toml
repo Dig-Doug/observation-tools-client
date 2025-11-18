@@ -15,7 +15,6 @@ async-trait.workspace = true
 axum.workspace = true
 axum-extra.workspace = true
 bytes.workspace = true
-clap.workspace = true
 minijinja-autoreload = { workspace = true }
 minijinja-embed = {workspace = true}
 minijinja.workspace = true
