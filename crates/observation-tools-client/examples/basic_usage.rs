@@ -28,12 +28,16 @@ async fn main() -> anyhow::Result<()> {
   // Log some observations using the macro
   observe!("startup", "Application started")?;
 
-  // Simulate some work
+  // Simulate some work with JSON data
+  // For complex types, use the builder API with .payload()
   let data = serde_json::json!({
       "user_id": 123,
       "action": "login"
   });
-  observe!("user_event", data)?;
+  observation_tools_client::ObservationBuilder::new("user_event")
+    .payload(data)
+    .source(file!(), line!())
+    .build()?;
 
   // With labels
   observe!(

@@ -5,6 +5,7 @@ use crate::context;
 use crate::error::Result;
 use crate::execution::SendObservation;
 use crate::Error;
+use observation_tools_shared::models::IntoPayload;
 use observation_tools_shared::models::Observation;
 use observation_tools_shared::models::ObservationId;
 use observation_tools_shared::models::Payload;
@@ -68,7 +69,11 @@ impl ObservationBuilder {
     self
   }
 
-  /// Set the payload for the observation
+  /// Set the payload for the observation using serde JSON serialization
+  ///
+  /// This method serializes the value to JSON and sets the MIME type to "application/json".
+  /// For types that implement `IntoPayload`, consider using `custom_payload` instead
+  /// to have more control over the serialization format.
   pub fn payload<T: serde::Serialize>(mut self, value: T) -> Self {
     // Serialize the value to JSON string
     match serde_json::to_string(&value) {
@@ -84,6 +89,32 @@ impl ObservationBuilder {
         tracing::error!("Failed to serialize observation payload: {}", e);
       }
     }
+    self
+  }
+
+  /// Set the payload for the observation using custom serialization
+  ///
+  /// This method uses the `IntoPayload` trait to convert the value into a payload.
+  /// This allows for custom serialization logic, including:
+  /// - Serializing primitives as text/plain instead of JSON
+  /// - Custom binary formats
+  /// - Optimized serialization for specific types
+  ///
+  /// # Examples
+  ///
+  /// ```no_run
+  /// use observation_tools_client::ObservationBuilder;
+  ///
+  /// // Strings are serialized as text/plain
+  /// ObservationBuilder::new("my_observation")
+  ///     .custom_payload("Hello, world!");
+  ///
+  /// // Numbers are serialized as text/plain
+  /// ObservationBuilder::new("count")
+  ///     .custom_payload(42);
+  /// ```
+  pub fn custom_payload<T: IntoPayload>(mut self, value: T) -> Self {
+    self.payload = Some(value.into_payload());
     self
   }
 
