@@ -5,10 +5,12 @@ use crate::context;
 use crate::error::Result;
 use crate::execution::SendObservation;
 use crate::Error;
+use observation_tools_shared::models::IntoPayload;
 use observation_tools_shared::models::Observation;
 use observation_tools_shared::models::ObservationId;
 use observation_tools_shared::models::Payload;
 use observation_tools_shared::models::SourceInfo;
+use observation_tools_shared::IntoCustomPayload;
 use std::collections::HashMap;
 
 /// Builder for creating observations
@@ -23,9 +25,9 @@ pub struct ObservationBuilder {
 
 impl ObservationBuilder {
   /// Create a new observation builder with the given name
-  pub fn new(name: impl Into<String>) -> Self {
+  pub fn new<T: AsRef<str>>(name: T) -> Self {
     Self {
-      name: name.into(),
+      name: name.as_ref().to_string(),
       labels: Vec::new(),
       metadata: HashMap::new(),
       source: None,
@@ -68,22 +70,13 @@ impl ObservationBuilder {
     self
   }
 
-  /// Set the payload for the observation
-  pub fn payload<T: serde::Serialize>(mut self, value: T) -> Self {
-    // Serialize the value to JSON string
-    match serde_json::to_string(&value) {
-      Ok(json_string) => {
-        let size = json_string.len();
-        self.payload = Some(Payload {
-          mime_type: "application/json".to_string(),
-          data: json_string,
-          size,
-        });
-      }
-      Err(e) => {
-        tracing::error!("Failed to serialize observation payload: {}", e);
-      }
-    }
+  pub fn payload<T: ?Sized + IntoPayload>(mut self, value: &T) -> Self {
+    self.payload = Some(value.to_payload());
+    self
+  }
+
+  pub fn custom_payload<T: IntoCustomPayload>(mut self, value: &T) -> Self {
+    self.payload = Some(value.to_payload());
     self
   }
 

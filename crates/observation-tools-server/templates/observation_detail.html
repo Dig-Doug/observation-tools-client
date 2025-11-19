@@ -1,8 +1,23 @@
 {% extends "base.html" %} {% block title %}{{ observation.name }}{% endblock %} {% block content %}
 <p class="text-neutral-600 dark:text-neutral-400 text-sm">
-  <a href="/" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">home</a> / <a href="/exe" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">executions</a> /
-  <a href="/exe/{{ observation.execution_id }}" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">{{ observation.execution_id }}</a> / {{
-  observation.name }}
+  <a
+    href="/"
+    class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+    >home</a
+  >
+  /
+  <a
+    href="/exe"
+    class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+    >executions</a
+  >
+  /
+  <a
+    href="/exe/{{ observation.execution_id }}"
+    class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+    >{{ observation.execution_id }}</a
+  >
+  / {{ observation.name }}
 </p>
 
 {% include "_observation_content.html" %} {% endblock %}

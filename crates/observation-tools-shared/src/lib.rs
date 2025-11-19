@@ -7,8 +7,11 @@ pub use error::Error;
 pub use error::Result;
 pub use models::Execution;
 pub use models::ExecutionId;
+pub use models::IntoCustomPayload;
+pub use models::IntoPayload;
 pub use models::Observation;
 pub use models::ObservationId;
+pub use models::Payload;
 
 /// Payload size threshold for blob storage (64KB)
 /// Payloads larger than this will be uploaded as separate blobs

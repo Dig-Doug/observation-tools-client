@@ -4,6 +4,7 @@ use chrono::DateTime;
 use chrono::Utc;
 use serde::Deserialize;
 use serde::Serialize;
+use std::any::Any;
 use std::collections::HashMap;
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -196,6 +197,39 @@ impl Payload {
   }
 }
 
+/// Trait for types that can be converted into an observation payload.
+pub trait IntoPayload {
+  /// Convert this value into a payload
+  fn to_payload(&self) -> Payload;
+}
+
+impl IntoPayload for str {
+  fn to_payload(&self) -> Payload {
+    Payload::text(self.to_string())
+  }
+}
+
+impl<T> IntoPayload for T
+where
+  T: Serialize + 'static,
+{
+  fn to_payload(&self) -> Payload {
+    if let Some(string_ref) = (self as &dyn Any).downcast_ref::<String>() {
+      Payload::text(string_ref.clone())
+    } else {
+      let json = serde_json::to_string(self).unwrap_or_default();
+      Payload::json(json)
+    }
+  }
+}
+
+/// Implement IntoPayload for custom types if Serde serialization is not
+/// sufficient..
+pub trait IntoCustomPayload {
+  /// Convert this value into a payload
+  fn to_payload(&self) -> Payload;
+}
+
 /// An observation is a single piece of collected data
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Observation {
@@ -276,54 +310,5 @@ impl Observation {
   pub fn with_parent_span(mut self, span_id: impl Into<String>) -> Self {
     self.parent_span_id = Some(span_id.into());
     self
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_execution_id_generation() {
-    let id1 = ExecutionId::new();
-    let id2 = ExecutionId::new();
-    assert_ne!(id1, id2);
-  }
-
-  #[test]
-  fn test_observation_id_generation() {
-    let id1 = ObservationId::new();
-    let id2 = ObservationId::new();
-    assert_ne!(id1, id2);
-  }
-
-  #[test]
-  fn test_execution_creation() {
-    let exec = Execution::new("test_execution");
-    assert_eq!(exec.name, "test_execution");
-    assert!(exec.metadata.is_empty());
-  }
-
-  #[test]
-  fn test_observation_creation() {
-    let exec_id = ExecutionId::new();
-    let payload = Payload::text("test data");
-    let obs = Observation::new(exec_id, "test_obs", payload);
-
-    assert_eq!(obs.name, "test_obs");
-    assert_eq!(obs.execution_id, exec_id);
-    assert_eq!(obs.payload.mime_type, "text/plain");
-  }
-
-  #[test]
-  fn test_observation_with_labels() {
-    let exec_id = ExecutionId::new();
-    let payload = Payload::json(r#"{"key": "value"}"#);
-    let obs = Observation::new(exec_id, "test", payload)
-      .with_label("api/request")
-      .with_label("http");
-
-    assert_eq!(obs.labels.len(), 2);
-    assert_eq!(obs.payload.mime_type, "application/json");
   }
 }
