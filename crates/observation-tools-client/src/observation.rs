@@ -10,6 +10,9 @@ use observation_tools_shared::models::Observation;
 use observation_tools_shared::models::ObservationId;
 use observation_tools_shared::models::Payload;
 use observation_tools_shared::models::SourceInfo;
+use observation_tools_shared::IntoCustomPayload;
+use serde::Serialize;
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 /// Builder for creating observations
@@ -24,9 +27,9 @@ pub struct ObservationBuilder {
 
 impl ObservationBuilder {
   /// Create a new observation builder with the given name
-  pub fn new(name: impl Into<String>) -> Self {
+  pub fn new<T: AsRef<str>>(name: T) -> Self {
     Self {
-      name: name.into(),
+      name: name.as_ref().to_string(),
       labels: Vec::new(),
       metadata: HashMap::new(),
       source: None,
@@ -69,52 +72,13 @@ impl ObservationBuilder {
     self
   }
 
-  /// Set the payload for the observation using serde JSON serialization
-  ///
-  /// This method serializes the value to JSON and sets the MIME type to "application/json".
-  /// For types that implement `IntoPayload`, consider using `custom_payload` instead
-  /// to have more control over the serialization format.
-  pub fn payload<T: serde::Serialize>(mut self, value: T) -> Self {
-    // Serialize the value to JSON string
-    match serde_json::to_string(&value) {
-      Ok(json_string) => {
-        let size = json_string.len();
-        self.payload = Some(Payload {
-          mime_type: "application/json".to_string(),
-          data: json_string,
-          size,
-        });
-      }
-      Err(e) => {
-        tracing::error!("Failed to serialize observation payload: {}", e);
-      }
-    }
+  pub fn payload<T: ?Sized + IntoPayload>(mut self, value: &T) -> Self {
+    self.payload = Some(value.to_payload());
     self
   }
 
-  /// Set the payload for the observation using custom serialization
-  ///
-  /// This method uses the `IntoPayload` trait to convert the value into a payload.
-  /// This allows for custom serialization logic, including:
-  /// - Serializing primitives as text/plain instead of JSON
-  /// - Custom binary formats
-  /// - Optimized serialization for specific types
-  ///
-  /// # Examples
-  ///
-  /// ```no_run
-  /// use observation_tools_client::ObservationBuilder;
-  ///
-  /// // Strings are serialized as text/plain
-  /// ObservationBuilder::new("my_observation")
-  ///     .custom_payload("Hello, world!");
-  ///
-  /// // Numbers are serialized as text/plain
-  /// ObservationBuilder::new("count")
-  ///     .custom_payload(42);
-  /// ```
-  pub fn custom_payload<T: IntoPayload>(mut self, value: T) -> Self {
-    self.payload = Some(value.into_payload());
+  pub fn custom_payload<T: IntoCustomPayload>(mut self, value: &T) -> Self {
+    self.payload = Some(value.to_payload());
     self
   }
 

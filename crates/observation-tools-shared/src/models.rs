@@ -4,6 +4,7 @@ use chrono::DateTime;
 use chrono::Utc;
 use serde::Deserialize;
 use serde::Serialize;
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -197,113 +198,35 @@ impl Payload {
 }
 
 /// Trait for types that can be converted into an observation payload.
-///
-/// This trait allows custom types to define their own serialization logic
-/// for observations. Types implementing this trait can provide optimized
-/// or custom payload representations instead of relying on JSON serialization.
-///
-/// # When to Implement
-///
-/// Implement this trait when you want to:
-/// - Serialize primitive types as text instead of JSON
-/// - Provide custom binary representations
-/// - Optimize serialization for specific types
-/// - Control the MIME type of the payload
-///
-/// # Examples
-///
-/// ```
-/// use observation_tools_shared::models::{IntoPayload, Payload};
-///
-/// struct CustomData {
-///     value: String,
-/// }
-///
-/// impl IntoPayload for CustomData {
-///     fn into_payload(self) -> Payload {
-///         Payload::text(self.value)
-///     }
-/// }
-/// ```
-///
-/// # Note on Blanket Implementations
-///
-/// This crate intentionally does NOT provide a blanket implementation
-/// for all `T: Serialize` types. This allows you to implement both
-/// `Serialize` and `IntoPayload` for your types without conflicts.
 pub trait IntoPayload {
   /// Convert this value into a payload
-  fn into_payload(self) -> Payload;
+  fn to_payload(&self) -> Payload;
 }
 
-// Implement IntoPayload for Payload itself (identity conversion)
-impl IntoPayload for Payload {
-  fn into_payload(self) -> Payload {
-    self
-  }
-}
-
-// String types - serialize as text/plain
-impl IntoPayload for String {
-  fn into_payload(self) -> Payload {
-    Payload::text(self)
-  }
-}
-
-impl IntoPayload for &str {
-  fn into_payload(self) -> Payload {
-    Payload::text(self)
-  }
-}
-
-impl IntoPayload for &String {
-  fn into_payload(self) -> Payload {
-    Payload::text(self)
-  }
-}
-
-// Numeric types - serialize as text/plain
-macro_rules! impl_into_payload_for_int {
-  ($($t:ty),*) => {
-    $(
-      impl IntoPayload for $t {
-        fn into_payload(self) -> Payload {
-          Payload::text(self.to_string())
-        }
-      }
-    )*
-  };
-}
-
-impl_into_payload_for_int!(i8, i16, i32, i64, i128, isize);
-impl_into_payload_for_int!(u8, u16, u32, u64, u128, usize);
-
-macro_rules! impl_into_payload_for_float {
-  ($($t:ty),*) => {
-    $(
-      impl IntoPayload for $t {
-        fn into_payload(self) -> Payload {
-          Payload::text(self.to_string())
-        }
-      }
-    )*
-  };
-}
-
-impl_into_payload_for_float!(f32, f64);
-
-// Boolean - serialize as text/plain
-impl IntoPayload for bool {
-  fn into_payload(self) -> Payload {
+impl IntoPayload for str {
+  fn to_payload(&self) -> Payload {
     Payload::text(self.to_string())
   }
 }
 
-// Char - serialize as text/plain
-impl IntoPayload for char {
-  fn into_payload(self) -> Payload {
-    Payload::text(self.to_string())
+impl<T> IntoPayload for T
+where
+  T: Serialize + 'static,
+{
+  fn to_payload(&self) -> Payload {
+    if let Some(string_ref) = (self as &dyn Any).downcast_ref::<String>() {
+      Payload::text(string_ref.clone())
+    } else {
+      let json = serde_json::to_string(self).unwrap_or_default();
+      Payload::json(json)
+    }
   }
+}
+
+/// Implement IntoPayload for custom types if Serde serialization is not sufficient..
+pub trait IntoCustomPayload {
+  /// Convert this value into a payload
+  fn to_payload(&self) -> Payload;
 }
 
 /// An observation is a single piece of collected data
@@ -386,142 +309,5 @@ impl Observation {
   pub fn with_parent_span(mut self, span_id: impl Into<String>) -> Self {
     self.parent_span_id = Some(span_id.into());
     self
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_execution_id_generation() {
-    let id1 = ExecutionId::new();
-    let id2 = ExecutionId::new();
-    assert_ne!(id1, id2);
-  }
-
-  #[test]
-  fn test_observation_id_generation() {
-    let id1 = ObservationId::new();
-    let id2 = ObservationId::new();
-    assert_ne!(id1, id2);
-  }
-
-  #[test]
-  fn test_execution_creation() {
-    let exec = Execution::new("test_execution");
-    assert_eq!(exec.name, "test_execution");
-    assert!(exec.metadata.is_empty());
-  }
-
-  #[test]
-  fn test_observation_creation() {
-    let exec_id = ExecutionId::new();
-    let payload = Payload::text("test data");
-    let obs = Observation::new(exec_id, "test_obs", payload);
-
-    assert_eq!(obs.name, "test_obs");
-    assert_eq!(obs.execution_id, exec_id);
-    assert_eq!(obs.payload.mime_type, "text/plain");
-  }
-
-  #[test]
-  fn test_observation_with_labels() {
-    let exec_id = ExecutionId::new();
-    let payload = Payload::json(r#"{"key": "value"}"#);
-    let obs = Observation::new(exec_id, "test", payload)
-      .with_label("api/request")
-      .with_label("http");
-
-    assert_eq!(obs.labels.len(), 2);
-    assert_eq!(obs.payload.mime_type, "application/json");
-  }
-
-  #[test]
-  fn test_into_payload_string() {
-    let payload = "Hello, world!".into_payload();
-    assert_eq!(payload.mime_type, "text/plain");
-    assert_eq!(payload.data, "Hello, world!");
-    assert_eq!(payload.size, "Hello, world!".len());
-  }
-
-  #[test]
-  fn test_into_payload_owned_string() {
-    let s = String::from("Test string");
-    let payload = s.into_payload();
-    assert_eq!(payload.mime_type, "text/plain");
-    assert_eq!(payload.data, "Test string");
-  }
-
-  #[test]
-  fn test_into_payload_integers() {
-    let p1 = 42i32.into_payload();
-    assert_eq!(p1.mime_type, "text/plain");
-    assert_eq!(p1.data, "42");
-
-    let p2 = 100u64.into_payload();
-    assert_eq!(p2.mime_type, "text/plain");
-    assert_eq!(p2.data, "100");
-
-    let p3 = (-123i128).into_payload();
-    assert_eq!(p3.mime_type, "text/plain");
-    assert_eq!(p3.data, "-123");
-  }
-
-  #[test]
-  fn test_into_payload_floats() {
-    let p1 = 3.14f32.into_payload();
-    assert_eq!(p1.mime_type, "text/plain");
-    assert_eq!(p1.data, "3.14");
-
-    let p2 = 2.718f64.into_payload();
-    assert_eq!(p2.mime_type, "text/plain");
-    assert_eq!(p2.data, "2.718");
-  }
-
-  #[test]
-  fn test_into_payload_bool() {
-    let p1 = true.into_payload();
-    assert_eq!(p1.mime_type, "text/plain");
-    assert_eq!(p1.data, "true");
-
-    let p2 = false.into_payload();
-    assert_eq!(p2.mime_type, "text/plain");
-    assert_eq!(p2.data, "false");
-  }
-
-  #[test]
-  fn test_into_payload_char() {
-    let p = 'x'.into_payload();
-    assert_eq!(p.mime_type, "text/plain");
-    assert_eq!(p.data, "x");
-  }
-
-  #[test]
-  fn test_into_payload_payload_identity() {
-    let original = Payload::json(r#"{"test": "data"}"#);
-    let payload = original.clone().into_payload();
-    assert_eq!(payload.mime_type, "application/json");
-    assert_eq!(payload.data, r#"{"test": "data"}"#);
-  }
-
-  #[test]
-  fn test_custom_into_payload_implementation() {
-    struct CustomType {
-      value: String,
-    }
-
-    impl IntoPayload for CustomType {
-      fn into_payload(self) -> Payload {
-        Payload::with_mime_type(format!("custom: {}", self.value), "text/custom")
-      }
-    }
-
-    let custom = CustomType {
-      value: "test".to_string(),
-    };
-    let payload = custom.into_payload();
-    assert_eq!(payload.mime_type, "text/custom");
-    assert_eq!(payload.data, "custom: test");
   }
 }

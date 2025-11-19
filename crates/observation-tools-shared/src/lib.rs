@@ -8,6 +8,7 @@ pub use error::Result;
 pub use models::Execution;
 pub use models::ExecutionId;
 pub use models::IntoPayload;
+pub use models::IntoCustomPayload;
 pub use models::Observation;
 pub use models::ObservationId;
 pub use models::Payload;
