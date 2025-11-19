@@ -2,14 +2,35 @@
 
 <div class="grid grid-cols-1 gap-8 {% if selected_observation %}mr-[50%]{% endif %}">
   <div>
-    <p class="text-neutral-600 dark:text-neutral-400 text-sm"><a href="/" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">home</a> / <a href="/exe" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">executions</a> / {{ execution.name }}</p>
+    <p class="text-neutral-600 dark:text-neutral-400 text-sm">
+      <a
+        href="/"
+        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+        >home</a
+      >
+      /
+      <a
+        href="/exe"
+        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+        >executions</a
+      >
+      / {{ execution.name }}
+    </p>
 
     <h1 data-testid="ExecutionDetailTitle" class="text-2xl font-bold my-4">{{ execution.name }}</h1>
 
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span> <code data-testid="ExecutionDetailId" class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5">{{ execution.id }}</code>
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
+      <code
+        data-testid="ExecutionDetailId"
+        class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
+        >{{ execution.id }}</code
+      >
     </p>
-    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span> {{ execution.created_at }}</p>
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span> {{
+      execution.created_at }}
+    </p>
 
     {% if execution.metadata %}
     <h3 class="text-base font-bold my-2">metadata</h3>
@@ -40,7 +61,9 @@
             obs.source.line }}{% endif %} — {{ obs.created_at }}
           </span>
           {% if obs.labels %}
-          <br /><span class="text-neutral-600 dark:text-neutral-400 text-sm">labels: {{ obs.labels|join(", ") }}</span>
+          <br /><span class="text-neutral-600 dark:text-neutral-400 text-sm"
+            >labels: {{ obs.labels|join(", ") }}</span
+          >
           {% endif %}
         </li>
         {% endfor %}
@@ -64,7 +87,13 @@
             ← prev
           </button>
           {% else %}
-          <button data-testid="PaginationPrev" disabled class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed">← prev</button>
+          <button
+            data-testid="PaginationPrev"
+            disabled
+            class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
+          >
+            ← prev
+          </button>
           {% endif %} {% if has_next_page %}
           <button
             data-testid="PaginationNext"
@@ -74,7 +103,13 @@
             next →
           </button>
           {% else %}
-          <button data-testid="PaginationNext" disabled class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed">next →</button>
+          <button
+            data-testid="PaginationNext"
+            disabled
+            class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
+          >
+            next →
+          </button>
           {% endif %}
         </div>
       </div>
@@ -85,9 +120,16 @@
   </div>
 
   {% if selected_observation %}
-  <div class="hidden {% if selected_observation %}!flex{% endif %} border-l border-black dark:border-neutral-200 px-8 py-8 fixed top-0 right-0 bottom-0 w-[50%] overflow-hidden bg-white dark:bg-neutral-900 flex-col" id="side-panel">
+  <div
+    class="hidden {% if selected_observation %}!flex{% endif %} border-l border-black dark:border-neutral-200 px-8 py-8 fixed top-0 right-0 bottom-0 w-[50%] overflow-hidden bg-white dark:bg-neutral-900 flex-col"
+    id="side-panel"
+  >
     <div class="flex-shrink-0">
-      <a href="/exe/{{ execution.id }}" class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">×</a>
+      <a
+        href="/exe/{{ execution.id }}"
+        class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+        >×</a
+      >
     </div>
     <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
       {% set observation = selected_observation %} {% include "_observation_content.html" %}

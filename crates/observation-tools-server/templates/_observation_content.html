@@ -2,8 +2,18 @@
   <div class="flex-shrink-0">
     <h1 class="text-2xl font-bold my-4">{{ observation.name }}</h1>
 
-    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span> <code data-testid="ObservationId" class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5">{{ observation.id }}</code></p>
-    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span> {{ observation.created_at }}</p>
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
+      <code
+        data-testid="ObservationId"
+        class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
+        >{{ observation.id }}</code
+      >
+    </p>
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span> {{
+      observation.created_at }}
+    </p>
 
     {% if observation.source %}
     <p class="mb-2">
@@ -16,10 +26,16 @@
       >
     </p>
     {% endif %} {% if observation.parent_span_id %}
-    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">parent span:</span> <code class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5">{{ observation.parent_span_id }}</code></p>
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">parent span:</span>
+      <code class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
+        >{{ observation.parent_span_id }}</code
+      >
+    </p>
     {% endif %} {% if observation.labels %}
     <p data-testid="ObservationLabels" class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">labels:</span> {{ observation.labels|join(", ") }}
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">labels:</span> {{
+      observation.labels|join(", ") }}
     </p>
     {% endif %} {% if observation.metadata %}
     <h3 class="text-base font-bold my-2">metadata</h3>
@@ -33,15 +49,22 @@
     <hr class="border-t border-black dark:border-neutral-200 my-4" />
 
     <h2 class="text-xl font-bold my-4">payload</h2>
-    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">type:</span> {{ observation.payload.mime_type }}</p>
-    <p class="mb-2"><span class="text-neutral-600 dark:text-neutral-400 text-sm">size:</span> {{ observation.payload.size }} bytes</p>
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">type:</span> {{
+      observation.payload.mime_type }}
+    </p>
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">size:</span> {{
+      observation.payload.size }} bytes
+    </p>
     <p class="mb-2">
       <a
         href="/api/exe/{{ observation.execution_id }}/obs/{{ observation.id }}/content"
         target="_blank"
         rel="noopener noreferrer"
         class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-      >Open raw content in new tab</a>
+        >Open raw content in new tab</a
+      >
     </p>
   </div>
 

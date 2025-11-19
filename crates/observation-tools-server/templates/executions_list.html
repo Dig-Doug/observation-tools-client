@@ -12,8 +12,15 @@
   <ul class="list-none">
     {% for execution in executions %}
     <li class="my-2">
-      <a href="/exe/{{ execution.id }}" data-testid="ExecutionLink" class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400">{{ execution.name }}</a>
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">— {{ execution.created_at }}</span>
+      <a
+        href="/exe/{{ execution.id }}"
+        data-testid="ExecutionLink"
+        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+        >{{ execution.name }}</a
+      >
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm"
+        >— {{ execution.created_at }}</span
+      >
     </li>
     {% endfor %}
   </ul>
@@ -36,7 +43,13 @@
         ← prev
       </button>
       {% else %}
-      <button data-testid="PaginationPrev" disabled class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed">← prev</button>
+      <button
+        data-testid="PaginationPrev"
+        disabled
+        class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
+      >
+        ← prev
+      </button>
       {% endif %} {% if has_next_page %}
       <button
         data-testid="PaginationNext"
@@ -46,7 +59,13 @@
         next →
       </button>
       {% else %}
-      <button data-testid="PaginationNext" disabled class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed">next →</button>
+      <button
+        data-testid="PaginationNext"
+        disabled
+        class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
+      >
+        next →
+      </button>
       {% endif %}
     </div>
   </div>

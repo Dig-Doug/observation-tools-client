@@ -4,7 +4,7 @@ use chrono::DateTime;
 use chrono::Utc;
 use serde::Deserialize;
 use serde::Serialize;
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::collections::HashMap;
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -223,7 +223,8 @@ where
   }
 }
 
-/// Implement IntoPayload for custom types if Serde serialization is not sufficient..
+/// Implement IntoPayload for custom types if Serde serialization is not
+/// sufficient..
 pub trait IntoCustomPayload {
   /// Convert this value into a payload
   fn to_payload(&self) -> Payload;

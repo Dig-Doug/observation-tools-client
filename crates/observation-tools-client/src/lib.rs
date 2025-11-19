@@ -18,10 +18,9 @@ pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
 pub use execution::SendObservation;
 pub use observation::ObservationBuilder;
-
+pub use observation_tools_shared::IntoCustomPayload;
 // Re-export from shared for convenience
 pub use observation_tools_shared::IntoPayload;
-pub use observation_tools_shared::IntoCustomPayload;
 pub use observation_tools_shared::Payload;
 
 // Re-export macros

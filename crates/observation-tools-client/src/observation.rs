@@ -11,8 +11,6 @@ use observation_tools_shared::models::ObservationId;
 use observation_tools_shared::models::Payload;
 use observation_tools_shared::models::SourceInfo;
 use observation_tools_shared::IntoCustomPayload;
-use serde::Serialize;
-use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 /// Builder for creating observations

@@ -4,8 +4,9 @@
 //! work correctly using both the client library and the OpenAPI client.
 
 use anyhow::anyhow;
+use observation_tools_client::observe;
+use observation_tools_client::Client;
 use observation_tools_client::ClientBuilder;
-use observation_tools_client::{observe, Client};
 use observation_tools_shared::ExecutionId;
 use serde::Serialize;
 use std::collections::HashSet;
@@ -142,7 +143,8 @@ async fn test_observe_macro() -> anyhow::Result<()> {
       custom_serialization = true
     )?;
 
-    // Struct with both Serialize AND IntoPayload - uses custom_serialization = true to prefer IntoPayload
+    // Struct with both Serialize AND IntoPayload - uses custom_serialization = true
+    // to prefer IntoPayload
     #[derive(Serialize)]
     struct MyCustomPayloadWithSerdeStruct {
       message: String,
@@ -203,7 +205,8 @@ async fn test_observe_macro() -> anyhow::Result<()> {
   assert_eq!(custom.payload.data, "custom payload");
   assert_eq!(custom.payload.mime_type, "text/plain");
 
-  // 4. Struct with both Serialize and IntoPayload - uses custom IntoPayload due to custom_serialization = true
+  // 4. Struct with both Serialize and IntoPayload - uses custom IntoPayload due
+  //    to custom_serialization = true
   let custom_with_serde = obs_map
     .get("custom_payload_with_serde_struct")
     .expect("custom_payload_with_serde_struct observation");
