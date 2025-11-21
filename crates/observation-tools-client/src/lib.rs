@@ -23,70 +23,8 @@ pub use observation_tools_shared::IntoCustomPayload;
 pub use observation_tools_shared::IntoPayload;
 pub use observation_tools_shared::Payload;
 
-// Re-export macros
-#[macro_export]
-macro_rules! observe {
-    // Simple case: observe!("name", value)
-    // Default: uses payload() for Serialize types
-    ($name:expr, $value:expr) => {{
-        $crate::ObservationBuilder::new($name)
-            .payload(&$value)
-            .source(file!(), line!())
-            .build()
-    }};
-
-    // Simple case with custom serialization: observe!("name", value, custom_serialization = true)
-    // Uses custom_payload() for IntoPayload types
-    ($name:expr, $value:expr, custom_serialization = true) => {{
-        $crate::ObservationBuilder::new($name)
-            .custom_payload(&$value)
-            .source(file!(), line!())
-            .build()
-    }};
-
-    // Structured case: observe!(name = "...", label = "...", payload = ...)
-    // Default: uses payload() for Serialize types
-    (name = $name:expr, label = $label:expr, payload = $payload:expr) => {{
-        $crate::ObservationBuilder::new($name)
-            .label($label)
-            .payload(&$payload)
-            .source(file!(), line!())
-            .build()
-    }};
-
-    // Structured case with custom serialization: observe!(name = "...", label = "...", payload = ..., custom_serialization = true)
-    // Uses custom_payload() for IntoPayload types
-    (name = $name:expr, label = $label:expr, payload = $payload:expr, custom_serialization = true) => {{
-        $crate::ObservationBuilder::new($name)
-            .label($label)
-            .custom_payload(&$payload)
-            .source(file!(), line!())
-            .build()
-    }};
-
-    // With metadata: observe!(name = "...", payload = ..., metadata = {key: val, ...})
-    // Default: uses payload() for Serialize types
-    (name = $name:expr, payload = $payload:expr, metadata = { $($key:expr => $val:expr),* }) => {{
-        let mut builder = $crate::ObservationBuilder::new($name)
-            .payload(&$payload)
-            .source(file!(), line!());
-        $(
-            builder = builder.metadata($key, $val);
-        )*
-        builder.build()
-    }};
-
-    // With metadata and custom serialization: observe!(name = "...", payload = ..., metadata = {key: val, ...}, custom_serialization = true)
-    (name = $name:expr, payload = $payload:expr, metadata = { $($key:expr => $val:expr),* }, custom_serialization = true) => {{
-        let mut builder = $crate::ObservationBuilder::new($name)
-            .custom_payload(&$payload)
-            .source(file!(), line!());
-        $(
-            builder = builder.metadata($key, $val);
-        )*
-        builder.build()
-    }};
-}
+// Re-export procedural macro
+pub use observation_tools_macros::observe;
 
 /// Register a global execution shared across all threads
 ///
