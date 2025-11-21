@@ -1,0 +1,14 @@
+[package]
+name = "observation-tools-macros"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { workspace = true, features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"

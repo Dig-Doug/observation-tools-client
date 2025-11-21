@@ -3,69 +3,14 @@
 //! These tests start a local server instance and verify the API endpoints
 //! work correctly using both the client library and the OpenAPI client.
 
+mod common;
+
 use anyhow::anyhow;
+use common::TestServer;
 use observation_tools_client::observe;
-use observation_tools_client::Client;
-use observation_tools_client::ClientBuilder;
 use observation_tools_shared::ExecutionId;
-use serde::Serialize;
 use std::collections::HashSet;
-use std::net::SocketAddr;
-use std::time::Duration;
-use tokio::time::sleep;
 use tracing::debug;
-
-/// Test server wrapper that provides convenient client creation
-struct TestServer {
-  addr: SocketAddr,
-  _handle: tokio::task::JoinHandle<()>,
-}
-
-impl TestServer {
-  /// Start a new test server on a random port
-  async fn new() -> Self {
-    let data_dir = tempfile::tempdir().expect("Failed to create temp dir");
-
-    // Bind to port 0 to get a random available port
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-      .await
-      .expect("Failed to bind to random port");
-
-    let addr = listener.local_addr().expect("Failed to get local address");
-
-    let config = observation_tools_server::Config::new()
-      .with_bind_addr(addr)
-      .with_data_dir(data_dir.path().to_path_buf());
-
-    let server = observation_tools_server::Server::new(config);
-
-    let handle = tokio::spawn(async move {
-      // Keep the tempdir alive for the duration of the server
-      let _data_dir = data_dir;
-      server.run(listener).await.expect("Server failed to run");
-    });
-
-    // Give the server a moment to start up
-    sleep(Duration::from_millis(300)).await;
-
-    Self {
-      addr,
-      _handle: handle,
-    }
-  }
-
-  /// Create an observation tools client connected to this test server
-  fn create_client(&self) -> anyhow::Result<Client> {
-    let base_url = format!("http://{}", self.addr);
-    Ok(ClientBuilder::new().base_url(&base_url).build()?)
-  }
-
-  /// Create an OpenAPI client connected to this test server
-  fn create_api_client(&self) -> anyhow::Result<observation_tools_client::server_client::Client> {
-    let base_url = format!("http://{}", self.addr);
-    observation_tools_client::server_client::create_client(&base_url)
-  }
-}
 
 #[test_log::test(tokio::test)]
 async fn test_create_execution_with_client() -> anyhow::Result<()> {
@@ -90,129 +35,6 @@ async fn test_create_execution_with_client() -> anyhow::Result<()> {
   );
   assert_eq!(get_response.execution.name, "test-execution");
   client.shutdown().await?;
-  Ok(())
-}
-
-#[test_log::test(tokio::test)]
-async fn test_observe_macro() -> anyhow::Result<()> {
-  let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-observe_macro")?
-    .wait_for_upload()
-    .await?;
-
-  let execution_id = execution.id();
-
-  observation_tools_client::with_execution(execution, async {
-    // Simple string payload - uses default Serialize behavior
-    observe!("no_args", "simple payload")?
-      .wait_for_upload()
-      .await?;
-
-    // Struct with only Serialize - uses default JSON serialization
-    #[derive(Serialize)]
-    struct MySerdeStruct {
-      message: String,
-    }
-    observe!(
-      "serde_struct",
-      MySerdeStruct {
-        message: "hello".to_string()
-      }
-    )?
-    .wait_for_upload()
-    .await?;
-
-    // Struct with custom IntoPayload - requires custom_serialization = true
-    struct MyCustomPayloadStruct {
-      message: String,
-    }
-
-    impl observation_tools_client::IntoCustomPayload for MyCustomPayloadStruct {
-      fn to_payload(&self) -> observation_tools_client::Payload {
-        observation_tools_client::Payload::text(self.message.clone())
-      }
-    }
-    observe!(
-      "custom_payload_struct",
-      MyCustomPayloadStruct {
-        message: "custom payload".to_string()
-      },
-      custom_serialization = true
-    )?;
-
-    // Struct with both Serialize AND IntoPayload - uses custom_serialization = true
-    // to prefer IntoPayload
-    #[derive(Serialize)]
-    struct MyCustomPayloadWithSerdeStruct {
-      message: String,
-    }
-
-    impl observation_tools_client::IntoCustomPayload for MyCustomPayloadWithSerdeStruct {
-      fn to_payload(&self) -> observation_tools_client::Payload {
-        observation_tools_client::Payload::text(self.message.clone())
-      }
-    }
-    observe!(
-      "custom_payload_with_serde_struct",
-      MyCustomPayloadWithSerdeStruct {
-        message: "custom payload with serde".to_string()
-      },
-      custom_serialization = true
-    )?;
-
-    Ok::<_, anyhow::Error>(())
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
-
-  // Should have 4 observations
-  assert_eq!(list_response.observations.len(), 4);
-
-  // Find observations by name and verify their payloads
-  let obs_map: std::collections::HashMap<_, _> = list_response
-    .observations
-    .iter()
-    .map(|obs| (obs.name.as_str(), obs))
-    .collect();
-
-  // 1. Simple string payload - serialized as JSON (String implements Serialize)
-  let no_args = obs_map.get("no_args").expect("no_args observation");
-  assert_eq!(no_args.payload.data, "\"simple payload\""); // JSON string includes quotes
-  assert_eq!(no_args.payload.mime_type, "application/json");
-
-  // 2. Struct with Serialize - serialized to JSON
-  let serde_struct = obs_map
-    .get("serde_struct")
-    .expect("serde_struct observation");
-  assert_eq!(serde_struct.payload.data, r#"{"message":"hello"}"#);
-  assert_eq!(serde_struct.payload.mime_type, "application/json");
-
-  // 3. Struct with custom IntoPayload - uses custom serialization (text/plain)
-  let custom = obs_map
-    .get("custom_payload_struct")
-    .expect("custom_payload_struct observation");
-  assert_eq!(custom.payload.data, "custom payload");
-  assert_eq!(custom.payload.mime_type, "text/plain");
-
-  // 4. Struct with both Serialize and IntoPayload - uses custom IntoPayload due
-  //    to custom_serialization = true
-  let custom_with_serde = obs_map
-    .get("custom_payload_with_serde_struct")
-    .expect("custom_payload_with_serde_struct observation");
-  assert_eq!(custom_with_serde.payload.data, "custom payload with serde");
-  assert_eq!(custom_with_serde.payload.mime_type, "text/plain");
-
   Ok(())
 }
 
