@@ -10,11 +10,9 @@ pub struct TestServer {
 }
 
 impl TestServer {
-  /// Start a new test server on a random port, or use existing server if
-  /// OBSERVATION_TOOLS_TEST_SERVER_URL is set
   pub async fn new() -> Self {
     // Check if an external test server URL is provided
-    if let Ok(url) = std::env::var("OBSERVATION_TOOLS_TEST_SERVER_URL") {
+    if let Ok(url) = std::env::var("SERVER_URL") {
       return Self {
         base_url: url,
         _handle: None,

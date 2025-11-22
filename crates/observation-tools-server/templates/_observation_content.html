@@ -38,10 +38,12 @@
       observation.labels|join(", ") }}
     </p>
     {% endif %} {% if observation.metadata %}
-    <h3 class="text-base font-bold my-2">metadata</h3>
-    <ul class="list-none">
+    <h3 data-testid="ObservationMetadataHeader" class="text-base font-bold my-2">metadata</h3>
+    <ul data-testid="ObservationMetadata" class="list-none">
       {% for item in observation.metadata | items %}
-      <li class="my-2">{{ item[0] }}: {{ item[1] }}</li>
+      <li data-testid="ObservationMetadataItem" class="my-2">
+        <span data-testid="ObservationMetadataKey">{{ item[0] }}</span>: <span data-testid="ObservationMetadataValue">{{ item[1] }}</span>
+      </li>
       {% endfor %}
     </ul>
     {% endif %}

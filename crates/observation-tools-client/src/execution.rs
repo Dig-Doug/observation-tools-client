@@ -178,6 +178,7 @@ impl ExecutionHandle {
   /// * `labels` - Optional array of labels for categorization
   /// * `source_file` - Optional source file path
   /// * `source_line` - Optional source line number
+  /// * `metadata` - Optional metadata as an array of [key, value] pairs
   #[napi(ts_return_type = "string")]
   pub fn observe(
     &self,
@@ -186,6 +187,7 @@ impl ExecutionHandle {
     labels: Option<Vec<String>>,
     source_file: Option<String>,
     source_line: Option<u32>,
+    metadata: Option<Vec<Vec<String>>>,
   ) -> napi::Result<String> {
     use observation_tools_shared::models::Observation;
     use observation_tools_shared::models::ObservationId;
@@ -213,13 +215,26 @@ impl ExecutionHandle {
       _ => None,
     };
 
+    // Convert metadata from array of [key, value] pairs to HashMap
+    let metadata_map = metadata
+      .unwrap_or_default()
+      .into_iter()
+      .filter_map(|pair| {
+        if pair.len() == 2 {
+          Some((pair[0].clone(), pair[1].clone()))
+        } else {
+          None
+        }
+      })
+      .collect::<HashMap<String, String>>();
+
     let observation_id = ObservationId::new();
     let observation = Observation {
       id: observation_id,
       execution_id: self.execution_id,
       name: name.clone(),
       labels: labels.unwrap_or_default(),
-      metadata: HashMap::new(),
+      metadata: metadata_map,
       source,
       parent_span_id: None,
       payload: payload_data,
