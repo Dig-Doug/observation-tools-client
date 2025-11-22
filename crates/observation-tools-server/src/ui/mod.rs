@@ -18,11 +18,16 @@ use minijinja_autoreload::AutoReloader;
 use observation_tools_shared::models::ExecutionId;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tracing::error;
 
 fn items_filter(value: Value) -> Value {
   if value.as_object().is_some() {
     let mut items = Vec::new();
-    for key in value.try_iter().unwrap() {
+    let Ok(values) = value.try_iter() else {
+      error!("Failed to iterate over items in items filter");
+      return Value::from(Vec::<Value>::new());
+    };
+    for key in values {
       if let Ok(val) = value.get_item(&key) {
         items.push(Value::from(vec![
           Value::from(key.as_str().unwrap_or("")),
