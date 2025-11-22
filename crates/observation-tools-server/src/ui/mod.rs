@@ -13,10 +13,33 @@ use axum::response::Html;
 use minijinja::context;
 use minijinja::path_loader;
 use minijinja::Environment;
+use minijinja::Value;
 use minijinja_autoreload::AutoReloader;
 use observation_tools_shared::models::ExecutionId;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tracing::error;
+
+fn items_filter(value: Value) -> Value {
+  if value.as_object().is_some() {
+    let mut items = Vec::new();
+    let Ok(values) = value.try_iter() else {
+      error!("Failed to iterate over items in items filter");
+      return Value::from(Vec::<Value>::new());
+    };
+    for key in values {
+      if let Ok(val) = value.get_item(&key) {
+        items.push(Value::from(vec![
+          Value::from(key.as_str().unwrap_or("")),
+          val,
+        ]));
+      }
+    }
+    Value::from(items)
+  } else {
+    Value::from(Vec::<Value>::new())
+  }
+}
 
 /// Initialize the template auto-reloader
 pub fn init_templates() -> Arc<AutoReloader> {
@@ -31,6 +54,9 @@ pub fn init_templates() -> Arc<AutoReloader> {
         .replace("\\t", "\t")
         .replace("\\\\", "\\")
     });
+
+    // Add items filter to convert maps to iterable key-value pairs
+    env.add_filter("items", items_filter);
 
     if cfg!(debug_assertions) {
       tracing::info!("Running in local development mode, enabling autoreload for templates");

@@ -1,11 +1,14 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{
-  parse::{Parse, ParseStream},
-  parse_macro_input,
-  spanned::Spanned,
-  Expr, Ident, LitStr, Result, Token,
-};
+use syn::parse::Parse;
+use syn::parse::ParseStream;
+use syn::parse_macro_input;
+use syn::spanned::Spanned;
+use syn::Expr;
+use syn::Ident;
+use syn::LitStr;
+use syn::Result;
+use syn::Token;
 
 /// Parse the observe! macro arguments
 enum ObserveArg {
@@ -115,7 +118,8 @@ impl Parse for ObserveArgs {
         // observe!(value) - auto-capture variable name
         args.push(ObserveArg::Simple(first_expr));
       } else {
-        // observe!(name_expr, value) - explicit name (can be string literal, const, or expression)
+        // observe!(name_expr, value) - explicit name (can be string literal, const, or
+        // expression)
         input.parse::<Token![,]>()?;
         let second_expr: Expr = input.parse()?;
 
@@ -146,8 +150,10 @@ impl Parse for ObserveArgs {
 /// - `observe!("name", value)` - Explicit name
 /// - `observe!(name = "...", payload = expr)` - Structured syntax
 /// - `observe!(name = "...", payload = expr, label = "...")` - With label
-/// - `observe!(name = "...", payload = expr, metadata { key: value, ... })` - With metadata
-/// - `observe!(name = "...", payload = expr, custom = true)` - Use custom serialization
+/// - `observe!(name = "...", payload = expr, metadata { key: value, ... })` -
+///   With metadata
+/// - `observe!(name = "...", payload = expr, custom = true)` - Use custom
+///   serialization
 #[proc_macro]
 pub fn observe(input: TokenStream) -> TokenStream {
   let args = parse_macro_input!(input as ObserveArgs);

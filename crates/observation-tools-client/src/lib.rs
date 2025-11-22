@@ -18,13 +18,12 @@ pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
 pub use execution::SendObservation;
 pub use observation::ObservationBuilder;
+// Re-export procedural macro
+pub use observation_tools_macros::observe;
 pub use observation_tools_shared::IntoCustomPayload;
 // Re-export from shared for convenience
 pub use observation_tools_shared::IntoPayload;
 pub use observation_tools_shared::Payload;
-
-// Re-export procedural macro
-pub use observation_tools_macros::observe;
 
 /// Register a global execution shared across all threads
 ///

@@ -29,12 +29,18 @@ test("Create execution with observation and verify data", async ({ page, server 
   const observationLabels = ["api", "test"];
   const sourceFile = "test.ts";
   const sourceLine = 123;
+  const observationMetadata = [
+    ["environment", "testing"],
+    ["version", "1.0.0"],
+    ["user", "test-user"],
+  ];
   const observationId = exe.observe(
     observationName,
     JSON.stringify(observationPayload),
     observationLabels,
     sourceFile,
     sourceLine,
+    observationMetadata,
   );
 
   await page.goto(server.baseUrl);
@@ -55,6 +61,14 @@ test("Create execution with observation and verify data", async ({ page, server 
   }
   await expect(page.getByTestId(TestId.ObservationSourceFile)).toContainText(sourceFile);
   await expect(page.getByTestId(TestId.ObservationSourceLine)).toContainText(sourceLine.toString());
+
+  // Verify metadata is rendered
+  await expect(page.getByTestId(TestId.ObservationMetadataHeader)).toBeVisible();
+  await expect(page.getByTestId(TestId.ObservationMetadata)).toBeVisible();
+  for (const [key, value] of observationMetadata) {
+    await expect(page.getByTestId(TestId.ObservationMetadata)).toContainText(key);
+    await expect(page.getByTestId(TestId.ObservationMetadata)).toContainText(value);
+  }
 });
 
 test("Execution list pagination with 357 executions", async ({ page, server }) => {

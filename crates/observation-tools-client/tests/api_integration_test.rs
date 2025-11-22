@@ -307,7 +307,7 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   assert_eq!(list_response.observations.len(), 1);
   let obs = &list_response.observations[0];
   assert_eq!(obs.name, "large-observation");
-  assert_eq!(obs.id.to_string(), observation_id.to_string());
+  assert_eq!(obs.id.to_string(), observation_id.id().to_string());
 
   // The payload.data should be empty because it was uploaded as a blob
   assert_eq!(
@@ -323,8 +323,10 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
 
   // Verify the blob can be retrieved via the content endpoint
   let blob_url = format!(
-    "http://{}/api/exe/{}/obs/{}/content",
-    server.addr, execution_id, observation_id
+    "{}/api/exe/{}/obs/{}/content",
+    server.base_url(),
+    execution_id,
+    observation_id.id()
   );
 
   let response = reqwest::get(&blob_url).await?;
