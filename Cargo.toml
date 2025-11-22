@@ -21,6 +21,7 @@ axum-extra = { version = "0.9", features = ["cookie"] }
 bytes = "1.9"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.5", features = ["derive"] }
+criterion = { version = "0.5", features = ["async_tokio", "html_reports"] }
 futures = "0.3"
 log = "0.4"
 minijinja = { version = "2.12", features = ["loader"] }
