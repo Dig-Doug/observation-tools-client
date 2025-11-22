@@ -53,6 +53,7 @@ impl TestServer {
   }
 
   /// Get the base URL of the test server
+  #[allow(unused)]
   pub fn base_url(&self) -> &str {
     &self.base_url
   }
