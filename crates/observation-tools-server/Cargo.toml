@@ -19,6 +19,7 @@ base64.workspace = true
 bytes.workspace = true
 chrono.workspace = true
 clap.workspace = true
+dotenvy.workspace = true
 minijinja-autoreload = { workspace = true }
 minijinja-embed = {workspace = true}
 minijinja.workspace = true

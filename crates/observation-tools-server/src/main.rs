@@ -29,6 +29,14 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+  // Load environment variables from .env file if it exists
+  if let Err(e) = dotenvy::dotenv() {
+    // Ignore the error if the file doesn't exist (NotFound)
+    if !e.to_string().contains("No such file or directory") {
+      eprintln!("Warning: Failed to load .env file: {}", e);
+    }
+  }
+
   // Initialize tracing
   tracing_subscriber::fmt()
     .with_env_filter(

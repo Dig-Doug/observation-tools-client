@@ -42,7 +42,7 @@ impl Server {
     tracing::info!(blob_dir = ?self.config.blob_dir, "Blob storage initialized");
 
     // Initialize auth storage (shares same sled db as metadata)
-    let auth_db = sled::open(&self.config.data_dir.join("metadata"))?;
+    let auth_db = sled::open(&self.config.data_dir.join("auth"))?;
     let auth_storage: Arc<dyn crate::auth::AuthStorage> = Arc::new(SledAuthStorage::new(auth_db));
     tracing::info!("Auth storage initialized");
 
@@ -92,8 +92,8 @@ impl Server {
     // Build auth router
     let auth_router = Router::new()
       .route("/auth/login", get(auth::login_page))
-      .route("/auth/:provider", get(auth::oauth_login))
-      .route("/auth/:provider/callback", get(auth::oauth_callback))
+      .route("/auth/{provider}", get(auth::oauth_login))
+      .route("/auth/{provider}/callback", get(auth::oauth_callback))
       .route(
         "/auth/logout",
         post(auth::logout).layer(middleware::from_fn(auth::require_auth)),
