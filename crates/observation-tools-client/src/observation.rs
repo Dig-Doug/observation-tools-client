@@ -3,7 +3,8 @@
 use crate::client::UploaderMessage;
 use crate::context;
 use crate::error::Result;
-use crate::execution::{ObservationHandle, SendObservation};
+use crate::execution::ObservationHandle;
+use crate::execution::SendObservation;
 use crate::Error;
 use observation_tools_shared::models::IntoPayload;
 use observation_tools_shared::models::Observation;

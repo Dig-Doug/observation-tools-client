@@ -18,6 +18,8 @@ use axum::Router;
 use minijinja_autoreload::AutoReloader;
 use observation_tools_shared::models::*;
 use std::sync::Arc;
+use tracing::error;
+use tracing::warn;
 use types::*;
 use utoipa::OpenApi;
 
@@ -86,16 +88,22 @@ impl IntoResponse for AppError {
         (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
       }
       AppError::Shared(err) => {
-        tracing::warn!(error = %err, "Shared error (bad request)");
+        warn!(error = %err, "Shared error (bad request)");
         (StatusCode::BAD_REQUEST, err.to_string())
       }
       AppError::BadRequest(msg) => {
-        tracing::warn!(error = %msg, "Bad request");
+        warn!(error = %msg, "Bad request");
         (StatusCode::BAD_REQUEST, msg.clone())
       }
       AppError::Template(err) => {
-        tracing::error!(error = %err, "Template rendering error");
-        (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+        let mut full_error_text = format!("Template rendering error: {:#}", err);
+        let mut e = &err as &dyn std::error::Error;
+        while let Some(next_err) = e.source() {
+          full_error_text += &format!("\ncaused by: {:#}", next_err);
+          e = next_err;
+        }
+        error!(error = %err, "Template rendering error: {}", full_error_text);
+        (StatusCode::INTERNAL_SERVER_ERROR, full_error_text)
       }
     };
 

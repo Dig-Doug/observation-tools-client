@@ -12,6 +12,15 @@ Export, visualize, and inspect data from anywhere in your program.
 cargo run --bin observation-tools -- export-openapi --output ./crates/observation-tools-client/openapi.json
 ```
 
+## Contributing
+
+### Formatting
+
+```bash
+cargo +nightly fmt
+pnpm dlx prettier --write .
+```
+
 ## License
 
 All code, except the client library, is distributed under the GNU AGPLv3 license. The client library is licensed under
