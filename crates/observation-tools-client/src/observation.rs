@@ -3,6 +3,7 @@
 use crate::client::UploaderMessage;
 use crate::context;
 use crate::error::Result;
+use crate::execution::ObservationHandle;
 use crate::execution::SendObservation;
 use crate::Error;
 use observation_tools_shared::models::IntoPayload;
@@ -114,6 +115,13 @@ impl ObservationBuilder {
         uploaded_tx,
       })
       .map_err(|_| Error::ChannelClosed)?;
-    Ok(SendObservation::new(observation_id, uploaded_rx))
+    Ok(SendObservation {
+      handle: ObservationHandle {
+        base_url: execution.base_url().to_string(),
+        execution_id: execution.id(),
+        observation_id,
+      },
+      uploaded_rx,
+    })
   }
 }

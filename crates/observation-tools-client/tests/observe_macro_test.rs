@@ -16,12 +16,12 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
-    observe!("simple_string", "hello world")?
+  let observation = observation_tools_client::with_execution(execution, async {
+    let handle = observe!("simple_string", "hello world")?
       .wait_for_upload()
       .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -40,6 +40,9 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
   assert_eq!(obs.payload.data, "\"hello world\""); // JSON string includes quotes
   assert_eq!(obs.payload.mime_type, "application/json");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -55,14 +58,14 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     #[derive(Serialize)]
     struct MyStruct {
       message: String,
       count: i32,
     }
 
-    observe!(
+    let handle = observe!(
       "serde_struct",
       MyStruct {
         message: "test message".to_string(),
@@ -72,7 +75,7 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -91,6 +94,9 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
   assert_eq!(obs.payload.data, r#"{"message":"test message","count":42}"#);
   assert_eq!(obs.payload.mime_type, "application/json");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -106,7 +112,7 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     struct CustomStruct {
       message: String,
     }
@@ -117,7 +123,7 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
       }
     }
 
-    observe!(
+    let handle = observe!(
       "custom_payload",
       CustomStruct {
         message: "custom message".to_string()
@@ -127,7 +133,7 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -146,6 +152,9 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
   assert_eq!(obs.payload.data, "custom message");
   assert_eq!(obs.payload.mime_type, "text/plain");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -161,7 +170,7 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     struct CustomStruct {
       value: String,
     }
@@ -172,7 +181,7 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
       }
     }
 
-    observe!(
+    let handle = observe!(
       "custom_new_syntax",
       CustomStruct {
         value: "test".to_string()
@@ -182,7 +191,7 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -201,6 +210,9 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
   assert_eq!(obs.payload.data, "custom: test");
   assert_eq!(obs.payload.mime_type, "text/plain");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -216,11 +228,11 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     let my_data = "captured variable name";
-    observe!(my_data)?.wait_for_upload().await?;
+    let handle = observe!(my_data)?.wait_for_upload().await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -239,6 +251,9 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
   assert_eq!(obs.name, "my_data");
   assert_eq!(obs.payload.data, "\"captured variable name\"");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -254,8 +269,8 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
-    observe!(
+  let observation = observation_tools_client::with_execution(execution, async {
+    let handle = observe!(
       name = "structured_observation",
       payload = "test payload",
       label = "test/category"
@@ -263,7 +278,7 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -282,6 +297,9 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
   assert_eq!(obs.labels, vec!["test/category"]);
   assert_eq!(obs.payload.data, "\"test payload\"");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -297,9 +315,9 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     let duration_ms = 123;
-    observe!(
+    let handle = observe!(
       name = "with_metadata",
       payload = "data",
       metadata {
@@ -311,7 +329,7 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -331,6 +349,9 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
   assert_eq!(obs.metadata.get("status_code"), Some(&"200".to_string()));
   assert_eq!(obs.metadata.get("duration_ms"), Some(&"123".to_string()));
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -346,14 +367,14 @@ async fn test_observe_expression_name() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     const OBSERVATION_NAME: &str = "const_name";
 
-    observe!(name = OBSERVATION_NAME, payload = "test data")?
+    let handle = observe!(name = OBSERVATION_NAME, payload = "test data")?
       .wait_for_upload()
       .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -370,6 +391,9 @@ async fn test_observe_expression_name() -> anyhow::Result<()> {
   let obs = &list_response.observations[0];
   assert_eq!(obs.name, "const_name");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -385,13 +409,13 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     let prefix = "dynamic";
     let name = format!("{}_observation", prefix);
 
-    observe!(&name, "test payload")?.wait_for_upload().await?;
+    let handle = observe!(&name, "test payload")?.wait_for_upload().await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -408,6 +432,9 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
   let obs = &list_response.observations[0];
   assert_eq!(obs.name, "dynamic_observation");
 
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
+
   Ok(())
 }
 
@@ -423,15 +450,15 @@ async fn test_observe_dynamic_label() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools_client::with_execution(execution, async {
     let endpoint = "users";
     let label = format!("api/{}/create", endpoint);
 
-    observe!(name = "request", payload = "data", label = label)?
+    let handle = observe!(name = "request", payload = "data", label = label)?
       .wait_for_upload()
       .await?;
 
-    Ok::<_, anyhow::Error>(())
+    Ok::<_, anyhow::Error>(handle)
   })
   .await?;
 
@@ -448,6 +475,9 @@ async fn test_observe_dynamic_label() -> anyhow::Result<()> {
   let obs = &list_response.observations[0];
   assert_eq!(obs.name, "request");
   assert_eq!(obs.labels, vec!["api/users/create"]);
+
+  let response = reqwest::get(&observation.url()).await?;
+  assert_eq!(response.status(), 200);
 
   Ok(())
 }

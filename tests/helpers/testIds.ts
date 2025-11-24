@@ -22,6 +22,11 @@ export enum TestId {
   ObservationLabels = "ObservationLabels",
   ObservationSourceFile = "ObservationSourceFile",
   ObservationSourceLine = "ObservationSourceLine",
+  ObservationMetadataHeader = "ObservationMetadataHeader",
+  ObservationMetadata = "ObservationMetadata",
+  ObservationMetadataItem = "ObservationMetadataItem",
+  ObservationMetadataKey = "ObservationMetadataKey",
+  ObservationMetadataValue = "ObservationMetadataValue",
 
   // Pagination
   PaginationNext = "PaginationNext",

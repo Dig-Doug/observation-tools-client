@@ -1,17 +1,25 @@
-use observation_tools_client::{Client, ClientBuilder};
-use std::net::SocketAddr;
+use observation_tools_client::Client;
+use observation_tools_client::ClientBuilder;
 use std::time::Duration;
 use tokio::time::sleep;
 
 /// Test server wrapper that provides convenient client creation
 pub struct TestServer {
-  pub addr: SocketAddr,
-  _handle: tokio::task::JoinHandle<()>,
+  base_url: String,
+  _handle: Option<tokio::task::JoinHandle<()>>,
 }
 
 impl TestServer {
-  /// Start a new test server on a random port
   pub async fn new() -> Self {
+    // Check if an external test server URL is provided
+    if let Ok(url) = std::env::var("SERVER_URL") {
+      return Self {
+        base_url: url,
+        _handle: None,
+      };
+    }
+
+    // Otherwise, start a new test server
     let data_dir = tempfile::tempdir().expect("Failed to create temp dir");
 
     // Bind to port 0 to get a random available port
@@ -37,22 +45,26 @@ impl TestServer {
     sleep(Duration::from_millis(300)).await;
 
     Self {
-      addr,
-      _handle: handle,
+      base_url: format!("http://{}", addr),
+      _handle: Some(handle),
     }
+  }
+
+  /// Get the base URL of the test server
+  #[allow(unused)]
+  pub fn base_url(&self) -> &str {
+    &self.base_url
   }
 
   /// Create an observation tools client connected to this test server
   pub fn create_client(&self) -> anyhow::Result<Client> {
-    let base_url = format!("http://{}", self.addr);
-    Ok(ClientBuilder::new().base_url(&base_url).build()?)
+    Ok(ClientBuilder::new().base_url(&self.base_url).build()?)
   }
 
   /// Create an OpenAPI client connected to this test server
   pub fn create_api_client(
     &self,
   ) -> anyhow::Result<observation_tools_client::server_client::Client> {
-    let base_url = format!("http://{}", self.addr);
-    observation_tools_client::server_client::create_client(&base_url)
+    observation_tools_client::server_client::create_client(&self.base_url)
   }
 }
