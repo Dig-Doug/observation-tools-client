@@ -4,9 +4,11 @@ use crate::api::ApiDoc;
 use crate::api::AppState;
 use crate::api::{self};
 use crate::config::Config;
+use crate::csrf;
 use crate::storage::LocalBlobStorage;
 use crate::storage::SledStorage;
 use crate::ui;
+use axum::middleware;
 use axum::routing::get;
 use axum::Router;
 use std::sync::Arc;
@@ -65,23 +67,16 @@ impl Server {
     tracing::debug!(static_dir = ?static_dir, "Serving static files from directory");
     let serve_static = ServeDir::new(static_dir);
 
-    // Build API router with optional authentication
-    let api_router = if let Some(ref secret) = self.config.api_secret {
-      let secret_clone = secret.clone();
-      api::build_router(state)
-        .layer(axum::middleware::from_fn(move |req, next| {
-          crate::auth::api_key_middleware(secret_clone.clone(), req, next)
-        }))
-    } else {
-      api::build_router(state)
-    };
-
     // Build the main router
     let app = Router::new()
       .merge(ui_router)
       .nest(
         "/api",
-        api::build_router(state).layer(middleware::from_fn(csrf::validate_csrf)),
+        api::build_router(state)
+          .layer(axum::middleware::from_fn(move |req, next| {
+            crate::auth::api_key_middleware(self.config.api_secret.clone(), req, next)
+          }))
+          .layer(middleware::from_fn(csrf::validate_csrf)),
       )
       .merge(SwaggerUi::new("/api/swagger-ui").url("/api/openapi.json", ApiDoc::openapi()))
       .nest_service("/static", serve_static)

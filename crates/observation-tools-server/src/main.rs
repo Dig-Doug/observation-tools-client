@@ -74,7 +74,7 @@ async fn main() -> anyhow::Result<()> {
       let secret = std::env::var("OBSERVATION_TOOLS_API_SECRET")
         .map_err(|_| anyhow::anyhow!("OBSERVATION_TOOLS_API_SECRET environment variable not set"))?;
 
-      let api_key = observation_tools_server::auth::generate_api_key(&secret);
+      let api_key = observation_tools_server::auth::generate_api_key(&secret)?;
       println!("{}", api_key);
     }
   }
