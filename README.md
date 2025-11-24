@@ -4,6 +4,14 @@
 
 Export, visualize, and inspect data from anywhere in your program.
 
+## Getting started
+
+Run the server:
+
+```bash
+cargo run --bin observation-tools -- serve
+```
+
 ## Building from source
 
 ## Contributing
