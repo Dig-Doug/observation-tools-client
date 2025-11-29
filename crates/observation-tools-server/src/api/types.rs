@@ -32,10 +32,6 @@ pub struct ListExecutionsQuery {
   /// Number of results to skip (for pagination)
   #[serde(skip_serializing_if = "Option::is_none")]
   pub offset: Option<usize>,
-
-  /// Search query for execution names or metadata
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub search: Option<String>,
 }
 
 /// Response for listing executions
@@ -80,22 +76,6 @@ pub struct ListObservationsQuery {
   /// Number of results to skip (for pagination)
   #[serde(skip_serializing_if = "Option::is_none")]
   pub offset: Option<usize>,
-
-  /// Search query for observation names or metadata
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub search: Option<String>,
-
-  /// Filter by labels (comma-separated)
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub labels: Option<String>,
-
-  /// Filter by source file
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub source_file: Option<String>,
-
-  /// Filter by parent span ID
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub parent_span_id: Option<String>,
 }
 
 /// Response for listing observations

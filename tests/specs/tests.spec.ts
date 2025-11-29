@@ -1,9 +1,11 @@
 import { test, expect } from "../fixtures";
 import { TestId } from "../helpers/testIds";
+import {  generateExecutionId } from "observation-tools-client";
 
 test("Server homepage loads", async ({ page, server }) => {
   await page.goto(server.baseUrl);
   await expect(page.locator("h1")).toBeVisible();
+  await expect(page.getByTestId(TestId.NavBarLogo), "Logo didn't load, are static files working?").toBeVisible();
 });
 
 test("Create execution", async ({ page, server }) => {
@@ -183,4 +185,21 @@ test("Large payload is uploaded as blob", async ({ page, server }) => {
   // The payload should be retrieved from blob storage and displayed
   // Even though it was stored as a blob, the UI should still show it
   await expect(page.getByTestId(TestId.ObservationPayload)).toBeVisible();
+});
+
+test("Navigate to execution page before execution exists, then create it", async ({
+  page,
+  server,
+}) => {
+  const executionId = generateExecutionId();
+  await page.goto(`${server.baseUrl}/exe/${executionId}`);
+  await expect(page.getByText("Waiting for execution...")).toBeVisible();
+  await expect(page.getByText(executionId)).toBeVisible();
+
+  const client = server.createClient();
+  const executionName = "pre-navigation-test-execution";
+  const exe = client.beginExecutionWithId(executionId, executionName);
+  expect(exe.idString).toBe(executionId);
+  await expect(page.getByTestId(TestId.ExecutionDetailTitle)).toContainText(executionName);
+  await expect(page.getByTestId(TestId.ExecutionDetailId)).toContainText(executionId);
 });

@@ -1,7 +1,6 @@
 //! Web UI handlers
 
 use crate::api::types::ListExecutionsQuery;
-use crate::api::types::ListObservationsQuery;
 use crate::api::AppError;
 use crate::csrf::CsrfToken;
 use crate::storage::MetadataStorage;
@@ -140,8 +139,14 @@ pub async fn list_executions(
 /// Query parameters for execution detail page
 #[derive(Debug, serde::Deserialize)]
 pub struct ExecutionDetailQuery {
-  #[serde(flatten)]
-  list_query: ListObservationsQuery,
+  /// Maximum number of results to return
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub limit: Option<usize>,
+
+  /// Number of results to skip (for pagination)
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub offset: Option<usize>,
+
   /// Optional observation ID to display in side panel
   obs: Option<String>,
 }
@@ -158,24 +163,37 @@ pub async fn execution_detail(
   tracing::debug!(execution_id = %id, "Rendering execution detail page");
 
   let execution_id = ExecutionId::parse(&id)?;
-  let execution = metadata.get_execution(execution_id).await?;
 
-  let limit = query.list_query.limit.unwrap_or(100);
-  let offset = query.list_query.offset.unwrap_or(0);
+  // Try to get the execution, but handle not found gracefully
+  let execution = match metadata.get_execution(execution_id).await {
+    Ok(execution) => Some(execution),
+    Err(crate::storage::StorageError::NotFound(_)) => None,
+    Err(e) => return Err(e.into()),
+  };
 
-  // Fetch observations with one extra to check for more pages
-  let mut observations = metadata
-    .list_observations(execution_id, Some(limit + 1), Some(offset))
-    .await?;
+  let limit = query.limit.unwrap_or(100);
+  let offset = query.offset.unwrap_or(0);
 
-  let has_next_page = observations.len() > limit;
-  if has_next_page {
-    observations.pop();
-  }
+  // Only fetch observations if execution exists
+  let (observations, has_next_page, total_count, page) = if execution.is_some() {
+    // Fetch observations with one extra to check for more pages
+    let mut observations = metadata
+      .list_observations(execution_id, Some(limit + 1), Some(offset))
+      .await?;
 
-  // Get total count for pagination info
-  let total_count = metadata.count_observations(execution_id).await?;
-  let page = (offset / limit) + 1;
+    let has_next_page = observations.len() > limit;
+    if has_next_page {
+      observations.pop();
+    }
+
+    // Get total count for pagination info
+    let total_count = metadata.count_observations(execution_id).await?;
+    let page = (offset / limit) + 1;
+
+    (observations, has_next_page, total_count, page)
+  } else {
+    (Vec::new(), false, 0, 1)
+  };
 
   // If observation ID is provided, load the observation for the side panel
   let selected_observation = if let Some(obs_id) = query.obs {
@@ -186,20 +204,25 @@ pub async fn execution_detail(
     None
   };
 
-  tracing::debug!(
-      observation_count = observations.len(),
-      total_count = total_count,
-      page = page,
-      has_selected_obs = selected_observation.is_some(),
-      execution_name = %execution.name,
-      "Retrieved execution details for UI"
-  );
+  if let Some(ref exec) = execution {
+    tracing::debug!(
+        observation_count = observations.len(),
+        total_count = total_count,
+        page = page,
+        has_selected_obs = selected_observation.is_some(),
+        execution_name = %exec.name,
+        "Retrieved execution details for UI"
+    );
+  } else {
+    tracing::debug!(execution_id = %id, "Execution not found, rendering waiting page");
+  }
 
   let env = templates.acquire_env()?;
   let tmpl = env.get_template("execution_detail.html")?;
 
   let html = tmpl.render(context! {
       execution => execution,
+      execution_id => id,
       observations => observations,
       has_next_page => has_next_page,
       total_count => total_count,

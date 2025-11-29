@@ -3,6 +3,13 @@
 /** Client for observation-tools */
 export declare class Client {
   beginExecution(name: string): ExecutionHandle
+  /**
+   * Begin a new execution with a specific ID (for testing)
+   *
+   * This allows tests to create an execution with a known ID, enabling
+   * navigation to the execution URL before the execution is uploaded.
+   */
+  beginExecutionWithId(id: string, name: string): ExecutionHandle
 }
 
 /** Builder for Client */
@@ -11,6 +18,8 @@ export declare class ClientBuilder {
   constructor()
   /** Set the base URL for the server */
   setBaseUrl(url: string): void
+  /** Set the API key for authentication */
+  setApiKey(apiKey: string): void
   /** Build the client */
   build(): Client
 }
@@ -34,3 +43,11 @@ export declare class ExecutionHandle {
    */
   observe(name: string, payloadJson: string, labels?: Array<string> | undefined | null, sourceFile?: string | undefined | null, sourceLine?: number | undefined | null, metadata?: Array<Array<string>> | undefined | null): string
 }
+
+/**
+ * Generate a new execution ID (for testing)
+ *
+ * This allows tests to generate an execution ID before creating the execution,
+ * enabling navigation to the execution URL before the execution is uploaded.
+ */
+export declare function generateExecutionId(): string

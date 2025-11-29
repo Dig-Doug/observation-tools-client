@@ -1,6 +1,3 @@
-//! HTTP server implementation
-
-use crate::api::ApiDoc;
 use crate::api::AppState;
 use crate::api::{self};
 use crate::config::Config;
@@ -14,7 +11,7 @@ use axum::Router;
 use std::sync::Arc;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use utoipa::OpenApi;
+use tracing::{debug, info, warn};
 use utoipa_swagger_ui::SwaggerUi;
 
 /// The Observation Tools server
@@ -23,34 +20,19 @@ pub struct Server {
 }
 
 impl Server {
-  /// Create a new server with the given configuration
   pub fn new(config: Config) -> Self {
     Self { config }
   }
 
-  /// Run the server with the given TCP listener
   pub async fn run(self, listener: tokio::net::TcpListener) -> anyhow::Result<()> {
-    tracing::info!("Starting Observation Tools server");
-    tracing::debug!(data_dir = ?self.config.data_dir, "Initializing storage");
-
-    // Initialize storage
-    let metadata = Arc::new(SledStorage::new(&self.config.data_dir.join("metadata"))?);
-    tracing::info!("Metadata storage initialized");
-
-    let blobs = Arc::new(LocalBlobStorage::new(&self.config.blob_dir)?);
-    tracing::info!(blob_dir = ?self.config.blob_dir, "Blob storage initialized");
-
-    // Initialize template environment
-    let templates = ui::init_templates();
-    tracing::debug!("Template environment initialized");
-
+    info!("Starting Observation Tools server");
+    debug!(data_dir = ?self.config.data_dir, "Initializing storage");
     let state = AppState {
-      metadata: metadata.clone(),
-      blobs,
-      templates,
+      metadata: Arc::new(SledStorage::new(&self.config.data_dir.join("metadata"))?),
+      blobs: Arc::new(LocalBlobStorage::new(&self.config.blob_dir)?),
+      templates: ui::init_templates(),
     };
 
-    // Build UI router with CSRF middleware
     let ui_router = Router::new()
       .route("/", get(ui::index))
       .route("/exe", get(ui::list_executions))
@@ -60,29 +42,38 @@ impl Server {
         get(ui::observation_detail),
       )
       .layer(middleware::from_fn(csrf::ui_csrf_middleware))
-      .with_state(state.clone());
+      .nest_service("/static", {
+        let static_dir = std::env::current_dir()?.join("crates/observation-tools-server/static");
+        if !static_dir.exists() {
+          // TODO(doug): Static dir doesn't work in rust tests. Fix and then make this an error again.
+          warn!(
+              static_dir = ?static_dir,
+              "Static directory does not exist. Static files will not be served."
+          );
+        }
+        debug!(static_dir = ?static_dir, "Serving static files from directory");
+        ServeDir::new(static_dir)
+      });
 
-    // Serve static files
-    let static_dir = std::env::current_dir()?.join("crates/observation-tools-server/static");
-    tracing::debug!(static_dir = ?static_dir, "Serving static files from directory");
-    let serve_static = ServeDir::new(static_dir);
-
-    // Build the main router
+    let api_secret = self.config.api_secret.clone();
+    let (mutating_router, readonly_router, openapi) = api::build_api();
+    let api_router = Router::new()
+      .merge(
+        mutating_router.layer(axum::middleware::from_fn(move |req, next| {
+          crate::auth::api_key_middleware(api_secret.clone(), req, next)
+        })),
+      )
+      .merge(readonly_router)
+      .layer(middleware::from_fn(csrf::validate_csrf));
     let app = Router::new()
       .merge(ui_router)
-      .nest(
-        "/api",
-        api::build_router(state).layer(middleware::from_fn(csrf::validate_csrf)),
-      )
-      .merge(SwaggerUi::new("/api/swagger-ui").url("/api/openapi.json", ApiDoc::openapi()))
-      .nest_service("/static", serve_static)
-      .layer(TraceLayer::new_for_http());
+      .merge(api_router)
+      .merge(SwaggerUi::new("/api/swagger-ui").url("/api/openapi.json", openapi))
+      .layer(TraceLayer::new_for_http())
+      .with_state(state);
 
-    tracing::debug!("Router configured");
-
-    // Log the actual bound address
     let bound_addr = listener.local_addr()?;
-    tracing::info!("Server listening on http://{}", bound_addr);
+    info!("Server listening on http://{}", bound_addr);
 
     axum::serve(listener, app).await?;
 

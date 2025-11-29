@@ -1,14 +1,12 @@
-use observation_tools_server::api::ApiDoc;
 use progenitor::GenerationSettings;
 use progenitor::InterfaceStyle;
 use syn::__private::quote::quote;
-use utoipa::OpenApi;
 
 fn main() {
   napi_build::setup();
 
   // Generate OpenAPI spec from server code
-  let openapi = ApiDoc::openapi();
+  let (_, _, openapi) = observation_tools_server::api::build_api();
   let mut spec = serde_json::to_value(&openapi).expect("Failed to serialize OpenAPI spec");
 
   // Convert OpenAPI 3.1 to 3.0 for progenitor compatibility

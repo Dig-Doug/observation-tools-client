@@ -62,12 +62,41 @@ struct ClientInner {
   _runtime: Option<Arc<tokio::runtime::Runtime>>,
 }
 
+/// Generate a new execution ID (for testing)
+///
+/// This allows tests to generate an execution ID before creating the execution,
+/// enabling navigation to the execution URL before the execution is uploaded.
+#[napi(js_name = "generateExecutionId")]
+#[allow(unused)]
+pub fn generate_execution_id() -> String {
+  observation_tools_shared::models::ExecutionId::new().to_string()
+}
+
 #[napi]
 impl Client {
   #[napi(js_name = "beginExecution")]
   pub fn begin_execution_wasm(&self, name: String) -> napi::Result<ExecutionHandle> {
     self
       .begin_execution(name)
+      .map(|begin| begin.into_handle())
+      .map_err(|e| napi::Error::from_reason(e.to_string()))
+  }
+
+  /// Begin a new execution with a specific ID (for testing)
+  ///
+  /// This allows tests to create an execution with a known ID, enabling
+  /// navigation to the execution URL before the execution is uploaded.
+  #[napi(js_name = "beginExecutionWithId")]
+  pub fn begin_execution_with_id_wasm(
+    &self,
+    id: String,
+    name: String,
+  ) -> napi::Result<ExecutionHandle> {
+    let execution_id = observation_tools_shared::models::ExecutionId::parse(&id)
+      .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    let execution = Execution::with_id(execution_id, name);
+    self
+      .begin_execution_internal(execution)
       .map(|begin| begin.into_handle())
       .map_err(|e| napi::Error::from_reason(e.to_string()))
   }
@@ -80,6 +109,10 @@ impl Client {
   /// to be uploaded before proceeding, or to get the handle immediately.
   pub fn begin_execution(&self, name: impl Into<String>) -> Result<BeginExecution> {
     let execution = Execution::new(name.into());
+    self.begin_execution_internal(execution)
+  }
+
+  fn begin_execution_internal(&self, execution: Execution) -> Result<BeginExecution> {
     trace!("Beginning new execution with ID {}", execution.id);
     let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
     self
@@ -119,11 +152,15 @@ impl Drop for ClientInner {
 #[napi]
 pub struct ClientBuilder {
   base_url: Option<String>,
+  api_key: Option<String>,
 }
 
 impl Default for ClientBuilder {
   fn default() -> Self {
-    Self { base_url: None }
+    Self {
+      base_url: None,
+      api_key: None,
+    }
   }
 }
 
@@ -140,12 +177,24 @@ impl ClientBuilder {
   pub fn set_base_url(&mut self, url: String) {
     self.base_url = Some(url);
   }
+
+  /// Set the API key for authentication
+  #[napi]
+  pub fn set_api_key(&mut self, api_key: String) {
+    self.api_key = Some(api_key);
+  }
 }
 
 impl ClientBuilder {
   /// Set the base URL for the server
   pub fn base_url(mut self, url: impl Into<String>) -> Self {
     self.base_url = Some(url.into());
+    self
+  }
+
+  /// Set the API key for authentication
+  pub fn api_key(mut self, api_key: impl Into<String>) -> Self {
+    self.api_key = Some(api_key.into());
     self
   }
 }
@@ -163,6 +212,7 @@ impl ClientBuilder {
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
     let timer_tx = tx.clone();
     let uploader_base_url = base_url.clone();
+    let api_key = self.api_key.clone();
     let (handle, runtime) = match tokio::runtime::Handle::try_current() {
       Ok(handle) => (handle, None),
       Err(_) => {
@@ -175,7 +225,7 @@ impl ClientBuilder {
         (runtime.handle().clone(), Some(runtime))
       }
     };
-    let api_client = crate::server_client::create_client(&uploader_base_url)?;
+    let api_client = crate::server_client::create_client(&uploader_base_url, api_key.clone())?;
     handle.spawn(async move {
       tokio::spawn(async move {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(100));
