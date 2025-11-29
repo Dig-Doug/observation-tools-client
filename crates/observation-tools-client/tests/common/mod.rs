@@ -17,6 +17,7 @@ impl TestServer {
   }
 
   /// Create a new test server with API key authentication enabled
+  #[allow(unused)]
   pub async fn new_with_auth() -> anyhow::Result<Self> {
     use rand::Rng;
     let mut rng = rand::thread_rng();
@@ -72,6 +73,7 @@ impl TestServer {
   }
 
   /// Generate a valid API key for this server
+  #[allow(unused)]
   pub fn generate_api_key(&self) -> anyhow::Result<String> {
     let Some(ref secret) = self.api_secret else {
       anyhow::bail!("API secret not configured for this test server");
@@ -80,11 +82,13 @@ impl TestServer {
   }
 
   /// Create an observation tools client connected to this test server
+  #[allow(unused)]
   pub fn create_client(&self) -> anyhow::Result<Client> {
     Ok(ClientBuilder::new().base_url(&self.base_url).build()?)
   }
 
   /// Create an observation tools client with API key authentication
+  #[allow(unused)]
   pub fn create_client_with_api_key(&self, api_key: &str) -> anyhow::Result<Client> {
     Ok(
       ClientBuilder::new()
@@ -95,6 +99,7 @@ impl TestServer {
   }
 
   /// Create an OpenAPI client connected to this test server
+  #[allow(unused)]
   pub fn create_api_client(
     &self,
   ) -> anyhow::Result<observation_tools_client::server_client::Client> {
@@ -102,6 +107,7 @@ impl TestServer {
   }
 
   /// Create an OpenAPI client with API key authentication
+  #[allow(unused)]
   pub fn create_api_client_with_api_key(
     &self,
     api_key: &str,
