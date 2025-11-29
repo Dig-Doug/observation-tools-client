@@ -38,27 +38,6 @@
         "description": "Response after creating observations",
         "type": "object"
       },
-      "ErrorResponse": {
-        "description": "API error response",
-        "properties": {
-          "code": {
-            "description": "Optional error code",
-            "nullable": true,
-            "type": "string"
-          },
-          "details": {
-            "description": "Optional additional details"
-          },
-          "error": {
-            "description": "Error message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "error"
-        ],
-        "type": "object"
-      },
       "Execution": {
         "description": "An execution represents the root scope for data collection.\nAll observations are associated with one execution.",
         "properties": {
@@ -130,29 +109,6 @@
         ],
         "type": "object"
       },
-      "ListExecutionsQuery": {
-        "description": "Query parameters for listing executions",
-        "properties": {
-          "limit": {
-            "description": "Maximum number of results to return",
-            "minimum": 0,
-            "nullable": true,
-            "type": "integer"
-          },
-          "offset": {
-            "description": "Number of results to skip (for pagination)",
-            "minimum": 0,
-            "nullable": true,
-            "type": "integer"
-          },
-          "search": {
-            "description": "Search query for execution names or metadata",
-            "nullable": true,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "ListExecutionsResponse": {
         "description": "Response for listing executions",
         "properties": {
@@ -172,44 +128,6 @@
           "executions",
           "has_next_page"
         ],
-        "type": "object"
-      },
-      "ListObservationsQuery": {
-        "description": "Query parameters for listing observations",
-        "properties": {
-          "labels": {
-            "description": "Filter by labels (comma-separated)",
-            "nullable": true,
-            "type": "string"
-          },
-          "limit": {
-            "description": "Maximum number of results to return",
-            "minimum": 0,
-            "nullable": true,
-            "type": "integer"
-          },
-          "offset": {
-            "description": "Number of results to skip (for pagination)",
-            "minimum": 0,
-            "nullable": true,
-            "type": "integer"
-          },
-          "parent_span_id": {
-            "description": "Filter by parent span ID",
-            "nullable": true,
-            "type": "string"
-          },
-          "search": {
-            "description": "Search query for observation names or metadata",
-            "nullable": true,
-            "type": "string"
-          },
-          "source_file": {
-            "description": "Filter by source file",
-            "nullable": true,
-            "type": "string"
-          }
-        },
         "type": "object"
       },
       "ListObservationsResponse": {
@@ -361,13 +279,8 @@
     }
   },
   "info": {
-    "description": "API for the Observation Tools developer data inspection toolkit",
-    "license": {
-      "identifier": "AGPL-3",
-      "name": "AGPL-3"
-    },
-    "title": "Observation Tools API",
-    "version": "0.1.0"
+    "title": "",
+    "version": ""
   },
   "openapi": "3.0.3",
   "paths": {
@@ -738,15 +651,5 @@
         ]
       }
     }
-  },
-  "tags": [
-    {
-      "description": "Execution management endpoints",
-      "name": "executions"
-    },
-    {
-      "description": "Observation management endpoints",
-      "name": "observations"
-    }
-  ]
+  }
 }
