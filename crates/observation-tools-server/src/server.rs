@@ -11,7 +11,7 @@ use axum::Router;
 use std::sync::Arc;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 use utoipa_swagger_ui::SwaggerUi;
 
 /// The Observation Tools server
@@ -44,13 +44,14 @@ impl Server {
       .layer(middleware::from_fn(csrf::ui_csrf_middleware))
       .nest_service("/static", {
         let static_dir = std::env::current_dir()?.join("crates/observation-tools-server/static");
-          if !static_dir.exists() {
-              panic!(
-                  "Static directory does not exist: {}. Make sure to run the server from the repository root.",
-                  static_dir.display()
-              );
-          }
-          debug!(static_dir = ?static_dir, "Serving static files from directory");
+        if !static_dir.exists() {
+          // TODO(doug): Static dir doesn't work in rust tests. Fix and then make this an error again.
+          warn!(
+              static_dir = ?static_dir,
+              "Static directory does not exist. Static files will not be served."
+          );
+        }
+        debug!(static_dir = ?static_dir, "Serving static files from directory");
         ServeDir::new(static_dir)
       });
 

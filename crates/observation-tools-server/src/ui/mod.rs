@@ -1,7 +1,6 @@
 //! Web UI handlers
 
 use crate::api::types::ListExecutionsQuery;
-use crate::api::types::ListObservationsQuery;
 use crate::api::AppError;
 use crate::csrf::CsrfToken;
 use crate::storage::MetadataStorage;

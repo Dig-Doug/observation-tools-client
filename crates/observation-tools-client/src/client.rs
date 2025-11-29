@@ -56,7 +56,6 @@ pub struct Client {
 
 struct ClientInner {
   base_url: String,
-  api_key: Option<String>,
   uploader_tx: async_channel::Sender<UploaderMessage>,
   shutdown_rx: std::sync::Mutex<Option<tokio::sync::oneshot::Receiver<()>>>,
   // If we create a runtime for the uploader, we hold it here to keep it alive
@@ -68,6 +67,7 @@ struct ClientInner {
 /// This allows tests to generate an execution ID before creating the execution,
 /// enabling navigation to the execution URL before the execution is uploaded.
 #[napi(js_name = "generateExecutionId")]
+#[allow(unused)]
 pub fn generate_execution_id() -> String {
   observation_tools_shared::models::ExecutionId::new().to_string()
 }
@@ -243,7 +243,6 @@ impl ClientBuilder {
     Ok(Client {
       inner: Arc::new(ClientInner {
         base_url,
-        api_key,
         uploader_tx: tx,
         shutdown_rx: std::sync::Mutex::new(Some(shutdown_rx)),
         _runtime: runtime,
