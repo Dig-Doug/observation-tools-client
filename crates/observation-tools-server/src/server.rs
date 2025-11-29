@@ -44,7 +44,13 @@ impl Server {
       .layer(middleware::from_fn(csrf::ui_csrf_middleware))
       .nest_service("/static", {
         let static_dir = std::env::current_dir()?.join("crates/observation-tools-server/static");
-        debug!(static_dir = ?static_dir, "Serving static files from directory");
+          if !static_dir.exists() {
+              panic!(
+                  "Static directory does not exist: {}. Make sure to run the server from the repository root.",
+                  static_dir.display()
+              );
+          }
+          debug!(static_dir = ?static_dir, "Serving static files from directory");
         ServeDir::new(static_dir)
       });
 

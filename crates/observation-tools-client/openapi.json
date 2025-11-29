@@ -309,16 +309,6 @@
               "nullable": true,
               "type": "integer"
             }
-          },
-          {
-            "description": "Search query for execution names or metadata",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "nullable": true,
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -407,46 +397,6 @@
               "minimum": 0,
               "nullable": true,
               "type": "integer"
-            }
-          },
-          {
-            "description": "Search query for observation names or metadata",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "nullable": true,
-              "type": "string"
-            }
-          },
-          {
-            "description": "Filter by labels (comma-separated)",
-            "in": "query",
-            "name": "labels",
-            "required": false,
-            "schema": {
-              "nullable": true,
-              "type": "string"
-            }
-          },
-          {
-            "description": "Filter by source file",
-            "in": "query",
-            "name": "source_file",
-            "required": false,
-            "schema": {
-              "nullable": true,
-              "type": "string"
-            }
-          },
-          {
-            "description": "Filter by parent span ID",
-            "in": "query",
-            "name": "parent_span_id",
-            "required": false,
-            "schema": {
-              "nullable": true,
-              "type": "string"
             }
           }
         ],

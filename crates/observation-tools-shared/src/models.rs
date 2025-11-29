@@ -122,6 +122,22 @@ impl Execution {
     }
   }
 
+  /// Create a new execution with a specific ID (for testing only)
+  ///
+  /// This allows tests to create an execution with a known ID before
+  /// sending it to the server.
+  #[cfg(any(test, feature = "testing"))]
+  pub fn with_id(id: ExecutionId, name: impl Into<String>) -> Self {
+    let now = Utc::now();
+    Self {
+      id,
+      name: name.into(),
+      metadata: HashMap::new(),
+      created_at: now,
+      updated_at: now,
+    }
+  }
+
   /// Create a new execution with metadata
   pub fn with_metadata(name: impl Into<String>, metadata: HashMap<String, String>) -> Self {
     let now = Utc::now();

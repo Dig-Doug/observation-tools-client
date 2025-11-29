@@ -63,12 +63,40 @@ struct ClientInner {
   _runtime: Option<Arc<tokio::runtime::Runtime>>,
 }
 
+/// Generate a new execution ID (for testing)
+///
+/// This allows tests to generate an execution ID before creating the execution,
+/// enabling navigation to the execution URL before the execution is uploaded.
+#[napi(js_name = "generateExecutionId")]
+pub fn generate_execution_id() -> String {
+  observation_tools_shared::models::ExecutionId::new().to_string()
+}
+
 #[napi]
 impl Client {
   #[napi(js_name = "beginExecution")]
   pub fn begin_execution_wasm(&self, name: String) -> napi::Result<ExecutionHandle> {
     self
       .begin_execution(name)
+      .map(|begin| begin.into_handle())
+      .map_err(|e| napi::Error::from_reason(e.to_string()))
+  }
+
+  /// Begin a new execution with a specific ID (for testing)
+  ///
+  /// This allows tests to create an execution with a known ID, enabling
+  /// navigation to the execution URL before the execution is uploaded.
+  #[napi(js_name = "beginExecutionWithId")]
+  pub fn begin_execution_with_id_wasm(
+    &self,
+    id: String,
+    name: String,
+  ) -> napi::Result<ExecutionHandle> {
+    let execution_id = observation_tools_shared::models::ExecutionId::parse(&id)
+      .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    let execution = Execution::with_id(execution_id, name);
+    self
+      .begin_execution_internal(execution)
       .map(|begin| begin.into_handle())
       .map_err(|e| napi::Error::from_reason(e.to_string()))
   }
@@ -81,6 +109,10 @@ impl Client {
   /// to be uploaded before proceeding, or to get the handle immediately.
   pub fn begin_execution(&self, name: impl Into<String>) -> Result<BeginExecution> {
     let execution = Execution::new(name.into());
+    self.begin_execution_internal(execution)
+  }
+
+  fn begin_execution_internal(&self, execution: Execution) -> Result<BeginExecution> {
     trace!("Beginning new execution with ID {}", execution.id);
     let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
     self

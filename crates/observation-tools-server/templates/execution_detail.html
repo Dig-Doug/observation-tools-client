@@ -1,6 +1,14 @@
-{% extends "base.html" %} {% block title %}{{ execution.name }}{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}{% if execution %}{{ execution.name }}{% else %}Waiting for execution...{% endif %}{% endblock %} {% block content %}
 
-<div class="grid grid-cols-1 gap-8 {% if selected_observation %}mr-[50%]{% endif %}">
+<div
+  id="execution-page"
+  hx-get="/exe/{{ execution_id }}?offset={{ offset }}&limit={{ limit }}"
+  hx-trigger="every 2s"
+  hx-select="#execution-page"
+  hx-swap="outerHTML"
+  class="grid grid-cols-1 gap-8 {% if selected_observation %}mr-[50%]{% endif %}"
+>
+  {% if execution %}
   <div>
     <p class="text-neutral-600 dark:text-neutral-400 text-sm">
       <a
@@ -134,6 +142,37 @@
     <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
       {% set observation = selected_observation %} {% include "_observation_content.html" %}
     </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div>
+    <p class="text-neutral-600 dark:text-neutral-400 text-sm">
+      <a
+        href="/"
+        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+        >home</a
+      >
+      /
+      <a
+        href="/exe"
+        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+        >executions</a
+      >
+      / waiting...
+    </p>
+
+    <h1 class="text-2xl font-bold my-4 text-neutral-400">Waiting for execution...</h1>
+
+    <p class="mb-2">
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
+      <code
+        class="bg-neutral-100 dark:bg-neutral-800 text-neutral-400 px-1 py-0.5"
+        >{{ execution_id }}</code
+      >
+    </p>
+    <p class="text-neutral-600 dark:text-neutral-400">
+      This execution has not been received yet. The page will automatically refresh when data arrives.
+    </p>
   </div>
   {% endif %}
 </div>

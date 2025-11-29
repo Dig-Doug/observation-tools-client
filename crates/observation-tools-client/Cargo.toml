@@ -16,7 +16,7 @@ log.workspace = true
 napi = { version = "3", features = ["async", "tokio_rt", "anyhow"] }
 napi-derive = { version = "3", features = ["type-def"] }
 observation-tools-macros.workspace = true
-observation-tools-shared.workspace = true
+observation-tools-shared = { workspace = true, features = ["testing"] }
 progenitor-client.workspace = true
 reqwest = { workspace = true, features = ["json"] }
 serde.workspace = true

@@ -2,7 +2,7 @@ import { spawn, ChildProcess } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { ClientBuilder, Client } from "observation-tools-client";
+import { ClientBuilder, Client} from "observation-tools-client";
 
 export class TestServer {
   port: number;

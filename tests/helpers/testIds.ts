@@ -5,6 +5,8 @@ export enum TestId {
   // Navigation
   NavHome = "NavHome",
   NavExecutionsList = "NavExecutionsList",
+  NavBarLogo = "NavBarLogo",
+  NavBarLogoDark = "NavBarLogoDark",
 
   // Executions List
   ExecutionLink = "ExecutionLink",
