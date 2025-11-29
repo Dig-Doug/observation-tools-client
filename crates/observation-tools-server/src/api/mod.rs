@@ -182,7 +182,7 @@ impl utoipa::Modify for SecurityAddon {
     }
 }
 
-/// Build the API router
+/// Build the API router with separate read-only and mutating routes
 pub fn build_router(state: AppState) -> Router {
   use observation_tools_shared::MAX_BLOB_SIZE;
   use observation_tools_shared::MAX_OBSERVATION_BATCH_SIZE;
@@ -206,13 +206,17 @@ pub fn build_router(state: AppState) -> Router {
     )
     .layer(DefaultBodyLimit::max(MAX_OBSERVATION_BATCH_SIZE));
 
-  Router::new()
-    // Execution routes
+  // Mutating routes (POST) - will have auth middleware applied
+  let mutating_routes = Router::new()
     .route("/exe", post(executions::create_execution))
+    .merge(observation_create_route)
+    .merge(blob_upload_route)
+    .with_state(state.clone());
+
+  // Read-only routes (GET) - no auth required
+  let read_only_routes = Router::new()
     .route("/exe", get(executions::list_executions))
     .route("/exe/{id}", get(executions::get_execution))
-    // Observation routes
-    .merge(observation_create_route) // Merge observation create route with custom body limit
     .route(
       "/exe/{execution_id}/obs",
       get(observations::list_observations),
@@ -221,7 +225,56 @@ pub fn build_router(state: AppState) -> Router {
       "/exe/{execution_id}/obs/{observation_id}",
       get(observations::get_observation),
     )
-    .merge(blob_upload_route) // Merge blob upload route with custom body limit
+    .route(
+      "/exe/{execution_id}/obs/{observation_id}/content",
+      get(observations::get_observation_blob),
+    )
+    .with_state(state);
+
+  Router::new()
+    .merge(mutating_routes)
+    .merge(read_only_routes)
+}
+
+/// Build router for mutating routes only (used to apply auth middleware)
+pub fn build_mutating_router(state: AppState) -> Router {
+  use observation_tools_shared::MAX_BLOB_SIZE;
+  use observation_tools_shared::MAX_OBSERVATION_BATCH_SIZE;
+
+  let blob_upload_route = Router::new()
+    .route(
+      "/exe/{execution_id}/obs/{observation_id}/blob",
+      post(observations::upload_observation_blob),
+    )
+    .layer(DefaultBodyLimit::max(MAX_BLOB_SIZE));
+
+  let observation_create_route = Router::new()
+    .route(
+      "/exe/{execution_id}/obs",
+      post(observations::create_observations),
+    )
+    .layer(DefaultBodyLimit::max(MAX_OBSERVATION_BATCH_SIZE));
+
+  Router::new()
+    .route("/exe", post(executions::create_execution))
+    .merge(observation_create_route)
+    .merge(blob_upload_route)
+    .with_state(state)
+}
+
+/// Build router for read-only routes (no auth required)
+pub fn build_readonly_router(state: AppState) -> Router {
+  Router::new()
+    .route("/exe", get(executions::list_executions))
+    .route("/exe/{id}", get(executions::get_execution))
+    .route(
+      "/exe/{execution_id}/obs",
+      get(observations::list_observations),
+    )
+    .route(
+      "/exe/{execution_id}/obs/{observation_id}",
+      get(observations::get_observation),
+    )
     .route(
       "/exe/{execution_id}/obs/{observation_id}/content",
       get(observations::get_observation_blob),

@@ -1,5 +1,5 @@
 use axum::extract::Request;
-use axum::http::HeaderMap;
+use axum::http::header::AUTHORIZATION;
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
@@ -9,8 +9,32 @@ use base64::Engine as _;
 use hmac::Hmac;
 use hmac::Mac;
 use sha2::Sha256;
+use std::sync::Once;
 use uuid::Uuid;
-use axum::http::header::AUTHORIZATION;
+
+#[derive(Debug, Clone)]
+pub struct ApiKeySecret(String);
+
+const MIN_SECRET_LENGTH: usize = 16;
+pub const ENV_API_KEY_SECRET: &str = "API_KEY_SECRET";
+
+impl ApiKeySecret {
+  pub fn from_env() -> Result<Option<Self>, AuthError> {
+    std::env::var(ENV_API_KEY_SECRET)
+      .ok()
+      .map(|s| ApiKeySecret::new(&s))
+      .transpose()
+  }
+
+  pub fn new(secret: &str) -> Result<Self, AuthError> {
+    if secret.len() < MIN_SECRET_LENGTH {
+      return Err(AuthError::InvalidSecretLength {
+        min_length: MIN_SECRET_LENGTH,
+      });
+    }
+    Ok(Self(secret.to_string()))
+  }
+}
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -18,6 +42,8 @@ const API_KEY_PREFIX: &str = "obs_";
 
 #[derive(Debug, thiserror::Error)]
 pub enum AuthError {
+  #[error("Invalid API secret length: Must be at least {min_length} bytes")]
+  InvalidSecretLength { min_length: usize },
   #[error("Missing Authorization header")]
   MissingAuthHeader,
   #[error("Invalid Authorization header format")]
@@ -31,6 +57,9 @@ pub enum AuthError {
 impl IntoResponse for AuthError {
   fn into_response(self) -> Response {
     let (status, message) = match self {
+      AuthError::InvalidSecretLength { .. } => {
+        (StatusCode::INTERNAL_SERVER_ERROR, "Invalid API secret configuration")
+      }
       AuthError::MissingAuthHeader => (StatusCode::UNAUTHORIZED, "Missing Authorization header"),
       AuthError::InvalidAuthFormat => (
         StatusCode::UNAUTHORIZED,
@@ -44,23 +73,37 @@ impl IntoResponse for AuthError {
   }
 }
 
-pub fn generate_api_key(secret: &str) -> Result<String, AuthError> {
-  let uuid = Uuid::new_v4();
-  let uuid_bytes = uuid.as_bytes();
+static API_MIDDLEWARE_INIT_ONCE: Once = Once::new();
 
-  let mut mac =
-    HmacSha256::new_from_slice(secret.as_bytes()).map_err(|_| AuthError::HmacInitFailed)?;
-  mac.update(uuid_bytes);
-  let signature = mac.finalize().into_bytes();
+pub async fn api_key_middleware(
+  secret: Option<ApiKeySecret>,
+  request: Request,
+  next: Next,
+) -> Result<Response, AuthError> {
+  API_MIDDLEWARE_INIT_ONCE.call_once(|| {
+    if let Some(_) = &secret {
+      tracing::info!("API key authentication is enabled.");
+    } else {
+      tracing::warn!("API key authentication is disabled.");
+    }
+  });
 
-  let mut payload = Vec::new();
-  payload.extend_from_slice(uuid_bytes);
-  payload.extend_from_slice(&signature);
-
-  Ok(format!("{}{}", API_KEY_PREFIX, URL_SAFE_NO_PAD.encode(&payload)))
+  if let Some(secret) = secret {
+    let auth_header = request
+      .headers()
+      .get(AUTHORIZATION)
+      .ok_or(AuthError::MissingAuthHeader)?
+      .to_str()
+      .map_err(|_| AuthError::InvalidAuthFormat)?;
+    let Some(token) = auth_header.strip_prefix("Bearer ") else {
+      return Err(AuthError::InvalidAuthFormat);
+    };
+    validate_api_key(&token, &secret)?;
+  }
+  Ok(next.run(request).await)
 }
 
-pub fn validate_api_key(api_key: &str, secret: &str) -> Result<(), AuthError> {
+fn validate_api_key(api_key: &str, secret: &ApiKeySecret) -> Result<(), AuthError> {
   if !api_key.starts_with(API_KEY_PREFIX) {
     return Err(AuthError::InvalidApiKey);
   }
@@ -78,9 +121,8 @@ pub fn validate_api_key(api_key: &str, secret: &str) -> Result<(), AuthError> {
   let provided_signature = &payload[16..];
 
   let mut mac =
-    HmacSha256::new_from_slice(secret.as_bytes()).map_err(|_| AuthError::HmacInitFailed)?;
+    HmacSha256::new_from_slice(secret.0.as_bytes()).map_err(|_| AuthError::HmacInitFailed)?;
   mac.update(uuid_bytes);
-
   mac
     .verify_slice(provided_signature)
     .map_err(|_| AuthError::InvalidApiKey)?;
@@ -88,58 +130,20 @@ pub fn validate_api_key(api_key: &str, secret: &str) -> Result<(), AuthError> {
   Ok(())
 }
 
-fn extract_bearer_token(headers: &HeaderMap) -> Result<String, AuthError> {
-  let auth_header = headers
-    .get(AUTHORIZATION)
-    .ok_or(AuthError::MissingAuthHeader)?
-    .to_str()
-    .map_err(|_| AuthError::InvalidAuthFormat)?;
-
-  if let Some(token) = auth_header.strip_prefix("Bearer ") {
-    Ok(token.to_string())
-  } else {
-    Err(AuthError::InvalidAuthFormat)
-  }
+pub fn generate_api_key(secret: &ApiKeySecret) -> Result<String, AuthError> {
+  let uuid = Uuid::new_v4();
+  let uuid_bytes = uuid.as_bytes();
+  let mut mac =
+    HmacSha256::new_from_slice(secret.0.as_bytes()).map_err(|_| AuthError::HmacInitFailed)?;
+  mac.update(uuid_bytes);
+  let signature = mac.finalize().into_bytes();
+  let mut payload = Vec::new();
+  payload.extend_from_slice(uuid_bytes);
+  payload.extend_from_slice(&signature);
+  Ok(format!(
+    "{}{}",
+    API_KEY_PREFIX,
+    URL_SAFE_NO_PAD.encode(&payload)
+  ))
 }
 
-pub async fn api_key_middleware(
-  secret: Option<String>,
-  request: Request,
-  next: Next,
-) -> Result<Response, AuthError> {
-  if let Some(secret) = secret {
-    let token = extract_bearer_token(request.headers())?;
-    validate_api_key(&token, &secret)?;
-  }
-  Ok(next.run(request).await)
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_generate_and_validate_api_key() {
-    let secret = "test-secret-key";
-    let api_key = generate_api_key(secret).unwrap();
-
-    assert!(api_key.starts_with(API_KEY_PREFIX));
-    assert!(validate_api_key(&api_key, secret).is_ok());
-  }
-
-  #[test]
-  fn test_invalid_api_key() {
-    let secret = "test-secret-key";
-    let api_key = generate_api_key(secret).unwrap();
-
-    let wrong_secret = "wrong-secret";
-    assert!(validate_api_key(&api_key, wrong_secret).is_err());
-  }
-
-  #[test]
-  fn test_malformed_api_key() {
-    let secret = "test-secret-key";
-    assert!(validate_api_key("invalid-key", secret).is_err());
-    assert!(validate_api_key("obs_invalid", secret).is_err());
-  }
-}

@@ -4,6 +4,7 @@
 //! observations.
 
 use clap::Parser;
+use observation_tools_server::auth::ApiKeySecret;
 use observation_tools_server::Config;
 use observation_tools_server::Server;
 use std::net::SocketAddr;
@@ -44,37 +45,29 @@ async fn main() -> anyhow::Result<()> {
 
   match cli.command {
     Commands::Serve { data_dir } => {
-      // Read PORT from environment or use default
       let port = std::env::var("PORT")
         .ok()
         .and_then(|p| p.parse::<u16>().ok())
         .unwrap_or(3000);
-
       let bind_addr: SocketAddr = ([0, 0, 0, 0], port).into();
-
-      // Read API secret from environment
-      let api_secret = std::env::var("OBSERVATION_TOOLS_API_SECRET").ok();
-
-      if api_secret.is_some() {
-        tracing::info!("API key authentication enabled");
-      } else {
-        tracing::warn!("API key authentication disabled - set OBSERVATION_TOOLS_API_SECRET to enable");
-      }
-
       let config = Config::new()
         .with_bind_addr(bind_addr)
         .with_data_dir(data_dir)
-        .with_api_secret(api_secret);
-
+        .with_api_secret(ApiKeySecret::from_env()?);
       let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
       let server = Server::new(config);
       server.run(listener).await?;
     }
     Commands::GenerateKey => {
-      let secret = std::env::var("OBSERVATION_TOOLS_API_SECRET")
-        .map_err(|_| anyhow::anyhow!("OBSERVATION_TOOLS_API_SECRET environment variable not set"))?;
+      let Some(api_secret) = ApiKeySecret::from_env()? else {
+        eprintln!(
+          "Error: No api key secret found. Please set the {} environment variable.",
+          observation_tools_server::auth::ENV_API_KEY_SECRET
+        );
+        std::process::exit(1);
+      };
 
-      let api_key = observation_tools_server::auth::generate_api_key(&secret)?;
+      let api_key = observation_tools_server::auth::generate_api_key(&api_secret)?;
       println!("{}", api_key);
     }
   }

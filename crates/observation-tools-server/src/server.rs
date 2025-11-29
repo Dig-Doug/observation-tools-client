@@ -67,17 +67,22 @@ impl Server {
     tracing::debug!(static_dir = ?static_dir, "Serving static files from directory");
     let serve_static = ServeDir::new(static_dir);
 
+    // Build API routes with auth only on mutating endpoints
+    let api_secret = self.config.api_secret.clone();
+    let api_router = Router::new()
+      .merge(
+        api::build_mutating_router(state.clone())
+          .layer(axum::middleware::from_fn(move |req, next| {
+            crate::auth::api_key_middleware(api_secret.clone(), req, next)
+          }))
+      )
+      .merge(api::build_readonly_router(state.clone()))
+      .layer(middleware::from_fn(csrf::validate_csrf));
+
     // Build the main router
     let app = Router::new()
       .merge(ui_router)
-      .nest(
-        "/api",
-        api::build_router(state)
-          .layer(axum::middleware::from_fn(move |req, next| {
-            crate::auth::api_key_middleware(self.config.api_secret.clone(), req, next)
-          }))
-          .layer(middleware::from_fn(csrf::validate_csrf)),
-      )
+      .nest("/api", api_router)
       .merge(SwaggerUi::new("/api/swagger-ui").url("/api/openapi.json", ApiDoc::openapi()))
       .nest_service("/static", serve_static)
       .layer(TraceLayer::new_for_http());

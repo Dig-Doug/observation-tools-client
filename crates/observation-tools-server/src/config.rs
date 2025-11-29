@@ -2,6 +2,7 @@
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use crate::auth::ApiKeySecret;
 
 /// Server configuration
 #[derive(Debug, Clone)]
@@ -16,7 +17,7 @@ pub struct Config {
   pub blob_dir: PathBuf,
 
   /// Optional API secret for authentication
-  pub api_secret: Option<String>,
+  pub api_secret: Option<ApiKeySecret>,
 }
 
 impl Config {
@@ -47,7 +48,7 @@ impl Config {
   }
 
   /// Set the API secret for authentication
-  pub fn with_api_secret(mut self, secret: Option<String>) -> Self {
+  pub fn with_api_secret(mut self, secret: Option<ApiKeySecret>) -> Self {
     self.api_secret = secret;
     self
   }

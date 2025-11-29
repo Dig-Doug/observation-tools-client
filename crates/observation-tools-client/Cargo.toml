@@ -38,6 +38,8 @@ utoipa.workspace = true
 [dev-dependencies]
 anyhow.workspace = true
 observation-tools-server.workspace = true
+rand.workspace = true
+reqwest.workspace = true
 tempfile = { workspace = true }
 test-log.workspace = true
 tracing-subscriber.workspace = true
