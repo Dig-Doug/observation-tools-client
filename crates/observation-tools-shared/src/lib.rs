@@ -9,8 +9,10 @@ pub use models::Execution;
 pub use models::ExecutionId;
 pub use models::IntoCustomPayload;
 pub use models::IntoPayload;
+pub use models::LogLevel;
 pub use models::Observation;
 pub use models::ObservationId;
+pub use models::ObservationType;
 pub use models::Payload;
 
 /// Payload size threshold for blob storage (64KB)

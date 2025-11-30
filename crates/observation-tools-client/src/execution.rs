@@ -233,6 +233,8 @@ impl ExecutionHandle {
       id: observation_id,
       execution_id: self.execution_id,
       name: name.clone(),
+      observation_type: observation_tools_shared::ObservationType::Payload,
+      log_level: observation_tools_shared::LogLevel::Info,
       labels: labels.unwrap_or_default(),
       metadata: metadata_map,
       source,

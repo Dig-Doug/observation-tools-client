@@ -151,6 +151,17 @@
         ],
         "type": "object"
       },
+      "LogLevel": {
+        "description": "Log level for observations",
+        "enum": [
+          "Trace",
+          "Debug",
+          "Info",
+          "Warning",
+          "Error"
+        ],
+        "type": "string"
+      },
       "Observation": {
         "description": "An observation is a single piece of collected data",
         "properties": {
@@ -174,6 +185,10 @@
             },
             "type": "array"
           },
+          "log_level": {
+            "$ref": "#/components/schemas/LogLevel",
+            "description": "Log level for this observation"
+          },
           "metadata": {
             "additionalProperties": {
               "type": "string"
@@ -187,6 +202,10 @@
           "name": {
             "description": "User-defined name for this observation",
             "type": "string"
+          },
+          "observation_type": {
+            "$ref": "#/components/schemas/ObservationType",
+            "description": "Type of observation"
           },
           "parent_span_id": {
             "description": "Parent span ID (for tracing integration)",
@@ -207,6 +226,8 @@
           "id",
           "execution_id",
           "name",
+          "observation_type",
+          "log_level",
           "payload",
           "created_at"
         ],
@@ -215,6 +236,14 @@
       "ObservationId": {
         "description": "Unique identifier for an observation (UUIDv7)",
         "example": "018e9a3a2c1b7e3f8d2a4b5c6d7e8f9b",
+        "type": "string"
+      },
+      "ObservationType": {
+        "description": "Type of observation",
+        "enum": [
+          "LogEntry",
+          "Payload"
+        ],
         "type": "string"
       },
       "Payload": {

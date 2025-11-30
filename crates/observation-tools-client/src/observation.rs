@@ -12,6 +12,8 @@ use observation_tools_shared::models::ObservationId;
 use observation_tools_shared::models::Payload;
 use observation_tools_shared::models::SourceInfo;
 use observation_tools_shared::IntoCustomPayload;
+use observation_tools_shared::LogLevel;
+use observation_tools_shared::ObservationType;
 use std::collections::HashMap;
 
 /// Builder for creating observations
@@ -22,6 +24,8 @@ pub struct ObservationBuilder {
   source: Option<SourceInfo>,
   parent_span_id: Option<String>,
   payload: Option<Payload>,
+  observation_type: ObservationType,
+  log_level: LogLevel,
 }
 
 impl ObservationBuilder {
@@ -34,6 +38,8 @@ impl ObservationBuilder {
       source: None,
       parent_span_id: None,
       payload: None,
+      observation_type: ObservationType::Payload,
+      log_level: LogLevel::Info,
     }
   }
 
@@ -71,6 +77,18 @@ impl ObservationBuilder {
     self
   }
 
+  /// Set the observation type
+  pub fn observation_type(mut self, observation_type: ObservationType) -> Self {
+    self.observation_type = observation_type;
+    self
+  }
+
+  /// Set the log level
+  pub fn log_level(mut self, log_level: LogLevel) -> Self {
+    self.log_level = log_level;
+    self
+  }
+
   pub fn payload<T: ?Sized + IntoPayload>(mut self, value: &T) -> Self {
     self.payload = Some(value.to_payload());
     self
@@ -93,6 +111,8 @@ impl ObservationBuilder {
       id: observation_id,
       execution_id: execution.id(),
       name: self.name,
+      observation_type: self.observation_type,
+      log_level: self.log_level,
       labels: self.labels,
       metadata: self.metadata,
       source: self.source,
