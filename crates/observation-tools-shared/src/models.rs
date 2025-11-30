@@ -216,24 +216,17 @@ impl Payload {
 /// Type of observation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum ObservationType {
-  /// A log entry observation
   LogEntry,
-  /// A payload observation
   Payload,
 }
 
 /// Log level for observations
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum LogLevel {
-  /// Trace level logging
   Trace,
-  /// Debug level logging
   Debug,
-  /// Info level logging
   Info,
-  /// Warning level logging
   Warning,
-  /// Error level logging
   Error,
 }
 
