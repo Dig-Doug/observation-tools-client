@@ -352,3 +352,47 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
 
   Ok(())
 }
+
+#[test_log::test(tokio::test)]
+async fn test_get_observation_blob() -> anyhow::Result<()> {
+    let server = TestServer::new().await;
+    let client = server.create_client()?;
+
+    let execution = client
+        .begin_execution("test-execution-with-observation")?
+        .wait_for_upload()
+        .await?;
+
+    let execution_id = execution.id();
+
+    observation_tools_client::with_execution(execution, async {
+        observe!("test-apostrophe", "Kelly Ortberg, Boeing’s representative")?
+            .wait_for_upload()
+            .await?;
+        Ok::<_, anyhow::Error>(())
+    })
+        .await?;
+
+    client.shutdown().await?;
+
+    let api_client = server.create_api_client()?;
+    let list_response = api_client
+        .list_observations()
+        .execution_id(&execution_id.to_string())
+        .send()
+        .await?;
+    assert_eq!(list_response.observations.len(), 1);
+    let obs = &list_response.observations[0];
+    assert_eq!(obs.payload.data, "test payload data");
+    
+    let observation = api_client.get_observation_blob()
+        .execution_id(&execution_id.to_string())
+        .observation_id(&obs.id.to_string())
+        .send()
+        .await?;
+
+    todo!("Check contents match")
+    
+    Ok(())
+}
+
