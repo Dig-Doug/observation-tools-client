@@ -1,8 +1,8 @@
 //! Server configuration
 
+use crate::auth::ApiKeySecret;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use crate::auth::ApiKeySecret;
 
 /// Server configuration
 #[derive(Debug, Clone)]

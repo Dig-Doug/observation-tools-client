@@ -2,34 +2,34 @@
 /* eslint-disable */
 /** Client for observation-tools */
 export declare class Client {
-  beginExecution(name: string): ExecutionHandle
+  beginExecution(name: string): ExecutionHandle;
   /**
    * Begin a new execution with a specific ID (for testing)
    *
    * This allows tests to create an execution with a known ID, enabling
    * navigation to the execution URL before the execution is uploaded.
    */
-  beginExecutionWithId(id: string, name: string): ExecutionHandle
+  beginExecutionWithId(id: string, name: string): ExecutionHandle;
 }
 
 /** Builder for Client */
 export declare class ClientBuilder {
   /** Create a new client builder */
-  constructor()
+  constructor();
   /** Set the base URL for the server */
-  setBaseUrl(url: string): void
+  setBaseUrl(url: string): void;
   /** Set the API key for authentication */
-  setApiKey(apiKey: string): void
+  setApiKey(apiKey: string): void;
   /** Build the client */
-  build(): Client
+  build(): Client;
 }
 
 /** Handle to an execution that can be used to send observations */
 export declare class ExecutionHandle {
   /** Get the execution ID as a string */
-  get idString(): string
+  get idString(): string;
   /** Get the URL to the execution page */
-  get url(): string
+  get url(): string;
   /**
    * Create and send an observation
    *
@@ -41,7 +41,14 @@ export declare class ExecutionHandle {
    * * `source_line` - Optional source line number
    * * `metadata` - Optional metadata as an array of [key, value] pairs
    */
-  observe(name: string, payloadJson: string, labels?: Array<string> | undefined | null, sourceFile?: string | undefined | null, sourceLine?: number | undefined | null, metadata?: Array<Array<string>> | undefined | null): string
+  observe(
+    name: string,
+    payloadJson: string,
+    labels?: Array<string> | undefined | null,
+    sourceFile?: string | undefined | null,
+    sourceLine?: number | undefined | null,
+    metadata?: Array<Array<string>> | undefined | null,
+  ): string;
 }
 
 /**
@@ -50,4 +57,4 @@ export declare class ExecutionHandle {
  * This allows tests to generate an execution ID before creating the execution,
  * enabling navigation to the execution URL before the execution is uploaded.
  */
-export declare function generateExecutionId(): string
+export declare function generateExecutionId(): string;

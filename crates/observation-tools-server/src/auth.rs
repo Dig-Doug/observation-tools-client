@@ -57,9 +57,10 @@ pub enum AuthError {
 impl IntoResponse for AuthError {
   fn into_response(self) -> Response {
     let (status, message) = match self {
-      AuthError::InvalidSecretLength { .. } => {
-        (StatusCode::INTERNAL_SERVER_ERROR, "Invalid API secret configuration")
-      }
+      AuthError::InvalidSecretLength { .. } => (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "Invalid API secret configuration",
+      ),
       AuthError::MissingAuthHeader => (StatusCode::UNAUTHORIZED, "Missing Authorization header"),
       AuthError::InvalidAuthFormat => (
         StatusCode::UNAUTHORIZED,
@@ -146,4 +147,3 @@ pub fn generate_api_key(secret: &ApiKeySecret) -> Result<String, AuthError> {
     URL_SAFE_NO_PAD.encode(&payload)
   ))
 }
-

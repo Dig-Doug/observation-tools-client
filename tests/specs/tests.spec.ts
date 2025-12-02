@@ -1,11 +1,14 @@
 import { test, expect } from "../fixtures";
 import { TestId } from "../helpers/testIds";
-import {  generateExecutionId } from "observation-tools-client";
+import { generateExecutionId } from "observation-tools-client";
 
 test("Server homepage loads", async ({ page, server }) => {
   await page.goto(server.baseUrl);
   await expect(page.locator("h1")).toBeVisible();
-  await expect(page.getByTestId(TestId.NavBarLogo), "Logo didn't load, are static files working?").toBeVisible();
+  await expect(
+    page.getByTestId(TestId.NavBarLogo),
+    "Logo didn't load, are static files working?",
+  ).toBeVisible();
 });
 
 test("Create execution", async ({ page, server }) => {
@@ -127,15 +130,34 @@ test("Observation list pagination with 396 observations", async ({ page, server 
 
   await page.goto(exe.url);
   await expect(page.getByTestId(TestId.ObservationListItem).first()).toBeVisible();
-
-  // Verify multiple observations are displayed (at least some from the 396)
+  // Wait for all observations to be received by the server (auto-refresh will pick them up)
+  await expect(page.getByTestId(TestId.PaginationInfo)).toContainText(`of ${totalObservations}`, {
+    timeout: 30000,
+  });
   const observationItems = page.getByTestId(TestId.ObservationListItem);
   const count = await observationItems.count();
-  expect(count).toBeGreaterThan(10); // Should show at least 10 observations
+  expect(count).toBeGreaterThan(10);
+  // Page 1
+  const prevButton = page.getByTestId(TestId.PaginationPrev);
+  const nextButton = page.getByTestId(TestId.PaginationNext);
+  await expect(prevButton).toBeDisabled();
+  await expect(nextButton).toBeEnabled();
+  // Page 2
+  await nextButton.click();
+  await expect(prevButton).toBeEnabled();
+  await expect(nextButton).toBeEnabled();
+  // Page 3
+  await nextButton.click();
+  // Page 4
+  await nextButton.click();
+  await expect(nextButton).toBeDisabled();
+  await expect(prevButton).toBeEnabled();
 
-  // TODO: Pagination controls navigation needs more investigation
-  // The pagination renders initially but disappears after clicking next
-  // For now, just verify observations are displayed
+  // Navigate back to page 1
+  await prevButton.click();
+  await prevButton.click();
+  await prevButton.click();
+  await expect(prevButton).toBeDisabled();
 });
 
 test("Execution list auto-refresh", async ({ page, server }) => {
@@ -202,4 +224,73 @@ test("Navigate to execution page before execution exists, then create it", async
   expect(exe.idString).toBe(executionId);
   await expect(page.getByTestId(TestId.ExecutionDetailTitle)).toContainText(executionName);
   await expect(page.getByTestId(TestId.ExecutionDetailId)).toContainText(executionId);
+});
+
+test("Observation side panel stays open during auto-refresh", async ({ page, server }) => {
+  const client = server.createClient();
+  const executionName = "auto-refresh-panel-test";
+  const exe = client.beginExecution(executionName);
+
+  // Create multiple observations
+  const observation1Name = "first-observation";
+  const observation1Payload = { message: "First observation data" };
+  const observation1Id = exe.observe(
+    observation1Name,
+    JSON.stringify(observation1Payload),
+    ["test"],
+    "test.ts",
+    10,
+  );
+
+  const observation2Name = "second-observation";
+  const observation2Payload = { message: "Second observation data" };
+  const observation2Id = exe.observe(
+    observation2Name,
+    JSON.stringify(observation2Payload),
+    ["test"],
+    "test.ts",
+    20,
+  );
+
+  // Navigate to the execution detail page
+  await page.goto(exe.url);
+  await expect(page.getByTestId(TestId.ExecutionDetailTitle)).toContainText(executionName);
+
+  // Click on the first observation to open the side panel
+  await page
+    .getByTestId(TestId.ObservationListItemLink)
+    .filter({ hasText: observation1Name })
+    .click();
+
+  // Verify the side panel is open with the first observation
+  await expect(page.getByTestId(TestId.ObservationId)).toContainText(observation1Id);
+  await expect(page.getByTestId(TestId.ObservationPayload)).toContainText("First observation data");
+
+  // Wait 5 seconds to span multiple auto-refresh cycles (refresh happens every 2 seconds)
+  await page.waitForTimeout(5000);
+
+  // Verify the side panel is still open with the same observation
+  await expect(page.getByTestId(TestId.ObservationId)).toContainText(observation1Id);
+  await expect(page.getByTestId(TestId.ObservationPayload)).toContainText("First observation data");
+
+  // Click on the second observation
+  await page
+    .getByTestId(TestId.ObservationListItemLink)
+    .filter({ hasText: observation2Name })
+    .click();
+
+  // Verify the side panel shows the second observation
+  await expect(page.getByTestId(TestId.ObservationId)).toContainText(observation2Id);
+  await expect(page.getByTestId(TestId.ObservationPayload)).toContainText(
+    "Second observation data",
+  );
+
+  // Wait another 5 seconds
+  await page.waitForTimeout(5000);
+
+  // Verify the side panel is still open with the second observation
+  await expect(page.getByTestId(TestId.ObservationId)).toContainText(observation2Id);
+  await expect(page.getByTestId(TestId.ObservationPayload)).toContainText(
+    "Second observation data",
+  );
 });

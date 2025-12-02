@@ -1,8 +1,10 @@
 mod common;
 
 use common::TestServer;
-use observation_tools_client::server_client::types::{LogLevel, ObservationType};
-use observation_tools_client::{observe, ObservationLogger};
+use observation_tools_client::observe;
+use observation_tools_client::server_client::types::LogLevel;
+use observation_tools_client::server_client::types::ObservationType;
+use observation_tools_client::ObservationLogger;
 
 #[tokio::test]
 async fn test_logger() -> anyhow::Result<()> {

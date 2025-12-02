@@ -262,6 +262,8 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
 
 #[test_log::test(tokio::test)]
 async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
+  use futures::TryStreamExt;
+
   let server = TestServer::new().await;
   let client = server.create_client()?;
 
@@ -321,22 +323,23 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
     "Payload size should be recorded correctly"
   );
 
-  // Verify the blob can be retrieved via the content endpoint
-  let blob_url = format!(
-    "{}/api/exe/{}/obs/{}/content",
-    server.base_url(),
-    execution_id,
-    observation_id.id()
-  );
+  // Verify the blob can be retrieved via the OpenAPI client
+  let blob_response = api_client
+    .get_observation_blob()
+    .execution_id(&execution_id.to_string())
+    .observation_id(&observation_id.id().to_string())
+    .send()
+    .await?;
 
-  let response = reqwest::get(&blob_url).await?;
-  assert!(
-    response.status().is_success(),
-    "Blob retrieval should succeed"
-  );
+  let blob_bytes: bytes::Bytes = blob_response
+    .into_inner_stream()
+    .try_collect::<Vec<_>>()
+    .await?
+    .into_iter()
+    .flatten()
+    .collect();
 
-  let content = response.text().await?;
-  let retrieved_payload: serde_json::Value = serde_json::from_str(&content)?;
+  let retrieved_payload: serde_json::Value = serde_json::from_slice(&blob_bytes)?;
 
   // Verify the retrieved content matches what we uploaded
   assert_eq!(
@@ -352,47 +355,3 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
 
   Ok(())
 }
-
-#[test_log::test(tokio::test)]
-async fn test_get_observation_blob() -> anyhow::Result<()> {
-    let server = TestServer::new().await;
-    let client = server.create_client()?;
-
-    let execution = client
-        .begin_execution("test-execution-with-observation")?
-        .wait_for_upload()
-        .await?;
-
-    let execution_id = execution.id();
-
-    observation_tools_client::with_execution(execution, async {
-        observe!("test-apostrophe", "Kelly Ortberg, Boeing’s representative")?
-            .wait_for_upload()
-            .await?;
-        Ok::<_, anyhow::Error>(())
-    })
-        .await?;
-
-    client.shutdown().await?;
-
-    let api_client = server.create_api_client()?;
-    let list_response = api_client
-        .list_observations()
-        .execution_id(&execution_id.to_string())
-        .send()
-        .await?;
-    assert_eq!(list_response.observations.len(), 1);
-    let obs = &list_response.observations[0];
-    assert_eq!(obs.payload.data, "test payload data");
-    
-    let observation = api_client.get_observation_blob()
-        .execution_id(&execution_id.to_string())
-        .observation_id(&obs.id.to_string())
-        .send()
-        .await?;
-
-    todo!("Check contents match")
-    
-    Ok(())
-}
-

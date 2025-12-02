@@ -382,12 +382,9 @@ async fn test_blob_retrieval_without_auth_succeeds() -> anyhow::Result<()> {
   });
 
   let observation_id = observation_tools_client::with_execution(execution, async {
-    observation_tools_client::observe!(
-      name = "large-observation",
-      payload = large_payload
-    )?
-    .wait_for_upload()
-    .await
+    observation_tools_client::observe!(name = "large-observation", payload = large_payload)?
+      .wait_for_upload()
+      .await
   })
   .await?;
 
