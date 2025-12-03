@@ -3,9 +3,11 @@
 use crate::client::UploaderMessage;
 use crate::context;
 use crate::error::Result;
+use crate::execution::ExecutionHandle;
 use crate::execution::ObservationHandle;
 use crate::execution::SendObservation;
 use crate::Error;
+use napi_derive::napi;
 use observation_tools_shared::models::IntoPayload;
 use observation_tools_shared::models::Observation;
 use observation_tools_shared::models::ObservationId;
@@ -17,6 +19,7 @@ use observation_tools_shared::ObservationType;
 use std::collections::HashMap;
 
 /// Builder for creating observations
+#[napi]
 pub struct ObservationBuilder {
   name: String,
   labels: Vec<String>,
@@ -106,6 +109,11 @@ impl ObservationBuilder {
   /// immediately.
   pub fn build(self) -> Result<SendObservation> {
     let execution = context::get_current_execution().ok_or(Error::NoExecutionContext)?;
+    self.build_with_execution(&execution)
+  }
+
+  /// Build and send the observation using an explicit execution handle
+  pub fn build_with_execution(self, execution: &ExecutionHandle) -> Result<SendObservation> {
     let observation_id = ObservationId::new();
     let observation = Observation {
       id: observation_id,
@@ -143,5 +151,107 @@ impl ObservationBuilder {
       },
       uploaded_rx,
     })
+  }
+}
+
+#[napi]
+impl ObservationBuilder {
+  /// Create a new observation builder with the given name
+  #[napi(constructor)]
+  pub fn new_napi(name: String) -> Self {
+    Self {
+      name,
+      labels: Vec::new(),
+      metadata: HashMap::new(),
+      source: None,
+      parent_span_id: None,
+      payload: None,
+      observation_type: ObservationType::Payload,
+      log_level: LogLevel::Info,
+    }
+  }
+
+  /// Add a label to the observation
+  #[napi(js_name = "label")]
+  pub fn label_napi(&mut self, label: String) -> &Self {
+    self.labels.push(label);
+    self
+  }
+
+  /// Add metadata to the observation
+  #[napi(js_name = "metadata")]
+  pub fn metadata_napi(&mut self, key: String, value: String) -> &Self {
+    self.metadata.insert(key, value);
+    self
+  }
+
+  /// Set the source info for the observation
+  #[napi(js_name = "source")]
+  pub fn source_napi(&mut self, file: String, line: u32) -> &Self {
+    self.source = Some(SourceInfo {
+      file,
+      line,
+      column: None,
+    });
+    self
+  }
+
+  /// Set the payload as JSON data
+  #[napi(js_name = "jsonPayload")]
+  pub fn json_payload_napi(&mut self, json_string: String) -> napi::Result<&Self> {
+    serde_json::from_str::<serde_json::Value>(&json_string)
+      .map_err(|e| napi::Error::from_reason(format!("Invalid JSON payload: {}", e)))?;
+
+    self.payload = Some(Payload::json(json_string));
+    Ok(self)
+  }
+
+  /// Set the payload with custom data and MIME type
+  #[napi(js_name = "rawPayload")]
+  pub fn raw_payload_napi(&mut self, data: String, mime_type: String) -> &Self {
+    self.payload = Some(Payload::with_mime_type(data, mime_type));
+    self
+  }
+
+  /// Set the payload as markdown content
+  #[napi(js_name = "markdownPayload")]
+  pub fn markdown_payload_napi(&mut self, content: String) -> &Self {
+    self.payload = Some(Payload::with_mime_type(content, "text/markdown"));
+    self
+  }
+
+  /// Build and send the observation
+  #[napi]
+  pub fn send(&mut self, execution: &ExecutionHandle) -> napi::Result<String> {
+    let observation_id = ObservationId::new();
+    let observation = Observation {
+      id: observation_id,
+      execution_id: execution.id(),
+      name: self.name.clone(),
+      observation_type: self.observation_type,
+      log_level: self.log_level,
+      labels: std::mem::take(&mut self.labels),
+      metadata: std::mem::take(&mut self.metadata),
+      source: self.source.take(),
+      parent_span_id: self.parent_span_id.take(),
+      payload: self
+        .payload
+        .take()
+        .ok_or_else(|| napi::Error::from_reason("Payload is required"))?,
+      created_at: chrono::Utc::now(),
+    };
+
+    log::info!(
+      "Sending: {}/exe/{}/obs/{}",
+      execution.base_url(),
+      execution.id(),
+      observation_id
+    );
+
+    execution
+      .send_observation(observation)
+      .map_err(|e| napi::Error::from_reason(format!("Failed to send observation: {}", e)))?;
+
+    Ok(observation_id.to_string())
   }
 }

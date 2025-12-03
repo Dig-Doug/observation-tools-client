@@ -275,6 +275,37 @@ pub trait IntoCustomPayload {
   fn to_payload(&self) -> Payload;
 }
 
+/// A wrapper type for markdown content.
+///
+/// Use this to create observations with markdown payloads that will be
+/// rendered as HTML in the UI.
+///
+/// # Example
+/// ```rust
+/// use observation_tools_shared::models::Markdown;
+///
+/// let md = Markdown::from("# Hello\n\nThis is **bold** text.");
+/// ```
+#[derive(Debug, Clone)]
+pub struct Markdown {
+  content: String,
+}
+
+impl Markdown {
+  /// Create a new Markdown payload from any type that can be converted to a String.
+  pub fn from(content: impl Into<String>) -> Self {
+    Self {
+      content: content.into(),
+    }
+  }
+}
+
+impl IntoCustomPayload for Markdown {
+  fn to_payload(&self) -> Payload {
+    Payload::with_mime_type(self.content.clone(), "text/markdown")
+  }
+}
+
 /// An observation is a single piece of collected data
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Observation {
