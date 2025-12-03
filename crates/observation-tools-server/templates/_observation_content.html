@@ -42,7 +42,8 @@
     <ul data-testid="ObservationMetadata" class="list-none">
       {% for item in observation.metadata | items %}
       <li data-testid="ObservationMetadataItem" class="my-2">
-        <span data-testid="ObservationMetadataKey">{{ item[0] }}</span>: <span data-testid="ObservationMetadataValue">{{ item[1] }}</span>
+        <span data-testid="ObservationMetadataKey">{{ item[0] }}</span>:
+        <span data-testid="ObservationMetadataValue">{{ item[1] }}</span>
       </li>
       {% endfor %}
     </ul>

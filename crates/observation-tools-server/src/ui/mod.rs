@@ -206,34 +206,34 @@ async fn execution_detail_view(
   let limit = query.limit.unwrap_or(100);
   let offset = query.offset.unwrap_or(0);
 
+  // Determine observation type filter based on view
+  let observation_type_filter = match view {
+    ExecutionView::Log => None,
+    ExecutionView::Payload => Some(ObservationType::Payload),
+  };
+
   // Only fetch observations if execution exists
   let (observations, has_next_page, total_count, page) = if execution.is_some() {
-    // Fetch all observations for the execution
-    // We need to fetch more than the limit to properly paginate filtered results
-    let all_observations = metadata
-      .list_observations(execution_id, None, None)
+    // Get total count with filter
+    let total_count = metadata
+      .count_observations(execution_id, observation_type_filter)
       .await?;
 
-    // Filter observations based on view type
-    let filtered_observations: Vec<_> = match view {
-      ExecutionView::Log => all_observations,
-      ExecutionView::Payload => all_observations
-        .into_iter()
-        .filter(|obs| obs.observation_type == ObservationType::Payload)
-        .collect(),
-    };
-
-    let total_count = filtered_observations.len();
-
-    // Apply pagination to filtered results
-    let observations: Vec<_> = filtered_observations
-      .into_iter()
-      .skip(offset)
-      .take(limit + 1)
-      .collect();
+    // Fetch paginated observations with filter (fetch one extra to check for next
+    // page)
+    let mut observations = metadata
+      .list_observations(
+        execution_id,
+        Some(limit + 1),
+        Some(offset),
+        observation_type_filter,
+      )
+      .await?;
 
     let has_next_page = observations.len() > limit;
-    let observations: Vec<_> = observations.into_iter().take(limit).collect();
+    if has_next_page {
+      observations.pop();
+    }
 
     let page = (offset / limit) + 1;
 

@@ -6,6 +6,7 @@ use observation_tools_shared::Execution;
 use observation_tools_shared::ExecutionId;
 use observation_tools_shared::Observation;
 use observation_tools_shared::ObservationId;
+use observation_tools_shared::ObservationType;
 use std::path::Path;
 use tracing::trace;
 
@@ -34,16 +35,23 @@ pub trait MetadataStorage: Send + Sync {
   /// Get observations by their IDs
   async fn get_observations(&self, ids: &[ObservationId]) -> StorageResult<Vec<Observation>>;
 
-  /// List observations for an execution (with optional pagination)
+  /// List observations for an execution (with optional pagination and type
+  /// filter)
   async fn list_observations(
     &self,
     execution_id: ExecutionId,
     limit: Option<usize>,
     offset: Option<usize>,
+    observation_type: Option<ObservationType>,
   ) -> StorageResult<Vec<Observation>>;
 
-  /// Count total number of observations for an execution
-  async fn count_observations(&self, execution_id: ExecutionId) -> StorageResult<usize>;
+  /// Count total number of observations for an execution (with optional type
+  /// filter)
+  async fn count_observations(
+    &self,
+    execution_id: ExecutionId,
+    observation_type: Option<ObservationType>,
+  ) -> StorageResult<usize>;
 }
 
 /// Sled-based metadata storage implementation
@@ -154,6 +162,7 @@ impl MetadataStorage for SledStorage {
     execution_id: ExecutionId,
     limit: Option<usize>,
     offset: Option<usize>,
+    observation_type: Option<ObservationType>,
   ) -> StorageResult<Vec<Observation>> {
     let obs_tree = self.observations_tree()?;
     let exec_obs_tree = self.execution_observations_tree()?;
@@ -167,19 +176,38 @@ impl MetadataStorage for SledStorage {
             .get(&obs_id)
             .ok()
             .flatten()
-            .and_then(|v| serde_json::from_slice(&v).ok())
+            .and_then(|v| serde_json::from_slice::<Observation>(&v).ok())
         })
       })
+      .filter(|obs| observation_type.map_or(true, |t| obs.observation_type == t))
       .skip(offset.unwrap_or(0))
       .take(limit.unwrap_or(100))
       .collect();
     Ok(observations)
   }
 
-  async fn count_observations(&self, execution_id: ExecutionId) -> StorageResult<usize> {
+  async fn count_observations(
+    &self,
+    execution_id: ExecutionId,
+    observation_type: Option<ObservationType>,
+  ) -> StorageResult<usize> {
+    let obs_tree = self.observations_tree()?;
     let exec_obs_tree = self.execution_observations_tree()?;
     let prefix = format!("{}:", execution_id);
-    let count = exec_obs_tree.scan_prefix(prefix.as_bytes()).count();
+    let count = exec_obs_tree
+      .scan_prefix(prefix.as_bytes())
+      .values()
+      .filter_map(|result| {
+        result.ok().and_then(|obs_id| {
+          obs_tree
+            .get(&obs_id)
+            .ok()
+            .flatten()
+            .and_then(|v| serde_json::from_slice::<Observation>(&v).ok())
+        })
+      })
+      .filter(|obs| observation_type.map_or(true, |t| obs.observation_type == t))
+      .count();
     Ok(count)
   }
 }

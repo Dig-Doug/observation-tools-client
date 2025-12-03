@@ -1,6 +1,7 @@
 use observation_tools_client::Client;
 use observation_tools_client::ClientBuilder;
-use observation_tools_server::auth::{generate_api_key, ApiKeySecret};
+use observation_tools_server::auth::generate_api_key;
+use observation_tools_server::auth::ApiKeySecret;
 use std::time::Duration;
 use tokio::time::sleep;
 

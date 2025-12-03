@@ -1,6 +1,9 @@
 use crate::context;
 use crate::observation::ObservationBuilder;
-use log::{Level, Log, Metadata, Record};
+use log::Level;
+use log::Log;
+use log::Metadata;
+use log::Record;
 use observation_tools_shared::ObservationType;
 
 pub struct ObservationLogger;

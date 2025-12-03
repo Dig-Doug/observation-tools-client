@@ -118,7 +118,9 @@ impl IntoResponse for AppError {
 pub fn build_api() -> (Router<AppState>, Router<AppState>, OpenApi) {
   use observation_tools_shared::MAX_BLOB_SIZE;
   use observation_tools_shared::MAX_OBSERVATION_BATCH_SIZE;
-  use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
+  use utoipa::openapi::security::HttpAuthScheme;
+  use utoipa::openapi::security::HttpBuilder;
+  use utoipa::openapi::security::SecurityScheme;
 
   let (mutation_router, mutation_openapi) = OpenApiRouter::<AppState>::new()
     .routes(routes!(executions::create_execution))

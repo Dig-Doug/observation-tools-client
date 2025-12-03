@@ -28,10 +28,9 @@ pub async fn pre_hook_async(
   req: &mut reqwest::Request,
 ) -> anyhow::Result<()> {
   if let Some(ref api_key) = client.api_key {
-    req.headers_mut().insert(
-      "authorization",
-      format!("Bearer {}", api_key).parse()?,
-    );
+    req
+      .headers_mut()
+      .insert("authorization", format!("Bearer {}", api_key).parse()?);
   }
   Ok(())
 }
@@ -71,11 +70,7 @@ impl Client {
       request_builder = request_builder.header("Authorization", format!("Bearer {}", api_key));
     }
 
-    let response = match request_builder
-      .body(data)
-      .send()
-      .await
-    {
+    let response = match request_builder.body(data).send().await {
       Ok(resp) => resp,
       Err(e) => {
         // Try to determine the specific error type for better diagnostics

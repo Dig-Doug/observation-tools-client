@@ -93,7 +93,7 @@ pub async fn list_observations(
 
   // Fetch one extra to determine if there are more pages
   let mut observations = metadata
-    .list_observations(execution_id, Some(limit + 1), query.offset)
+    .list_observations(execution_id, Some(limit + 1), query.offset, None)
     .await?;
 
   let has_next_page = observations.len() > limit;
