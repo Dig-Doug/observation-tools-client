@@ -72,15 +72,6 @@ pub fn generate_execution_id() -> String {
   observation_tools_shared::models::ExecutionId::new().to_string()
 }
 
-/// Generate a new observation ID (for testing)
-///
-/// This allows tests to generate an observation ID before creating the observation.
-#[napi(js_name = "generateObservationId")]
-#[allow(unused)]
-pub fn generate_observation_id() -> String {
-  observation_tools_shared::models::ObservationId::new().to_string()
-}
-
 #[napi]
 impl Client {
   #[napi(js_name = "beginExecution")]

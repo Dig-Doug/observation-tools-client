@@ -78,17 +78,9 @@
   {% elif observation.payload.mime_type == "text/markdown" %}
   <div
     data-testid="ObservationPayload"
-    class="prose dark:prose-invert max-w-none"
-    style="
-      flex-grow: 1;
-      min-height: 0;
-      overflow: auto;
-      border: 1px solid var(--border-color);
-      padding: 1rem;
-      margin: 0;
-    "
+    class="markdown-body grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0"
   >
-{{ observation.payload.data|render_markdown|safe }}
+    {{ observation.payload.data|render_markdown|safe }}
   </div>
   {% else %}
   <pre

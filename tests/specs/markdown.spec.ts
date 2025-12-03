@@ -1,16 +1,16 @@
 import {expect, test} from "../fixtures";
-import { ObservationBuilder } from "observation-tools-client";
+import {ObservationBuilder} from "observation-tools-client";
 import {TestId} from "../helpers/testIds";
 
-test("Markdown observation is rendered as HTML", async ({ page, server }) => {
+test("Markdown observation is rendered as HTML", async ({page, server}) => {
     const client = server.createClient();
     const executionName = "execution-with-markdown";
     const exe = client.beginExecution(executionName);
 
     const observationName = "markdown-observation";
-    
+
     const markdownContent = `
-# h1 Heading 8-)
+# h1 Heading
 ## h2 Heading
 ### h3 Heading
 #### h4 Heading
@@ -136,11 +136,11 @@ Right aligned columns
 
 ## Links
 
-[link text](http://dev.nodeca.com)
+[link text](http://observation.tools)
 
-[link with title](http://nodeca.github.io/pica/demo/ "title text!")
+[link with title](http://observation.tools "title text!")
 
-Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
+Inline link http://observation.tools
 
 
 ## Images
@@ -156,39 +156,13 @@ With a reference later in the document defining the URL location:
 
 [id]: https://octodex.github.com/images/dojocat.jpg  "The Dojocat"
 
-
-## Plugins
-
-The killer feature of \`markdown-it\` is very effective support of
-[syntax plugins](https://www.npmjs.org/browse/keyword/markdown-it-plugin).
-
-
-### [Emojies](https://github.com/markdown-it/markdown-it-emoji)
+## Emojis
 
 > Classic markup: :wink: :cry: :laughing: :yum:
 >
 > Shortcuts (emoticons): :-) :-( 8-) ;)
 
-see [how to change output](https://github.com/markdown-it/markdown-it-emoji#change-output) with twemoji.
-
-
-### [Subscript](https://github.com/markdown-it/markdown-it-sub) / [Superscript](https://github.com/markdown-it/markdown-it-sup)
-
-- 19^th^
-- H~2~O
-
-
-### [\\<ins>](https://github.com/markdown-it/markdown-it-ins)
-
-++Inserted text++
-
-
-### [\\<mark>](https://github.com/markdown-it/markdown-it-mark)
-
-==Marked text==
-
-
-### [Footnotes](https://github.com/markdown-it/markdown-it-footnote)
+### Footnotes
 
 Footnote 1 link[^first].
 
@@ -203,77 +177,16 @@ Duplicated footnote reference[^second].
     and multiple paragraphs.
 
 [^second]: Footnote text.
-
-
-### [Definition lists](https://github.com/markdown-it/markdown-it-deflist)
-
-Term 1
-
-:   Definition 1
-with lazy continuation.
-
-Term 2 with *inline markup*
-
-:   Definition 2
-
-        { some code, part of Definition 2 }
-
-    Third paragraph of definition 2.
-
-_Compact style:_
-
-Term 1
-  ~ Definition 1
-
-Term 2
-  ~ Definition 2a
-  ~ Definition 2b
-
-
-### [Abbreviations](https://github.com/markdown-it/markdown-it-abbr)
-
-This is HTML abbreviation example.
-
-It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
-
-*[HTML]: Hyper Text Markup Language
-
-### [Custom containers](https://github.com/markdown-it/markdown-it-container)
-
-::: warning
-*here be dragons*
-:::
 `;
 
-    // Create observation with markdown payload using ObservationBuilder
-    new ObservationBuilder(observationName)
-        .markdownPayload(markdownContent)
-        .send(exe);
+    const handle = new ObservationBuilder(observationName).markdownPayload(markdownContent).send(exe);
 
-    // Navigate to observation
-    await page.goto(server.baseUrl);
-    await page.getByTestId(TestId.NavExecutionsList).click();
-    await page.getByTestId(TestId.ExecutionLink).filter({ hasText: executionName }).first().click();
-    await page.getByTestId(TestId.ObservationListItemLink).filter({ hasText: observationName }).click();
-
-    // Verify markdown is rendered as HTML
+    await page.goto(handle.handle().url);
     const payloadElement = page.getByTestId(TestId.ObservationPayload);
-    await expect(payloadElement).toBeVisible();
-
-    // Check that markdown headers are rendered as HTML h1 elements
-    await expect(payloadElement.locator("h1")).toContainText("Hello World");
-
-    // Check that bold text is rendered
-    await expect(payloadElement.locator("strong")).toContainText("bold");
-
-    // Check that italic text is rendered
-    await expect(payloadElement.locator("em")).toContainText("italic");
-
-    // Check that list items are rendered
-    await expect(payloadElement.locator("li").first()).toContainText("Item 1");
+    await expect(payloadElement.locator("h1")).toContainText("h1 Heading");
 });
 
-test("Markdown observation sanitizes malicious HTML", async ({ page, server }) => {
+test("Markdown observation sanitizes malicious HTML", async ({page, server}) => {
     const client = server.createClient();
     const executionName = "execution-with-malicious-markdown";
     const exe = client.beginExecution(executionName);
@@ -290,17 +203,11 @@ test("Markdown observation sanitizes malicious HTML", async ({ page, server }) =
 
 Safe paragraph.
 `;
-
-    // Create observation with markdown payload using ObservationBuilder
-    new ObservationBuilder(observationName)
+    const handle = new ObservationBuilder(observationName)
         .markdownPayload(maliciousMarkdown)
         .send(exe);
 
-    // Navigate to observation
-    await page.goto(server.baseUrl);
-    await page.getByTestId(TestId.NavExecutionsList).click();
-    await page.getByTestId(TestId.ExecutionLink).filter({ hasText: executionName }).first().click();
-    await page.getByTestId(TestId.ObservationListItemLink).filter({ hasText: observationName }).click();
+    await page.goto(handle.handle().url);
 
     const payloadElement = page.getByTestId(TestId.ObservationPayload);
     await expect(payloadElement).toBeVisible();

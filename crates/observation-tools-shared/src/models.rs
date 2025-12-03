@@ -292,7 +292,8 @@ pub struct Markdown {
 }
 
 impl Markdown {
-  /// Create a new Markdown payload from any type that can be converted to a String.
+  /// Create a new Markdown payload from any type that can be converted to a
+  /// String.
   pub fn from(content: impl Into<String>) -> Self {
     Self {
       content: content.into(),

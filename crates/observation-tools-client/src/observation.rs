@@ -143,14 +143,14 @@ impl ObservationBuilder {
         uploaded_tx,
       })
       .map_err(|_| Error::ChannelClosed)?;
-    Ok(SendObservation {
-      handle: ObservationHandle {
+    Ok(SendObservation::new(
+      ObservationHandle {
         base_url: execution.base_url().to_string(),
         execution_id: execution.id(),
         observation_id,
       },
       uploaded_rx,
-    })
+    ))
   }
 }
 
@@ -221,8 +221,11 @@ impl ObservationBuilder {
   }
 
   /// Build and send the observation
+  ///
+  /// Returns a SendObservation which allows you to wait for the upload to
+  /// complete or get the ObservationHandle immediately.
   #[napi]
-  pub fn send(&mut self, execution: &ExecutionHandle) -> napi::Result<String> {
+  pub fn send(&mut self, execution: &ExecutionHandle) -> napi::Result<SendObservation> {
     let observation_id = ObservationId::new();
     let observation = Observation {
       id: observation_id,
@@ -241,6 +244,8 @@ impl ObservationBuilder {
       created_at: chrono::Utc::now(),
     };
 
+    let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
+
     log::info!(
       "Sending: {}/exe/{}/obs/{}",
       execution.base_url(),
@@ -249,9 +254,20 @@ impl ObservationBuilder {
     );
 
     execution
-      .send_observation(observation)
-      .map_err(|e| napi::Error::from_reason(format!("Failed to send observation: {}", e)))?;
+      .uploader_tx
+      .try_send(crate::client::UploaderMessage::Observations {
+        observations: vec![observation],
+        uploaded_tx,
+      })
+      .map_err(|_| napi::Error::from_reason("Channel closed"))?;
 
-    Ok(observation_id.to_string())
+    Ok(SendObservation::new(
+      ObservationHandle {
+        base_url: execution.base_url().to_string(),
+        execution_id: execution.id(),
+        observation_id,
+      },
+      uploaded_rx,
+    ))
   }
 }

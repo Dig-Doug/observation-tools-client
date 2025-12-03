@@ -1,11 +1,14 @@
 import { test, expect } from "../fixtures";
 import { TestId } from "../helpers/testIds";
-import { generateExecutionId} from "observation-tools-client";
+import { generateExecutionId } from "observation-tools-client";
 
 test("Server homepage loads", async ({ page, server }) => {
   await page.goto(server.baseUrl);
   await expect(page.locator("h1")).toBeVisible();
-  await expect(page.getByTestId(TestId.NavBarLogo), "Logo didn't load, are static files working?").toBeVisible();
+  await expect(
+    page.getByTestId(TestId.NavBarLogo),
+    "Logo didn't load, are static files working?",
+  ).toBeVisible();
 });
 
 test("Create execution", async ({ page, server }) => {

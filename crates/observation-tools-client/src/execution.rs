@@ -8,39 +8,53 @@ use napi_derive::napi;
 use observation_tools_shared::models::ExecutionId;
 use observation_tools_shared::models::Observation;
 
-/// Result of beginning a new execution
-///
-/// This type is returned when you start a new execution and allows you to
-/// wait for the execution to be uploaded to the server before proceeding.
 pub struct BeginExecution {
   handle: ExecutionHandle,
   uploaded_rx: tokio::sync::oneshot::Receiver<()>,
 }
 
-/// Result of sending observation(s)
-///
-/// This type is returned when you send observations and allows you to
-/// wait for the observations to be uploaded to the server before proceeding.
+#[napi]
 pub struct SendObservation {
   pub(crate) handle: ObservationHandle,
-  pub(crate) uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+  pub(crate) uploaded_rx: Option<tokio::sync::oneshot::Receiver<()>>,
 }
 
 impl SendObservation {
-  /// Wait for the observations to be uploaded to the server
-  ///
-  /// This consumes the SendObservation and returns the observation ID
-  /// after the observations have been successfully uploaded.
-  ///
-  /// # Returns
-  /// - `Ok(ObservationId)` if the observations were successfully uploaded
-  /// - `Err(Error::ChannelClosed)` if the upload task failed
+  pub(crate) fn new(
+    handle: ObservationHandle,
+    uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+  ) -> Self {
+    Self {
+      handle,
+      uploaded_rx: Some(uploaded_rx),
+    }
+  }
+
   pub async fn wait_for_upload(self) -> Result<ObservationHandle> {
-    self.uploaded_rx.await.map_err(|_| Error::ChannelClosed)?;
+    let rx = self.uploaded_rx.ok_or(Error::ChannelClosed)?;
+    rx.await.map_err(|_| Error::ChannelClosed)?;
     Ok(self.handle)
+  }
+
+  pub fn handle(&self) -> &ObservationHandle {
+    &self.handle
+  }
+
+  pub fn into_handle(self) -> ObservationHandle {
+    self.handle
   }
 }
 
+#[napi]
+impl SendObservation {
+  #[napi(js_name = "handle")]
+  pub fn handle_napi(&self) -> ObservationHandle {
+    self.handle.clone()
+  }
+}
+
+#[napi]
+#[derive(Clone)]
 pub struct ObservationHandle {
   pub(crate) base_url: String,
   pub(crate) observation_id: observation_tools_shared::models::ObservationId,
@@ -48,12 +62,14 @@ pub struct ObservationHandle {
 }
 
 impl ObservationHandle {
-  /// Get the observation ID
   pub fn id(&self) -> &observation_tools_shared::models::ObservationId {
     &self.observation_id
   }
+}
 
-  /// Get the URL to the observation page
+#[napi]
+impl ObservationHandle {
+  #[napi(getter)]
   pub fn url(&self) -> String {
     format!(
       "{}/exe/{}/obs/{}",
@@ -62,9 +78,9 @@ impl ObservationHandle {
   }
 }
 
-impl Into<ObservationHandle> for SendObservation {
-  fn into(self) -> ObservationHandle {
-    self.handle
+impl From<SendObservation> for ObservationHandle {
+  fn from(send: SendObservation) -> ObservationHandle {
+    send.into_handle()
   }
 }
 
@@ -80,30 +96,15 @@ impl BeginExecution {
   }
 
   /// Wait for the execution to be uploaded to the server
-  ///
-  /// This consumes the BeginExecution and returns the ExecutionHandle
-  /// after the execution has been successfully uploaded.
-  ///
-  /// # Returns
-  /// - `Ok(ExecutionHandle)` if the execution was successfully uploaded
-  /// - `Err(Error::ChannelClosed)` if the upload task failed
   pub async fn wait_for_upload(self) -> Result<ExecutionHandle> {
     self.uploaded_rx.await.map_err(|_| Error::ChannelClosed)?;
     Ok(self.handle)
   }
 
-  /// Get a reference to the execution handle without waiting for upload
-  ///
-  /// This is useful if you want to start sending observations immediately
-  /// without waiting for the execution creation to complete.
   pub fn handle(&self) -> &ExecutionHandle {
     &self.handle
   }
 
-  /// Consume this and return the execution handle without waiting for upload
-  ///
-  /// This is useful if you don't care about waiting for the execution
-  /// to be uploaded before proceeding.
   pub fn into_handle(self) -> ExecutionHandle {
     self.handle
   }
