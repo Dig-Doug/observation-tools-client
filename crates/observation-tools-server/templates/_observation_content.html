@@ -75,6 +75,13 @@
   <div class="flex-grow">
     <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
   </div>
+  {% elif observation.payload.mime_type == "text/markdown" %}
+  <div
+    data-testid="ObservationPayload"
+    class="markdown-body grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0"
+  >
+    {{ observation.payload.data|render_markdown|safe }}
+  </div>
   {% else %}
   <pre
     data-testid="ObservationPayload"

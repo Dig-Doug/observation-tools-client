@@ -764,4 +764,7 @@ module.exports = nativeBinding;
 module.exports.Client = nativeBinding.Client;
 module.exports.ClientBuilder = nativeBinding.ClientBuilder;
 module.exports.ExecutionHandle = nativeBinding.ExecutionHandle;
+module.exports.ObservationBuilder = nativeBinding.ObservationBuilder;
+module.exports.ObservationHandle = nativeBinding.ObservationHandle;
+module.exports.SendObservation = nativeBinding.SendObservation;
 module.exports.generateExecutionId = nativeBinding.generateExecutionId;

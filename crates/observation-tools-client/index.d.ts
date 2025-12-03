@@ -51,6 +51,39 @@ export declare class ExecutionHandle {
   ): string;
 }
 
+/** Builder for creating observations */
+export declare class ObservationBuilder {
+  /** Create a new observation builder with the given name */
+  constructor(name: string);
+  /** Add a label to the observation */
+  label(label: string): this;
+  /** Add metadata to the observation */
+  metadata(key: string, value: string): this;
+  /** Set the source info for the observation */
+  source(file: string, line: number): this;
+  /** Set the payload as JSON data */
+  jsonPayload(jsonString: string): this;
+  /** Set the payload with custom data and MIME type */
+  rawPayload(data: string, mimeType: string): this;
+  /** Set the payload as markdown content */
+  markdownPayload(content: string): this;
+  /**
+   * Build and send the observation
+   *
+   * Returns a SendObservation which allows you to wait for the upload to complete
+   * or get the ObservationHandle immediately.
+   */
+  send(execution: ExecutionHandle): SendObservation;
+}
+
+export declare class ObservationHandle {
+  get url(): string;
+}
+
+export declare class SendObservation {
+  handle(): ObservationHandle;
+}
+
 /**
  * Generate a new execution ID (for testing)
  *

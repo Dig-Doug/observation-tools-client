@@ -10,6 +10,7 @@ pub use models::ExecutionId;
 pub use models::IntoCustomPayload;
 pub use models::IntoPayload;
 pub use models::LogLevel;
+pub use models::Markdown;
 pub use models::Observation;
 pub use models::ObservationId;
 pub use models::ObservationType;

@@ -1,3 +1,5 @@
+@import "github-markdown.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,4 +22,14 @@
       @apply bg-neutral-900 text-neutral-200;
     }
   }
+}
+
+.markdown-body {
+  --fgColor-default: inherit;
+  --bgColor-default: transparent;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  list-style-type: revert;
 }
