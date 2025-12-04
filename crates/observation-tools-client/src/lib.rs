@@ -6,6 +6,7 @@ mod error;
 mod execution;
 mod logger;
 mod observation;
+mod observation_handle;
 pub mod server_client;
 
 pub use client::Client;
@@ -17,9 +18,10 @@ pub use error::Error;
 pub use error::Result;
 pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
-pub use execution::SendObservation;
 pub use logger::ObservationLogger;
 pub use observation::ObservationBuilder;
+pub use observation_handle::ObservationHandle;
+pub use observation_handle::SendObservation;
 // Re-export procedural macro
 pub use observation_tools_macros::observe;
 pub use observation_tools_shared::IntoCustomPayload;

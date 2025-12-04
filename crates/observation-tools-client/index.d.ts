@@ -70,8 +70,8 @@ export declare class ObservationBuilder {
   /**
    * Build and send the observation
    *
-   * Returns a SendObservation which allows you to wait for the upload to complete
-   * or get the ObservationHandle immediately.
+   * Returns a SendObservation which allows you to wait for the upload to
+   * complete or get the ObservationHandle immediately.
    */
   send(execution: ExecutionHandle): SendObservation;
 }
