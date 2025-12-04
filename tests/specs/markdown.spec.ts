@@ -1,15 +1,15 @@
-import {expect, test} from "../fixtures";
-import {ObservationBuilder} from "observation-tools-client";
-import {TestId} from "../helpers/testIds";
+import { expect, test } from "../fixtures";
+import { ObservationBuilder } from "observation-tools-client";
+import { TestId } from "../helpers/testIds";
 
-test("Markdown observation is rendered as HTML", async ({page, server}) => {
-    const client = server.createClient();
-    const executionName = "execution-with-markdown";
-    const exe = client.beginExecution(executionName);
+test("Markdown observation is rendered as HTML", async ({ page, server }) => {
+  const client = server.createClient();
+  const executionName = "execution-with-markdown";
+  const exe = client.beginExecution(executionName);
 
-    const observationName = "markdown-observation";
+  const observationName = "markdown-observation";
 
-    const markdownContent = `
+  const markdownContent = `
 # h1 Heading
 ## h2 Heading
 ### h3 Heading
@@ -179,21 +179,21 @@ Duplicated footnote reference[^second].
 [^second]: Footnote text.
 `;
 
-    const handle = new ObservationBuilder(observationName).markdownPayload(markdownContent).send(exe);
+  const handle = new ObservationBuilder(observationName).markdownPayload(markdownContent).send(exe);
 
-    await page.goto(handle.handle().url);
-    const payloadElement = page.getByTestId(TestId.ObservationPayload);
-    await expect(payloadElement.locator("h1")).toContainText("h1 Heading");
+  await page.goto(handle.handle().url);
+  const payloadElement = page.getByTestId(TestId.ObservationPayload);
+  await expect(payloadElement.locator("h1")).toContainText("h1 Heading");
 });
 
-test("Markdown observation sanitizes malicious HTML", async ({page, server}) => {
-    const client = server.createClient();
-    const executionName = "execution-with-malicious-markdown";
-    const exe = client.beginExecution(executionName);
+test("Markdown observation sanitizes malicious HTML", async ({ page, server }) => {
+  const client = server.createClient();
+  const executionName = "execution-with-malicious-markdown";
+  const exe = client.beginExecution(executionName);
 
-    const observationName = "malicious-markdown-observation";
-    // Try to inject malicious HTML/JavaScript
-    const maliciousMarkdown = `# Safe Header
+  const observationName = "malicious-markdown-observation";
+  // Try to inject malicious HTML/JavaScript
+  const maliciousMarkdown = `# Safe Header
 
 <script>alert('XSS')</script>
 
@@ -203,30 +203,30 @@ test("Markdown observation sanitizes malicious HTML", async ({page, server}) => 
 
 Safe paragraph.
 `;
-    const handle = new ObservationBuilder(observationName)
-        .markdownPayload(maliciousMarkdown)
-        .send(exe);
+  const handle = new ObservationBuilder(observationName)
+    .markdownPayload(maliciousMarkdown)
+    .send(exe);
 
-    await page.goto(handle.handle().url);
+  await page.goto(handle.handle().url);
 
-    const payloadElement = page.getByTestId(TestId.ObservationPayload);
-    await expect(payloadElement).toBeVisible();
+  const payloadElement = page.getByTestId(TestId.ObservationPayload);
+  await expect(payloadElement).toBeVisible();
 
-    // Verify safe content is rendered
-    await expect(payloadElement.locator("h1")).toContainText("Safe Header");
-    await expect(payloadElement).toContainText("Safe paragraph");
+  // Verify safe content is rendered
+  await expect(payloadElement.locator("h1")).toContainText("Safe Header");
+  await expect(payloadElement).toContainText("Safe paragraph");
 
-    // Verify malicious script tags are removed
-    await expect(payloadElement.locator("script")).toHaveCount(0);
+  // Verify malicious script tags are removed
+  await expect(payloadElement.locator("script")).toHaveCount(0);
 
-    // Verify javascript: links are sanitized (ammonia removes the href entirely or sanitizes it)
-    const links = payloadElement.locator("a");
-    const linkCount = await links.count();
-    for (let i = 0; i < linkCount; i++) {
-        const href = await links.nth(i).getAttribute("href");
-        // href should either be null (removed) or not contain javascript:
-        if (href !== null) {
-            expect(href).not.toContain("javascript:");
-        }
+  // Verify javascript: links are sanitized (ammonia removes the href entirely or sanitizes it)
+  const links = payloadElement.locator("a");
+  const linkCount = await links.count();
+  for (let i = 0; i < linkCount; i++) {
+    const href = await links.nth(i).getAttribute("href");
+    // href should either be null (removed) or not contain javascript:
+    if (href !== null) {
+      expect(href).not.toContain("javascript:");
     }
+  }
 });
