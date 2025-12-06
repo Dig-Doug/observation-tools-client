@@ -267,13 +267,16 @@ pub fn observe(input: TokenStream) -> TokenStream {
     }
   });
 
+  // Note: .source(), .label(), and .metadata() must come before .payload()
+  // because .payload() returns ObservationBuilderWithPayload which only has
+  // .build()
   let expanded = quote! {
       {
           ::observation_tools_client::ObservationBuilder::new(#name)
-              .#payload_method(&#payload)
               .source(#file, #line)
               #label_call
               #(#metadata_calls)*
+              .#payload_method(&#payload)
               .build()
       }
   };

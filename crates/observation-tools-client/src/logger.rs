@@ -40,12 +40,11 @@ impl Log for ObservationLogger {
     let mut builder = ObservationBuilder::new("ObservationLogger")
       .observation_type(ObservationType::LogEntry)
       .log_level(record.level().into())
-      .label(format!("log/{}", record.target()))
-      .payload(&format!("{}", record.args()));
+      .label(format!("log/{}", record.target()));
     if let (Some(file), Some(line)) = (record.file(), record.line()) {
       builder = builder.source(file, line);
     }
-    let _ = builder.build();
+    let _ = builder.payload(&format!("{}", record.args())).build();
   }
 
   fn flush(&self) {

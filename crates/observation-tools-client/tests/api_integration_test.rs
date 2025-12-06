@@ -52,12 +52,12 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
 
   observation_tools_client::with_execution(execution, async {
     observation_tools_client::ObservationBuilder::new("test-observation")
-      .payload("test payload data")
       .label("test/label1")
       .label("test/label2")
       .metadata("key1", "value1")
       .metadata("key2", "value2")
-      .build()?
+      .payload("test payload data")
+      .build()
       .wait_for_upload()
       .await?;
 
@@ -107,7 +107,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     // Create BATCH_SIZE observations to test batching behavior
     for i in 0..observation_tools_client::BATCH_SIZE {
       let obs_name = format!("observation-{}", i);
-      observe!(&obs_name, payload_data)?;
+      observe!(&obs_name, payload_data);
       expected_names.insert(obs_name);
     }
 
@@ -199,7 +199,7 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
           name = TASK_1_NAME,
           label = "concurrent/task1",
           payload = "data from task 1"
-        )?
+        )
         .wait_for_upload()
         .await?;
         let _ = task1_sender.send(());
@@ -219,7 +219,7 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
           name = TASK_2_NAME,
           label = "concurrent/task2",
           payload = "data from task 2"
-        )?
+        )
         .wait_for_upload()
         .await?;
         debug!("Task 2 waiting for task 1");
@@ -290,7 +290,7 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
       name = "large-observation",
       label = "test/large-payload",
       payload = large_payload
-    )?
+    )
     .wait_for_upload()
     .await
   })

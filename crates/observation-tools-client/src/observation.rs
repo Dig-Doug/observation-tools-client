@@ -1,8 +1,8 @@
 //! Observation builder API
 
+use crate::client::ObservationUploadResult;
 use crate::client::UploaderMessage;
 use crate::context;
-use crate::error::Result;
 use crate::execution::ExecutionHandle;
 use crate::observation_handle::ObservationHandle;
 use crate::observation_handle::SendObservation;
@@ -18,7 +18,10 @@ use observation_tools_shared::LogLevel;
 use observation_tools_shared::ObservationType;
 use std::collections::HashMap;
 
-/// Builder for creating observations
+/// Builder for creating observations (without payload set yet)
+///
+/// Call `.payload()` or `.custom_payload()` to get an
+/// `ObservationBuilderWithPayload` that can be built.
 #[napi]
 pub struct ObservationBuilder {
   name: String,
@@ -26,9 +29,20 @@ pub struct ObservationBuilder {
   metadata: HashMap<String, String>,
   source: Option<SourceInfo>,
   parent_span_id: Option<String>,
-  payload: Option<Payload>,
   observation_type: ObservationType,
   log_level: LogLevel,
+  // payload field only used by NAPI impl which can't use type-state pattern
+  napi_payload: Option<Payload>,
+}
+
+/// Builder for creating observations (with payload set)
+///
+/// This struct is returned by `ObservationBuilder::payload()` and
+/// `ObservationBuilder::custom_payload()`. It has the `build()` methods
+/// since a payload is required.
+pub struct ObservationBuilderWithPayload {
+  fields: ObservationBuilder,
+  payload: Payload,
 }
 
 impl ObservationBuilder {
@@ -40,9 +54,9 @@ impl ObservationBuilder {
       metadata: HashMap::new(),
       source: None,
       parent_span_id: None,
-      payload: None,
       observation_type: ObservationType::Payload,
       log_level: LogLevel::Info,
+      napi_payload: None,
     }
   }
 
@@ -92,43 +106,75 @@ impl ObservationBuilder {
     self
   }
 
-  pub fn payload<T: ?Sized + IntoPayload>(mut self, value: &T) -> Self {
-    self.payload = Some(value.to_payload());
-    self
+  /// Set the payload and return a builder that can be built
+  pub fn payload<T: ?Sized + IntoPayload>(self, value: &T) -> ObservationBuilderWithPayload {
+    ObservationBuilderWithPayload {
+      fields: self,
+      payload: value.to_payload(),
+    }
   }
 
-  pub fn custom_payload<T: IntoCustomPayload>(mut self, value: &T) -> Self {
-    self.payload = Some(value.to_payload());
-    self
+  /// Set a custom payload and return a builder that can be built
+  pub fn custom_payload<T: IntoCustomPayload>(self, value: &T) -> ObservationBuilderWithPayload {
+    ObservationBuilderWithPayload {
+      fields: self,
+      payload: value.to_payload(),
+    }
   }
+}
 
+impl ObservationBuilderWithPayload {
   /// Build and send the observation using the current execution context
   ///
   /// Returns a `SendObservation` which allows you to wait for the observation
   /// to be uploaded before proceeding, or to get the observation ID
   /// immediately.
-  pub fn build(self) -> Result<SendObservation> {
-    let execution = context::get_current_execution().ok_or(Error::NoExecutionContext)?;
-    self.build_with_execution(&execution)
+  ///
+  /// If no execution context is available, logs an error and returns a stub
+  /// SendObservation that will fail on `wait_for_upload()`.
+  pub fn build(self) -> SendObservation {
+    match context::get_current_execution() {
+      Some(execution) => self.build_with_execution(&execution),
+      None => {
+        log::error!(
+          "No execution context available for observation '{}'",
+          self.fields.name
+        );
+        SendObservation::stub(Error::NoExecutionContext)
+      }
+    }
   }
 
   /// Build and send the observation using an explicit execution handle
-  pub fn build_with_execution(self, execution: &ExecutionHandle) -> Result<SendObservation> {
+  ///
+  /// Returns a `SendObservation` which allows you to wait for the observation
+  /// to be uploaded. If sending fails, returns a stub that will fail on
+  /// `wait_for_upload()`.
+  pub fn build_with_execution(self, execution: &ExecutionHandle) -> SendObservation {
     let observation_id = ObservationId::new();
+
+    let handle = ObservationHandle {
+      base_url: execution.base_url().to_string(),
+      execution_id: execution.id(),
+      observation_id,
+    };
+
     let observation = Observation {
       id: observation_id,
       execution_id: execution.id(),
-      name: self.name,
-      observation_type: self.observation_type,
-      log_level: self.log_level,
-      labels: self.labels,
-      metadata: self.metadata,
-      source: self.source,
-      parent_span_id: self.parent_span_id,
-      payload: self.payload.ok_or(Error::MissingPayload)?,
+      name: self.fields.name,
+      observation_type: self.fields.observation_type,
+      log_level: self.fields.log_level,
+      labels: self.fields.labels,
+      metadata: self.fields.metadata,
+      source: self.fields.source,
+      parent_span_id: self.fields.parent_span_id,
+      payload: self.payload,
       created_at: chrono::Utc::now(),
     };
-    let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
+
+    let (uploaded_tx, uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
+
     // Log before sending so any error comes afterward
     log::info!(
       "Sending: {}/exe/{}/obs/{}",
@@ -136,24 +182,25 @@ impl ObservationBuilder {
       execution.id(),
       observation_id
     );
-    execution
+
+    if let Err(e) = execution
       .uploader_tx
       .try_send(UploaderMessage::Observations {
         observations: vec![observation],
+        handle: handle.clone(),
         uploaded_tx,
       })
-      .map_err(|_| Error::ChannelClosed)?;
-    Ok(SendObservation::new(
-      ObservationHandle {
-        base_url: execution.base_url().to_string(),
-        execution_id: execution.id(),
-        observation_id,
-      },
-      uploaded_rx,
-    ))
+    {
+      log::error!("Failed to send observation: {}", e);
+      return SendObservation::stub(Error::ChannelClosed);
+    }
+
+    SendObservation::new(handle, uploaded_rx)
   }
 }
 
+// NAPI implementation uses runtime checking since JavaScript can't use Rust's
+// type-state pattern
 #[napi]
 impl ObservationBuilder {
   /// Create a new observation builder with the given name
@@ -165,9 +212,9 @@ impl ObservationBuilder {
       metadata: HashMap::new(),
       source: None,
       parent_span_id: None,
-      payload: None,
       observation_type: ObservationType::Payload,
       log_level: LogLevel::Info,
+      napi_payload: None,
     }
   }
 
@@ -202,21 +249,21 @@ impl ObservationBuilder {
     serde_json::from_str::<serde_json::Value>(&json_string)
       .map_err(|e| napi::Error::from_reason(format!("Invalid JSON payload: {}", e)))?;
 
-    self.payload = Some(Payload::json(json_string));
+    self.napi_payload = Some(Payload::json(json_string));
     Ok(self)
   }
 
   /// Set the payload with custom data and MIME type
   #[napi(js_name = "rawPayload")]
   pub fn raw_payload_napi(&mut self, data: String, mime_type: String) -> &Self {
-    self.payload = Some(Payload::with_mime_type(data, mime_type));
+    self.napi_payload = Some(Payload::with_mime_type(data, mime_type));
     self
   }
 
   /// Set the payload as markdown content
   #[napi(js_name = "markdownPayload")]
   pub fn markdown_payload_napi(&mut self, content: String) -> &Self {
-    self.payload = Some(Payload::with_mime_type(content, "text/markdown"));
+    self.napi_payload = Some(Payload::with_mime_type(content, "text/markdown"));
     self
   }
 
@@ -224,9 +271,26 @@ impl ObservationBuilder {
   ///
   /// Returns a SendObservation which allows you to wait for the upload to
   /// complete or get the ObservationHandle immediately.
+  ///
+  /// If sending fails, returns a stub that will fail on `wait_for_upload()`.
   #[napi]
-  pub fn send(&mut self, execution: &ExecutionHandle) -> napi::Result<SendObservation> {
+  pub fn send(&mut self, execution: &ExecutionHandle) -> SendObservation {
     let observation_id = ObservationId::new();
+
+    let payload = match self.napi_payload.take() {
+      Some(p) => p,
+      None => {
+        log::error!("Observation '{}' is missing payload", self.name);
+        return SendObservation::stub(Error::MissingPayload);
+      }
+    };
+
+    let handle = ObservationHandle {
+      base_url: execution.base_url().to_string(),
+      execution_id: execution.id(),
+      observation_id,
+    };
+
     let observation = Observation {
       id: observation_id,
       execution_id: execution.id(),
@@ -237,14 +301,11 @@ impl ObservationBuilder {
       metadata: std::mem::take(&mut self.metadata),
       source: self.source.take(),
       parent_span_id: self.parent_span_id.take(),
-      payload: self
-        .payload
-        .take()
-        .ok_or_else(|| napi::Error::from_reason("Payload is required"))?,
+      payload,
       created_at: chrono::Utc::now(),
     };
 
-    let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
+    let (uploaded_tx, uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
 
     log::info!(
       "Sending: {}/exe/{}/obs/{}",
@@ -253,21 +314,18 @@ impl ObservationBuilder {
       observation_id
     );
 
-    execution
+    if let Err(e) = execution
       .uploader_tx
-      .try_send(crate::client::UploaderMessage::Observations {
+      .try_send(UploaderMessage::Observations {
         observations: vec![observation],
+        handle: handle.clone(),
         uploaded_tx,
       })
-      .map_err(|_| napi::Error::from_reason("Channel closed"))?;
+    {
+      log::error!("Failed to send observation: {}", e);
+      return SendObservation::stub(Error::ChannelClosed);
+    }
 
-    Ok(SendObservation::new(
-      ObservationHandle {
-        base_url: execution.base_url().to_string(),
-        execution_id: execution.id(),
-        observation_id,
-      },
-      uploaded_rx,
-    ))
+    SendObservation::new(handle, uploaded_rx)
   }
 }

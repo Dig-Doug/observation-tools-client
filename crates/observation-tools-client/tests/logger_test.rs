@@ -20,7 +20,7 @@ async fn test_logger() -> anyhow::Result<()> {
   let execution_id = execution.id();
   observation_tools_client::with_execution(execution, async {
     log::info!("info-log");
-    observe!("direct-log", "direct-log-payload")?
+    observe!("direct-log", "direct-log-payload")
       .wait_for_upload()
       .await?;
     Ok::<_, anyhow::Error>(())

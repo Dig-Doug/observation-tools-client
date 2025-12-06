@@ -51,7 +51,12 @@ export declare class ExecutionHandle {
   ): string;
 }
 
-/** Builder for creating observations */
+/**
+ * Builder for creating observations (without payload set yet)
+ *
+ * Call `.payload()` or `.custom_payload()` to get an `ObservationBuilderWithPayload`
+ * that can be built.
+ */
 export declare class ObservationBuilder {
   /** Create a new observation builder with the given name */
   constructor(name: string);
@@ -72,6 +77,8 @@ export declare class ObservationBuilder {
    *
    * Returns a SendObservation which allows you to wait for the upload to
    * complete or get the ObservationHandle immediately.
+   *
+   * If sending fails, returns a stub that will fail on `wait_for_upload()`.
    */
   send(execution: ExecutionHandle): SendObservation;
 }

@@ -40,6 +40,10 @@ pub enum Error {
 
   #[error("Failed to send uploader message: {0}")]
   TrySendError(String),
+
+  /// Upload failed with error
+  #[error("Upload failed: {0}")]
+  UploadFailed(String),
 }
 
 impl From<TrySendError<UploaderMessage>> for Error {

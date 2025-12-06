@@ -30,6 +30,11 @@ impl ExecutionId {
     Self(Uuid::now_v7())
   }
 
+  /// Create a nil (all zeros) execution ID for placeholder use
+  pub fn nil() -> Self {
+    Self(Uuid::nil())
+  }
+
   /// Parse from a string
   pub fn parse(s: &str) -> crate::Result<Self> {
     Ok(Self(Uuid::parse_str(s)?))
@@ -67,6 +72,11 @@ impl ObservationId {
   /// Generate a new UUIDv7 observation ID
   pub fn new() -> Self {
     Self(Uuid::now_v7())
+  }
+
+  /// Create a nil (all zeros) observation ID for placeholder use
+  pub fn nil() -> Self {
+    Self(Uuid::nil())
   }
 
   /// Parse from a string
