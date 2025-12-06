@@ -1,30 +1,66 @@
 //! Observation handle types
 
+use crate::client::ObservationUploadResult;
 use crate::error::Result;
 use crate::Error;
 use napi_derive::napi;
+use observation_tools_shared::models::ExecutionId;
+use observation_tools_shared::models::ObservationId;
 
 #[napi]
 pub struct SendObservation {
   pub(crate) handle: ObservationHandle,
-  pub(crate) uploaded_rx: Option<tokio::sync::oneshot::Receiver<()>>,
+  pub(crate) uploaded_rx: Option<tokio::sync::watch::Receiver<ObservationUploadResult>>,
+  /// Error that occurred during creation (for stub observations)
+  pub(crate) creation_error: Option<Error>,
 }
 
 impl SendObservation {
   pub(crate) fn new(
     handle: ObservationHandle,
-    uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+    uploaded_rx: tokio::sync::watch::Receiver<ObservationUploadResult>,
   ) -> Self {
     Self {
       handle,
       uploaded_rx: Some(uploaded_rx),
+      creation_error: None,
     }
   }
 
-  pub async fn wait_for_upload(self) -> Result<ObservationHandle> {
-    let rx = self.uploaded_rx.ok_or(Error::ChannelClosed)?;
-    rx.await.map_err(|_| Error::ChannelClosed)?;
-    Ok(self.handle)
+  /// Create a stub SendObservation that will fail on wait_for_upload()
+  ///
+  /// This is used when observation creation fails (e.g., no execution context).
+  /// The stub allows callers to ignore errors at creation time but still
+  /// detect failures when explicitly waiting.
+  pub(crate) fn stub(error: Error) -> Self {
+    Self {
+      handle: ObservationHandle::placeholder(),
+      uploaded_rx: None,
+      creation_error: Some(error),
+    }
+  }
+
+  pub async fn wait_for_upload(mut self) -> Result<ObservationHandle> {
+    // Return creation error if present
+    if let Some(err) = self.creation_error {
+      return Err(err);
+    }
+
+    // Get receiver (must be mutable for borrow_and_update and changed)
+    let rx = self.uploaded_rx.as_mut().ok_or(Error::ChannelClosed)?;
+
+    // Wait for value to change from None to Some
+    loop {
+      {
+        let value = rx.borrow_and_update();
+        match &*value {
+          Some(Ok(handle)) => return Ok(handle.clone()),
+          Some(Err(error_msg)) => return Err(Error::UploadFailed(error_msg.clone())),
+          None => {}
+        }
+      }
+      rx.changed().await.map_err(|_| Error::ChannelClosed)?;
+    }
   }
 
   pub fn handle(&self) -> &ObservationHandle {
@@ -45,16 +81,25 @@ impl SendObservation {
 }
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ObservationHandle {
   pub(crate) base_url: String,
-  pub(crate) observation_id: observation_tools_shared::models::ObservationId,
-  pub(crate) execution_id: observation_tools_shared::models::ExecutionId,
+  pub(crate) observation_id: ObservationId,
+  pub(crate) execution_id: ExecutionId,
 }
 
 impl ObservationHandle {
-  pub fn id(&self) -> &observation_tools_shared::models::ObservationId {
+  pub fn id(&self) -> &ObservationId {
     &self.observation_id
+  }
+
+  /// Create a placeholder handle for stub observations
+  pub(crate) fn placeholder() -> Self {
+    Self {
+      base_url: String::new(),
+      observation_id: ObservationId::nil(),
+      execution_id: ExecutionId::nil(),
+    }
   }
 }
 

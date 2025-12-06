@@ -51,7 +51,12 @@ export declare class ExecutionHandle {
   ): string;
 }
 
-/** Builder for creating observations */
+/**
+ * Builder for creating observations (without payload set yet)
+ *
+ * Call `.payload()` or `.custom_payload()` to get an
+ * `ObservationBuilderWithPayload` that can be built.
+ */
 export declare class ObservationBuilder {
   /** Create a new observation builder with the given name */
   constructor(name: string);
@@ -62,16 +67,28 @@ export declare class ObservationBuilder {
   /** Set the source info for the observation */
   source(file: string, line: number): this;
   /** Set the payload as JSON data */
-  jsonPayload(jsonString: string): this;
+  jsonPayload(jsonString: string): ObservationBuilderWithPayload;
   /** Set the payload with custom data and MIME type */
-  rawPayload(data: string, mimeType: string): this;
+  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayload;
   /** Set the payload as markdown content */
-  markdownPayload(content: string): this;
+  markdownPayload(content: string): ObservationBuilderWithPayload;
+}
+
+/**
+ * Builder for creating observations (with payload set)
+ *
+ * This struct is returned by `ObservationBuilder::payload()` and
+ * `ObservationBuilder::custom_payload()`. It has the `build()` methods
+ * since a payload is required.
+ */
+export declare class ObservationBuilderWithPayload {
   /**
    * Build and send the observation
    *
    * Returns a SendObservation which allows you to wait for the upload to
    * complete or get the ObservationHandle immediately.
+   *
+   * If sending fails, returns a stub that will fail on `wait_for_upload()`.
    */
   send(execution: ExecutionHandle): SendObservation;
 }

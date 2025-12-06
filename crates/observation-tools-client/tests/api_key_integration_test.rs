@@ -44,10 +44,10 @@ async fn test_api_with_valid_key() -> anyhow::Result<()> {
 
   observation_tools_client::with_execution(execution, async {
     observation_tools_client::ObservationBuilder::new("test-observation")
-      .payload("test payload data")
       .label("test/label")
       .metadata("key1", "value1")
-      .build()?
+      .payload("test payload data")
+      .build()
       .wait_for_upload()
       .await?;
 
@@ -196,7 +196,7 @@ async fn test_blob_upload_with_auth() -> anyhow::Result<()> {
       name = "large-observation",
       label = "test/large-payload",
       payload = large_payload
-    )?
+    )
     .wait_for_upload()
     .await
   })
@@ -289,7 +289,7 @@ async fn test_observation_without_auth_after_execution_with_auth() -> anyhow::Re
 
   let unauth_client = server.create_client()?;
   let result = observation_tools_client::with_execution(execution, async {
-    observation_tools_client::observe!(name = "test-observation", payload = "test data")?
+    observation_tools_client::observe!(name = "test-observation", payload = "test data")
       .wait_for_upload()
       .await
   })
@@ -382,7 +382,7 @@ async fn test_blob_retrieval_without_auth_succeeds() -> anyhow::Result<()> {
   });
 
   let observation_id = observation_tools_client::with_execution(execution, async {
-    observation_tools_client::observe!(name = "large-observation", payload = large_payload)?
+    observation_tools_client::observe!(name = "large-observation", payload = large_payload)
       .wait_for_upload()
       .await
   })

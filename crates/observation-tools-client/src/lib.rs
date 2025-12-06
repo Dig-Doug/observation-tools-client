@@ -20,6 +20,7 @@ pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
 pub use logger::ObservationLogger;
 pub use observation::ObservationBuilder;
+pub use observation::ObservationBuilderWithPayload;
 pub use observation_handle::ObservationHandle;
 pub use observation_handle::SendObservation;
 // Re-export procedural macro

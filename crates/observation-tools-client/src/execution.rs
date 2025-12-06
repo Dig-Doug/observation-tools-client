@@ -1,22 +1,26 @@
 //! Execution handle for managing observation context
 
+use crate::client::ExecutionUploadResult;
+use crate::client::ObservationUploadResult;
 use crate::client::UploaderMessage;
 use crate::error::Result;
+use crate::observation_handle::ObservationHandle;
 use crate::Error;
 use async_channel;
 use napi_derive::napi;
 use observation_tools_shared::models::ExecutionId;
 use observation_tools_shared::models::Observation;
+use observation_tools_shared::models::ObservationId;
 
 pub struct BeginExecution {
   handle: ExecutionHandle,
-  uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+  uploaded_rx: tokio::sync::watch::Receiver<ExecutionUploadResult>,
 }
 
 impl BeginExecution {
   pub(crate) fn new(
     handle: ExecutionHandle,
-    uploaded_rx: tokio::sync::oneshot::Receiver<()>,
+    uploaded_rx: tokio::sync::watch::Receiver<ExecutionUploadResult>,
   ) -> Self {
     Self {
       handle,
@@ -25,9 +29,23 @@ impl BeginExecution {
   }
 
   /// Wait for the execution to be uploaded to the server
-  pub async fn wait_for_upload(self) -> Result<ExecutionHandle> {
-    self.uploaded_rx.await.map_err(|_| Error::ChannelClosed)?;
-    Ok(self.handle)
+  pub async fn wait_for_upload(mut self) -> Result<ExecutionHandle> {
+    // Wait for value to change from None to Some
+    loop {
+      {
+        let value = self.uploaded_rx.borrow_and_update();
+        match &*value {
+          Some(Ok(handle)) => return Ok(handle.clone()),
+          Some(Err(error_msg)) => return Err(Error::UploadFailed(error_msg.clone())),
+          None => {}
+        }
+      }
+      self
+        .uploaded_rx
+        .changed()
+        .await
+        .map_err(|_| Error::ChannelClosed)?;
+    }
   }
 
   pub fn handle(&self) -> &ExecutionHandle {
@@ -41,7 +59,7 @@ impl BeginExecution {
 
 /// Handle to an execution that can be used to send observations
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ExecutionHandle {
   pub(crate) execution_id: ExecutionId,
   pub(crate) uploader_tx: async_channel::Sender<UploaderMessage>,
@@ -73,13 +91,20 @@ impl ExecutionHandle {
 
   /// Send an observation (internal use, doesn't wait for upload)
   pub(crate) fn send_observation(&self, observation: Observation) -> Result<()> {
-    // Create a oneshot channel but drop the receiver since we don't wait
-    let (uploaded_tx, _uploaded_rx) = tokio::sync::oneshot::channel();
+    // Create a watch channel but drop the receiver since we don't wait
+    let (uploaded_tx, _uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
+
+    let handle = ObservationHandle {
+      base_url: self.base_url.clone(),
+      observation_id: observation.id,
+      execution_id: self.execution_id,
+    };
 
     self
       .uploader_tx
       .try_send(UploaderMessage::Observations {
         observations: vec![observation],
+        handle,
         uploaded_tx,
       })
       .map_err(|_| Error::ChannelClosed)
@@ -120,7 +145,6 @@ impl ExecutionHandle {
     metadata: Option<Vec<Vec<String>>>,
   ) -> napi::Result<String> {
     use observation_tools_shared::models::Observation;
-    use observation_tools_shared::models::ObservationId;
     use observation_tools_shared::models::Payload;
     use observation_tools_shared::models::SourceInfo;
     use std::collections::HashMap;

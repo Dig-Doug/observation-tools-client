@@ -17,7 +17,7 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
   let execution_id = execution.id();
 
   let observation = observation_tools_client::with_execution(execution, async {
-    let handle = observe!("simple_string", "hello world")?
+    let handle = observe!("simple_string", "hello world")
       .wait_for_upload()
       .await?;
 
@@ -71,7 +71,7 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
         message: "test message".to_string(),
         count: 42,
       }
-    )?
+    )
     .wait_for_upload()
     .await?;
 
@@ -129,7 +129,7 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
         message: "custom message".to_string()
       },
       custom_serialization = true
-    )?
+    )
     .wait_for_upload()
     .await?;
 
@@ -187,7 +187,7 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
         value: "test".to_string()
       },
       custom = true
-    )?
+    )
     .wait_for_upload()
     .await?;
 
@@ -230,7 +230,7 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
 
   let observation = observation_tools_client::with_execution(execution, async {
     let my_data = "captured variable name";
-    let handle = observe!(my_data)?.wait_for_upload().await?;
+    let handle = observe!(my_data).wait_for_upload().await?;
 
     Ok::<_, anyhow::Error>(handle)
   })
@@ -274,7 +274,7 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
       name = "structured_observation",
       payload = "test payload",
       label = "test/category"
-    )?
+    )
     .wait_for_upload()
     .await?;
 
@@ -325,7 +325,7 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
         status_code: "200",
         duration_ms: duration_ms.to_string()
       }
-    )?
+    )
     .wait_for_upload()
     .await?;
 
@@ -370,7 +370,7 @@ async fn test_observe_expression_name() -> anyhow::Result<()> {
   let observation = observation_tools_client::with_execution(execution, async {
     const OBSERVATION_NAME: &str = "const_name";
 
-    let handle = observe!(name = OBSERVATION_NAME, payload = "test data")?
+    let handle = observe!(name = OBSERVATION_NAME, payload = "test data")
       .wait_for_upload()
       .await?;
 
@@ -413,7 +413,7 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
     let prefix = "dynamic";
     let name = format!("{}_observation", prefix);
 
-    let handle = observe!(&name, "test payload")?.wait_for_upload().await?;
+    let handle = observe!(&name, "test payload").wait_for_upload().await?;
 
     Ok::<_, anyhow::Error>(handle)
   })
@@ -454,7 +454,7 @@ async fn test_observe_dynamic_label() -> anyhow::Result<()> {
     let endpoint = "users";
     let label = format!("api/{}/create", endpoint);
 
-    let handle = observe!(name = "request", payload = "data", label = label)?
+    let handle = observe!(name = "request", payload = "data", label = label)
       .wait_for_upload()
       .await?;
 

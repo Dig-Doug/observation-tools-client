@@ -3,6 +3,7 @@
 use crate::error::Result;
 use crate::execution::BeginExecution;
 use crate::execution::ExecutionHandle;
+use crate::observation_handle::ObservationHandle;
 use async_channel;
 use log::error;
 use log::info;
@@ -15,21 +16,31 @@ pub use observation_tools_shared::BATCH_SIZE;
 pub use observation_tools_shared::BLOB_THRESHOLD_BYTES;
 use std::sync::Arc;
 
+/// Result type for observation upload completion notifications via watch
+/// channel Uses String for error since crate::Error doesn't implement Clone
+pub(crate) type ObservationUploadResult = Option<std::result::Result<ObservationHandle, String>>;
+
+/// Result type for execution upload completion notifications via watch channel
+/// Uses String for error since crate::Error doesn't implement Clone
+pub(crate) type ExecutionUploadResult = Option<std::result::Result<ExecutionHandle, String>>;
+
 /// Message types for the background uploader task
 pub(crate) enum UploaderMessage {
   Execution {
     execution: Execution,
-    uploaded_tx: tokio::sync::oneshot::Sender<()>,
+    handle: ExecutionHandle,
+    uploaded_tx: tokio::sync::watch::Sender<ExecutionUploadResult>,
   },
   Observations {
     observations: Vec<Observation>,
-    uploaded_tx: tokio::sync::oneshot::Sender<()>,
+    handle: ObservationHandle,
+    uploaded_tx: tokio::sync::watch::Sender<ObservationUploadResult>,
   },
   Flush,
   Shutdown,
 }
 
-// Manual Debug implementation since oneshot::Sender doesn't implement Debug
+// Manual Debug implementation since watch::Sender doesn't implement Debug
 impl std::fmt::Debug for UploaderMessage {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
@@ -37,9 +48,14 @@ impl std::fmt::Debug for UploaderMessage {
         .debug_struct("Execution")
         .field("execution", execution)
         .finish(),
-      Self::Observations { observations, .. } => f
+      Self::Observations {
+        observations,
+        handle,
+        ..
+      } => f
         .debug_struct("Observations")
         .field("observations", observations)
+        .field("handle", handle)
         .finish(),
       Self::Flush => write!(f, "Flush"),
       Self::Shutdown => write!(f, "Shutdown"),
@@ -114,19 +130,20 @@ impl Client {
 
   fn begin_execution_internal(&self, execution: Execution) -> Result<BeginExecution> {
     trace!("Beginning new execution with ID {}", execution.id);
-    let (uploaded_tx, uploaded_rx) = tokio::sync::oneshot::channel();
-    self
-      .inner
-      .uploader_tx
-      .try_send(UploaderMessage::Execution {
-        execution: execution.clone(),
-        uploaded_tx,
-      })?;
     let handle = ExecutionHandle::new(
       execution.id,
       self.inner.uploader_tx.clone(),
       self.inner.base_url.clone(),
     );
+    let (uploaded_tx, uploaded_rx) = tokio::sync::watch::channel(None);
+    self
+      .inner
+      .uploader_tx
+      .try_send(UploaderMessage::Execution {
+        execution: execution.clone(),
+        handle: handle.clone(),
+        uploaded_tx,
+      })?;
     Ok(BeginExecution::new(handle, uploaded_rx))
   }
 
@@ -256,52 +273,66 @@ async fn uploader_task(
   rx: async_channel::Receiver<UploaderMessage>,
 ) {
   info!("Uploader task started");
-  let flush_observations =
-    async |buffer: &mut Vec<Observation>, senders: &mut Vec<tokio::sync::oneshot::Sender<()>>| {
-      if buffer.is_empty() {
-        return;
-      }
-      let result = upload_observations(&api_client, buffer.drain(..).collect()).await;
-      match result {
-        Ok(()) => {
-          // Signal all senders that observations were uploaded
-          for sender in senders.drain(..) {
-            let _ = sender.send(());
-          }
+
+  // Buffer type for observation senders: (handle, sender)
+  type ObservationSender = (
+    ObservationHandle,
+    tokio::sync::watch::Sender<ObservationUploadResult>,
+  );
+
+  let flush_observations = async |buffer: &mut Vec<Observation>,
+                                  senders: &mut Vec<ObservationSender>| {
+    if buffer.is_empty() {
+      return;
+    }
+    let result = upload_observations(&api_client, buffer.drain(..).collect()).await;
+    match result {
+      Ok(()) => {
+        // Signal all senders that observations were uploaded successfully
+        for (handle, sender) in senders.drain(..) {
+          let _ = sender.send(Some(Ok(handle)));
         }
-        Err(e) => {
-          error!("Failed to upload observations: {}", e);
-          // Clear senders on error (they won't receive notification)
-          senders.clear();
+      }
+      Err(e) => {
+        let error_msg = e.to_string();
+        error!("Failed to upload observations: {}", error_msg);
+        // Signal all senders with the error (as String for Clone compatibility)
+        for (_, sender) in senders.drain(..) {
+          let _ = sender.send(Some(Err(error_msg.clone())));
         }
       }
-    };
+    }
+  };
   let mut observation_buffer: Vec<Observation> = Vec::new();
-  let mut sender_buffer: Vec<tokio::sync::oneshot::Sender<()>> = Vec::new();
+  let mut sender_buffer: Vec<ObservationSender> = Vec::new();
   loop {
     let msg = rx.recv().await.ok();
     match msg {
       Some(UploaderMessage::Execution {
         execution,
+        handle,
         uploaded_tx,
       }) => {
         let result = upload_execution(&api_client, execution).await;
         match result {
           Ok(()) => {
-            // Signal successful upload
-            let _ = uploaded_tx.send(());
+            // Signal successful upload with handle
+            let _ = uploaded_tx.send(Some(Ok(handle)));
           }
           Err(e) => {
-            error!("Failed to upload execution: {}", e);
+            let error_msg = e.to_string();
+            error!("Failed to upload execution: {}", error_msg);
+            let _ = uploaded_tx.send(Some(Err(error_msg)));
           }
         }
       }
       Some(UploaderMessage::Observations {
         observations,
+        handle,
         uploaded_tx,
       }) => {
         observation_buffer.extend(observations);
-        sender_buffer.push(uploaded_tx);
+        sender_buffer.push((handle, uploaded_tx));
         if observation_buffer.len() >= BATCH_SIZE {
           flush_observations(&mut observation_buffer, &mut sender_buffer).await;
         }
