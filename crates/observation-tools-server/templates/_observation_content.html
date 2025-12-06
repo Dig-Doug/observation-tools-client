@@ -1,3 +1,4 @@
+{% from "_json_value.html" import render_json %}
 <div class="flex flex-col h-full">
   <div class="flex-shrink-0">
     <h1 class="text-2xl font-bold my-4">{{ observation.name }}</h1>
@@ -82,18 +83,25 @@
   >
     {{ observation.payload.data|render_markdown|safe }}
   </div>
-  {% else %}
+  {% elif observation.payload.mime_type == "application/json" %} {%- set json_result =
+  observation.payload.data | parse_json -%} {%- if json_result.ok -%}
+  <div
+    data-testid="ObservationPayload"
+    class="json-body grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0"
+  >
+    {{ render_json(json_result.value) }}
+  </div>
+  {%- else -%}
   <pre
     data-testid="ObservationPayload"
-    style="
-      flex-grow: 1;
-      min-height: 0;
-      overflow: auto;
-      border: 1px solid var(--border-color);
-      padding: 1rem;
-      margin: 0;
-      background-color: var(--code-bg);
-    "
+    class="grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0 bg-neutral-100 dark:bg-neutral-800"
+  >
+{{ observation.payload.data|unescape }}</pre
+  >
+  {%- endif -%} {% else %}
+  <pre
+    data-testid="ObservationPayload"
+    class="grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0 bg-neutral-100 dark:bg-neutral-800"
   >
 {{ observation.payload.data|unescape }}</pre
   >

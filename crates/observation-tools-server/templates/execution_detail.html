@@ -4,7 +4,6 @@ for execution...{% endif %}{% endblock %} {% block content %}
 <div
   id="execution-page"
   hx-get="/exe/{{ execution_id }}?offset={{ offset }}&limit={{ limit }}{% if selected_observation %}&obs={{ selected_observation.id }}{% endif %}"
-  hx-trigger="every 2s"
   hx-select="#execution-page"
   hx-swap="outerHTML"
   class="grid grid-cols-1 gap-8 {% if selected_observation %}mr-[50%]{% endif %}"

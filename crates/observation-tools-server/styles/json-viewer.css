@@ -1,0 +1,134 @@
+/* JSON Viewer Styles */
+.json-body {
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    SF Mono,
+    Menlo,
+    Consolas,
+    Liberation Mono,
+    monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  /* Light mode colors */
+  --json-key-color: #0550ae;
+  --json-string-color: #0a3069;
+  --json-number-color: #0550ae;
+  --json-bool-color: #cf222e;
+  --json-null-color: #6e7781;
+  --json-bracket-color: #1f2328;
+  --json-preview-color: #656d76;
+}
+
+/* Dark mode colors */
+@media (prefers-color-scheme: dark) {
+  .json-body {
+    --json-key-color: #79c0ff;
+    --json-string-color: #a5d6ff;
+    --json-number-color: #79c0ff;
+    --json-bool-color: #ff7b72;
+    --json-null-color: #8b949e;
+    --json-bracket-color: #f0f6fc;
+    --json-preview-color: #8b949e;
+  }
+}
+
+.json-body .json-key {
+  color: var(--json-key-color);
+}
+
+.json-body .json-string {
+  color: var(--json-string-color);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.json-body .json-number {
+  color: var(--json-number-color);
+}
+
+.json-body .json-bool {
+  color: var(--json-bool-color);
+}
+
+.json-body .json-null {
+  color: var(--json-null-color);
+  font-style: italic;
+}
+
+.json-body .json-bracket {
+  color: var(--json-bracket-color);
+  font-weight: 500;
+}
+
+.json-body .json-preview {
+  color: var(--json-preview-color);
+  font-size: 0.85em;
+}
+
+/* Details/Summary styling for expand/collapse */
+.json-body details {
+  display: inline;
+}
+
+.json-body details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline;
+}
+
+.json-body details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.json-body details > summary::marker {
+  display: none;
+  content: "";
+}
+
+.json-body details > summary .json-preview::before {
+  content: "▶ ";
+  font-size: 0.7em;
+  margin-right: 0.1em;
+}
+
+.json-body details[open] > summary .json-preview::before {
+  content: "▼ ";
+}
+
+/* Hide preview text when expanded */
+.json-body details[open] > summary .json-preview {
+  display: none;
+}
+
+/* Content indentation */
+.json-body .json-content {
+  display: block;
+  margin-left: 1.5rem;
+  border-left: 1px solid var(--json-bracket-color);
+  padding-left: 0.75rem;
+}
+
+.json-body .json-content {
+  border-left-color: color-mix(in srgb, var(--json-bracket-color) 30%, transparent);
+}
+
+.json-body .json-item {
+  display: block;
+}
+
+/* Closing bracket positioning */
+.json-body details > .json-bracket:last-child {
+  display: block;
+}
+
+.json-body details:not([open]) > .json-bracket:last-child {
+  display: none;
+}
+
+.json-body details:not([open]) > .json-content {
+  display: none;
+}
