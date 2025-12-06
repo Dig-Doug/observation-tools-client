@@ -54,8 +54,8 @@ export declare class ExecutionHandle {
 /**
  * Builder for creating observations (without payload set yet)
  *
- * Call `.payload()` or `.custom_payload()` to get an `ObservationBuilderWithPayload`
- * that can be built.
+ * Call `.payload()` or `.custom_payload()` to get an
+ * `ObservationBuilderWithPayload` that can be built.
  */
 export declare class ObservationBuilder {
   /** Create a new observation builder with the given name */
@@ -67,11 +67,21 @@ export declare class ObservationBuilder {
   /** Set the source info for the observation */
   source(file: string, line: number): this;
   /** Set the payload as JSON data */
-  jsonPayload(jsonString: string): this;
+  jsonPayload(jsonString: string): ObservationBuilderWithPayload;
   /** Set the payload with custom data and MIME type */
-  rawPayload(data: string, mimeType: string): this;
+  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayload;
   /** Set the payload as markdown content */
-  markdownPayload(content: string): this;
+  markdownPayload(content: string): ObservationBuilderWithPayload;
+}
+
+/**
+ * Builder for creating observations (with payload set)
+ *
+ * This struct is returned by `ObservationBuilder::payload()` and
+ * `ObservationBuilder::custom_payload()`. It has the `build()` methods
+ * since a payload is required.
+ */
+export declare class ObservationBuilderWithPayload {
   /**
    * Build and send the observation
    *
