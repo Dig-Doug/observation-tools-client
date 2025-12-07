@@ -10,8 +10,8 @@ none -%} <span class="json-null">null</span>{% if not is_last %},{% endif %} {%-
 number -%} <span class="json-number">{{ value }}</span>{% if not is_last %},{% endif %} {%- elif
 value is mapping -%} {# Object #} {%- set items = value | items -%} {%- if items | length == 0 -%}
 <span class="json-bracket">{}</span>{% if not is_last %},{% endif %} {%- else -%}
-<details open>
-  <summary>
+<details open data-testid="JsonCollapsibleArea">
+  <summary data-testid="JsonCollapseToggle">
     <span class="json-bracket">{</span>
     <span class="json-preview"
       >{{ items | length }} {% if items | length == 1 %}key{% else %}keys{% endif %}</span
@@ -28,8 +28,8 @@ value is mapping -%} {# Object #} {%- set items = value | items -%} {%- if items
 </details>
 {%- endif -%} {%- elif value is iterable -%} {# Array #} {%- if value | length == 0 -%}
 <span class="json-bracket">[]</span>{% if not is_last %},{% endif %} {%- else -%}
-<details open>
-  <summary>
+<details open data-testid="JsonCollapsibleArea">
+  <summary data-testid="JsonCollapseToggle">
     <span class="json-bracket">[</span>
     <span class="json-preview"
       >{{ value | length }} {% if value | length == 1 %}item{% else %}items{% endif %}</span
