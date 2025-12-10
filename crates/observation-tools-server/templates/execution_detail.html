@@ -33,15 +33,11 @@
             </h1>
 
             <p class="mb-2">
-              <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
-              <code
-                data-testid="ExecutionDetailId"
-                class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-                >{{ execution.id }}</code
-              >
+              <span class="text-base-content/60 text-sm">id:</span>
+              <kbd data-testid="ExecutionDetailId" class="kbd kbd-sm">{{ execution.id }}</kbd>
             </p>
             <p class="mb-2">
-              <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span>
+              <span class="text-base-content/60 text-sm">created:</span>
               {{ execution.created_at }}
             </p>
 
@@ -54,31 +50,21 @@
               </ul>
             {% endif %}
 
-            <hr class="border-t border-black dark:border-neutral-200 my-4" />
+            <div class="divider"></div>
 
-            <div class="flex gap-4 mb-4">
+            <div role="tablist" class="tabs tabs-box mb-4">
               <a
                 href="/exe/{{ execution.id }}"
                 data-testid="ViewTabLog"
-                class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
-            {% if view == 'log' %}
-                  bg-black dark:bg-neutral-200 text-white dark:text-black
-                {% else %}
-                  bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
-                  dark:hover:text-blue-400
-                {% endif %}"
+                role="tab"
+                class="tab {% if view == 'log' %}tab-active{% endif %}"
                 >log</a
               >
               <a
                 href="/exe/{{ execution.id }}/payload"
                 data-testid="ViewTabPayload"
-                class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
-            {% if view == 'payload' %}
-                  bg-black dark:bg-neutral-200 text-white dark:text-black
-                {% else %}
-                  bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
-                  dark:hover:text-blue-400
-                {% endif %}"
+                role="tab"
+                class="tab {% if view == 'payload' %}tab-active{% endif %}"
                 >payload</a
               >
             </div>
@@ -89,7 +75,7 @@
               {% if observations %}
                 {% if view == 'log' %}
                   <div
-                    class="font-mono text-sm bg-neutral-900 dark:bg-black rounded border border-neutral-700 overflow-hidden"
+                    class="font-mono text-sm bg-neutral-900 rounded border border-neutral-700 overflow-hidden"
                   >
                     {% for obs in observations %}
                       <a
@@ -100,7 +86,7 @@
                         <div data-testid="ObservationListItem" class="flex items-start gap-3">
                           <span class="text-neutral-500 shrink-0">{{ obs.created_at }}</span>
                           <span
-                            class="shrink-0 w-14 text-right {% if obs.log_level == 'Error' %}text-red-400{% elif obs.log_level == 'Warning' %}text-yellow-400{% elif obs.log_level == 'Info' %}text-blue-400{% elif obs.log_level == 'Debug' %}text-green-400{% else %}text-neutral-500{% endif %}"
+                            class="shrink-0 w-14 text-right {% if obs.log_level == 'Error' %}text-error{% elif obs.log_level == 'Warning' %}text-warning{% elif obs.log_level == 'Info' %}text-info{% elif obs.log_level == 'Debug' %}text-success{% else %}text-neutral-500{% endif %}"
                             >{{ obs.log_level }}</span
                           >
                           <span class="text-neutral-400 shrink-0"
@@ -132,16 +118,16 @@
                         <a
                           data-testid="ObservationListItemLink"
                           href="{{ base_path }}?obs={{ obs.id }}"
-                          class="underline cursor-pointer text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 {% if selected_observation and selected_observation.id == obs.id %}font-bold{% endif %}"
+                          class="link {% if selected_observation and selected_observation.id == obs.id %}font-bold{% endif %}"
                           >{{ obs.name }}</a
                         >
-                        <span class="text-neutral-600 dark:text-neutral-400 text-sm">
+                        <span class="text-base-content/60 text-sm">
                           — {{ obs.payload.mime_type }}
                           {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
                           — {{ obs.created_at }}
                         </span>
                         {% if obs.labels %}
-                          <br /><span class="text-neutral-600 dark:text-neutral-400 text-sm"
+                          <br /><span class="text-base-content/60 text-sm"
                             >labels: {{ obs.labels|join(", ") }}</span
                           >
                         {% endif %}
@@ -150,49 +136,26 @@
                   </ul>
                 {% endif %}
                 {% if total_count %}
-                  <div class="mt-4 pt-4 border-t border-black dark:border-neutral-200">
-                    <p data-testid="PaginationInfo" class="mb-2">
-                      <span class="text-neutral-600 dark:text-neutral-400 text-sm">
-                        showing {{ offset + 1 }}-{{ offset + observations|length }} of
-                        {{ total_count }} (page {{ page }})
-                      </span>
-                    </p>
-                    <div class="flex gap-2">
-                      {% if offset > 0 %}
-                        <button
-                          data-testid="PaginationPrev"
-                          onclick="window.location.href='{{ base_path }}?offset={{ offset - limit }}&limit={{ limit }}'"
-                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                        >
-                          ← prev
-                        </button>
-                      {% else %}
-                        <button
-                          data-testid="PaginationPrev"
-                          disabled
-                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
-                        >
-                          ← prev
-                        </button>
-                      {% endif %}
-                      {% if has_next_page %}
-                        <button
-                          data-testid="PaginationNext"
-                          onclick="window.location.href='{{ base_path }}?offset={{ offset + limit }}&limit={{ limit }}'"
-                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                        >
-                          next →
-                        </button>
-                      {% else %}
-                        <button
-                          data-testid="PaginationNext"
-                          disabled
-                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
-                        >
-                          next →
-                        </button>
-                      {% endif %}
-                    </div>
+                  <div class="divider"></div>
+                  <p data-testid="PaginationInfo" class="mb-2 text-base-content/60 text-sm">
+                    showing {{ offset + 1 }}-{{ offset + observations|length }} of
+                    {{ total_count }} (page {{ page }})
+                  </p>
+                  <div class="join">
+                    <button
+                      data-testid="PaginationPrev"
+                      {% if offset > 0 %}onclick="window.location.href='{{ base_path }}?offset={{ offset - limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
+                      class="join-item btn btn-sm btn-outline"
+                    >
+                      ← prev
+                    </button>
+                    <button
+                      data-testid="PaginationNext"
+                      {% if has_next_page %}onclick="window.location.href='{{ base_path }}?offset={{ offset + limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
+                      class="join-item btn btn-sm btn-outline"
+                    >
+                      next →
+                    </button>
                   </div>
                 {% endif %}
               {% else %}
@@ -201,22 +164,20 @@
             </div>
           </div>
         {% else %}
-          <div>
+          <div class="p-8">
             {{ breadcrumbs([
               {"href": "/", "text": "home"},
               {"href": "/exe", "text": "executions"},
               {"text": "waiting..."}
             ]) }}
 
-            <h1 class="text-2xl font-bold my-4 text-neutral-400">Waiting for execution...</h1>
+            <h1 class="text-2xl font-bold my-4 text-base-content/40">Waiting for execution...</h1>
 
             <p class="mb-2">
-              <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
-              <code class="bg-neutral-100 dark:bg-neutral-800 text-neutral-400 px-1 py-0.5"
-                >{{ execution_id }}</code
-              >
+              <span class="text-base-content/60 text-sm">id:</span>
+              <kbd class="kbd kbd-sm opacity-60">{{ execution_id }}</kbd>
             </p>
-            <p class="text-neutral-600 dark:text-neutral-400">
+            <p class="text-base-content/60">
               This execution has not been received yet. The page will automatically refresh when
               data arrives.
             </p>
@@ -225,21 +186,17 @@
       </main>
 
       {% if selected_observation %}
-        <complementary
-          class="{% if selected_observation %}!flex{% endif %} border-l border-black dark:border-neutral-200 px-8 py-8 overflow-hidden bg-white dark:bg-neutral-900 flex-col overflow-y-auto"
+        <aside
+          class="border-l border-base-300 p-8 overflow-y-auto bg-base-100 flex flex-col"
           id="side-panel"
         >
           <div class="flex-shrink-0">
-            <a
-              href="{{ base_path }}"
-              class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-              >×</a
-            >
+            <a href="{{ base_path }}" class="block text-right text-xl mb-4 link no-underline">×</a>
           </div>
           <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
             {% set observation = selected_observation %} {% include "_observation_content.html" %}
           </div>
-        </complementary>
+        </aside>
       {% endif %}
     </div>
   </div>

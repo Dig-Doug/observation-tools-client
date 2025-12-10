@@ -30,15 +30,13 @@
             {"text": "waiting..."}
           ]) }}
 
-          <h1 class="text-2xl font-bold my-4 text-neutral-400">Waiting for observation...</h1>
+          <h1 class="text-2xl font-bold my-4 text-base-content/40">Waiting for observation...</h1>
 
           <p class="mb-2">
-            <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
-            <code class="bg-neutral-100 dark:bg-neutral-800 text-neutral-400 px-1 py-0.5"
-              >{{ observation_id }}</code
-            >
+            <span class="text-base-content/60 text-sm">id:</span>
+            <kbd class="kbd kbd-sm opacity-60">{{ observation_id }}</kbd>
           </p>
-          <p class="text-neutral-600 dark:text-neutral-400">
+          <p class="text-base-content/60">
             This observation has not been received yet. The page will automatically refresh when
             data arrives.
           </p>
