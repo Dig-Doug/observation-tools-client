@@ -1,5 +1,9 @@
+{% from "_nav_bar.html" import nav %}
+
 {% extends "base.html" %} {% block title %}Observation Tools{% endblock %}
 {% block content %}
+  {{ nav() }}
+  <main class="p-8">
   <h1 class="text-2xl font-bold my-4">observation tools</h1>
 
   <p class="mb-4">
@@ -28,4 +32,5 @@
     3. instrument your code<br />
     4. view results here
   </p>
+  </main>
 {% endblock %}

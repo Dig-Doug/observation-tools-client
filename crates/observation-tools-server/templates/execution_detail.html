@@ -1,3 +1,5 @@
+{% from "_nav_bar.html" import nav %}
+
 {% extends "base.html" %}
 {% block title %}{% if execution %}
   {{ execution.name }}
@@ -5,135 +7,136 @@
   Waiting for execution...
 {% endif %}{% endblock %}
 {% block content %}
-  <div
-    class="grid grid-cols-1 gap-8 {% if selected_observation %}mr-[50%]{% endif %}"
-  >
-    {% if execution %}
-      <div>
-        <p class="text-neutral-600 dark:text-neutral-400 text-sm">
-          <a
-            href="/"
-            class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-          >home</a
-          >
-          /
-          <a
-            href="/exe"
-            class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-          >executions</a
-          >
-          / {{ execution.name }}
-        </p>
+  <div class="h-screen grid grid-rows-[auto_1fr]">
+    {{ nav() }}
+    <main class="grid {% if selected_observation %}grid-cols-2{% else %}grid-cols-1{% endif %} overflow-hidden">
+      {% if execution %}
+        <div class="p-8 overflow-y-auto">
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">
+            <a
+              href="/"
+              class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+            >home</a
+            >
+            /
+            <a
+              href="/exe"
+              class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+            >executions</a
+            >
+            / {{ execution.name }}
+          </p>
 
-        <h1 data-testid="ExecutionDetailTitle" class="text-2xl font-bold my-4">
-          {{ execution.name }}
-        </h1>
+          <h1 data-testid="ExecutionDetailTitle" class="text-2xl font-bold my-4">
+            {{ execution.name }}
+          </h1>
 
-        <p class="mb-2">
-          <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
-          <code
-            data-testid="ExecutionDetailId"
-            class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-          >{{ execution.id }}</code
-          >
-        </p>
-        <p class="mb-2">
-          <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span>
-          {{ execution.created_at }}
-        </p>
+          <p class="mb-2">
+            <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
+            <code
+              data-testid="ExecutionDetailId"
+              class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
+            >{{ execution.id }}</code
+            >
+          </p>
+          <p class="mb-2">
+            <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span>
+            {{ execution.created_at }}
+          </p>
 
-        {% if execution.metadata %}
-          <h3 class="text-base font-bold my-2">metadata</h3>
-          <ul class="list-none">
-            {% for item in execution.metadata | items %}
-              <li class="my-2">{{ item[0] }}: {{ item[1] }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
+          {% if execution.metadata %}
+            <h3 class="text-base font-bold my-2">metadata</h3>
+            <ul class="list-none">
+              {% for item in execution.metadata | items %}
+                <li class="my-2">{{ item[0] }}: {{ item[1] }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
 
-        <hr class="border-t border-black dark:border-neutral-200 my-4" />
+          <hr class="border-t border-black dark:border-neutral-200 my-4" />
 
-        <div class="flex gap-4 mb-4">
-          <a
-            href="/exe/{{ execution.id }}"
-            data-testid="ViewTabLog"
-            class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
+          <div class="flex gap-4 mb-4">
+            <a
+              href="/exe/{{ execution.id }}"
+              data-testid="ViewTabLog"
+              class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
             {% if view == 'log' %}
               bg-black dark:bg-neutral-200 text-white dark:text-black
             {% else %}
               bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
               dark:hover:text-blue-400
             {% endif %}"
-          >log</a
-          >
-          <a
-            href="/exe/{{ execution.id }}/payload"
-            data-testid="ViewTabPayload"
-            class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
-{% if view == 'payload' %}
+            >log</a
+            >
+            <a
+              href="/exe/{{ execution.id }}/payload"
+              data-testid="ViewTabPayload"
+              class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
+            {% if view == 'payload' %}
               bg-black dark:bg-neutral-200 text-white dark:text-black
             {% else %}
               bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
               dark:hover:text-blue-400
             {% endif %}"
-          >payload</a
-          >
-        </div>
-
-        <h2 class="text-xl font-bold my-4">observations</h2>
-
-        {%  with params = observation_list_params %}
-          {% include "_observation_list.html" %}
-        {% endwith %}
-      </div>
-
-      {% if selected_observation %}
-        <div
-          class="hidden {% if selected_observation %}!flex{% endif %} border-l border-black dark:border-neutral-200 px-8 py-8 fixed top-0 right-0 bottom-0 w-[50%] overflow-hidden bg-white dark:bg-neutral-900 flex-col"
-          id="side-panel"
-        >
-          <div class="flex-shrink-0">
-            <a
-              href="{{ base_path }}"
-              class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-            >×</a
+            >payload</a
             >
           </div>
-          <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
-            {% set observation = selected_observation %} {% include "_observation_content.html" %}
+
+          <h2 class="text-xl font-bold my-4">observations</h2>
+
+          {% with params = observation_list_params %}
+            {% include "_observation_list.html" %}
+          {% endwith %}
+        </div>
+
+        {% if selected_observation %}
+          <div
+            class="{% if selected_observation %}!flex{% endif %} border-l border-black dark:border-neutral-200 px-8 py-8 overflow-hidden bg-white dark:bg-neutral-900 flex-col overflow-y-auto"
+            id="side-panel"
+          >
+            <div class="flex-shrink-0">
+              <a
+                href="{{ base_path }}"
+                class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+              >×</a
+              >
+            </div>
+            <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
+              {% set observation = selected_observation %} {% include "_observation_content.html" %}
+            </div>
           </div>
+        {% endif %}
+      {% else %}
+        <div>
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">
+            <a
+              href="/"
+              class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+            >home</a
+            >
+            /
+            <a
+              href="/exe"
+              class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+            >executions</a
+            >
+            / waiting...
+          </p>
+
+          <h1 class="text-2xl font-bold my-4 text-neutral-400">Waiting for execution...</h1>
+
+          <p class="mb-2">
+            <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
+            <code class="bg-neutral-100 dark:bg-neutral-800 text-neutral-400 px-1 py-0.5"
+            >{{ execution_id }}</code
+            >
+          </p>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            This execution has not been received yet. The page will automatically refresh when data
+            arrives.
+          </p>
         </div>
       {% endif %}
-    {% else %}
-      <div>
-        <p class="text-neutral-600 dark:text-neutral-400 text-sm">
-          <a
-            href="/"
-            class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-          >home</a
-          >
-          /
-          <a
-            href="/exe"
-            class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-          >executions</a
-          >
-          / waiting...
-        </p>
-
-        <h1 class="text-2xl font-bold my-4 text-neutral-400">Waiting for execution...</h1>
-
-        <p class="mb-2">
-          <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
-          <code class="bg-neutral-100 dark:bg-neutral-800 text-neutral-400 px-1 py-0.5"
-          >{{ execution_id }}</code
-          >
-        </p>
-        <p class="text-neutral-600 dark:text-neutral-400">
-          This execution has not been received yet. The page will automatically refresh when data
-          arrives.
-        </p>
-      </div>
-    {% endif %}
+    </main>
   </div>
 {% endblock %}

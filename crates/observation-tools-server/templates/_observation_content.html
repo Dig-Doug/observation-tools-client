@@ -8,7 +8,7 @@
       <code
         data-testid="ObservationId"
         class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-        >{{ observation.id }}</code
+      >{{ observation.id }}</code
       >
     </p>
     <p class="mb-2">
@@ -21,10 +21,10 @@
         <span class="text-neutral-600 dark:text-neutral-400 text-sm">source:</span>
         <code
           class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-          ><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span
-            data-testid="ObservationSourceLine"
-            >{{ observation.source.line }}</span
-          ></code
+        ><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span
+          data-testid="ObservationSourceLine"
+        >{{ observation.source.line }}</span
+        ></code
         >
       </p>
     {% endif %}
@@ -33,7 +33,7 @@
         <span class="text-neutral-600 dark:text-neutral-400 text-sm">parent span:</span>
         <code
           class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-          >{{ observation.parent_span_id }}</code
+        >{{ observation.parent_span_id }}</code
         >
       </p>
     {% endif %}
@@ -72,7 +72,7 @@
         target="_blank"
         rel="noopener noreferrer"
         class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-        >Open raw content in new tab</a
+      >Open raw content in new tab</a
       >
     </p>
   </div>
@@ -84,36 +84,27 @@
   {% elif observation.payload.mime_type == "text/markdown" %}
     <div
       data-testid="ObservationPayload"
-      class="markdown-body grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0"
+      class="markdown-body"
     >
       {{ observation.payload.data|render_markdown|safe }}
     </div>
   {% elif observation.payload.mime_type == "application/json" %}
-    {%-
-      set json_result =
-      observation.payload.data | parse_json
-    -%}
-    {%- if json_result.ok -%}
+    {% set json_result = observation.payload.data | parse_json %}
+    {% if json_result.ok %}
       <div
         data-testid="ObservationPayload"
-        class="json-body grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0"
+        class="json-body"
       >
         {{ render_json(json_result.value) }}
       </div>
-    {%- else -%}
-      <pre
-        data-testid="ObservationPayload"
-        class="grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0 bg-neutral-100 dark:bg-neutral-800"
-      >
-{{ observation.payload.data|unescape }}</pre
-      >
-    {%- endif -%}
+    {% else %}
+      <pre data-testid="ObservationPayload">
+        {{ observation.payload.data|unescape }}
+      </pre>
+    {% endif %}
   {% else %}
-    <pre
-      data-testid="ObservationPayload"
-      class="grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0 bg-neutral-100 dark:bg-neutral-800"
-    >
-{{ observation.payload.data|unescape }}</pre
-    >
+    <pre data-testid="ObservationPayload">
+      {{ observation.payload.data|unescape }}
+    </pre>
   {% endif %}
 </div>
