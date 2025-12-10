@@ -1,40 +1,40 @@
 <!doctype html>
 <html lang="en" hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light dark" />
-  <title>{% block title %}Observation Tools{% endblock %}</title>
-  <link rel="icon" href="/static/logo.svg" type="image/svg+xml" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{% block title %}Observation Tools{% endblock %}</title>
+    <link rel="icon" href="/static/logo.svg" type="image/svg+xml" />
 
-  <!-- Tailwind CSS -->
-  <link rel="stylesheet" href="/static/styles.css" />
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="/static/styles.css" />
 
-  <!-- htmx -->
-  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
-  <style>
+    <style>
       /* Logo dark mode toggle */
       .logo {
-          display: block;
+        display: block;
       }
 
       .logo-dark {
-          display: none;
+        display: none;
       }
 
       @media (prefers-color-scheme: dark) {
-          .logo {
-              display: none;
-          }
+        .logo {
+          display: none;
+        }
 
-          .logo-dark {
-              display: block;
-          }
+        .logo-dark {
+          display: block;
+        }
       }
-  </style>
-</head>
-<body>
-{% block content %}{% endblock %}
-</body>
+    </style>
+  </head>
+  <body>
+    {% block content %}{% endblock %}
+  </body>
 </html>

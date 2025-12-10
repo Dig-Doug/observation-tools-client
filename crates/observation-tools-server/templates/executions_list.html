@@ -1,5 +1,6 @@
 {% from "_nav_bar.html" import nav %}
-{% extends "base.html" %} {% block title %}Executions{% endblock %}
+{% extends "base.html" %}
+{% block title %}Executions{% endblock %}
 {% block content %}
   {{ nav() }}
   <main class="p-8">
@@ -9,8 +10,8 @@
       id="executions-list"
       hx-get="/exe?offset={{ offset }}&limit={{ limit }}"
       hx-trigger="every 2s"
-      hx-select="#executions-list"
-      hx-swap="outerHTML"
+      hx-select="#executions-list > *"
+      hx-swap="innerHTML"
     >
       {% if executions %}
         <ul class="list-none">
@@ -20,10 +21,10 @@
                 href="/exe/{{ execution.id }}"
                 data-testid="ExecutionLink"
                 class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-              >{{ execution.name }}</a
+                >{{ execution.name }}</a
               >
               <span class="text-neutral-600 dark:text-neutral-400 text-sm"
-              >— {{ execution.created_at }}</span
+                >— {{ execution.created_at }}</span
               >
             </li>
           {% endfor %}
@@ -32,10 +33,10 @@
         {% if total_count %}
           <div class="mt-4 pt-4 border-t border-black dark:border-neutral-200">
             <p data-testid="PaginationInfo" class="mb-2">
-            <span class="text-neutral-600 dark:text-neutral-400 text-sm">
-              showing {{ offset + 1 }}-{{ offset + executions|length }} of {{ total_count }} (page
-              {{ page }})
-            </span>
+              <span class="text-neutral-600 dark:text-neutral-400 text-sm">
+                showing {{ offset + 1 }}-{{ offset + executions|length }} of {{ total_count }} (page
+                {{ page }})
+              </span>
             </p>
             <div class="flex gap-2">
               {% if offset > 0 %}

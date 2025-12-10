@@ -16,19 +16,19 @@
           <a
             href="/"
             class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-          >home</a
+            >home</a
           >
           /
           <a
             href="/exe"
             class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-          >executions</a
+            >executions</a
           >
           /
           <a
             href="/exe/{{ observation.execution_id }}"
             class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-          >{{ observation.execution_id }}</a
+            >{{ observation.execution_id }}</a
           >
           / {{ observation.name }}
         </p>
@@ -40,19 +40,19 @@
             <a
               href="/"
               class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-            >home</a
+              >home</a
             >
             /
             <a
               href="/exe"
               class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-            >executions</a
+              >executions</a
             >
             /
             <a
               href="/exe/{{ execution_id }}"
               class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-            >{{ execution_id }}</a
+              >{{ execution_id }}</a
             >
             / waiting...
           </p>
@@ -62,12 +62,12 @@
           <p class="mb-2">
             <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
             <code class="bg-neutral-100 dark:bg-neutral-800 text-neutral-400 px-1 py-0.5"
-            >{{ observation_id }}</code
+              >{{ observation_id }}</code
             >
           </p>
           <p class="text-neutral-600 dark:text-neutral-400">
-            This observation has not been received yet. The page will automatically refresh when data
-            arrives.
+            This observation has not been received yet. The page will automatically refresh when
+            data arrives.
           </p>
         </div>
       {% endif %}

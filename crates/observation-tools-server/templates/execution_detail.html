@@ -1,5 +1,4 @@
 {% from "_nav_bar.html" import nav %}
-
 {% extends "base.html" %}
 {% block title %}{% if execution %}
   {{ execution.name }}
@@ -9,13 +8,16 @@
 {% block content %}
   <div class="h-screen grid grid-rows-[auto_1fr]">
     {{ nav() }}
-    <div class="grid {% if selected_observation %}grid-cols-2{% else %}grid-cols-1{% endif %} overflow-hidden">
-      <main class="overflow-y-auto"
-            id="execution-detail"
-            hx-get="/exe/{{ execution_id }}"
-            hx-trigger="every 2s"
-            hx-select="#execution-detail > *"
-            hx-swap="innerHTML"
+    <div
+      class="grid {% if selected_observation %}grid-cols-2{% else %}grid-cols-1{% endif %} overflow-hidden"
+    >
+      <main
+        class="overflow-y-auto"
+        id="execution-detail"
+        hx-get="/exe/{{ execution_id }}"
+        hx-trigger="every 2s"
+        hx-select="#execution-detail > *"
+        hx-swap="innerHTML"
       >
         {% if execution %}
           <div class="p-8">
@@ -23,13 +25,13 @@
               <a
                 href="/"
                 class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-              >home</a
+                >home</a
               >
               /
               <a
                 href="/exe"
                 class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-              >executions</a
+                >executions</a
               >
               / {{ execution.name }}
             </p>
@@ -43,7 +45,7 @@
               <code
                 data-testid="ExecutionDetailId"
                 class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-              >{{ execution.id }}</code
+                >{{ execution.id }}</code
               >
             </p>
             <p class="mb-2">
@@ -68,126 +70,140 @@
                 data-testid="ViewTabLog"
                 class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
             {% if view == 'log' %}
-              bg-black dark:bg-neutral-200 text-white dark:text-black
-            {% else %}
-              bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
-              dark:hover:text-blue-400
-            {% endif %}"
-              >log</a
+                  bg-black dark:bg-neutral-200 text-white dark:text-black
+                {% else %}
+                  bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
+                  dark:hover:text-blue-400
+                {% endif %}"
+                >log</a
               >
               <a
                 href="/exe/{{ execution.id }}/payload"
                 data-testid="ViewTabPayload"
                 class="font-mono text-sm px-3 py-1 border border-black dark:border-neutral-200
             {% if view == 'payload' %}
-              bg-black dark:bg-neutral-200 text-white dark:text-black
-            {% else %}
-              bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
-              dark:hover:text-blue-400
-            {% endif %}"
-              >payload</a
+                  bg-black dark:bg-neutral-200 text-white dark:text-black
+                {% else %}
+                  bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 hover:text-blue-600
+                  dark:hover:text-blue-400
+                {% endif %}"
+                >payload</a
               >
             </div>
 
             <h2 class="text-xl font-bold my-4">observations</h2>
 
             <div id="observations-list">
-              {% if observations %} {% if view == 'log' %}
-                <div
-                  class="font-mono text-sm bg-neutral-900 dark:bg-black rounded border border-neutral-700 overflow-hidden"
-                >
-                  {% for obs in observations %}
-                    <a
-                      data-testid="ObservationListItemLink"
-                      href="{{ base_path }}?obs={{ obs.id }}"
-                      class="block px-3 py-1.5 hover:bg-neutral-800 cursor-pointer border-b border-neutral-800 last:border-b-0 {% if selected_observation and selected_observation.id == obs.id %}bg-neutral-800{% endif %}"
-                    >
-                      <div data-testid="ObservationListItem" class="flex items-start gap-3">
-                        <span class="text-neutral-500 shrink-0">{{ obs.created_at }}</span>
-                        <span
-                          class="shrink-0 w-14 text-right {% if obs.log_level == 'Error' %}text-red-400 {% elif obs.log_level == 'Warning' %}text-yellow-400 {% elif obs.log_level == 'Info' %}text-blue-400 {% elif obs.log_level == 'Debug' %}text-green-400 {% else %}text-neutral-500{% endif %}"
-                        >{{ obs.log_level }}</span
-                        >
-                        <span class="text-neutral-400 shrink-0"
-                        >{% if obs.source %}{{ obs.source.file }}:{{ obs.source.line }}{% else %}-{% endif %}</span
-                        >
-                        <span class="text-neutral-200 truncate"
-                        >{% if obs.observation_type == 'LogEntry' %}{{ obs.payload.data[:200] }}{% if
-              obs.payload.data|length > 200 %}...{% endif %}{% else %}{{ obs.name }}:
-                          {{ obs.payload.data[:100] }}{% if obs.payload.data|length > 100 %}...
-                          {% endif %}{% endif %}</span
-                        >
-                      </div>
-                    </a>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <ul class="list-none">
-                  {% for obs in observations %}
-                    <li data-testid="ObservationListItem" class="my-2">
+              {% if observations %}
+                {% if view == 'log' %}
+                  <div
+                    class="font-mono text-sm bg-neutral-900 dark:bg-black rounded border border-neutral-700 overflow-hidden"
+                  >
+                    {% for obs in observations %}
                       <a
                         data-testid="ObservationListItemLink"
                         href="{{ base_path }}?obs={{ obs.id }}"
-                        class="underline cursor-pointer text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 {% if selected_observation and selected_observation.id == obs.id %}font-bold{% endif %}"
-                      >{{ obs.name }}</a
+                        class="block px-3 py-1.5 hover:bg-neutral-800 cursor-pointer border-b border-neutral-800 last:border-b-0 {% if selected_observation and selected_observation.id == obs.id %}bg-neutral-800{% endif %}"
                       >
-                      <span class="text-neutral-600 dark:text-neutral-400 text-sm">
-            — {{ obs.payload.mime_type }} {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
-                        — {{ obs.created_at }}
-          </span>
-                      {% if obs.labels %}
-                        <br /><span class="text-neutral-600 dark:text-neutral-400 text-sm"
-                      >labels: {{ obs.labels|join(", ") }}</span
-                      >
-                      {% endif %}
-                    </li>
-                  {% endfor %}
-                </ul>
-              {% endif %} {% if total_count %}
-                <div class="mt-4 pt-4 border-t border-black dark:border-neutral-200">
-                  <p data-testid="PaginationInfo" class="mb-2">
-          <span class="text-neutral-600 dark:text-neutral-400 text-sm">
-            showing {{ offset + 1 }}-{{ offset + observations|length }} of {{ total_count }} (page
-            {{ page }})
-          </span>
-                  </p>
-                  <div class="flex gap-2">
-                    {% if offset > 0 %}
-                      <button
-                        data-testid="PaginationPrev"
-                        onclick="window.location.href='{{ base_path }}?offset={{ offset - limit }}&limit={{ limit }}'"
-                        class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                      >
-                        ← prev
-                      </button>
-                    {% else %}
-                      <button
-                        data-testid="PaginationPrev"
-                        disabled
-                        class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
-                      >
-                        ← prev
-                      </button>
-                    {% endif %} {% if has_next_page %}
-                    <button
-                      data-testid="PaginationNext"
-                      onclick="window.location.href='{{ base_path }}?offset={{ offset + limit }}&limit={{ limit }}'"
-                      class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                    >
-                      next →
-                    </button>
-                  {% else %}
-                    <button
-                      data-testid="PaginationNext"
-                      disabled
-                      class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
-                    >
-                      next →
-                    </button>
-                  {% endif %}
+                        <div data-testid="ObservationListItem" class="flex items-start gap-3">
+                          <span class="text-neutral-500 shrink-0">{{ obs.created_at }}</span>
+                          <span
+                            class="shrink-0 w-14 text-right {% if obs.log_level == 'Error' %}text-red-400{% elif obs.log_level == 'Warning' %}text-yellow-400{% elif obs.log_level == 'Info' %}text-blue-400{% elif obs.log_level == 'Debug' %}text-green-400{% else %}text-neutral-500{% endif %}"
+                            >{{ obs.log_level }}</span
+                          >
+                          <span class="text-neutral-400 shrink-0"
+                            >{% if obs.source %}{{ obs.source.file }}:{{ obs.source.line }}{% else %}-{% endif %}</span
+                          >
+                          <span class="text-neutral-200 truncate"
+                            >{% if obs.observation_type == 'LogEntry' %}
+                              {{ obs.payload.data[:200] }}{%
+                                if
+                                obs.payload.data|length > 200
+                              %}
+                                ...
+                              {% endif %}
+                            {% else %}
+                              {{ obs.name }}:
+                              {{ obs.payload.data[:100] }}{% if obs.payload.data|length > 100 %}
+                                ...
+                              {% endif %}
+                            {% endif %}</span
+                          >
+                        </div>
+                      </a>
+                    {% endfor %}
                   </div>
-                </div>
-              {% endif %} {% else %}
+                {% else %}
+                  <ul class="list-none">
+                    {% for obs in observations %}
+                      <li data-testid="ObservationListItem" class="my-2">
+                        <a
+                          data-testid="ObservationListItemLink"
+                          href="{{ base_path }}?obs={{ obs.id }}"
+                          class="underline cursor-pointer text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 {% if selected_observation and selected_observation.id == obs.id %}font-bold{% endif %}"
+                          >{{ obs.name }}</a
+                        >
+                        <span class="text-neutral-600 dark:text-neutral-400 text-sm">
+                          — {{ obs.payload.mime_type }}
+                          {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
+                          — {{ obs.created_at }}
+                        </span>
+                        {% if obs.labels %}
+                          <br /><span class="text-neutral-600 dark:text-neutral-400 text-sm"
+                            >labels: {{ obs.labels|join(", ") }}</span
+                          >
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+                {% if total_count %}
+                  <div class="mt-4 pt-4 border-t border-black dark:border-neutral-200">
+                    <p data-testid="PaginationInfo" class="mb-2">
+                      <span class="text-neutral-600 dark:text-neutral-400 text-sm">
+                        showing {{ offset + 1 }}-{{ offset + observations|length }} of
+                        {{ total_count }} (page {{ page }})
+                      </span>
+                    </p>
+                    <div class="flex gap-2">
+                      {% if offset > 0 %}
+                        <button
+                          data-testid="PaginationPrev"
+                          onclick="window.location.href='{{ base_path }}?offset={{ offset - limit }}&limit={{ limit }}'"
+                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          ← prev
+                        </button>
+                      {% else %}
+                        <button
+                          data-testid="PaginationPrev"
+                          disabled
+                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
+                        >
+                          ← prev
+                        </button>
+                      {% endif %}
+                      {% if has_next_page %}
+                        <button
+                          data-testid="PaginationNext"
+                          onclick="window.location.href='{{ base_path }}?offset={{ offset + limit }}&limit={{ limit }}'"
+                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          next →
+                        </button>
+                      {% else %}
+                        <button
+                          data-testid="PaginationNext"
+                          disabled
+                          class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
+                        >
+                          next →
+                        </button>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endif %}
+              {% else %}
                 <p>no observations found.</p>
               {% endif %}
             </div>
@@ -198,13 +214,13 @@
               <a
                 href="/"
                 class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-              >home</a
+                >home</a
               >
               /
               <a
                 href="/exe"
                 class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-              >executions</a
+                >executions</a
               >
               / waiting...
             </p>
@@ -214,12 +230,12 @@
             <p class="mb-2">
               <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
               <code class="bg-neutral-100 dark:bg-neutral-800 text-neutral-400 px-1 py-0.5"
-              >{{ execution_id }}</code
+                >{{ execution_id }}</code
               >
             </p>
             <p class="text-neutral-600 dark:text-neutral-400">
-              This execution has not been received yet. The page will automatically refresh when data
-              arrives.
+              This execution has not been received yet. The page will automatically refresh when
+              data arrives.
             </p>
           </div>
         {% endif %}
@@ -234,7 +250,7 @@
             <a
               href="{{ base_path }}"
               class="block text-right cursor-pointer text-xl mb-4 no-underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-            >×</a
+              >×</a
             >
           </div>
           <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
