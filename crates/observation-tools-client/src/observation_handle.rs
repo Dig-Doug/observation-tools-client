@@ -40,10 +40,10 @@ impl SendObservation {
     }
   }
 
-  pub async fn wait_for_upload(mut self) -> Result<ObservationHandle> {
+  pub async fn wait_for_upload(&mut self) -> Result<ObservationHandle> {
     // Return creation error if present
-    if let Some(err) = self.creation_error {
-      return Err(err);
+    if let Some(_err) = &self.creation_error {
+      return Err(Error::CreationError);
     }
 
     // Get receiver (must be mutable for borrow_and_update and changed)

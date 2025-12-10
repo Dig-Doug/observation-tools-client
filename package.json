@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "build:css": "tailwindcss -i ./crates/observation-tools-server/styles/input.css -o ./crates/observation-tools-server/static/styles.css",
-    "watch:css": "tailwindcss -i ./crates/observation-tools-server/styles/input.css -o ./crates/observation-tools-server/static/styles.css --watch"
+    "watch:css": "tailwindcss -i ./crates/observation-tools-server/styles/input.css -o ./crates/observation-tools-server/static/styles.css --watch",
+    "format": "cargo +nightly fmt && prettier --write ."
   },
   "devDependencies": {
+    "prettier": "^3.7.4",
+    "prettier-plugin-jinja-template": "^2.1.0",
     "tailwindcss": "^3.4.1"
   }
 }

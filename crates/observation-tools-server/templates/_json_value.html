@@ -1,47 +1,73 @@
 {# Recursive macro to render JSON values with syntax highlighting and collapsible objects/arrays.
 Usage: {{ render_json(value, is_last) }} - value: The JSON value to render (can be object, array,
 string, number, boolean, or null) - is_last: Whether this is the last item in a parent container
-(controls trailing comma) #} {% macro render_json(value, is_last=true) %} {#- Check for
-null/undefined FIRST since none passes other type checks -#} {%- if value is undefined or value is
-none -%} <span class="json-null">null</span>{% if not is_last %},{% endif %} {%- elif value == true
--%} <span class="json-bool">true</span>{% if not is_last %},{% endif %} {%- elif value == false -%}
-<span class="json-bool">false</span>{% if not is_last %},{% endif %} {%- elif value is string -%}
-<span class="json-string">"{{ value | e }}"</span>{% if not is_last %},{% endif %} {%- elif value is
-number -%} <span class="json-number">{{ value }}</span>{% if not is_last %},{% endif %} {%- elif
-value is mapping -%} {# Object #} {%- set items = value | items -%} {%- if items | length == 0 -%}
-<span class="json-bracket">{}</span>{% if not is_last %},{% endif %} {%- else -%}
-<details open data-testid="JsonCollapsibleArea">
-  <summary data-testid="JsonCollapseToggle">
-    <span class="json-bracket">{</span>
-    <span class="json-preview"
-      >{{ items | length }} {% if items | length == 1 %}key{% else %}keys{% endif %}</span
-    >
-  </summary>
-  <div class="json-content">
-    {%- for item in items -%}
-    <div class="json-item">
-      <span class="json-key">"{{ item[0] }}"</span>: {{ render_json(item[1], loop.last) }}
-    </div>
-    {%- endfor -%}
-  </div>
-  <span class="json-bracket">}</span>{% if not is_last %},{% endif %}
-</details>
-{%- endif -%} {%- elif value is iterable -%} {# Array #} {%- if value | length == 0 -%}
-<span class="json-bracket">[]</span>{% if not is_last %},{% endif %} {%- else -%}
-<details open data-testid="JsonCollapsibleArea">
-  <summary data-testid="JsonCollapseToggle">
-    <span class="json-bracket">[</span>
-    <span class="json-preview"
-      >{{ value | length }} {% if value | length == 1 %}item{% else %}items{% endif %}</span
-    >
-  </summary>
-  <div class="json-content">
-    {%- for item in value -%}
-    <div class="json-item">{{ render_json(item, loop.last) }}</div>
-    {%- endfor -%}
-  </div>
-  <span class="json-bracket">]</span>{% if not is_last %},{% endif %}
-</details>
-{%- endif -%} {%- else -%}
-<span class="json-string">"{{ value | e }}"</span>{% if not is_last %},{% endif %} {%- endif -%} {%
-endmacro %}
+(controls trailing comma) #}
+{% macro render_json(value, is_last=true) %}
+  {#- Check for
+null/undefined FIRST since none passes other type checks -#}
+  {%-
+    if value is undefined or value is
+    none
+  -%}
+    <span class="json-null">null</span>{% if not is_last %},{% endif %}
+  {%- elif value == true -%}
+    <span class="json-bool">true</span>{% if not is_last %},{% endif %}
+  {%- elif value == false -%}
+    <span class="json-bool">false</span>{% if not is_last %},{% endif %}
+  {%- elif value is string -%}
+    <span class="json-string">"{{ value | e }}"</span>{% if not is_last %},{% endif %}
+  {%-
+      elif value is
+      number
+    -%}
+    <span class="json-number">{{ value }}</span>{% if not is_last %},{% endif %}
+  {%-
+      elif
+      value is mapping
+    -%}
+    {# Object #}
+    {%- set items = value | items -%}
+    {%- if items | length == 0 -%}
+      <span class="json-bracket">{}</span>{% if not is_last %},{% endif %}
+    {%- else -%}
+      <details open data-testid="JsonCollapsibleArea">
+        <summary data-testid="JsonCollapseToggle">
+          <span class="json-bracket">{</span>
+          <span class="json-preview"
+            >{{ items | length }} {% if items | length == 1 %}key{% else %}keys{% endif %}</span
+          >
+        </summary>
+        <div class="json-content">
+          {%- for item in items -%}
+            <div class="json-item">
+              <span class="json-key">"{{ item[0] }}"</span>: {{ render_json(item[1], loop.last) }}
+            </div>
+          {%- endfor -%}
+        </div>
+        <span class="json-bracket">}</span>{% if not is_last %},{% endif %}
+      </details>
+    {%- endif -%}
+  {%- elif value is iterable -%}
+    {# Array #}
+    {%- if value | length == 0 -%}
+      <span class="json-bracket">[]</span>{% if not is_last %},{% endif %}
+    {%- else -%}
+      <details open data-testid="JsonCollapsibleArea">
+        <summary data-testid="JsonCollapseToggle">
+          <span class="json-bracket">[</span>
+          <span class="json-preview"
+            >{{ value | length }} {% if value | length == 1 %}item{% else %}items{% endif %}</span
+          >
+        </summary>
+        <div class="json-content">
+          {%- for item in value -%}
+            <div class="json-item">{{ render_json(item, loop.last) }}</div>
+          {%- endfor -%}
+        </div>
+        <span class="json-bracket">]</span>{% if not is_last %},{% endif %}
+      </details>
+    {%- endif -%}
+  {%- else -%}
+    <span class="json-string">"{{ value | e }}"</span>{% if not is_last %},{% endif %}
+  {%- endif -%}
+{% endmacro %}

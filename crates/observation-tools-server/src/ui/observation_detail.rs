@@ -27,16 +27,24 @@ pub async fn observation_detail(
       "Rendering observation detail page"
   );
 
-  let _execution_id = ExecutionId::parse(&execution_id)?;
-  let observation_id = observation_tools_shared::ObservationId::parse(&observation_id)?;
+  let _parsed_execution_id = ExecutionId::parse(&execution_id)?;
+  let parsed_observation_id = observation_tools_shared::ObservationId::parse(&observation_id)?;
 
-  let observations = metadata.get_observations(&[observation_id]).await?;
+  // Try to get the observation, but handle not found gracefully
+  let observation = match metadata.get_observations(&[parsed_observation_id]).await {
+    Ok(observations) => observations.into_iter().next(),
+    Err(crate::storage::StorageError::NotFound(_)) => None,
+    Err(e) => return Err(e.into()),
+  };
 
-  let observation = observations.into_iter().next().ok_or_else(|| {
-    crate::storage::StorageError::NotFound(format!("Observation {} not found", observation_id))
-  })?;
-
-  tracing::debug!(observation_name = %observation.name, "Retrieved observation for UI");
+  if let Some(ref obs) = observation {
+    tracing::debug!(observation_name = %obs.name, "Retrieved observation for UI");
+  } else {
+    tracing::debug!(
+      observation_id = %observation_id,
+      "Observation not found, rendering waiting page"
+    );
+  }
 
   let env = templates.acquire_env()?;
 
@@ -58,6 +66,8 @@ pub async fn observation_detail(
 
   let html = tmpl.render(context! {
       observation => observation,
+      execution_id => execution_id,
+      observation_id => observation_id,
       display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
       csrf_token => csrf.0,
   })?;

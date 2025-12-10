@@ -10,6 +10,7 @@ name = "observation-tools"
 path = "src/main.rs"
 
 [dependencies]
+url.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 axum.workspace = true

@@ -769,3 +769,4 @@ module.exports.ObservationBuilderWithPayload = nativeBinding.ObservationBuilderW
 module.exports.ObservationHandle = nativeBinding.ObservationHandle;
 module.exports.SendObservation = nativeBinding.SendObservation;
 module.exports.generateExecutionId = nativeBinding.generateExecutionId;
+module.exports.generateObservationId = nativeBinding.generateObservationId;

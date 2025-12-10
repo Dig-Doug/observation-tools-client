@@ -49,6 +49,30 @@ export declare class ExecutionHandle {
     sourceLine?: number | undefined | null,
     metadata?: Array<Array<string>> | undefined | null,
   ): string;
+  /**
+   * Create and send an observation with a specific ID (for testing)
+   *
+   * This allows tests to create an observation with a known ID, enabling
+   * navigation to the observation URL before the observation is uploaded.
+   *
+   * # Arguments
+   * * `id` - The observation ID to use
+   * * `name` - The name of the observation
+   * * `payload_json` - The data to observe as a JSON string
+   * * `labels` - Optional array of labels for categorization
+   * * `source_file` - Optional source file path
+   * * `source_line` - Optional source line number
+   * * `metadata` - Optional metadata as an array of [key, value] pairs
+   */
+  observeWithId(
+    id: string,
+    name: string,
+    payloadJson: string,
+    labels?: Array<string> | undefined | null,
+    sourceFile?: string | undefined | null,
+    sourceLine?: number | undefined | null,
+    metadata?: Array<Array<string>> | undefined | null,
+  ): string;
 }
 
 /**
@@ -108,3 +132,11 @@ export declare class SendObservation {
  * enabling navigation to the execution URL before the execution is uploaded.
  */
 export declare function generateExecutionId(): string;
+
+/**
+ * Generate a new observation ID (for testing)
+ *
+ * This allows tests to generate an observation ID before creating the observation,
+ * enabling navigation to the observation URL before the observation is uploaded.
+ */
+export declare function generateObservationId(): string;

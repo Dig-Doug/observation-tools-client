@@ -10,11 +10,14 @@ use axum::response::Html;
 use minijinja::context;
 use minijinja_autoreload::AutoReloader;
 use observation_tools_shared::models::ExecutionId;
+use observation_tools_shared::Observation;
 use observation_tools_shared::ObservationType;
+use serde::Serialize;
 use std::sync::Arc;
+use url::Url;
 
 /// Query parameters for execution detail page
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct ExecutionDetailQuery {
   /// Maximum number of results to return
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -82,41 +85,15 @@ async fn execution_detail_view(
   let limit = query.limit.unwrap_or(100);
   let offset = query.offset.unwrap_or(0);
 
-  // Determine observation type filter based on view
-  let observation_type_filter = match view {
-    ExecutionView::Log => None,
-    ExecutionView::Payload => Some(ObservationType::Payload),
-  };
-
-  // Only fetch observations if execution exists
-  let (observations, has_next_page, total_count, page) = if execution.is_some() {
-    // Get total count with filter
-    let total_count = metadata
-      .count_observations(execution_id, observation_type_filter)
-      .await?;
-
-    // Fetch paginated observations with filter (fetch one extra to check for next
-    // page)
-    let mut observations = metadata
-      .list_observations(
-        execution_id,
-        Some(limit + 1),
-        Some(offset),
-        observation_type_filter,
-      )
-      .await?;
-
-    let has_next_page = observations.len() > limit;
-    if has_next_page {
-      observations.pop();
-    }
-
-    let page = (offset / limit) + 1;
-
-    (observations, has_next_page, total_count, page)
-  } else {
-    (Vec::new(), false, 0, 1)
-  };
+  let observation_list_params = build_observation_list_params(
+    metadata.clone(),
+    execution_id,
+    ObservationListQuery {
+      limit: Some(limit),
+      offset: Some(offset),
+    },
+  )
+  .await?;
 
   // If observation ID is provided, load the observation for the side panel
   let selected_observation = if let Some(obs_id) = &query.obs {
@@ -127,19 +104,6 @@ async fn execution_detail_view(
     None
   };
 
-  if let Some(ref exec) = execution {
-    tracing::debug!(
-        observation_count = observations.len(),
-        total_count = total_count,
-        page = page,
-        has_selected_obs = selected_observation.is_some(),
-        execution_name = %exec.name,
-        "Retrieved execution details for UI"
-    );
-  } else {
-    tracing::debug!(execution_id = %id, "Execution not found, rendering waiting page");
-  }
-
   let env = templates.acquire_env()?;
   let tmpl = env.get_template("execution_detail.html")?;
 
@@ -149,20 +113,132 @@ async fn execution_detail_view(
   };
 
   let html = tmpl.render(context! {
-      execution => execution,
-      execution_id => id,
-      observations => observations,
-      has_next_page => has_next_page,
-      total_count => total_count,
-      offset => offset,
-      limit => limit,
-      page => page,
-      selected_observation => selected_observation,
-      display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
-      csrf_token => csrf.0,
-      view => view_name,
-      base_path => base_path,
+        execution => execution,
+        execution_id => id,
+  observation_list_params,
+        offset => offset,
+        limit => limit,
+        selected_observation => selected_observation,
+        display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
+        csrf_token => csrf.0,
+        view => view_name,
+        base_path => base_path,
+    })?;
+
+  Ok(Html(html))
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub enum ObservationListParams {
+  LogView {
+    refresh_url: String,
+    limit: usize,
+    offset: usize,
+    has_next_page: bool,
+    observations: Vec<Observation>,
+    total_count: usize,
+    page: usize,
+    previous_page_url: Option<String>,
+    next_page_url: Option<String>,
+  },
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ObservationListQuery {
+  /// Maximum number of results to return
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub limit: Option<usize>,
+
+  /// Number of results to skip (for pagination)
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub offset: Option<usize>,
+}
+
+impl ObservationListQuery {
+  pub const OBSERVATION_LIST_COMPONENT_URL: &'static str = "/exe/{id}/_/log_list";
+
+  pub fn component_url(&self, execution_id: &ExecutionId) -> String {
+    format!(
+      "/exe/{}/_/log_list?limit={}&offset={}",
+      execution_id,
+      self.limit.unwrap_or(100),
+      self.offset.unwrap_or(0)
+    )
+  }
+}
+
+#[tracing::instrument(skip(metadata, templates))]
+pub async fn log_list(
+  State(metadata): State<Arc<dyn MetadataStorage>>,
+  State(templates): State<Arc<AutoReloader>>,
+  Path(id): Path<String>,
+  Query(query): Query<ObservationListQuery>,
+) -> Result<Html<String>, AppError> {
+  let execution_id = ExecutionId::parse(&id)?;
+
+  let params = build_observation_list_params(metadata, execution_id, query).await?;
+
+  let env = templates.acquire_env()?;
+  let tmpl = env.get_template("_observation_list.html")?;
+
+  let html = tmpl.render(context! {
+      params => params
   })?;
 
   Ok(Html(html))
+}
+
+async fn build_observation_list_params(
+  metadata: Arc<dyn MetadataStorage>,
+  execution_id: ExecutionId,
+  query: ObservationListQuery,
+) -> Result<ObservationListParams, AppError> {
+  let limit = query.limit.unwrap_or(100);
+  let offset = query.offset.unwrap_or(0);
+  let total_count = metadata.count_observations(execution_id, None).await?;
+  let mut observations = metadata
+    .list_observations(
+      execution_id,
+      // Fetch one extra to see if there are more pages
+      Some(limit + 1),
+      Some(offset),
+      None,
+    )
+    .await?;
+  let has_next_page = observations.len() > limit;
+  if has_next_page {
+    observations.pop();
+  }
+  let page = (offset / limit) + 1;
+  Ok(ObservationListParams::LogView {
+    refresh_url: query.component_url(&execution_id),
+    limit,
+    offset,
+    has_next_page,
+    observations,
+    total_count,
+    page,
+    next_page_url: if has_next_page {
+      Some(
+        ObservationListQuery {
+          limit: Some(limit),
+          offset: Some(offset + limit),
+        }
+        .component_url(&execution_id),
+      )
+    } else {
+      None
+    },
+    previous_page_url: if offset > 0 {
+      Some(
+        ObservationListQuery {
+          limit: Some(limit),
+          offset: Some((offset - limit).max(0)),
+        }
+        .component_url(&execution_id),
+      )
+    } else {
+      None
+    },
+  })
 }

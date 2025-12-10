@@ -14,14 +14,14 @@ test("JSON observation is rendered with syntax highlighting", async ({ page, ser
     active: true,
     items: ["a", "b", "c"],
     nested: {
-      key: "value"
+      key: "value",
     },
     emptyArray: [],
     emptyObject: {},
     longStringShouldWrap: "a".repeat(500),
     nullValue: null,
-    malicious: "<script>alert(\"XSS\")</script>",
-    imgXss: "<img src=\"x\" onerror=\"alert('XSS')\">"
+    malicious: '<script>alert("XSS")</script>',
+    imgXss: '<img src="x" onerror="alert(\'XSS\')">',
   });
 
   const handle = new ObservationBuilder(observationName).jsonPayload(jsonContent).send(exe);
@@ -42,8 +42,8 @@ test("JSON objects are collapsible", async ({ page, server }) => {
   const observationName = "collapsible-json-observation";
   const jsonContent = JSON.stringify({
     outer: {
-      inner: "value"
-    }
+      inner: "value",
+    },
   });
 
   const handle = new ObservationBuilder(observationName).jsonPayload(jsonContent).send(exe);
