@@ -1,4 +1,5 @@
 @import "github-markdown.css";
+@import "json-viewer.css";
 
 @tailwind base;
 @tailwind components;

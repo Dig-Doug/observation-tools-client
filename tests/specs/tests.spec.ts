@@ -1,6 +1,6 @@
 import { test, expect } from "../fixtures";
 import { TestId } from "../helpers/testIds";
-import { generateExecutionId } from "observation-tools-client";
+import { generateExecutionId, generateObservationId } from "observation-tools-client";
 
 test("Server homepage loads", async ({ page, server }) => {
   await page.goto(server.baseUrl);
@@ -224,6 +224,35 @@ test("Navigate to execution page before execution exists, then create it", async
   expect(exe.idString).toBe(executionId);
   await expect(page.getByTestId(TestId.ExecutionDetailTitle)).toContainText(executionName);
   await expect(page.getByTestId(TestId.ExecutionDetailId)).toContainText(executionId);
+});
+
+test("Navigate to observation page before observation exists, then create it", async ({
+  page,
+  server,
+}) => {
+  const client = server.createClient();
+  const executionName = "pre-navigation-observation-test";
+  const exe = client.beginExecution(executionName);
+  const executionId = exe.idString;
+
+  const observationId = generateObservationId();
+  await page.goto(`${server.baseUrl}/exe/${executionId}/obs/${observationId}`);
+  await expect(page.getByText("Waiting for observation...")).toBeVisible();
+  await expect(page.getByText(observationId)).toBeVisible();
+
+  const observationName = "pre-navigation-test-observation";
+  const observationPayload = { message: "Created after navigation" };
+  const createdId = exe.observeWithId(
+    observationId,
+    observationName,
+    JSON.stringify(observationPayload),
+  );
+  expect(createdId).toBe(observationId);
+
+  await expect(page.getByTestId(TestId.ObservationId)).toContainText(observationId);
+  await expect(page.getByTestId(TestId.ObservationPayload)).toContainText(
+    "Created after navigation",
+  );
 });
 
 test("Observation side panel stays open during auto-refresh", async ({ page, server }) => {

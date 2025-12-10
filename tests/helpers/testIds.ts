@@ -32,6 +32,10 @@ export enum TestId {
   ObservationMetadataKey = "ObservationMetadataKey",
   ObservationMetadataValue = "ObservationMetadataValue",
 
+  // JSON Viewer
+  JsonCollapsibleArea = "JsonCollapsibleArea",
+  JsonCollapseToggle = "JsonCollapseToggle",
+
   // Pagination
   PaginationNext = "PaginationNext",
   PaginationPrev = "PaginationPrev",

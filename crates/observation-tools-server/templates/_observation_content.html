@@ -1,3 +1,4 @@
+{% from "_json_value.html" import render_json %}
 <div class="flex flex-col h-full">
   <div class="flex-shrink-0">
     <h1 class="text-2xl font-bold my-4">{{ observation.name }}</h1>
@@ -11,54 +12,59 @@
       >
     </p>
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span> {{
-      observation.created_at }}
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span>
+      {{ observation.created_at }}
     </p>
 
     {% if observation.source %}
-    <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">source:</span>
-      <code class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-        ><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span
-          data-testid="ObservationSourceLine"
-          >{{ observation.source.line }}</span
-        ></code
-      >
-    </p>
-    {% endif %} {% if observation.parent_span_id %}
-    <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">parent span:</span>
-      <code class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-        >{{ observation.parent_span_id }}</code
-      >
-    </p>
-    {% endif %} {% if observation.labels %}
-    <p data-testid="ObservationLabels" class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">labels:</span> {{
-      observation.labels|join(", ") }}
-    </p>
-    {% endif %} {% if observation.metadata %}
-    <h3 data-testid="ObservationMetadataHeader" class="text-base font-bold my-2">metadata</h3>
-    <ul data-testid="ObservationMetadata" class="list-none">
-      {% for item in observation.metadata | items %}
-      <li data-testid="ObservationMetadataItem" class="my-2">
-        <span data-testid="ObservationMetadataKey">{{ item[0] }}</span>:
-        <span data-testid="ObservationMetadataValue">{{ item[1] }}</span>
-      </li>
-      {% endfor %}
-    </ul>
+      <p class="mb-2">
+        <span class="text-neutral-600 dark:text-neutral-400 text-sm">source:</span>
+        <code
+          class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
+          ><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span
+            data-testid="ObservationSourceLine"
+            >{{ observation.source.line }}</span
+          ></code
+        >
+      </p>
+    {% endif %}
+    {% if observation.parent_span_id %}
+      <p class="mb-2">
+        <span class="text-neutral-600 dark:text-neutral-400 text-sm">parent span:</span>
+        <code
+          class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
+          >{{ observation.parent_span_id }}</code
+        >
+      </p>
+    {% endif %}
+    {% if observation.labels %}
+      <p data-testid="ObservationLabels" class="mb-2">
+        <span class="text-neutral-600 dark:text-neutral-400 text-sm">labels:</span>
+        {{ observation.labels|join(", ") }}
+      </p>
+    {% endif %}
+    {% if observation.metadata %}
+      <h3 data-testid="ObservationMetadataHeader" class="text-base font-bold my-2">metadata</h3>
+      <ul data-testid="ObservationMetadata" class="list-none">
+        {% for item in observation.metadata | items %}
+          <li data-testid="ObservationMetadataItem" class="my-2">
+            <span data-testid="ObservationMetadataKey">{{ item[0] }}</span>:
+            <span data-testid="ObservationMetadataValue">{{ item[1] }}</span>
+          </li>
+        {% endfor %}
+      </ul>
     {% endif %}
 
     <hr class="border-t border-black dark:border-neutral-200 my-4" />
 
     <h2 class="text-xl font-bold my-4">payload</h2>
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">type:</span> {{
-      observation.payload.mime_type }}
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">type:</span>
+      {{ observation.payload.mime_type }}
     </p>
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">size:</span> {{
-      observation.payload.size }} bytes
+      <span class="text-neutral-600 dark:text-neutral-400 text-sm">size:</span>
+      {{ observation.payload.size }} bytes
     </p>
     <p class="mb-2">
       <a
@@ -72,30 +78,29 @@
   </div>
 
   {% if observation.payload.size > display_threshold %}
-  <div class="flex-grow">
-    <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
-  </div>
+    <div class="flex-grow">
+      <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
+    </div>
   {% elif observation.payload.mime_type == "text/markdown" %}
-  <div
-    data-testid="ObservationPayload"
-    class="markdown-body grow min-h-0 overflow-auto border border-black dark:border-neutral-200 p-4 m-0"
-  >
-    {{ observation.payload.data|render_markdown|safe }}
-  </div>
+    <div data-testid="ObservationPayload" class="markdown-body">
+      {{ observation.payload.data|render_markdown|safe }}
+    </div>
+  {% elif observation.payload.mime_type == "application/json" %}
+    {% set json_result = observation.payload.data | parse_json %}
+    {% if json_result.ok %}
+      <div data-testid="ObservationPayload" class="json-body">
+        {{ render_json(json_result.value) }}
+      </div>
+    {% else %}
+      <pre data-testid="ObservationPayload">
+        {{ observation.payload.data|unescape }}
+      </pre
+      >
+    {% endif %}
   {% else %}
-  <pre
-    data-testid="ObservationPayload"
-    style="
-      flex-grow: 1;
-      min-height: 0;
-      overflow: auto;
-      border: 1px solid var(--border-color);
-      padding: 1rem;
-      margin: 0;
-      background-color: var(--code-bg);
-    "
-  >
-{{ observation.payload.data|unescape }}</pre
-  >
+    <pre data-testid="ObservationPayload">
+      {{ observation.payload.data|unescape }}
+    </pre
+    >
   {% endif %}
 </div>

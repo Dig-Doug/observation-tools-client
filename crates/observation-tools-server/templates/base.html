@@ -18,13 +18,16 @@
       .logo {
         display: block;
       }
+
       .logo-dark {
         display: none;
       }
+
       @media (prefers-color-scheme: dark) {
         .logo {
           display: none;
         }
+
         .logo-dark {
           display: block;
         }
@@ -32,30 +35,6 @@
     </style>
   </head>
   <body>
-    <nav
-      class="px-8 py-4 pb-4 border-b border-black dark:border-neutral-200 flex items-center gap-4"
-    >
-      <img src="/static/logo.svg" alt="" class="logo w-6 h-6" data-testid="NavBarLogo" />
-      <img
-        src="/static/logo_dark.svg"
-        alt=""
-        class="logo-dark w-6 h-6"
-        data-testid="NavBarLogoDark"
-      />
-      <a
-        href="/"
-        data-testid="NavHome"
-        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-        >home</a
-      >
-      <a
-        href="/exe"
-        data-testid="NavExecutionsList"
-        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-        >executions</a
-      >
-    </nav>
-
-    <main class="px-8 py-8">{% block content %}{% endblock %}</main>
+    {% block content %}{% endblock %}
   </body>
 </html>

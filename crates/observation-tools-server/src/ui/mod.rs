@@ -1,6 +1,6 @@
 //! Web UI handlers
 
-mod execution_detail;
+pub mod execution_detail;
 mod executions_list;
 mod index;
 mod observation_detail;

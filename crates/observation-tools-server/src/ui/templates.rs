@@ -45,6 +45,24 @@ pub fn render_markdown(value: String) -> String {
   ammonia::clean(&html_output)
 }
 
+/// Parse a JSON string and return a result object for template rendering.
+/// Returns { ok: true, value: <parsed> } on success, { ok: false } on failure.
+pub fn parse_json(value: String) -> Value {
+  match serde_json::from_str::<serde_json::Value>(&value) {
+    Ok(json) => {
+      let mut map = std::collections::BTreeMap::new();
+      map.insert("ok".to_string(), Value::from(true));
+      map.insert("value".to_string(), Value::from_serialize(&json));
+      Value::from_iter(map)
+    }
+    Err(_) => {
+      let mut map = std::collections::BTreeMap::new();
+      map.insert("ok".to_string(), Value::from(false));
+      Value::from_iter(map)
+    }
+  }
+}
+
 /// Initialize the template auto-reloader
 pub fn init_templates() -> Arc<AutoReloader> {
   Arc::new(AutoReloader::new(move |notifier| {
@@ -64,6 +82,9 @@ pub fn init_templates() -> Arc<AutoReloader> {
 
     // Add render_markdown filter to convert markdown to sanitized HTML
     env.add_filter("render_markdown", render_markdown);
+
+    // Add parse_json filter to parse JSON strings for template rendering
+    env.add_filter("parse_json", parse_json);
 
     if cfg!(debug_assertions) {
       tracing::info!("Running in local development mode, enabling autoreload for templates");

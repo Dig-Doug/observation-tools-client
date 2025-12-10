@@ -44,6 +44,9 @@ pub enum Error {
   /// Upload failed with error
   #[error("Upload failed: {0}")]
   UploadFailed(String),
+
+  #[error("Creation error")]
+  CreationError,
 }
 
 impl From<TrySendError<UploaderMessage>> for Error {
