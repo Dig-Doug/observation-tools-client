@@ -4,42 +4,34 @@
     <h1 class="text-2xl font-bold my-4">{{ observation.name }}</h1>
 
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">id:</span>
-      <code
-        data-testid="ObservationId"
-        class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-        >{{ observation.id }}</code
-      >
+      <span class="text-base-content/60 text-sm">id:</span>
+      <kbd data-testid="ObservationId" class="kbd kbd-sm">{{ observation.id }}</kbd>
     </p>
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">created:</span>
+      <span class="text-base-content/60 text-sm">created:</span>
       {{ observation.created_at }}
     </p>
 
     {% if observation.source %}
       <p class="mb-2">
-        <span class="text-neutral-600 dark:text-neutral-400 text-sm">source:</span>
-        <code
-          class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
+        <span class="text-base-content/60 text-sm">source:</span>
+        <kbd class="kbd kbd-sm"
           ><span data-testid="ObservationSourceFile">{{ observation.source.file }}</span>:<span
             data-testid="ObservationSourceLine"
             >{{ observation.source.line }}</span
-          ></code
+          ></kbd
         >
       </p>
     {% endif %}
     {% if observation.parent_span_id %}
       <p class="mb-2">
-        <span class="text-neutral-600 dark:text-neutral-400 text-sm">parent span:</span>
-        <code
-          class="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-neutral-200 px-1 py-0.5"
-          >{{ observation.parent_span_id }}</code
-        >
+        <span class="text-base-content/60 text-sm">parent span:</span>
+        <kbd class="kbd kbd-sm">{{ observation.parent_span_id }}</kbd>
       </p>
     {% endif %}
     {% if observation.labels %}
       <p data-testid="ObservationLabels" class="mb-2">
-        <span class="text-neutral-600 dark:text-neutral-400 text-sm">labels:</span>
+        <span class="text-base-content/60 text-sm">labels:</span>
         {{ observation.labels|join(", ") }}
       </p>
     {% endif %}
@@ -55,15 +47,15 @@
       </ul>
     {% endif %}
 
-    <hr class="border-t border-black dark:border-neutral-200 my-4" />
+    <div class="divider"></div>
 
     <h2 class="text-xl font-bold my-4">payload</h2>
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">type:</span>
+      <span class="text-base-content/60 text-sm">type:</span>
       {{ observation.payload.mime_type }}
     </p>
     <p class="mb-2">
-      <span class="text-neutral-600 dark:text-neutral-400 text-sm">size:</span>
+      <span class="text-base-content/60 text-sm">size:</span>
       {{ observation.payload.size }} bytes
     </p>
     <p class="mb-2">
@@ -71,7 +63,7 @@
         href="/api/exe/{{ observation.execution_id }}/obs/{{ observation.id }}/content"
         target="_blank"
         rel="noopener noreferrer"
-        class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+        class="link"
         >Open raw content in new tab</a
       >
     </p>

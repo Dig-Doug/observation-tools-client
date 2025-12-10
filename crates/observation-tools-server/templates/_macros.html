@@ -1,0 +1,15 @@
+{% macro breadcrumbs(items) %}
+  <div class="breadcrumbs text-sm">
+    <ul>
+      {%- for item in items -%}
+        <li>
+          {%- if item.href -%}
+            <a href="{{ item.href }}" class="link">{{ item.text }}</a>
+          {%- else -%}
+            {{ item.text }}
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+{% endmacro %}

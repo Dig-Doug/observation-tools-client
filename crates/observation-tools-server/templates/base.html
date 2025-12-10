@@ -7,30 +7,17 @@
     <title>{% block title %}Observation Tools{% endblock %}</title>
     <link rel="icon" href="/static/logo.svg" type="image/svg+xml" />
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS + DaisyUI -->
     <link rel="stylesheet" href="/static/styles.css" />
 
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
     <style>
-      /* Logo dark mode toggle */
-      .logo {
-        display: block;
-      }
-
-      .logo-dark {
-        display: none;
-      }
-
+      .logo-dark { display: none; }
       @media (prefers-color-scheme: dark) {
-        .logo {
-          display: none;
-        }
-
-        .logo-dark {
-          display: block;
-        }
+        .logo { display: none; }
+        .logo-dark { display: block; }
       }
     </style>
   </head>

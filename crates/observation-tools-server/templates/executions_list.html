@@ -17,63 +17,35 @@
         <ul class="list-none">
           {% for execution in executions %}
             <li class="my-2">
-              <a
-                href="/exe/{{ execution.id }}"
-                data-testid="ExecutionLink"
-                class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+              <a href="/exe/{{ execution.id }}" data-testid="ExecutionLink" class="link"
                 >{{ execution.name }}</a
               >
-              <span class="text-neutral-600 dark:text-neutral-400 text-sm"
-                >— {{ execution.created_at }}</span
-              >
+              <span class="text-base-content/60 text-sm">— {{ execution.created_at }}</span>
             </li>
           {% endfor %}
         </ul>
 
         {% if total_count %}
-          <div class="mt-4 pt-4 border-t border-black dark:border-neutral-200">
-            <p data-testid="PaginationInfo" class="mb-2">
-              <span class="text-neutral-600 dark:text-neutral-400 text-sm">
-                showing {{ offset + 1 }}-{{ offset + executions|length }} of {{ total_count }} (page
-                {{ page }})
-              </span>
-            </p>
-            <div class="flex gap-2">
-              {% if offset > 0 %}
-                <button
-                  data-testid="PaginationPrev"
-                  onclick="window.location.href='/exe?offset={{ offset - limit }}&limit={{ limit }}'"
-                  class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                >
-                  ← prev
-                </button>
-              {% else %}
-                <button
-                  data-testid="PaginationPrev"
-                  disabled
-                  class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
-                >
-                  ← prev
-                </button>
-              {% endif %}
-              {% if has_next_page %}
-                <button
-                  data-testid="PaginationNext"
-                  onclick="window.location.href='/exe?offset={{ offset + limit }}&limit={{ limit }}'"
-                  class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                >
-                  next →
-                </button>
-              {% else %}
-                <button
-                  data-testid="PaginationNext"
-                  disabled
-                  class="font-mono text-sm px-2 py-1 border border-black dark:border-neutral-200 bg-white dark:bg-neutral-800 text-black dark:text-neutral-200 opacity-50 cursor-not-allowed"
-                >
-                  next →
-                </button>
-              {% endif %}
-            </div>
+          <div class="divider"></div>
+          <p data-testid="PaginationInfo" class="mb-2 text-base-content/60 text-sm">
+            showing {{ offset + 1 }}-{{ offset + executions|length }} of {{ total_count }} (page
+            {{ page }})
+          </p>
+          <div class="join">
+            <button
+              data-testid="PaginationPrev"
+              {% if offset > 0 %}onclick="window.location.href='/exe?offset={{ offset - limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
+              class="join-item btn btn-sm btn-outline"
+            >
+              ← prev
+            </button>
+            <button
+              data-testid="PaginationNext"
+              {% if has_next_page %}onclick="window.location.href='/exe?offset={{ offset + limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
+              class="join-item btn btn-sm btn-outline"
+            >
+              next →
+            </button>
           </div>
         {% endif %}
       {% else %}

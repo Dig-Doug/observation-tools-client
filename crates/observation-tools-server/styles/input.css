@@ -1,9 +1,14 @@
-@import "github-markdown.css";
-@import "json-viewer.css";
+@import "tailwindcss";
+@import "./github-markdown.css";
+@import "./json-viewer.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@plugin "daisyui";
+
+@source "../../observation-tools-server/templates/**/*.html";
+
+@theme {
+  --font-mono: monospace;
+}
 
 @layer base {
   :root {
@@ -15,13 +20,7 @@
   }
 
   body {
-    @apply font-mono text-sm leading-normal bg-white text-black overflow-x-hidden;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    body {
-      @apply bg-neutral-900 text-neutral-200;
-    }
+    @apply font-mono text-sm leading-normal;
   }
 }
 

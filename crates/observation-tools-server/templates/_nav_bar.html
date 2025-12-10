@@ -1,25 +1,8 @@
 {% macro nav(class="") %}
-  <nav
-    class="px-8 py-4 pb-4 border-b border-black dark:border-neutral-200 flex items-center gap-4 {{ class }}"
-  >
+  <nav class="navbar border-b border-base-300 px-4 {{ class }}">
     <img src="/static/logo.svg" alt="" class="logo w-6 h-6" data-testid="NavBarLogo" />
-    <img
-      src="/static/logo_dark.svg"
-      alt=""
-      class="logo-dark w-6 h-6"
-      data-testid="NavBarLogoDark"
-    />
-    <a
-      href="/"
-      data-testid="NavHome"
-      class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-      >home</a
-    >
-    <a
-      href="/exe"
-      data-testid="NavExecutionsList"
-      class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-      >executions</a
-    >
+    <img src="/static/logo_dark.svg" alt="" class="logo-dark w-6 h-6" data-testid="NavBarLogoDark" />
+    <a href="/" data-testid="NavHome" class="link ml-4">home</a>
+    <a href="/exe" data-testid="NavExecutionsList" class="link ml-4">executions</a>
   </nav>
 {% endmacro %}
