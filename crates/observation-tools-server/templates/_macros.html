@@ -1,0 +1,16 @@
+{% macro breadcrumbs(items) %}
+  <p class="text-neutral-600 dark:text-neutral-400 text-sm">
+    {%- for item in items -%}
+      {%- if not loop.first %} / {% endif -%}
+      {%- if item.href -%}
+        <a
+          href="{{ item.href }}"
+          class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
+          >{{ item.text }}</a
+        >
+      {%- else -%}
+        {{ item.text }}
+      {%- endif -%}
+    {%- endfor -%}
+  </p>
+{% endmacro %}

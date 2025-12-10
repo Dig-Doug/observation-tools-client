@@ -1,4 +1,5 @@
 {% from "_nav_bar.html" import nav %}
+{% from "_macros.html" import breadcrumbs %}
 {% extends "base.html" %}
 {% block title %}{% if execution %}
   {{ execution.name }}
@@ -21,20 +22,11 @@
       >
         {% if execution %}
           <div class="p-8">
-            <p class="text-neutral-600 dark:text-neutral-400 text-sm">
-              <a
-                href="/"
-                class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-                >home</a
-              >
-              /
-              <a
-                href="/exe"
-                class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-                >executions</a
-              >
-              / {{ execution.name }}
-            </p>
+            {{ breadcrumbs([
+              {"href": "/", "text": "home"},
+              {"href": "/exe", "text": "executions"},
+              {"text": execution.name}
+            ]) }}
 
             <h1 data-testid="ExecutionDetailTitle" class="text-2xl font-bold my-4">
               {{ execution.name }}
@@ -210,20 +202,11 @@
           </div>
         {% else %}
           <div>
-            <p class="text-neutral-600 dark:text-neutral-400 text-sm">
-              <a
-                href="/"
-                class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-                >home</a
-              >
-              /
-              <a
-                href="/exe"
-                class="underline text-black dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400"
-                >executions</a
-              >
-              / waiting...
-            </p>
+            {{ breadcrumbs([
+              {"href": "/", "text": "home"},
+              {"href": "/exe", "text": "executions"},
+              {"text": "waiting..."}
+            ]) }}
 
             <h1 class="text-2xl font-bold my-4 text-neutral-400">Waiting for execution...</h1>
 
