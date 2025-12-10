@@ -5,20 +5,17 @@ use crate::csrf::CsrfToken;
 use crate::storage::MetadataStorage;
 use axum::extract::Path;
 use axum::extract::State;
-use axum::http::HeaderMap;
 use axum::response::Html;
 use minijinja::context;
 use minijinja_autoreload::AutoReloader;
-use observation_tools_shared::models::ExecutionId;
 use std::sync::Arc;
 
 /// Observation detail (for the side panel)
-#[tracing::instrument(skip(metadata, templates, headers))]
+#[tracing::instrument(skip(metadata, templates))]
 pub async fn observation_detail(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   State(templates): State<Arc<AutoReloader>>,
   Path((execution_id, observation_id)): Path<(String, String)>,
-  headers: HeaderMap,
   csrf: CsrfToken,
 ) -> Result<Html<String>, AppError> {
   tracing::debug!(
