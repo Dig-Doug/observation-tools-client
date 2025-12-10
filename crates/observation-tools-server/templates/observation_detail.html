@@ -9,7 +9,7 @@
       hx-get="/exe/{{ execution_id }}/obs/{{ observation_id }}"
       hx-trigger="every 2s"
       hx-select="#observation-page"
-      hx-swap="outerHTML"
+      hx-swap="innerHTML"
     >
       {% if observation %}
         <p class="text-neutral-600 dark:text-neutral-400 text-sm">

@@ -5,7 +5,6 @@ use crate::csrf;
 use crate::storage::LocalBlobStorage;
 use crate::storage::SledStorage;
 use crate::ui;
-use crate::ui::execution_detail::ObservationListQuery;
 use axum::middleware;
 use axum::routing::get;
 use axum::Router;
@@ -40,10 +39,6 @@ impl Server {
       .route("/", get(ui::index))
       .route("/exe", get(ui::list_executions))
       .route("/exe/{id}", get(ui::execution_detail_log))
-      .route(
-        ObservationListQuery::OBSERVATION_LIST_COMPONENT_URL,
-        get(ui::execution_detail::log_list),
-      )
       .route("/exe/{id}/payload", get(ui::execution_detail_payload))
       .route(
         "/exe/{execution_id}/obs/{observation_id}",

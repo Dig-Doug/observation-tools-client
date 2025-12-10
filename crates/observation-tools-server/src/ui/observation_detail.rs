@@ -26,44 +26,14 @@ pub async fn observation_detail(
       observation_id = %observation_id,
       "Rendering observation detail page"
   );
-
-  let _parsed_execution_id = ExecutionId::parse(&execution_id)?;
   let parsed_observation_id = observation_tools_shared::ObservationId::parse(&observation_id)?;
-
-  // Try to get the observation, but handle not found gracefully
   let observation = match metadata.get_observations(&[parsed_observation_id]).await {
     Ok(observations) => observations.into_iter().next(),
     Err(crate::storage::StorageError::NotFound(_)) => None,
     Err(e) => return Err(e.into()),
   };
-
-  if let Some(ref obs) = observation {
-    tracing::debug!(observation_name = %obs.name, "Retrieved observation for UI");
-  } else {
-    tracing::debug!(
-      observation_id = %observation_id,
-      "Observation not found, rendering waiting page"
-    );
-  }
-
   let env = templates.acquire_env()?;
-
-  // Check if this is an HTMX request (for side panel)
-  let is_htmx_request = headers
-    .get("hx-request")
-    .and_then(|v| v.to_str().ok())
-    .map(|v| v == "true")
-    .unwrap_or(false);
-
-  // Use partial template for HTMX requests, full template otherwise
-  let template_name = if is_htmx_request {
-    "observation_detail_partial.html"
-  } else {
-    "observation_detail.html"
-  };
-
-  let tmpl = env.get_template(template_name)?;
-
+  let tmpl = env.get_template("observation_detail.html")?;
   let html = tmpl.render(context! {
       observation => observation,
       execution_id => execution_id,
@@ -71,6 +41,5 @@ pub async fn observation_detail(
       display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
       csrf_token => csrf.0,
   })?;
-
   Ok(Html(html))
 }
