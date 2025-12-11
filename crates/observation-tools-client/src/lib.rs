@@ -1,5 +1,8 @@
 //! Client library for observation-tools
 
+#[cfg(feature = "axum")]
+pub mod axum;
+
 mod client;
 pub(crate) mod context;
 mod error;

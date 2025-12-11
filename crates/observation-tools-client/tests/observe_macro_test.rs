@@ -27,15 +27,10 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "simple_string");
   assert_eq!(obs.payload.data, "\"hello world\""); // JSON string includes quotes
   assert_eq!(obs.payload.mime_type, "application/json");
@@ -81,15 +76,10 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "serde_struct");
   assert_eq!(obs.payload.data, r#"{"message":"test message","count":42}"#);
   assert_eq!(obs.payload.mime_type, "application/json");
@@ -139,15 +129,10 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "custom_payload");
   assert_eq!(obs.payload.data, "custom message");
   assert_eq!(obs.payload.mime_type, "text/plain");
@@ -197,15 +182,10 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "custom_new_syntax");
   assert_eq!(obs.payload.data, "custom: test");
   assert_eq!(obs.payload.mime_type, "text/plain");
@@ -238,15 +218,10 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   // The observation name should match the variable name
   assert_eq!(obs.name, "my_data");
   assert_eq!(obs.payload.data, "\"captured variable name\"");
@@ -284,15 +259,10 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "structured_observation");
   assert_eq!(obs.labels, vec!["test/category"]);
   assert_eq!(obs.payload.data, "\"test payload\"");
@@ -335,15 +305,10 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "with_metadata");
   assert_eq!(obs.metadata.get("request_type"), Some(&"GET".to_string()));
   assert_eq!(obs.metadata.get("status_code"), Some(&"200".to_string()));
@@ -380,15 +345,10 @@ async fn test_observe_expression_name() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "const_name");
 
   let response = reqwest::get(&observation.url()).await?;
@@ -421,15 +381,10 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "dynamic_observation");
 
   let response = reqwest::get(&observation.url()).await?;
@@ -464,15 +419,10 @@ async fn test_observe_dynamic_label() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "request");
   assert_eq!(obs.labels, vec!["api/users/create"]);
 

@@ -1,7 +1,12 @@
 {% macro nav(class="") %}
   <nav class="navbar border-b border-base-300 px-4 {{ class }}">
     <img src="/static/logo.svg" alt="" class="logo w-6 h-6" data-testid="NavBarLogo" />
-    <img src="/static/logo_dark.svg" alt="" class="logo-dark w-6 h-6" data-testid="NavBarLogoDark" />
+    <img
+      src="/static/logo_dark.svg"
+      alt=""
+      class="logo-dark w-6 h-6"
+      data-testid="NavBarLogoDark"
+    />
     <a href="/" data-testid="NavHome" class="link ml-4">home</a>
     <a href="/exe" data-testid="NavExecutionsList" class="link ml-4">executions</a>
   </nav>

@@ -28,15 +28,10 @@ async fn test_logger() -> anyhow::Result<()> {
   .await?;
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 2);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 2);
+  let obs = &observations[0];
   assert_eq!(obs.payload.data, "info-log");
   assert_eq!(obs.observation_type, ObservationType::LogEntry);
   assert_eq!(obs.log_level, LogLevel::Info);

@@ -8,7 +8,6 @@ mod common;
 use anyhow::anyhow;
 use common::TestServer;
 use observation_tools_client::observe;
-use observation_tools_shared::ExecutionId;
 use std::collections::HashSet;
 use tracing::debug;
 
@@ -67,16 +66,11 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
+  assert_eq!(observations.len(), 1);
 
-  let obs = &list_response.observations[0];
+  let obs = &observations[0];
   assert_eq!(obs.name, "test-observation");
   assert_eq!(obs.execution_id.to_string(), execution_id.to_string());
   assert!(obs.labels.contains(&"test/label1".to_string()));
@@ -116,17 +110,12 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   .await?;
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution.id().to_string())
-    .send()
-    .await?;
-  assert_eq!(list_response.observations.len(), expected_names.len());
+  let observations = server.list_observations(&execution.id()).await?;
+  assert_eq!(observations.len(), expected_names.len());
 
   // Verify all payloads are stored inline (not as blobs) since they're under the
   // threshold
-  for obs in &list_response.observations {
+  for obs in &observations {
     assert!(
       !obs.payload.data.is_empty(),
       "Observation {} should have inline payload data (not stored as blob)",
@@ -140,11 +129,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     );
   }
 
-  let obs_names: HashSet<String> = list_response
-    .observations
-    .iter()
-    .map(|o| o.name.clone())
-    .collect();
+  let obs_names: HashSet<String> = observations.iter().map(|o| o.name.clone()).collect();
   assert_eq!(obs_names.difference(&expected_names).count(), 0);
   Ok(())
 }
@@ -231,31 +216,19 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client()?;
-  let count_observations_with_name =
-    async |execution_id: ExecutionId, name: &str| -> anyhow::Result<usize> {
-      let response = api_client
-        .list_observations()
-        .execution_id(&execution_id.to_string())
-        .send()
-        .await?;
-      Ok(
-        response
-          .observations
-          .iter()
-          .filter(|o| o.name == name)
-          .count(),
-      )
-    };
+  let observations1 = server.list_observations(&execution1.id()).await?;
+  let count1 = observations1
+    .iter()
+    .filter(|o| o.name == TASK_1_NAME)
+    .count();
+  assert_eq!(count1, NUM_OBSERVATIONS);
 
-  assert_eq!(
-    count_observations_with_name(execution1.id(), TASK_1_NAME).await?,
-    NUM_OBSERVATIONS,
-  );
-  assert_eq!(
-    count_observations_with_name(execution2.id(), TASK_2_NAME).await?,
-    NUM_OBSERVATIONS
-  );
+  let observations2 = server.list_observations(&execution2.id()).await?;
+  let count2 = observations2
+    .iter()
+    .filter(|o| o.name == TASK_2_NAME)
+    .count();
+  assert_eq!(count2, NUM_OBSERVATIONS);
 
   Ok(())
 }
@@ -299,15 +272,10 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   client.shutdown().await?;
 
   // Verify the observation metadata was stored
-  let api_client = server.create_api_client()?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "large-observation");
   assert_eq!(obs.id.to_string(), observation_id.id().to_string());
 
@@ -324,6 +292,7 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   );
 
   // Verify the blob can be retrieved via the OpenAPI client
+  let api_client = server.create_api_client()?;
   let blob_response = api_client
     .get_observation_blob()
     .execution_id(&execution_id.to_string())
