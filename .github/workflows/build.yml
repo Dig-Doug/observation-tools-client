@@ -25,10 +25,10 @@ jobs:
           node-version: lts/*
 
       - name: Build Rust workspace
-        run: cargo build --workspace
+        run: cargo build --workspace --all-features
 
       - name: Run Rust tests
-        run: cargo test --workspace
+        run: cargo test --workspace --all-features
 
       - name: Install Node.js dependencies for client
         working-directory: crates/observation-tools-client

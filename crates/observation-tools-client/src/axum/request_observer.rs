@@ -123,8 +123,8 @@ where
       let mut request_builder = ObservationBuilder::new("http/request");
       request_builder
         .label("http/request")
-        .metadata("method", &method)
-        .metadata("uri", &uri);
+        .metadata("method", req.method().to_string())
+        .metadata("uri", req.uri().to_string());
       let request_payload = json!({
           "headers": filter_headers(req.headers(), &config.excluded_headers),
       });

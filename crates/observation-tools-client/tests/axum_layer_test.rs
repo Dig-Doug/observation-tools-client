@@ -41,8 +41,10 @@ async fn test_execution_layer_creates_context() -> anyhow::Result<()> {
 
   let api_client = server.create_api_client()?;
   let executions = api_client.list_executions().send().await?;
-  assert_eq!(executions.len(), 1);
-  let observations = server.list_observations(&execution[0].id).await?;
+  assert_eq!(executions.executions.len(), 1);
+  let observations = server
+    .list_observations(&executions.executions[0].id)
+    .await?;
   assert_eq!(observations.len(), 1);
   assert_eq!(observations[0].name, "handler_observation");
 
@@ -71,7 +73,9 @@ async fn test_request_observer_captures_request_response() -> anyhow::Result<()>
 
   let api_client = server.create_api_client()?;
   let executions = api_client.list_executions().send().await?;
-  let observations = server.list_observations(&executions[0].id).await?;
+  let observations = server
+    .list_observations(&executions.executions[0].id)
+    .await?;
   assert_eq!(observations.len(), 2);
   assert_eq!(observations[0].name, "http/request");
   assert_eq!(observations[1].name, "http/response");
@@ -125,7 +129,9 @@ async fn test_request_observer_config_excludes_headers() -> anyhow::Result<()> {
 
   let api_client = server.create_api_client()?;
   let executions = api_client.list_executions().send().await?;
-  let observations = server.list_observations(&executions[0].id).await?;
+  let observations = server
+    .list_observations(&executions.executions[0].id)
+    .await?;
   let payload: serde_json::Value = serde_json::from_str(&observations[0].payload.data)?;
   let headers = payload["headers"]
     .as_object()
@@ -172,9 +178,12 @@ async fn test_error_response_has_error_log_level() -> anyhow::Result<()> {
 
   let api_client = server.create_api_client()?;
   let executions = api_client.list_executions().send().await?;
-  let observations = server.list_observations(&executions[0].id).await?;
+  let observations = server
+    .list_observations(&executions.executions[0].id)
+    .await?;
+  assert_eq!(observations.len(), 3);
   assert_eq!(
-    observations[1].log_level,
+    observations[2].log_level,
     observation_tools_client::server_client::types::LogLevel::Error,
     "5xx responses should have Error log level"
   );
