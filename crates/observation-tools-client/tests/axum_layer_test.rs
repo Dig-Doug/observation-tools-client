@@ -7,6 +7,8 @@
 mod common;
 
 use axum::routing::get;
+use axum::routing::post;
+use axum::Json;
 use axum::Router;
 use common::TestServer;
 use http::header::HeaderName;
@@ -14,6 +16,7 @@ use observation_tools_client::axum::ExecutionLayer;
 use observation_tools_client::axum::RequestObserverConfig;
 use observation_tools_client::axum::RequestObserverLayer;
 use observation_tools_client::observe;
+use serde_json::json;
 
 #[test_log::test(tokio::test)]
 async fn test_execution_layer_creates_context() -> anyhow::Result<()> {
@@ -187,6 +190,140 @@ async fn test_error_response_has_error_log_level() -> anyhow::Result<()> {
     observation_tools_client::server_client::types::LogLevel::Error,
     "5xx responses should have Error log level"
   );
+
+  Ok(())
+}
+
+#[test_log::test(tokio::test)]
+async fn test_request_observer_captures_request_and_response_body() -> anyhow::Result<()> {
+  use base64::Engine;
+
+  let server = TestServer::new().await;
+  let client = server.create_client()?;
+
+  let app = Router::new()
+    .route(
+      "/echo",
+      post(|Json(body): Json<serde_json::Value>| async move {
+        Json(json!({
+            "received": body,
+            "message": "echo response"
+        }))
+      }),
+    )
+    .layer(RequestObserverLayer::new())
+    .layer(ExecutionLayer::new(client.clone()));
+
+  let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+  let addr = listener.local_addr()?;
+  tokio::spawn(async move {
+    axum::serve(listener, app).await.expect("Server failed");
+  });
+
+  let http_client = reqwest::Client::new();
+  let request_body = json!({
+      "name": "test",
+      "value": 42
+  });
+  let response = http_client
+    .post(format!("http://{}/echo", addr))
+    .json(&request_body)
+    .send()
+    .await?;
+  assert_eq!(response.status(), 200);
+
+  let response_json: serde_json::Value = response.json().await?;
+  assert_eq!(response_json["received"]["name"], "test");
+  assert_eq!(response_json["message"], "echo response");
+
+  client.shutdown().await?;
+
+  let api_client = server.create_api_client()?;
+  let executions = api_client.list_executions().send().await?;
+  let observations = server
+    .list_observations(&executions.executions[0].id)
+    .await?;
+
+  assert_eq!(observations.len(), 2);
+
+  // Check request observation has body with base64 data and content-type
+  let request_payload: serde_json::Value = serde_json::from_str(&observations[0].payload.data)?;
+  assert!(request_payload.get("body").is_some(), "request should have body");
+  let request_body_obj = &request_payload["body"];
+  assert!(
+    request_body_obj["content_type"]
+      .as_str()
+      .is_some_and(|ct| ct.starts_with("application/json")),
+    "request body should have application/json content-type"
+  );
+  let request_data = request_body_obj["data"].as_str().expect("data should be string");
+  let decoded_request = base64::engine::general_purpose::STANDARD.decode(request_data)?;
+  let decoded_request_json: serde_json::Value = serde_json::from_slice(&decoded_request)?;
+  assert_eq!(decoded_request_json["name"], "test");
+  assert_eq!(decoded_request_json["value"], 42);
+
+  // Check response observation has body with base64 data and content-type
+  let response_payload: serde_json::Value = serde_json::from_str(&observations[1].payload.data)?;
+  assert!(response_payload.get("body").is_some(), "response should have body");
+  let response_body_obj = &response_payload["body"];
+  assert!(
+    response_body_obj["content_type"]
+      .as_str()
+      .is_some_and(|ct| ct.starts_with("application/json")),
+    "response body should have application/json content-type"
+  );
+  let response_data = response_body_obj["data"].as_str().expect("data should be string");
+  let decoded_response = base64::engine::general_purpose::STANDARD.decode(response_data)?;
+  let decoded_response_json: serde_json::Value = serde_json::from_slice(&decoded_response)?;
+  assert_eq!(decoded_response_json["message"], "echo response");
+  assert_eq!(decoded_response_json["received"]["name"], "test");
+
+  Ok(())
+}
+
+#[test_log::test(tokio::test)]
+async fn test_request_observer_handles_text_body() -> anyhow::Result<()> {
+  use base64::Engine;
+
+  let server = TestServer::new().await;
+  let client = server.create_client()?;
+
+  let app = Router::new()
+    .route("/text", get(|| async { "Hello, World!" }))
+    .layer(RequestObserverLayer::new())
+    .layer(ExecutionLayer::new(client.clone()));
+
+  let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+  let addr = listener.local_addr()?;
+  tokio::spawn(async move {
+    axum::serve(listener, app).await.expect("Server failed");
+  });
+
+  let response = reqwest::get(format!("http://{}/text", addr)).await?;
+  assert_eq!(response.status(), 200);
+  assert_eq!(response.text().await?, "Hello, World!");
+
+  client.shutdown().await?;
+
+  let api_client = server.create_api_client()?;
+  let executions = api_client.list_executions().send().await?;
+  let observations = server
+    .list_observations(&executions.executions[0].id)
+    .await?;
+
+  // Check response observation has body with base64 data and content-type
+  let response_payload: serde_json::Value = serde_json::from_str(&observations[1].payload.data)?;
+  let response_body_obj = &response_payload["body"];
+  assert!(
+    response_body_obj["content_type"]
+      .as_str()
+      .is_some_and(|ct| ct.starts_with("text/plain")),
+    "response body should have text/plain content-type"
+  );
+  let response_data = response_body_obj["data"].as_str().expect("data should be string");
+  let decoded_response = base64::engine::general_purpose::STANDARD.decode(response_data)?;
+  let decoded_text = String::from_utf8(decoded_response)?;
+  assert_eq!(decoded_text, "Hello, World!");
 
   Ok(())
 }
