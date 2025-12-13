@@ -18,26 +18,6 @@
         "description": "Response after creating an execution",
         "type": "object"
       },
-      "CreateObservationsRequest": {
-        "description": "Request to create observations (can be a batch)",
-        "properties": {
-          "observations": {
-            "description": "List of observations to create",
-            "items": {
-              "$ref": "#/components/schemas/Observation"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "observations"
-        ],
-        "type": "object"
-      },
-      "CreateObservationsResponse": {
-        "description": "Response after creating observations",
-        "type": "object"
-      },
       "Execution": {
         "description": "An execution represents the root scope for data collection.\nAll observations are associated with one execution.",
         "properties": {
@@ -251,7 +231,12 @@
         "properties": {
           "data": {
             "description": "The actual payload data",
-            "type": "string"
+            "items": {
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
           },
           "mime_type": {
             "description": "MIME type of the payload (e.g., \"text/plain\", \"application/json\")",
@@ -445,49 +430,6 @@
           }
         },
         "summary": "List observations for an execution",
-        "tags": [
-          "observations"
-        ]
-      },
-      "post": {
-        "operationId": "create_observations",
-        "parameters": [
-          {
-            "description": "Execution ID",
-            "in": "path",
-            "name": "execution_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateObservationsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateObservationsResponse"
-                }
-              }
-            },
-            "description": "Observations created successfully"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        },
-        "summary": "Create observations (batch)",
         "tags": [
           "observations"
         ]

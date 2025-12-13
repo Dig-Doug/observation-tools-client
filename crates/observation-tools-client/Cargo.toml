@@ -31,7 +31,7 @@ napi-derive = { version = "3", features = ["type-def"] }
 observation-tools-macros.workspace = true
 observation-tools-shared = { workspace = true, features = ["testing"] }
 progenitor-client.workspace = true
-reqwest = { workspace = true, features = ["json"] }
+reqwest = { workspace = true, features = ["json", "multipart"] }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

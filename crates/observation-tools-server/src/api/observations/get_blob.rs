@@ -56,11 +56,10 @@ pub async fn get_observation_blob(
       "Returning inline payload"
     );
 
-    let data = observation.payload.data.into_bytes();
     return Ok((
       StatusCode::OK,
       [(header::CONTENT_TYPE, content_type)],
-      data.into(),
+      observation.payload.data,
     ));
   }
 
@@ -70,5 +69,5 @@ pub async fn get_observation_blob(
 
   tracing::debug!(size = blob.len(), "Blob retrieved from storage");
 
-  Ok((StatusCode::OK, [(header::CONTENT_TYPE, content_type)], blob))
+  Ok((StatusCode::OK, [(header::CONTENT_TYPE, content_type)], blob.to_vec()))
 }

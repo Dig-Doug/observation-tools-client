@@ -1,5 +1,6 @@
 mod common;
 
+use common::PayloadExt;
 use common::TestServer;
 use observation_tools_client::observe;
 use serde::Serialize;
@@ -32,7 +33,7 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "simple_string");
-  assert_eq!(obs.payload.data, "\"hello world\""); // JSON string includes quotes
+  assert_eq!(obs.payload.data_as_str(), "\"hello world\""); // JSON string includes quotes
   assert_eq!(obs.payload.mime_type, "application/json");
 
   let response = reqwest::get(&observation.url()).await?;
@@ -81,7 +82,7 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "serde_struct");
-  assert_eq!(obs.payload.data, r#"{"message":"test message","count":42}"#);
+  assert_eq!(obs.payload.data_as_str(), r#"{"message":"test message","count":42}"#);
   assert_eq!(obs.payload.mime_type, "application/json");
 
   let response = reqwest::get(&observation.url()).await?;
@@ -134,7 +135,7 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "custom_payload");
-  assert_eq!(obs.payload.data, "custom message");
+  assert_eq!(obs.payload.data_as_str(), "custom message");
   assert_eq!(obs.payload.mime_type, "text/plain");
 
   let response = reqwest::get(&observation.url()).await?;
@@ -187,7 +188,7 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "custom_new_syntax");
-  assert_eq!(obs.payload.data, "custom: test");
+  assert_eq!(obs.payload.data_as_str(), "custom: test");
   assert_eq!(obs.payload.mime_type, "text/plain");
 
   let response = reqwest::get(&observation.url()).await?;
@@ -224,7 +225,7 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
   let obs = &observations[0];
   // The observation name should match the variable name
   assert_eq!(obs.name, "my_data");
-  assert_eq!(obs.payload.data, "\"captured variable name\"");
+  assert_eq!(obs.payload.data_as_str(), "\"captured variable name\"");
 
   let response = reqwest::get(&observation.url()).await?;
   assert_eq!(response.status(), 200);
@@ -265,7 +266,7 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
   let obs = &observations[0];
   assert_eq!(obs.name, "structured_observation");
   assert_eq!(obs.labels, vec!["test/category"]);
-  assert_eq!(obs.payload.data, "\"test payload\"");
+  assert_eq!(obs.payload.data_as_str(), "\"test payload\"");
 
   let response = reqwest::get(&observation.url()).await?;
   assert_eq!(response.status(), 200);

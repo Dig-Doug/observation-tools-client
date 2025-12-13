@@ -156,7 +156,7 @@ impl ExecutionHandle {
     let size = payload_json.len();
     let payload_data = Payload {
       mime_type: "application/json".to_string(),
-      data: payload_json,
+      data: payload_json.into_bytes(),
       size,
     };
 
@@ -251,7 +251,7 @@ impl ExecutionHandle {
     let size = payload_json.len();
     let payload_data = Payload {
       mime_type: "application/json".to_string(),
-      data: payload_json,
+      data: payload_json.into_bytes(),
       size,
     };
 

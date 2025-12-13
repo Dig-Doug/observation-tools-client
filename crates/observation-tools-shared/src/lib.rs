@@ -33,8 +33,14 @@ pub const BATCH_SIZE: usize = 100;
 /// - IDs, timestamps, JSON structure: ~512 bytes
 pub const MAX_OBSERVATION_METADATA_OVERHEAD: usize = 4096; // 4KB
 
+/// JSON expansion factor for byte array serialization
+/// Vec<u8> serializes as [0,1,2,...] where each byte becomes ~4 characters
+pub const BYTE_ARRAY_JSON_EXPANSION: usize = 4;
+
 /// Maximum size for a single observation (payload + metadata)
-pub const MAX_OBSERVATION_SIZE: usize = BLOB_THRESHOLD_BYTES + MAX_OBSERVATION_METADATA_OVERHEAD;
+/// Note: payload.data is Vec<u8> which expands ~4x when serialized as JSON array
+pub const MAX_OBSERVATION_SIZE: usize =
+  (BLOB_THRESHOLD_BYTES * BYTE_ARRAY_JSON_EXPANSION) + MAX_OBSERVATION_METADATA_OVERHEAD;
 
 /// Maximum size for a batch of observations
 /// This is used to set the HTTP body limit for observation creation endpoints

@@ -6,6 +6,7 @@
 mod common;
 
 use anyhow::anyhow;
+use common::PayloadExt;
 use common::TestServer;
 use observation_tools_client::observe;
 use std::collections::HashSet;
@@ -78,7 +79,7 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
   assert_eq!(obs.metadata.get("key1"), Some(&"value1".to_string()));
   assert_eq!(obs.metadata.get("key2"), Some(&"value2".to_string()));
   assert_eq!(obs.payload.mime_type, "text/plain");
-  assert_eq!(obs.payload.data, "test payload data");
+  assert_eq!(obs.payload.data_as_str(), "test payload data");
 
   Ok(())
 }
@@ -280,8 +281,8 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   assert_eq!(obs.id.to_string(), observation_id.id().to_string());
 
   // The payload.data should be empty because it was uploaded as a blob
-  assert_eq!(
-    obs.payload.data, "",
+  assert!(
+    obs.payload.data.is_empty(),
     "Large payload data should be empty in metadata (stored as blob)"
   );
 

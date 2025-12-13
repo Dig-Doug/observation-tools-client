@@ -116,7 +116,6 @@ impl IntoResponse for AppError {
 /// Build the complete API router and OpenAPI spec
 /// Returns the router (split into mutating and readonly) and the OpenAPI spec
 pub fn build_api() -> (Router<AppState>, Router<AppState>, OpenApi) {
-  use observation_tools_shared::MAX_BLOB_SIZE;
   use observation_tools_shared::MAX_OBSERVATION_BATCH_SIZE;
   use utoipa::openapi::security::HttpAuthScheme;
   use utoipa::openapi::security::HttpBuilder;
@@ -124,19 +123,20 @@ pub fn build_api() -> (Router<AppState>, Router<AppState>, OpenApi) {
 
   let (mutation_router, mutation_openapi) = OpenApiRouter::<AppState>::new()
     .routes(routes!(executions::create_execution))
-    .routes(routes!(observations::create_observations))
     .split_for_parts();
 
-  let blob_upload_route = Router::new()
+  // create_observations uses multipart form which isn't supported by OpenAPI codegen,
+  // so we register it manually outside the OpenApiRouter
+  let create_observations_route = Router::new()
     .route(
-      "/api/exe/{execution_id}/obs/{observation_id}/blob",
-      axum::routing::post(observations::upload_observation_blob),
+      "/api/exe/{execution_id}/obs",
+      axum::routing::post(observations::create_observations),
     )
-    .layer(DefaultBodyLimit::max(MAX_BLOB_SIZE));
+    .layer(DefaultBodyLimit::max(MAX_OBSERVATION_BATCH_SIZE));
 
   let mutation_router = Router::new()
     .merge(mutation_router.layer(DefaultBodyLimit::max(MAX_OBSERVATION_BATCH_SIZE)))
-    .merge(blob_upload_route);
+    .merge(create_observations_route);
 
   let (read_only_router, read_only_openapi) = OpenApiRouter::<AppState>::new()
     .routes(routes!(executions::list_executions))

@@ -1,6 +1,3 @@
-use std::env;
-use std::error::Error as StdError;
-use std::fmt::Debug;
 use std::time::Duration;
 
 include!(concat!(env!("OUT_DIR"), "/observation_tools_openapi.rs"));
@@ -37,85 +34,78 @@ pub async fn pre_hook_async(
 
 // Extension methods for Client
 impl Client {
-  /// Upload a blob for an observation
+  /// Create observations via multipart form
   ///
   /// This endpoint is not part of the generated OpenAPI client because
-  /// progenitor doesn't support binary request bodies.
-  pub async fn upload_observation_blob(
+  /// progenitor doesn't support multipart request bodies.
+  ///
+  /// The multipart form contains:
+  /// - "observations": JSON array of observation metadata (with empty payload.data)
+  /// - "{observation_id}": Binary payload data for each observation
+  pub async fn create_observations_multipart(
     &self,
     execution_id: &str,
-    observation_id: &str,
-    data: Vec<u8>,
+    observations: Vec<observation_tools_shared::models::Observation>,
   ) -> anyhow::Result<()> {
-    let url = format!(
-      "{}/api/exe/{}/obs/{}/blob",
-      self.baseurl, execution_id, observation_id
-    );
-    let data_size = data.len();
+    let url = format!("{}/api/exe/{}/obs", self.baseurl, execution_id);
+    let observation_count = observations.len();
 
     log::trace!(
-      "Uploading blob: url={}, observation_id={}, size={} bytes",
+      "Creating observations via multipart: url={}, count={}",
       url,
-      observation_id,
-      data_size
+      observation_count
     );
 
-    let mut request_builder = self
-      .client
-      .post(&url)
-      .header("Content-Type", "application/octet-stream");
+    // Build multipart form
+    let mut form = reqwest::multipart::Form::new();
+
+    // Prepare observations metadata (with payload.data cleared) and collect payloads
+    let mut observations_metadata = Vec::with_capacity(observations.len());
+    let mut payloads: Vec<(String, Vec<u8>)> = Vec::new();
+
+    for mut obs in observations {
+      let obs_id = obs.id.to_string();
+      let payload_data = std::mem::take(&mut obs.payload.data);
+
+      if !payload_data.is_empty() {
+        payloads.push((obs_id, payload_data));
+      }
+
+      observations_metadata.push(obs);
+    }
+
+    // Add observations JSON part
+    let observations_json = serde_json::to_vec(&observations_metadata)?;
+    let observations_part = reqwest::multipart::Part::bytes(observations_json)
+      .mime_str("application/json")?;
+    form = form.part("observations", observations_part);
+
+    // Add payload parts
+    for (obs_id, payload_data) in payloads {
+      let part = reqwest::multipart::Part::bytes(payload_data);
+      form = form.part(obs_id, part);
+    }
+
+    let mut request_builder = self.client.post(&url).multipart(form);
 
     // Add Authorization header if API key is configured
     if let Some(ref api_key) = self.inner.api_key {
       request_builder = request_builder.header("Authorization", format!("Bearer {}", api_key));
     }
 
-    let response = match request_builder.body(data).send().await {
+    let response = match request_builder.send().await {
       Ok(resp) => resp,
       Err(e) => {
-        // Try to determine the specific error type for better diagnostics
-        let error_type = if e.is_timeout() {
-          "timeout"
-        } else if e.is_connect() {
-          "connection failed"
-        } else if e.is_request() {
-          "request error"
-        } else if e.is_body() {
-          "body error"
-        } else if e.is_decode() {
-          "decode error"
-        } else {
-          "unknown error"
-        };
-
-        let mut error_details = format!("{}", e);
-
-        // Add source chain for more context
-        if let Some(source) = e.source() {
-          error_details.push_str(&format!(" | caused by: {}", source));
-          let mut current_source = source;
-          while let Some(next_source) = current_source.source() {
-            error_details.push_str(&format!(" | {}", next_source));
-            current_source = next_source;
-          }
-        }
-
         log::error!(
-          "Failed to send blob upload request: url={}, observation_id={}, size={} bytes, error_type={}, error={}",
+          "Failed to send create_observations request: url={}, count={}, error={}",
           url,
-          observation_id,
-          data_size,
-          error_type,
-          error_details
+          observation_count,
+          e
         );
-
         return Err(anyhow::anyhow!(
-          "Failed to send blob upload request to {} ({}): {} (observation_id={}, size={} bytes)",
+          "Failed to send create_observations request to {}: {}",
           url,
-          error_type,
-          error_details,
-          observation_id,
-          data_size
+          e
         ));
       }
     };
@@ -127,26 +117,22 @@ impl Client {
         .await
         .unwrap_or_else(|e| format!("(failed to read error response body: {})", e));
       log::error!(
-        "Blob upload failed with HTTP error: url={}, observation_id={}, status={}, body={}",
+        "Create observations failed with HTTP error: url={}, status={}, body={}",
         url,
-        observation_id,
         status,
         error_text
       );
       return Err(anyhow::anyhow!(
-        "Blob upload failed: HTTP {} from {} - {} (observation_id={}, size={} bytes)",
+        "Create observations failed: HTTP {} from {} - {}",
         status,
         url,
-        error_text,
-        observation_id,
-        data_size
+        error_text
       ));
     }
 
     log::trace!(
-      "Blob uploaded successfully: observation_id={}, size={} bytes",
-      observation_id,
-      data_size
+      "Observations created successfully: count={}",
+      observation_count
     );
 
     Ok(())

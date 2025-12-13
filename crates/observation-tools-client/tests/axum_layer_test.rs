@@ -10,6 +10,7 @@ use axum::routing::get;
 use axum::routing::post;
 use axum::Json;
 use axum::Router;
+use common::PayloadExt;
 use common::TestServer;
 use http::header::HeaderName;
 use observation_tools_client::axum::ExecutionLayer;
@@ -135,7 +136,7 @@ async fn test_request_observer_config_excludes_headers() -> anyhow::Result<()> {
   let observations = server
     .list_observations(&executions.executions[0].id)
     .await?;
-  let payload: serde_json::Value = serde_json::from_str(&observations[0].payload.data)?;
+  let payload: serde_json::Value = serde_json::from_slice(&observations[0].payload.data_as_bytes())?;
   let headers = payload["headers"]
     .as_object()
     .expect("headers should be object");
@@ -247,7 +248,7 @@ async fn test_request_observer_captures_request_and_response_body() -> anyhow::R
   assert_eq!(observations.len(), 2);
 
   // Check request observation has body with base64 data and content-type
-  let request_payload: serde_json::Value = serde_json::from_str(&observations[0].payload.data)?;
+  let request_payload: serde_json::Value = serde_json::from_slice(&observations[0].payload.data_as_bytes())?;
   assert!(request_payload.get("body").is_some(), "request should have body");
   let request_body_obj = &request_payload["body"];
   assert!(
@@ -263,7 +264,7 @@ async fn test_request_observer_captures_request_and_response_body() -> anyhow::R
   assert_eq!(decoded_request_json["value"], 42);
 
   // Check response observation has body with base64 data and content-type
-  let response_payload: serde_json::Value = serde_json::from_str(&observations[1].payload.data)?;
+  let response_payload: serde_json::Value = serde_json::from_slice(&observations[1].payload.data_as_bytes())?;
   assert!(response_payload.get("body").is_some(), "response should have body");
   let response_body_obj = &response_payload["body"];
   assert!(
@@ -312,7 +313,7 @@ async fn test_request_observer_handles_text_body() -> anyhow::Result<()> {
     .await?;
 
   // Check response observation has body with base64 data and content-type
-  let response_payload: serde_json::Value = serde_json::from_str(&observations[1].payload.data)?;
+  let response_payload: serde_json::Value = serde_json::from_slice(&observations[1].payload.data_as_bytes())?;
   let response_body_obj = &response_payload["body"];
   assert!(
     response_body_obj["content_type"]

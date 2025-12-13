@@ -179,7 +179,7 @@ pub struct SourceInfo {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Payload {
   /// The actual payload data
-  pub data: String,
+  pub data: Vec<u8>,
 
   /// MIME type of the payload (e.g., "text/plain", "application/json")
   pub mime_type: String,
@@ -191,7 +191,7 @@ pub struct Payload {
 impl Payload {
   /// Create a new payload from text
   pub fn text(data: impl Into<String>) -> Self {
-    let data = data.into();
+    let data = data.into().into_bytes();
     let size = data.len();
     Self {
       data,
@@ -202,7 +202,7 @@ impl Payload {
 
   /// Create a new payload from JSON
   pub fn json(data: impl Into<String>) -> Self {
-    let data = data.into();
+    let data = data.into().into_bytes();
     let size = data.len();
     Self {
       data,
@@ -213,13 +213,19 @@ impl Payload {
 
   /// Create a new payload with a custom MIME type
   pub fn with_mime_type(data: impl Into<String>, mime_type: impl Into<String>) -> Self {
-    let data = data.into();
+    let data = data.into().into_bytes();
     let size = data.len();
     Self {
       data,
       mime_type: mime_type.into(),
       size,
     }
+  }
+
+  /// Get data as UTF-8 string (for testing). Panics if not valid UTF-8.
+  #[cfg(any(test, feature = "testing"))]
+  pub fn data_as_str(&self) -> &str {
+    std::str::from_utf8(&self.data).expect("payload data is not valid UTF-8")
   }
 }
 
