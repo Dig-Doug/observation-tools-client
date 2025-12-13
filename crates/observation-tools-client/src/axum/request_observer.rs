@@ -15,6 +15,7 @@ use http::header::CONTENT_TYPE;
 use http::header::COOKIE;
 use http::header::SET_COOKIE;
 use http_body_util::BodyExt;
+use observation_tools_shared::models::Payload;
 use observation_tools_shared::LogLevel;
 use serde_json::json;
 use std::future::Future;
@@ -132,17 +133,27 @@ where
         .map(|collected| collected.to_bytes())
         .unwrap_or_else(|_| Bytes::new());
 
-      // Observe the request
-      let mut request_builder = ObservationBuilder::new("http/request");
-      request_builder
+      // Observe the request headers
+      let mut request_headers_builder = ObservationBuilder::new("http/request/headers");
+      request_headers_builder
         .label("http/request")
+        .label("http/request/headers")
         .metadata("method", parts.method.to_string())
         .metadata("uri", parts.uri.to_string());
-      let request_payload = json!({
-          "headers": filter_headers(&parts.headers, &config.excluded_headers),
-          "body": body_to_payload(&request_body_bytes, &parts.headers),
-      });
-      let _ = request_builder.payload(&request_payload).build();
+      let headers_payload = json!(filter_headers(&parts.headers, &config.excluded_headers));
+      let _ = request_headers_builder.payload(&headers_payload).build();
+
+      // Observe the request body
+      if !request_body_bytes.is_empty() {
+        let mut request_body_builder = ObservationBuilder::new("http/request/body");
+        request_body_builder
+          .label("http/request")
+          .label("http/request/body")
+          .metadata("method", parts.method.to_string())
+          .metadata("uri", parts.uri.to_string());
+        let body_payload = bytes_to_payload(&request_body_bytes, &parts.headers);
+        let _ = request_body_builder.payload(&body_payload).build();
+      }
 
       // Reconstruct request with buffered body
       let req = Request::from_parts(parts, Body::from(request_body_bytes));
@@ -157,7 +168,7 @@ where
         .map(|collected| collected.to_bytes())
         .unwrap_or_else(|_| Bytes::new());
 
-      // Observe the response
+      // Observe the response headers
       let status = parts.status;
       let log_level = match status.as_u16() {
         200..=299 => LogLevel::Info,
@@ -165,16 +176,26 @@ where
         500..=599 => LogLevel::Error,
         _ => LogLevel::Info,
       };
-      let mut response_builder = ObservationBuilder::new("http/response");
-      response_builder
+      let mut response_headers_builder = ObservationBuilder::new("http/response/headers");
+      response_headers_builder
         .label("http/response")
+        .label("http/response/headers")
         .metadata("status", &status.as_u16().to_string())
         .log_level(log_level);
-      let response_payload = json!({
-          "headers": filter_headers(&parts.headers, &config.excluded_headers),
-          "body": body_to_payload(&response_body_bytes, &parts.headers),
-      });
-      let _ = response_builder.payload(&response_payload).build();
+      let headers_payload = json!(filter_headers(&parts.headers, &config.excluded_headers));
+      let _ = response_headers_builder.payload(&headers_payload).build();
+
+      // Observe the response body
+      if !response_body_bytes.is_empty() {
+        let mut response_body_builder = ObservationBuilder::new("http/response/body");
+        response_body_builder
+          .label("http/response")
+          .label("http/response/body")
+          .metadata("status", &status.as_u16().to_string())
+          .log_level(log_level);
+        let body_payload = bytes_to_payload(&response_body_bytes, &parts.headers);
+        let _ = response_body_builder.payload(&body_payload).build();
+      }
 
       // Reconstruct response with buffered body
       Ok(Response::from_parts(parts, Body::from(response_body_bytes)))
@@ -202,28 +223,18 @@ fn filter_headers(
   map
 }
 
-/// Convert body bytes to a payload object with content-type from headers
-///
-/// Returns an object with `data` (base64-encoded bytes) and `content_type` from headers.
-/// Returns null if the body is empty.
-fn body_to_payload(bytes: &Bytes, headers: &HeaderMap) -> serde_json::Value {
-  if bytes.is_empty() {
-    return serde_json::Value::Null;
-  }
-
-  use base64::Engine;
-  let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
-
+/// Convert body bytes to a Payload with the content-type from headers
+fn bytes_to_payload(bytes: &Bytes, headers: &HeaderMap) -> Payload {
   let content_type = headers
     .get(CONTENT_TYPE)
     .and_then(|v| v.to_str().ok())
-    .map(|s| serde_json::Value::String(s.to_string()))
-    .unwrap_or(serde_json::Value::Null);
+    .unwrap_or("application/octet-stream");
 
-  json!({
-      "data": encoded,
-      "content_type": content_type
-  })
+  Payload {
+    data: bytes.to_vec(),
+    mime_type: content_type.to_string(),
+    size: bytes.len(),
+  }
 }
 
 #[cfg(test)]
