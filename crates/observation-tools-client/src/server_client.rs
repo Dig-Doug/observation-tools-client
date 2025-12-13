@@ -40,7 +40,8 @@ impl Client {
   /// progenitor doesn't support multipart request bodies.
   ///
   /// The multipart form contains:
-  /// - "observations": JSON array of observation metadata (with empty payload.data)
+  /// - "observations": JSON array of observation metadata (with empty
+  ///   payload.data)
   /// - "{observation_id}": Binary payload data for each observation
   pub async fn create_observations_multipart(
     &self,
@@ -59,7 +60,8 @@ impl Client {
     // Build multipart form
     let mut form = reqwest::multipart::Form::new();
 
-    // Prepare observations metadata (with payload.data cleared) and collect payloads
+    // Prepare observations metadata (with payload.data cleared) and collect
+    // payloads
     let mut observations_metadata = Vec::with_capacity(observations.len());
     let mut payloads: Vec<(String, Vec<u8>)> = Vec::new();
 
@@ -76,8 +78,8 @@ impl Client {
 
     // Add observations JSON part
     let observations_json = serde_json::to_vec(&observations_metadata)?;
-    let observations_part = reqwest::multipart::Part::bytes(observations_json)
-      .mime_str("application/json")?;
+    let observations_part =
+      reqwest::multipart::Part::bytes(observations_json).mime_str("application/json")?;
     form = form.part("observations", observations_part);
 
     // Add payload parts

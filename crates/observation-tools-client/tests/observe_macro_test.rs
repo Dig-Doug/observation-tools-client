@@ -82,7 +82,10 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "serde_struct");
-  assert_eq!(obs.payload.data_as_str(), r#"{"message":"test message","count":42}"#);
+  assert_eq!(
+    obs.payload.data_as_str(),
+    r#"{"message":"test message","count":42}"#
+  );
   assert_eq!(obs.payload.mime_type, "application/json");
 
   let response = reqwest::get(&observation.url()).await?;

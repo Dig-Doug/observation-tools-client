@@ -125,8 +125,8 @@ pub fn build_api() -> (Router<AppState>, Router<AppState>, OpenApi) {
     .routes(routes!(executions::create_execution))
     .split_for_parts();
 
-  // create_observations uses multipart form which isn't supported by OpenAPI codegen,
-  // so we register it manually outside the OpenApiRouter
+  // create_observations uses multipart form which isn't supported by OpenAPI
+  // codegen, so we register it manually outside the OpenApiRouter
   let create_observations_route = Router::new()
     .route(
       "/api/exe/{execution_id}/obs",

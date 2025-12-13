@@ -17,7 +17,8 @@ use std::sync::Arc;
 /// Create observations (batch) via multipart form
 ///
 /// The multipart form should contain:
-/// - "observations": JSON array of observation metadata (with empty payload.data)
+/// - "observations": JSON array of observation metadata (with empty
+///   payload.data)
 /// - "{observation_id}": Binary payload data for each observation
 #[tracing::instrument(skip(metadata, blobs, multipart))]
 pub async fn create_observations(
@@ -32,19 +33,21 @@ pub async fn create_observations(
   let mut payloads: HashMap<String, bytes::Bytes> = HashMap::new();
 
   // Parse all multipart fields
-  while let Some(field) = multipart.next_field().await.map_err(|e| {
-    AppError::BadRequest(format!("Failed to read multipart field: {}", e))
-  })? {
+  while let Some(field) = multipart
+    .next_field()
+    .await
+    .map_err(|e| AppError::BadRequest(format!("Failed to read multipart field: {}", e)))?
+  {
     let name = field.name().unwrap_or_default().to_string();
 
     if name == "observations" {
       // Parse JSON observations metadata
-      let data = field.bytes().await.map_err(|e| {
-        AppError::BadRequest(format!("Failed to read observations data: {}", e))
-      })?;
-      let parsed: Vec<Observation> = serde_json::from_slice(&data).map_err(|e| {
-        AppError::BadRequest(format!("Failed to parse observations JSON: {}", e))
-      })?;
+      let data = field
+        .bytes()
+        .await
+        .map_err(|e| AppError::BadRequest(format!("Failed to read observations data: {}", e)))?;
+      let parsed: Vec<Observation> = serde_json::from_slice(&data)
+        .map_err(|e| AppError::BadRequest(format!("Failed to parse observations JSON: {}", e)))?;
       observations = Some(parsed);
     } else {
       // This is a payload field, keyed by observation ID

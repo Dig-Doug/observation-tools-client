@@ -20,7 +20,8 @@ impl PayloadExt for Payload {
   }
 
   fn data_as_bytes(&self) -> Vec<u8> {
-    // The OpenAPI-generated type uses Vec<i32> for the byte array, so we need to convert
+    // The OpenAPI-generated type uses Vec<i32> for the byte array, so we need to
+    // convert
     self.data.iter().map(|&b| b as u8).collect()
   }
 }

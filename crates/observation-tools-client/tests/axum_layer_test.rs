@@ -136,7 +136,8 @@ async fn test_request_observer_config_excludes_headers() -> anyhow::Result<()> {
   let observations = server
     .list_observations(&executions.executions[0].id)
     .await?;
-  let payload: serde_json::Value = serde_json::from_slice(&observations[0].payload.data_as_bytes())?;
+  let payload: serde_json::Value =
+    serde_json::from_slice(&observations[0].payload.data_as_bytes())?;
   let headers = payload["headers"]
     .as_object()
     .expect("headers should be object");
@@ -248,8 +249,12 @@ async fn test_request_observer_captures_request_and_response_body() -> anyhow::R
   assert_eq!(observations.len(), 2);
 
   // Check request observation has body with base64 data and content-type
-  let request_payload: serde_json::Value = serde_json::from_slice(&observations[0].payload.data_as_bytes())?;
-  assert!(request_payload.get("body").is_some(), "request should have body");
+  let request_payload: serde_json::Value =
+    serde_json::from_slice(&observations[0].payload.data_as_bytes())?;
+  assert!(
+    request_payload.get("body").is_some(),
+    "request should have body"
+  );
   let request_body_obj = &request_payload["body"];
   assert!(
     request_body_obj["content_type"]
@@ -257,15 +262,21 @@ async fn test_request_observer_captures_request_and_response_body() -> anyhow::R
       .is_some_and(|ct| ct.starts_with("application/json")),
     "request body should have application/json content-type"
   );
-  let request_data = request_body_obj["data"].as_str().expect("data should be string");
+  let request_data = request_body_obj["data"]
+    .as_str()
+    .expect("data should be string");
   let decoded_request = base64::engine::general_purpose::STANDARD.decode(request_data)?;
   let decoded_request_json: serde_json::Value = serde_json::from_slice(&decoded_request)?;
   assert_eq!(decoded_request_json["name"], "test");
   assert_eq!(decoded_request_json["value"], 42);
 
   // Check response observation has body with base64 data and content-type
-  let response_payload: serde_json::Value = serde_json::from_slice(&observations[1].payload.data_as_bytes())?;
-  assert!(response_payload.get("body").is_some(), "response should have body");
+  let response_payload: serde_json::Value =
+    serde_json::from_slice(&observations[1].payload.data_as_bytes())?;
+  assert!(
+    response_payload.get("body").is_some(),
+    "response should have body"
+  );
   let response_body_obj = &response_payload["body"];
   assert!(
     response_body_obj["content_type"]
@@ -273,7 +284,9 @@ async fn test_request_observer_captures_request_and_response_body() -> anyhow::R
       .is_some_and(|ct| ct.starts_with("application/json")),
     "response body should have application/json content-type"
   );
-  let response_data = response_body_obj["data"].as_str().expect("data should be string");
+  let response_data = response_body_obj["data"]
+    .as_str()
+    .expect("data should be string");
   let decoded_response = base64::engine::general_purpose::STANDARD.decode(response_data)?;
   let decoded_response_json: serde_json::Value = serde_json::from_slice(&decoded_response)?;
   assert_eq!(decoded_response_json["message"], "echo response");
@@ -313,7 +326,8 @@ async fn test_request_observer_handles_text_body() -> anyhow::Result<()> {
     .await?;
 
   // Check response observation has body with base64 data and content-type
-  let response_payload: serde_json::Value = serde_json::from_slice(&observations[1].payload.data_as_bytes())?;
+  let response_payload: serde_json::Value =
+    serde_json::from_slice(&observations[1].payload.data_as_bytes())?;
   let response_body_obj = &response_payload["body"];
   assert!(
     response_body_obj["content_type"]
@@ -321,7 +335,9 @@ async fn test_request_observer_handles_text_body() -> anyhow::Result<()> {
       .is_some_and(|ct| ct.starts_with("text/plain")),
     "response body should have text/plain content-type"
   );
-  let response_data = response_body_obj["data"].as_str().expect("data should be string");
+  let response_data = response_body_obj["data"]
+    .as_str()
+    .expect("data should be string");
   let decoded_response = base64::engine::general_purpose::STANDARD.decode(response_data)?;
   let decoded_text = String::from_utf8(decoded_response)?;
   assert_eq!(decoded_text, "Hello, World!");

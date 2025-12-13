@@ -38,7 +38,8 @@ pub const MAX_OBSERVATION_METADATA_OVERHEAD: usize = 4096; // 4KB
 pub const BYTE_ARRAY_JSON_EXPANSION: usize = 4;
 
 /// Maximum size for a single observation (payload + metadata)
-/// Note: payload.data is Vec<u8> which expands ~4x when serialized as JSON array
+/// Note: payload.data is Vec<u8> which expands ~4x when serialized as JSON
+/// array
 pub const MAX_OBSERVATION_SIZE: usize =
   (BLOB_THRESHOLD_BYTES * BYTE_ARRAY_JSON_EXPANSION) + MAX_OBSERVATION_METADATA_OVERHEAD;
 
