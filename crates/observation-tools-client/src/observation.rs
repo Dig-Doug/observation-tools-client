@@ -145,10 +145,9 @@ impl ObservationBuilder {
     &self,
     json_string: String,
   ) -> napi::Result<ObservationBuilderWithPayload> {
-    serde_json::from_str::<serde_json::Value>(&json_string)
+    let value = serde_json::from_str::<serde_json::Value>(&json_string)
       .map_err(|e| napi::Error::from_reason(format!("Invalid JSON payload: {}", e)))?;
-
-    Ok(self.payload(&Payload::json(json_string)))
+    Ok(self.payload(&value))
   }
 
   /// Set the payload with custom data and MIME type

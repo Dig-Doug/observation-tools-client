@@ -13,6 +13,7 @@ use observation_tools_shared::ObservationId;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Arc;
+use tracing::trace;
 use utoipa::ToSchema;
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -40,6 +41,7 @@ impl GetObservation {
 pub enum PayloadOrPointerResponse {
   Text(String),
   Json(serde_json::Value),
+  Markdown { raw: String },
   InlineBinary(Vec<u8>),
   Pointer { url: String },
 }
@@ -61,6 +63,11 @@ impl PayloadOrPointerResponse {
       "text/plain" | "text/html" | "text/csv" => {
         if let Ok(text) = String::from_utf8(data.clone()) {
           return PayloadOrPointerResponse::Text(text);
+        }
+      }
+      "text/markdown" => {
+        if let Ok(text) = String::from_utf8(data.clone()) {
+          return PayloadOrPointerResponse::Markdown { raw: text };
         }
       }
       _ => {}

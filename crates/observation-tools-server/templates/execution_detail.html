@@ -96,17 +96,18 @@
                           >
                           <span class="text-neutral-200 truncate"
                             >{% if obs.observation_type == 'LogEntry' %}
-                              {{ obs.payload.data[:200] }}{%
-                                if
-                                obs.payload.data|length > 200
-                              %}
-                                ...
-                              {% endif %}
+                              {% if obs.payload.Text is defined %}{{ obs.payload.Text[:200] }}{% if obs.payload.Text|length > 200 %}...{% endif %}
+                              {% elif obs.payload.Json is defined %}[JSON]
+                              {% elif obs.payload.Markdown is defined %}{{ obs.payload.Markdown.raw[:200] }}{% if obs.payload.Markdown.raw|length > 200 %}...{% endif %}
+                              {% elif obs.payload.Pointer is defined %}[external content]
+                              {% else %}[binary]{% endif %}
                             {% else %}
                               {{ obs.name }}:
-                              {{ obs.payload.data[:100] }}{% if obs.payload.data|length > 100 %}
-                                ...
-                              {% endif %}
+                              {% if obs.payload.Text is defined %}{{ obs.payload.Text[:100] }}{% if obs.payload.Text|length > 100 %}...{% endif %}
+                              {% elif obs.payload.Json is defined %}[JSON]
+                              {% elif obs.payload.Markdown is defined %}{{ obs.payload.Markdown.raw[:100] }}{% if obs.payload.Markdown.raw|length > 100 %}...{% endif %}
+                              {% elif obs.payload.Pointer is defined %}[external content]
+                              {% else %}[binary]{% endif %}
                             {% endif %}</span
                           >
                         </div>
@@ -124,7 +125,7 @@
                           >{{ obs.name }}</a
                         >
                         <span class="text-base-content/60 text-sm">
-                          — {{ obs.payload.mime_type }}
+                          — {{ obs.mime_type }}
                           {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
                           — {{ obs.created_at }}
                         </span>
