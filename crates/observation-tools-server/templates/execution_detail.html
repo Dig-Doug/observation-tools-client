@@ -96,18 +96,30 @@
                           >
                           <span class="text-neutral-200 truncate"
                             >{% if obs.observation_type == 'LogEntry' %}
-                              {% if obs.payload.Text is defined %}{{ obs.payload.Text[:200] }}{% if obs.payload.Text|length > 200 %}...{% endif %}
-                              {% elif obs.payload.Json is defined %}[JSON]
-                              {% elif obs.payload.Markdown is defined %}{{ obs.payload.Markdown.raw[:200] }}{% if obs.payload.Markdown.raw|length > 200 %}...{% endif %}
-                              {% elif obs.payload.Pointer is defined %}[external content]
-                              {% else %}[binary]{% endif %}
+                              {% if obs.payload.Text is defined %}
+                                {{ obs.payload.Text[:200] }}{% if obs.payload.Text|length > 200 %}...{% endif %}
+                              {% elif obs.payload.Json is defined %}
+                                [JSON]
+                              {% elif obs.payload.Markdown is defined %}
+                                {{ obs.payload.Markdown.raw[:200] }}{% if obs.payload.Markdown.raw|length > 200 %}...{% endif %}
+                              {% elif obs.payload.Pointer is defined %}
+                                [external content]
+                              {% else %}
+                                [binary]
+                              {% endif %}
                             {% else %}
                               {{ obs.name }}:
-                              {% if obs.payload.Text is defined %}{{ obs.payload.Text[:100] }}{% if obs.payload.Text|length > 100 %}...{% endif %}
-                              {% elif obs.payload.Json is defined %}[JSON]
-                              {% elif obs.payload.Markdown is defined %}{{ obs.payload.Markdown.raw[:100] }}{% if obs.payload.Markdown.raw|length > 100 %}...{% endif %}
-                              {% elif obs.payload.Pointer is defined %}[external content]
-                              {% else %}[binary]{% endif %}
+                              {% if obs.payload.Text is defined %}
+                                {{ obs.payload.Text[:100] }}{% if obs.payload.Text|length > 100 %}...{% endif %}
+                              {% elif obs.payload.Json is defined %}
+                                [JSON]
+                              {% elif obs.payload.Markdown is defined %}
+                                {{ obs.payload.Markdown.raw[:100] }}{% if obs.payload.Markdown.raw|length > 100 %}...{% endif %}
+                              {% elif obs.payload.Pointer is defined %}
+                                [external content]
+                              {% else %}
+                                [binary]
+                              {% endif %}
                             {% endif %}</span
                           >
                         </div>

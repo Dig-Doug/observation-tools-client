@@ -86,10 +86,14 @@
   {% elif observation.payload.Pointer is defined %}
     <div data-testid="ObservationPayload">
       <p class="mb-2">Payload stored externally.</p>
-      <a href="{{ observation.payload.Pointer.url }}" target="_blank" class="link">Load external content</a>
+      <a href="{{ observation.payload.Pointer.url }}" target="_blank" class="link"
+        >Load external content</a
+      >
     </div>
   {% elif observation.payload.InlineBinary is defined %}
-    <pre data-testid="ObservationPayload">[Binary content - {{ observation.payload_size }} bytes]</pre>
+    <pre data-testid="ObservationPayload">
+[Binary content - {{ observation.payload_size }} bytes]</pre
+    >
   {% else %}
     <pre data-testid="ObservationPayload">[Unknown payload type]</pre>
   {% endif %}
