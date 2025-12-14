@@ -96,7 +96,7 @@ pub trait IntoCustomPayload {
 ///
 /// # Example
 /// ```rust
-/// use observation_tools_shared::models::Markdown;
+/// use observation_tools_shared::Markdown;
 ///
 /// let md = Markdown::from("# Hello\n\nThis is **bold** text.");
 /// ```

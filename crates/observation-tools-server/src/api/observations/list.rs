@@ -10,7 +10,6 @@ use axum::extract::Query;
 use axum::extract::State;
 use axum::Json;
 use observation_tools_shared::models::ExecutionId;
-use observation_tools_shared::Observation;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Arc;

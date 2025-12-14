@@ -13,7 +13,6 @@ use observation_tools_shared::ObservationId;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Arc;
-use tracing::trace;
 use utoipa::ToSchema;
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

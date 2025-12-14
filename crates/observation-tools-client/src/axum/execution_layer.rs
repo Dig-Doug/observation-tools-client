@@ -2,8 +2,6 @@ use crate::context::with_execution;
 use crate::Client;
 use axum::extract::Request;
 use axum::response::Response;
-use http::Method;
-use http::Uri;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;

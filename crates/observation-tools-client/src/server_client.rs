@@ -1,4 +1,3 @@
-use crate::server_client::types::GetObservation;
 use crate::server_client::types::PayloadOrPointerResponse;
 use crate::ObservationWithPayload;
 use reqwest::multipart::Part;
@@ -54,7 +53,7 @@ pub async fn pre_hook_async(
 
 // Extension methods for Client
 impl Client {
-  pub async fn create_observations_multipart(
+  pub(crate) async fn create_observations_multipart(
     &self,
     execution_id: &str,
     observations: Vec<ObservationWithPayload>,

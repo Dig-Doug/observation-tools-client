@@ -112,6 +112,11 @@ impl ObservationHandle {
       self.base_url, self.execution_id, self.observation_id
     )
   }
+
+  #[napi(getter, js_name = "id")]
+  pub fn id_napi(&self) -> String {
+    self.observation_id.to_string()
+  }
 }
 
 impl From<SendObservation> for ObservationHandle {

@@ -232,7 +232,10 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
   let obs = &observations[0];
   // The observation name should match the variable name
   assert_eq!(obs.name, "my_data");
-  assert_eq!(obs.payload.as_str(), Some("\"captured variable name\""));
+  assert_eq!(
+    obs.payload.as_json(),
+    Some(&serde_json::to_value("captured variable name")?)
+  );
 
   let response = reqwest::get(&observation.url()).await?;
   assert_eq!(response.status(), 200);
@@ -273,7 +276,10 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
   let obs = &observations[0];
   assert_eq!(obs.name, "structured_observation");
   assert_eq!(obs.labels, vec!["test/category"]);
-  assert_eq!(obs.payload.as_str(), Some("\"test payload\""));
+  assert_eq!(
+    obs.payload.as_json(),
+    Some(&serde_json::to_value("test payload")?)
+  );
 
   let response = reqwest::get(&observation.url()).await?;
   assert_eq!(response.status(), 200);

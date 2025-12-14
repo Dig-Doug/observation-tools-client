@@ -2,77 +2,34 @@
 /* eslint-disable */
 /** Client for observation-tools */
 export declare class Client {
-  beginExecution(name: string): ExecutionHandle;
+  beginExecution(name: string): ExecutionHandle
   /**
    * Begin a new execution with a specific ID (for testing)
    *
    * This allows tests to create an execution with a known ID, enabling
    * navigation to the execution URL before the execution is uploaded.
    */
-  beginExecutionWithId(id: string, name: string): ExecutionHandle;
+  beginExecutionWithId(id: string, name: string): ExecutionHandle
 }
 
 /** Builder for Client */
 export declare class ClientBuilder {
   /** Create a new client builder */
-  constructor();
+  constructor()
   /** Set the base URL for the server */
-  setBaseUrl(url: string): void;
+  setBaseUrl(url: string): void
   /** Set the API key for authentication */
-  setApiKey(apiKey: string): void;
+  setApiKey(apiKey: string): void
   /** Build the client */
-  build(): Client;
+  build(): Client
 }
 
 /** Handle to an execution that can be used to send observations */
 export declare class ExecutionHandle {
   /** Get the execution ID as a string */
-  get idString(): string;
+  get idString(): string
   /** Get the URL to the execution page */
-  get url(): string;
-  /**
-   * Create and send an observation
-   *
-   * # Arguments
-   * * `name` - The name of the observation
-   * * `payload_json` - The data to observe as a JSON string
-   * * `labels` - Optional array of labels for categorization
-   * * `source_file` - Optional source file path
-   * * `source_line` - Optional source line number
-   * * `metadata` - Optional metadata as an array of [key, value] pairs
-   */
-  observe(
-    name: string,
-    payloadJson: string,
-    labels?: Array<string> | undefined | null,
-    sourceFile?: string | undefined | null,
-    sourceLine?: number | undefined | null,
-    metadata?: Array<Array<string>> | undefined | null,
-  ): string;
-  /**
-   * Create and send an observation with a specific ID (for testing)
-   *
-   * This allows tests to create an observation with a known ID, enabling
-   * navigation to the observation URL before the observation is uploaded.
-   *
-   * # Arguments
-   * * `id` - The observation ID to use
-   * * `name` - The name of the observation
-   * * `payload_json` - The data to observe as a JSON string
-   * * `labels` - Optional array of labels for categorization
-   * * `source_file` - Optional source file path
-   * * `source_line` - Optional source line number
-   * * `metadata` - Optional metadata as an array of [key, value] pairs
-   */
-  observeWithId(
-    id: string,
-    name: string,
-    payloadJson: string,
-    labels?: Array<string> | undefined | null,
-    sourceFile?: string | undefined | null,
-    sourceLine?: number | undefined | null,
-    metadata?: Array<Array<string>> | undefined | null,
-  ): string;
+  get url(): string
 }
 
 /**
@@ -83,19 +40,26 @@ export declare class ExecutionHandle {
  */
 export declare class ObservationBuilder {
   /** Create a new observation builder with the given name */
-  constructor(name: string);
+  constructor(name: string)
+  /**
+   * Set a custom observation ID (for testing)
+   *
+   * This allows tests to create an observation with a known ID, enabling
+   * navigation to the observation URL before the observation is uploaded.
+   */
+  withId(id: string): this
   /** Add a label to the observation */
-  label(label: string): this;
+  label(label: string): this
   /** Add metadata to the observation */
-  metadata(key: string, value: string): this;
+  metadata(key: string, value: string): this
   /** Set the source info for the observation */
-  source(file: string, line: number): this;
+  source(file: string, line: number): this
   /** Set the payload as JSON data */
-  jsonPayload(jsonString: string): ObservationBuilderWithPayload;
+  jsonPayload(jsonString: string): ObservationBuilderWithPayload
   /** Set the payload with custom data and MIME type */
-  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayload;
+  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayload
   /** Set the payload as markdown content */
-  markdownPayload(content: string): ObservationBuilderWithPayload;
+  markdownPayload(content: string): ObservationBuilderWithPayload
 }
 
 /**
@@ -114,15 +78,16 @@ export declare class ObservationBuilderWithPayload {
    *
    * If sending fails, returns a stub that will fail on `wait_for_upload()`.
    */
-  send(execution: ExecutionHandle): SendObservation;
+  send(execution: ExecutionHandle): SendObservation
 }
 
 export declare class ObservationHandle {
-  get url(): string;
+  get url(): string
+  get id(): string
 }
 
 export declare class SendObservation {
-  handle(): ObservationHandle;
+  handle(): ObservationHandle
 }
 
 /**
@@ -131,7 +96,7 @@ export declare class SendObservation {
  * This allows tests to generate an execution ID before creating the execution,
  * enabling navigation to the execution URL before the execution is uploaded.
  */
-export declare function generateExecutionId(): string;
+export declare function generateExecutionId(): string
 
 /**
  * Generate a new observation ID (for testing)
@@ -140,4 +105,4 @@ export declare function generateExecutionId(): string;
  * observation, enabling navigation to the observation URL before the
  * observation is uploaded.
  */
-export declare function generateObservationId(): string;
+export declare function generateObservationId(): string

@@ -34,6 +34,8 @@ pub struct ObservationBuilder {
   parent_span_id: Option<String>,
   observation_type: ObservationType,
   log_level: LogLevel,
+  /// Custom observation ID (for testing)
+  custom_id: Option<ObservationId>,
 }
 
 impl ObservationBuilder {
@@ -47,7 +49,17 @@ impl ObservationBuilder {
       parent_span_id: None,
       observation_type: ObservationType::Payload,
       log_level: LogLevel::Info,
+      custom_id: None,
     }
+  }
+
+  /// Set a custom observation ID (for testing)
+  ///
+  /// This allows tests to create an observation with a known ID, enabling
+  /// navigation to the observation URL before the observation is uploaded.
+  pub fn with_id(&mut self, id: ObservationId) -> &mut Self {
+    self.custom_id = Some(id);
+    self
   }
 
   /// Add a label to the observation
@@ -119,6 +131,17 @@ impl ObservationBuilder {
   #[napi(constructor)]
   pub fn new_napi(name: String) -> Self {
     Self::new(name)
+  }
+
+  /// Set a custom observation ID (for testing)
+  ///
+  /// This allows tests to create an observation with a known ID, enabling
+  /// navigation to the observation URL before the observation is uploaded.
+  #[napi(js_name = "withId")]
+  pub fn with_id_napi(&mut self, id: String) -> napi::Result<&Self> {
+    let observation_id = ObservationId::parse(&id)
+      .map_err(|e| napi::Error::from_reason(format!("Invalid observation ID: {}", e)))?;
+    Ok(self.with_id(observation_id))
   }
 
   /// Add a label to the observation
@@ -202,7 +225,7 @@ impl ObservationBuilderWithPayload {
   /// to be uploaded. If sending fails, returns a stub that will fail on
   /// `wait_for_upload()`.
   pub fn build_with_execution(self, execution: &ExecutionHandle) -> SendObservation {
-    let observation_id = ObservationId::new();
+    let observation_id = self.fields.custom_id.unwrap_or_else(ObservationId::new);
 
     let handle = ObservationHandle {
       base_url: execution.base_url().to_string(),

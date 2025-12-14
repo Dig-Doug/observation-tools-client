@@ -1,6 +1,10 @@
 import { test, expect } from "../fixtures";
 import { TestId } from "../helpers/testIds";
-import { generateExecutionId, generateObservationId } from "observation-tools-client";
+import {
+  generateExecutionId,
+  generateObservationId,
+  ObservationBuilder,
+} from "observation-tools-client";
 
 test("Server homepage loads", async ({ page, server }) => {
   await page.goto(server.baseUrl);
@@ -39,14 +43,19 @@ test("Create execution with observation and verify data", async ({ page, server 
     ["version", "1.0.0"],
     ["user", "test-user"],
   ];
-  const observationId = exe.observe(
-    observationName,
-    JSON.stringify(observationPayload),
-    observationLabels,
-    sourceFile,
-    sourceLine,
-    observationMetadata,
-  );
+  let builder = new ObservationBuilder(observationName);
+  for (const label of observationLabels) {
+    builder = builder.label(label);
+  }
+  for (const [key, value] of observationMetadata) {
+    builder = builder.metadata(key, value);
+  }
+  const observationHandle = builder
+    .source(sourceFile, sourceLine)
+    .jsonPayload(JSON.stringify(observationPayload))
+    .send(exe)
+    .handle();
+  const observationId = observationHandle.id;
 
   await page.goto(server.baseUrl);
   await page.getByTestId(TestId.NavExecutionsList).click();
@@ -122,10 +131,9 @@ test("Observation list pagination with 396 observations", async ({ page, server 
   const exe = client.beginExecution("execution-with-many-observations");
   const totalObservations = 396;
   for (let i = 0; i < totalObservations; i++) {
-    exe.observe(
-      `observation-${i.toString().padStart(3, "0")}`,
-      JSON.stringify({ index: i, data: `test-data-${i}` }),
-    );
+    new ObservationBuilder(`observation-${i.toString().padStart(3, "0")}`)
+      .jsonPayload(JSON.stringify({ index: i, data: `test-data-${i}` }))
+      .send(exe);
   }
 
   await page.goto(exe.url);
@@ -184,10 +192,12 @@ test("Large payload is uploaded as blob", async ({ page, server }) => {
   // The payload must be valid JSON, so we create an object with a large string field
   const largeData = "x".repeat(70000);
   const largePayload = { data: largeData, size: largeData.length };
-  const observationId = exe.observe(observationName, JSON.stringify(largePayload), [
-    "test",
-    "large-payload",
-  ]);
+  const observationId = new ObservationBuilder(observationName)
+    .label("test")
+    .label("large-payload")
+    .jsonPayload(JSON.stringify(largePayload))
+    .send(exe)
+    .handle().id;
 
   // Wait a moment for the blob upload to complete
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -242,11 +252,11 @@ test("Navigate to observation page before observation exists, then create it", a
 
   const observationName = "pre-navigation-test-observation";
   const observationPayload = { message: "Created after navigation" };
-  const createdId = exe.observeWithId(
-    observationId,
-    observationName,
-    JSON.stringify(observationPayload),
-  );
+  const createdId = new ObservationBuilder(observationName)
+    .withId(observationId)
+    .jsonPayload(JSON.stringify(observationPayload))
+    .send(exe)
+    .handle().id;
   expect(createdId).toBe(observationId);
 
   await expect(page.getByTestId(TestId.ObservationId)).toContainText(observationId);
@@ -263,23 +273,21 @@ test("Observation side panel stays open during auto-refresh", async ({ page, ser
   // Create multiple observations
   const observation1Name = "first-observation";
   const observation1Payload = { message: "First observation data" };
-  const observation1Id = exe.observe(
-    observation1Name,
-    JSON.stringify(observation1Payload),
-    ["test"],
-    "test.ts",
-    10,
-  );
+  const observation1Id = new ObservationBuilder(observation1Name)
+    .label("test")
+    .source("test.ts", 10)
+    .jsonPayload(JSON.stringify(observation1Payload))
+    .send(exe)
+    .handle().id;
 
   const observation2Name = "second-observation";
   const observation2Payload = { message: "Second observation data" };
-  const observation2Id = exe.observe(
-    observation2Name,
-    JSON.stringify(observation2Payload),
-    ["test"],
-    "test.ts",
-    20,
-  );
+  const observation2Id = new ObservationBuilder(observation2Name)
+    .label("test")
+    .source("test.ts", 20)
+    .jsonPayload(JSON.stringify(observation2Payload))
+    .send(exe)
+    .handle().id;
 
   // Navigate to the execution detail page
   await page.goto(exe.url);

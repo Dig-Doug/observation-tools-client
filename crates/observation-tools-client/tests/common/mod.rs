@@ -1,5 +1,4 @@
 use observation_tools_client::server_client::types::GetObservation;
-use observation_tools_client::server_client::types::Observation;
 use observation_tools_client::Client;
 use observation_tools_client::ClientBuilder;
 use observation_tools_server::auth::generate_api_key;
