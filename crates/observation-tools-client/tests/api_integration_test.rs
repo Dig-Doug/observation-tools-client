@@ -6,9 +6,9 @@
 mod common;
 
 use anyhow::anyhow;
-use common::PayloadExt;
 use common::TestServer;
 use observation_tools_client::observe;
+use observation_tools_client::server_client::types::PayloadOrPointerResponse;
 use std::collections::HashSet;
 use tracing::debug;
 
@@ -78,8 +78,8 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
   assert!(obs.labels.contains(&"test/label2".to_string()));
   assert_eq!(obs.metadata.get("key1"), Some(&"value1".to_string()));
   assert_eq!(obs.metadata.get("key2"), Some(&"value2".to_string()));
-  assert_eq!(obs.payload.mime_type, "text/plain");
-  assert_eq!(obs.payload.data_as_str(), "test payload data");
+  assert_eq!(obs.mime_type, "text/plain");
+  assert_eq!(obs.payload.as_str(), Some("test payload data"));
 
   Ok(())
 }
@@ -118,12 +118,12 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   // threshold
   for obs in &observations {
     assert!(
-      !obs.payload.data.is_empty(),
+      !matches!(obs.payload, PayloadOrPointerResponse::Pointer { .. }),
       "Observation {} should have inline payload data (not stored as blob)",
       obs.name
     );
     assert_eq!(
-      obs.payload.size,
+      obs.payload_size,
       observation_tools_client::BLOB_THRESHOLD_BYTES as u64 - 1,
       "Observation {} payload size should be exactly 1 byte under threshold",
       obs.name
@@ -282,13 +282,13 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
 
   // The payload.data should be empty because it was uploaded as a blob
   assert!(
-    obs.payload.data.is_empty(),
-    "Large payload data should be empty in metadata (stored as blob)"
+    matches!(obs.payload, PayloadOrPointerResponse::Pointer { .. }),
+    "Large payload data should be stored as a blob pointer"
   );
 
   // But the size should still be recorded
   assert_eq!(
-    obs.payload.size, expected_size as u64,
+    obs.payload_size, expected_size as u64,
     "Payload size should be recorded correctly"
   );
 

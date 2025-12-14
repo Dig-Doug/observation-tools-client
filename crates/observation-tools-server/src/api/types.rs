@@ -1,7 +1,7 @@
 //! API request and response types
 
 use observation_tools_shared::models::Execution;
-use observation_tools_shared::models::Observation;
+use observation_tools_shared::Observation;
 use serde::Deserialize;
 use serde::Serialize;
 use utoipa::IntoParams;
@@ -76,23 +76,6 @@ pub struct ListObservationsQuery {
   /// Number of results to skip (for pagination)
   #[serde(skip_serializing_if = "Option::is_none")]
   pub offset: Option<usize>,
-}
-
-/// Response for listing observations
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct ListObservationsResponse {
-  /// List of observations
-  pub observations: Vec<Observation>,
-
-  /// Whether there are more results available
-  pub has_next_page: bool,
-}
-
-/// Response for getting a single observation
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct GetObservationResponse {
-  /// The observation
-  pub observation: Observation,
 }
 
 // ============================================================================

@@ -7,16 +7,17 @@ use crate::execution::ExecutionHandle;
 use crate::observation_handle::ObservationHandle;
 use crate::observation_handle::SendObservation;
 use crate::Error;
+use crate::ObservationWithPayload;
 use napi_derive::napi;
-use observation_tools_shared::models::IntoPayload;
-use observation_tools_shared::models::Observation;
-use observation_tools_shared::models::ObservationId;
-use observation_tools_shared::models::Payload;
-use observation_tools_shared::models::SourceInfo;
 use observation_tools_shared::IntoCustomPayload;
+use observation_tools_shared::IntoPayload;
 use observation_tools_shared::LogLevel;
 use observation_tools_shared::Markdown;
+use observation_tools_shared::Observation;
+use observation_tools_shared::ObservationId;
 use observation_tools_shared::ObservationType;
+use observation_tools_shared::Payload;
+use observation_tools_shared::SourceInfo;
 use std::collections::HashMap;
 
 /// Builder for creating observations (without payload set yet)
@@ -220,8 +221,9 @@ impl ObservationBuilderWithPayload {
       metadata: self.fields.metadata,
       source: self.fields.source,
       parent_span_id: self.fields.parent_span_id,
-      payload: self.payload,
       created_at: chrono::Utc::now(),
+      mime_type: self.payload.mime_type.clone(),
+      payload_size: self.payload.size,
     };
 
     let (uploaded_tx, uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
@@ -237,7 +239,10 @@ impl ObservationBuilderWithPayload {
     if let Err(e) = execution
       .uploader_tx
       .try_send(UploaderMessage::Observations {
-        observations: vec![observation],
+        observations: vec![ObservationWithPayload {
+          observation,
+          payload: self.payload,
+        }],
         handle: handle.clone(),
         uploaded_tx,
       })

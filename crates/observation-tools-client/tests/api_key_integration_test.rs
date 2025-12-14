@@ -1,7 +1,7 @@
 mod common;
 
-use common::PayloadExt;
 use common::TestServer;
+use observation_tools_client::server_client::types::PayloadOrPointerResponse;
 
 #[test_log::test(tokio::test)]
 async fn test_api_without_auth_when_no_key_configured() -> anyhow::Result<()> {
@@ -63,7 +63,7 @@ async fn test_api_with_valid_key() -> anyhow::Result<()> {
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "test-observation");
-  assert_eq!(obs.payload.data_as_str(), "test payload data");
+  assert_eq!(obs.payload.as_str(), Some("test payload data"));
 
   Ok(())
 }
@@ -207,7 +207,7 @@ async fn test_blob_upload_with_auth() -> anyhow::Result<()> {
   assert_eq!(obs.name, "large-observation");
 
   assert!(
-    obs.payload.data.is_empty(),
+    matches!(obs.payload, PayloadOrPointerResponse::Pointer { .. }),
     "Large payload data should be empty in metadata (stored as blob)"
   );
 

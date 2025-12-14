@@ -2,19 +2,22 @@
 
 pub mod error;
 pub mod models;
+mod observation;
+mod payload;
 
 pub use error::Error;
 pub use error::Result;
 pub use models::Execution;
 pub use models::ExecutionId;
-pub use models::IntoCustomPayload;
-pub use models::IntoPayload;
-pub use models::LogLevel;
-pub use models::Markdown;
-pub use models::Observation;
-pub use models::ObservationId;
-pub use models::ObservationType;
-pub use models::Payload;
+pub use observation::LogLevel;
+pub use observation::Observation;
+pub use observation::ObservationId;
+pub use observation::ObservationType;
+pub use observation::SourceInfo;
+pub use payload::IntoCustomPayload;
+pub use payload::IntoPayload;
+pub use payload::Markdown;
+pub use payload::Payload;
 
 /// Payload size threshold for blob storage (64KB)
 /// Payloads larger than this will be uploaded as separate blobs

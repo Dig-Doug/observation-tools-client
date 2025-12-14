@@ -5,7 +5,7 @@ use crate::error::Result;
 use crate::Error;
 use napi_derive::napi;
 use observation_tools_shared::models::ExecutionId;
-use observation_tools_shared::models::ObservationId;
+use observation_tools_shared::ObservationId;
 
 #[napi]
 pub struct SendObservation {

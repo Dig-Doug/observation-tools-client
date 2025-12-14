@@ -1,30 +1,9 @@
+use observation_tools_client::server_client::types::GetObservation;
 use observation_tools_client::server_client::types::Observation;
-use observation_tools_client::server_client::types::Payload;
 use observation_tools_client::Client;
 use observation_tools_client::ClientBuilder;
 use observation_tools_server::auth::generate_api_key;
 use observation_tools_server::auth::ApiKeySecret;
-
-/// Extension trait to add helper methods to the OpenAPI-generated Payload type
-pub trait PayloadExt {
-  /// Get data as UTF-8 string. Panics if not valid UTF-8.
-  fn data_as_str(&self) -> String;
-
-  /// Get data as bytes (converts from Vec<i32> to Vec<u8>)
-  fn data_as_bytes(&self) -> Vec<u8>;
-}
-
-impl PayloadExt for Payload {
-  fn data_as_str(&self) -> String {
-    String::from_utf8(self.data_as_bytes()).expect("payload data is not valid UTF-8")
-  }
-
-  fn data_as_bytes(&self) -> Vec<u8> {
-    // The OpenAPI-generated type uses Vec<i32> for the byte array, so we need to
-    // convert
-    self.data.iter().map(|&b| b as u8).collect()
-  }
-}
 
 /// Test server wrapper that provides convenient client creation
 pub struct TestServer {
@@ -143,7 +122,7 @@ impl TestServer {
   pub async fn list_observations(
     &self,
     execution_id: &impl ToString,
-  ) -> anyhow::Result<Vec<Observation>> {
+  ) -> anyhow::Result<Vec<GetObservation>> {
     let api_client = self.create_api_client()?;
     let response = api_client
       .list_observations()

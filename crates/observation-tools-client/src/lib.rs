@@ -31,6 +31,7 @@ pub use observation_tools_macros::observe;
 pub use observation_tools_shared::IntoCustomPayload;
 // Re-export from shared for convenience
 pub use observation_tools_shared::IntoPayload;
+use observation_tools_shared::Observation;
 pub use observation_tools_shared::Payload;
 
 /// Register a global execution shared across all threads
@@ -60,4 +61,10 @@ pub fn current_execution() -> Option<ExecutionHandle> {
 /// This clears the execution context that is shared across all threads.
 pub fn clear_global_execution() {
   context::clear_global_execution()
+}
+
+#[derive(Debug)]
+struct ObservationWithPayload {
+  observation: Observation,
+  payload: Payload,
 }

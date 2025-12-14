@@ -1,7 +1,3 @@
-//! Request/Response observer middleware for Axum
-//!
-//! Automatically observes incoming requests and outgoing responses.
-
 use crate::context;
 use crate::observation::ObservationBuilder;
 use axum::body::Body;
@@ -15,8 +11,8 @@ use http::header::CONTENT_TYPE;
 use http::header::COOKIE;
 use http::header::SET_COOKIE;
 use http_body_util::BodyExt;
-use observation_tools_shared::models::Payload;
 use observation_tools_shared::LogLevel;
+use observation_tools_shared::Payload;
 use serde_json::json;
 use std::future::Future;
 use std::pin::Pin;
@@ -25,7 +21,6 @@ use std::task::Poll;
 use tower::Layer;
 use tower::Service;
 
-/// Configuration for RequestObserverLayer
 #[derive(Clone)]
 pub struct RequestObserverConfig {
   /// Headers to exclude from observation
@@ -39,16 +34,12 @@ impl Default for RequestObserverConfig {
 }
 
 impl RequestObserverConfig {
-  /// Create a new configuration with defaults
-  ///
-  /// By default, excludes sensitive headers: authorization, cookie, set-cookie
   pub fn new() -> Self {
     Self {
       excluded_headers: vec![AUTHORIZATION, COOKIE, SET_COOKIE],
     }
   }
 
-  /// Add a header to exclude from observation
   pub fn exclude_header(mut self, header: HeaderName) -> Self {
     self.excluded_headers.push(header);
     self
@@ -125,52 +116,41 @@ where
         return inner.call(req).await;
       }
 
-      // Extract request parts and body
       let (parts, body) = req.into_parts();
-      let request_body_bytes = body
-        .collect()
-        .await
-        .map(|collected| collected.to_bytes())
-        .unwrap_or_else(|_| Bytes::new());
-
-      // Observe the request headers
       let mut request_headers_builder = ObservationBuilder::new("http/request/headers");
       request_headers_builder
         .label("http/request")
         .label("http/request/headers")
         .metadata("method", parts.method.to_string())
-        .metadata("uri", parts.uri.to_string());
-      let headers_payload = json!(filter_headers(&parts.headers, &config.excluded_headers));
-      let _ = request_headers_builder.payload(&headers_payload).build();
+        .metadata("uri", parts.uri.to_string())
+        .payload(&json!(filter_headers(
+          &parts.headers,
+          &config.excluded_headers
+        )))
+        .build();
 
-      // Observe the request body
+      let request_body_bytes = body
+        .collect()
+        .await
+        .map(|collected| collected.to_bytes())
+        .unwrap_or_else(|_| Bytes::new());
       if !request_body_bytes.is_empty() {
         let mut request_body_builder = ObservationBuilder::new("http/request/body");
         request_body_builder
           .label("http/request")
           .label("http/request/body")
           .metadata("method", parts.method.to_string())
-          .metadata("uri", parts.uri.to_string());
-        let body_payload = bytes_to_payload(&request_body_bytes, &parts.headers);
-        let _ = request_body_builder.payload(&body_payload).build();
+          .metadata("uri", parts.uri.to_string())
+          .payload(&bytes_to_payload(&request_body_bytes, &parts.headers))
+          .build();
       }
 
-      // Reconstruct request with buffered body
-      let req = Request::from_parts(parts, Body::from(request_body_bytes));
+      let response = inner
+        .call(Request::from_parts(parts, Body::from(request_body_bytes)))
+        .await?;
 
-      let response = inner.call(req).await?;
-
-      // Extract response parts and body
       let (parts, body) = response.into_parts();
-      let response_body_bytes = body
-        .collect()
-        .await
-        .map(|collected| collected.to_bytes())
-        .unwrap_or_else(|_| Bytes::new());
-
-      // Observe the response headers
-      let status = parts.status;
-      let log_level = match status.as_u16() {
+      let log_level = match parts.status.as_u16() {
         200..=299 => LogLevel::Info,
         400..=499 => LogLevel::Warning,
         500..=599 => LogLevel::Error,
@@ -180,31 +160,35 @@ where
       response_headers_builder
         .label("http/response")
         .label("http/response/headers")
-        .metadata("status", &status.as_u16().to_string())
-        .log_level(log_level);
-      let headers_payload = json!(filter_headers(&parts.headers, &config.excluded_headers));
-      let _ = response_headers_builder.payload(&headers_payload).build();
+        .metadata("status", &parts.status.as_u16().to_string())
+        .log_level(log_level)
+        .payload(&json!(filter_headers(
+          &parts.headers,
+          &config.excluded_headers
+        )))
+        .build();
 
-      // Observe the response body
+      let response_body_bytes = body
+        .collect()
+        .await
+        .map(|collected| collected.to_bytes())
+        .unwrap_or_else(|_| Bytes::new());
       if !response_body_bytes.is_empty() {
         let mut response_body_builder = ObservationBuilder::new("http/response/body");
         response_body_builder
           .label("http/response")
           .label("http/response/body")
-          .metadata("status", &status.as_u16().to_string())
-          .log_level(log_level);
-        let body_payload = bytes_to_payload(&response_body_bytes, &parts.headers);
-        let _ = response_body_builder.payload(&body_payload).build();
+          .metadata("status", &parts.status.as_u16().to_string())
+          .log_level(log_level)
+          .payload(&bytes_to_payload(&response_body_bytes, &parts.headers))
+          .build();
       }
 
-      // Reconstruct response with buffered body
       Ok(Response::from_parts(parts, Body::from(response_body_bytes)))
     })
   }
 }
 
-/// Filter headers, removing excluded ones and converting to a JSON-friendly
-/// format
 fn filter_headers(
   headers: &HeaderMap,
   excluded: &[HeaderName],
@@ -223,7 +207,6 @@ fn filter_headers(
   map
 }
 
-/// Convert body bytes to a Payload with the content-type from headers
 fn bytes_to_payload(bytes: &Bytes, headers: &HeaderMap) -> Payload {
   let content_type = headers
     .get(CONTENT_TYPE)

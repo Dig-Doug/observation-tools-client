@@ -1,6 +1,5 @@
 mod common;
 
-use common::PayloadExt;
 use common::TestServer;
 use observation_tools_client::observe;
 use observation_tools_client::server_client::types::LogLevel;
@@ -33,7 +32,7 @@ async fn test_logger() -> anyhow::Result<()> {
 
   assert_eq!(observations.len(), 2);
   let obs = &observations[0];
-  assert_eq!(obs.payload.data_as_str(), "info-log");
+  assert_eq!(obs.payload.as_str(), Some("info-log"));
   assert_eq!(obs.observation_type, ObservationType::LogEntry);
   assert_eq!(obs.log_level, LogLevel::Info);
 

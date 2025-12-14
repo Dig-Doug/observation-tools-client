@@ -8,6 +8,7 @@ mod list;
 pub use create::create_observations;
 pub use get::__path_get_observation;
 pub use get::get_observation;
+pub use get::GetObservation;
 pub use get_blob::__path_get_observation_blob;
 pub use get_blob::get_observation_blob;
 pub use list::__path_list_observations;

@@ -63,44 +63,17 @@ where
     let mut inner = self.inner.clone();
 
     Box::pin(async move {
-      let execution_name = format_execution_name(req.method(), req.uri());
-      let execution = match client.begin_execution(&execution_name) {
-        Ok(begin) => begin.into_handle(),
-        Err(e) => {
-          tracing::error!("Failed to create execution: {}", e);
-          // Continue without execution context - observations will fail
-          // but the request will still be processed
-          return inner.call(req).await;
-        }
-      };
+      let execution =
+        match client.begin_execution(&format!("{} {}", req.method(), req.uri().path())) {
+          Ok(begin) => begin.into_handle(),
+          Err(e) => {
+            tracing::error!("Failed to create execution: {}", e);
+            // Continue without execution context - observations will fail
+            // but the request will still be processed
+            return inner.call(req).await;
+          }
+        };
       with_execution(execution, inner.call(req)).await
     })
-  }
-}
-
-/// Format the execution name from method and URI
-fn format_execution_name(method: &Method, uri: &Uri) -> String {
-  format!("{} {}", method, uri.path())
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use http::Method;
-
-  #[test]
-  fn test_format_execution_name() {
-    let uri = "/api/users".parse::<Uri>().expect("valid uri");
-    assert_eq!(format_execution_name(&Method::GET, &uri), "GET /api/users");
-
-    let uri = "/".parse::<Uri>().expect("valid uri");
-    assert_eq!(format_execution_name(&Method::POST, &uri), "POST /");
-  }
-
-  #[test]
-  fn test_format_execution_name_with_query() {
-    // Query string should not be included in execution name
-    let uri = "/api/search?q=test".parse::<Uri>().expect("valid uri");
-    assert_eq!(format_execution_name(&Method::GET, &uri), "GET /api/search");
   }
 }

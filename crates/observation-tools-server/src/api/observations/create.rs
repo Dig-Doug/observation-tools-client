@@ -4,12 +4,14 @@ use crate::api::types::CreateObservationsResponse;
 use crate::api::AppError;
 use crate::storage::BlobStorage;
 use crate::storage::MetadataStorage;
+use crate::storage::ObservationWithPayloadPointer;
+use crate::storage::PayloadOrPointer;
 use axum::extract::Multipart;
 use axum::extract::Path;
 use axum::extract::State;
 use axum::Json;
 use observation_tools_shared::models::ExecutionId;
-use observation_tools_shared::models::Observation;
+use observation_tools_shared::Observation;
 use observation_tools_shared::BLOB_THRESHOLD_BYTES;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -70,26 +72,25 @@ pub async fn create_observations(
   );
 
   // Merge payload data into observations and handle blob storage
+  let mut observations_with_payloads = vec![];
   for obs in &mut observations {
     let obs_id_str = obs.id.to_string();
-    if let Some(payload_data) = payloads.remove(&obs_id_str) {
-      let payload_size = payload_data.len();
-
-      if payload_size >= BLOB_THRESHOLD_BYTES {
-        // Store large payloads in blob storage
-        tracing::debug!(
-          observation_id = %obs.id,
-          size = payload_size,
-          "Storing large payload in blob storage"
-        );
-        blobs.store_blob(obs.id, payload_data).await?;
-        // Keep payload.data empty, payload.size should already be set by client
-      } else {
-        // Store small payloads inline
-        obs.payload.data = payload_data.to_vec();
-        obs.payload.size = payload_size;
-      }
-    }
+    let Some(payload_data) = payloads.remove(&obs_id_str) else {
+      return Err(AppError::BadRequest(format!(
+        "Missing payload data for observation ID {}",
+        obs.id
+      )));
+    };
+    let payload = if payload_data.len() >= BLOB_THRESHOLD_BYTES {
+      blobs.store_blob(obs.id, payload_data).await?;
+      None
+    } else {
+      Some(payload_data.to_vec())
+    };
+    observations_with_payloads.push(ObservationWithPayloadPointer {
+      observation: obs.clone(),
+      payload_or_pointer: PayloadOrPointer { payload },
+    });
   }
 
   // Warn about any orphan payloads
@@ -100,8 +101,9 @@ pub async fn create_observations(
     );
   }
 
-  // Store observations
-  metadata.store_observations(&observations).await?;
+  metadata
+    .store_observations(observations_with_payloads)
+    .await?;
 
   tracing::info!(
     execution_id = %execution_id,

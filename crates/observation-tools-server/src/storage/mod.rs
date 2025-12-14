@@ -7,6 +7,8 @@ pub use blob::BlobStorage;
 pub use blob::LocalBlobStorage;
 pub use metadata::MetadataStorage;
 pub use metadata::SledStorage;
+use serde::Deserialize;
+use serde::Serialize;
 use thiserror::Error;
 
 /// Storage errors
@@ -36,3 +38,14 @@ pub enum StorageError {
 
 /// Result type for storage operations
 pub type StorageResult<T> = Result<T, StorageError>;
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ObservationWithPayloadPointer {
+  pub observation: observation_tools_shared::Observation,
+  pub payload_or_pointer: PayloadOrPointer,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PayloadOrPointer {
+  pub payload: Option<Vec<u8>>,
+}

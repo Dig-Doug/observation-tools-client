@@ -6,11 +6,11 @@ use crate::client::UploaderMessage;
 use crate::error::Result;
 use crate::observation_handle::ObservationHandle;
 use crate::Error;
+use crate::ObservationWithPayload;
 use async_channel;
 use napi_derive::napi;
 use observation_tools_shared::models::ExecutionId;
-use observation_tools_shared::models::Observation;
-use observation_tools_shared::models::ObservationId;
+use observation_tools_shared::ObservationId;
 
 pub struct BeginExecution {
   handle: ExecutionHandle,
@@ -90,13 +90,14 @@ impl ExecutionHandle {
   }
 
   /// Send an observation (internal use, doesn't wait for upload)
-  pub(crate) fn send_observation(&self, observation: Observation) -> Result<()> {
+  #[deprecated]
+  pub(crate) fn send_observation(&self, observation: ObservationWithPayload) -> Result<()> {
     // Create a watch channel but drop the receiver since we don't wait
     let (uploaded_tx, _uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
 
     let handle = ObservationHandle {
       base_url: self.base_url.clone(),
-      observation_id: observation.id,
+      observation_id: observation.observation.id,
       execution_id: self.execution_id,
     };
 
@@ -135,6 +136,7 @@ impl ExecutionHandle {
   /// * `source_line` - Optional source line number
   /// * `metadata` - Optional metadata as an array of [key, value] pairs
   #[napi(ts_return_type = "string")]
+  #[deprecated]
   pub fn observe(
     &self,
     name: String,
@@ -144,9 +146,9 @@ impl ExecutionHandle {
     source_line: Option<u32>,
     metadata: Option<Vec<Vec<String>>>,
   ) -> napi::Result<String> {
-    use observation_tools_shared::models::Observation;
-    use observation_tools_shared::models::Payload;
-    use observation_tools_shared::models::SourceInfo;
+    use observation_tools_shared::Observation;
+    use observation_tools_shared::Payload;
+    use observation_tools_shared::SourceInfo;
     use std::collections::HashMap;
 
     // Validate that it's valid JSON
@@ -193,12 +195,16 @@ impl ExecutionHandle {
       metadata: metadata_map,
       source,
       parent_span_id: None,
-      payload: payload_data,
+      mime_type: payload_data.mime_type.clone(),
+      payload_size: payload_data.size,
       created_at: chrono::Utc::now(),
     };
 
     self
-      .send_observation(observation)
+      .send_observation(ObservationWithPayload {
+        observation,
+        payload: payload_data,
+      })
       .map_err(|e| napi::Error::from_reason(format!("Failed to send observation: {}", e)))?;
 
     log::info!(
@@ -226,6 +232,7 @@ impl ExecutionHandle {
   /// * `source_line` - Optional source line number
   /// * `metadata` - Optional metadata as an array of [key, value] pairs
   #[napi(js_name = "observeWithId", ts_return_type = "string")]
+  #[deprecated]
   pub fn observe_with_id(
     &self,
     id: String,
@@ -236,9 +243,9 @@ impl ExecutionHandle {
     source_line: Option<u32>,
     metadata: Option<Vec<Vec<String>>>,
   ) -> napi::Result<String> {
-    use observation_tools_shared::models::Observation;
-    use observation_tools_shared::models::Payload;
-    use observation_tools_shared::models::SourceInfo;
+    use observation_tools_shared::Observation;
+    use observation_tools_shared::Payload;
+    use observation_tools_shared::SourceInfo;
     use std::collections::HashMap;
 
     let observation_id = ObservationId::parse(&id)
@@ -287,12 +294,16 @@ impl ExecutionHandle {
       metadata: metadata_map,
       source,
       parent_span_id: None,
-      payload: payload_data,
+      mime_type: payload_data.mime_type.clone(),
+      payload_size: payload_data.size,
       created_at: chrono::Utc::now(),
     };
 
     self
-      .send_observation(observation)
+      .send_observation(ObservationWithPayload {
+        observation,
+        payload: payload_data,
+      })
       .map_err(|e| napi::Error::from_reason(format!("Failed to send observation: {}", e)))?;
 
     log::info!(

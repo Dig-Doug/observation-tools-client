@@ -4,13 +4,13 @@ use crate::error::Result;
 use crate::execution::BeginExecution;
 use crate::execution::ExecutionHandle;
 use crate::observation_handle::ObservationHandle;
+use crate::ObservationWithPayload;
 use async_channel;
 use log::error;
 use log::info;
 use log::trace;
 use napi_derive::napi;
 use observation_tools_shared::models::Execution;
-use observation_tools_shared::models::Observation;
 // Re-export constants from shared crate for convenience
 pub use observation_tools_shared::BATCH_SIZE;
 pub use observation_tools_shared::BLOB_THRESHOLD_BYTES;
@@ -32,7 +32,7 @@ pub(crate) enum UploaderMessage {
     uploaded_tx: tokio::sync::watch::Sender<ExecutionUploadResult>,
   },
   Observations {
-    observations: Vec<Observation>,
+    observations: Vec<ObservationWithPayload>,
     handle: ObservationHandle,
     uploaded_tx: tokio::sync::watch::Sender<ObservationUploadResult>,
   },
@@ -96,7 +96,7 @@ pub fn generate_execution_id() -> String {
 #[napi(js_name = "generateObservationId")]
 #[allow(unused)]
 pub fn generate_observation_id() -> String {
-  observation_tools_shared::models::ObservationId::new().to_string()
+  observation_tools_shared::ObservationId::new().to_string()
 }
 
 #[napi]
@@ -291,7 +291,7 @@ async fn uploader_task(
     tokio::sync::watch::Sender<ObservationUploadResult>,
   );
 
-  let flush_observations = async |buffer: &mut Vec<Observation>,
+  let flush_observations = async |buffer: &mut Vec<ObservationWithPayload>,
                                   senders: &mut Vec<ObservationSender>| {
     if buffer.is_empty() {
       return;
@@ -314,7 +314,7 @@ async fn uploader_task(
       }
     }
   };
-  let mut observation_buffer: Vec<Observation> = Vec::new();
+  let mut observation_buffer: Vec<ObservationWithPayload> = Vec::new();
   let mut sender_buffer: Vec<ObservationSender> = Vec::new();
   loop {
     let msg = rx.recv().await.ok();
@@ -383,7 +383,7 @@ async fn upload_execution(
 
 async fn upload_observations(
   client: &crate::server_client::Client,
-  observations: Vec<Observation>,
+  observations: Vec<ObservationWithPayload>,
 ) -> Result<()> {
   if observations.is_empty() {
     return Ok(());
@@ -392,7 +392,10 @@ async fn upload_observations(
   // Group by execution_id
   let mut by_execution: std::collections::HashMap<_, Vec<_>> = std::collections::HashMap::new();
   for obs in observations {
-    by_execution.entry(obs.execution_id).or_default().push(obs);
+    by_execution
+      .entry(obs.observation.execution_id)
+      .or_default()
+      .push(obs);
   }
 
   // Upload each batch via multipart form

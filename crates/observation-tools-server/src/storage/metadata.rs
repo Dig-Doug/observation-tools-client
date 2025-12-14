@@ -1,10 +1,10 @@
 //! Metadata storage for executions and observations
 
+use super::ObservationWithPayloadPointer;
 use super::StorageError;
 use super::StorageResult;
 use observation_tools_shared::Execution;
 use observation_tools_shared::ExecutionId;
-use observation_tools_shared::Observation;
 use observation_tools_shared::ObservationId;
 use observation_tools_shared::ObservationType;
 use std::path::Path;
@@ -30,10 +30,16 @@ pub trait MetadataStorage: Send + Sync {
   async fn count_executions(&self) -> StorageResult<usize>;
 
   /// Store multiple observations in a batch
-  async fn store_observations(&self, observations: &[Observation]) -> StorageResult<()>;
+  async fn store_observations(
+    &self,
+    observations: Vec<ObservationWithPayloadPointer>,
+  ) -> StorageResult<()>;
 
   /// Get observations by their IDs
-  async fn get_observations(&self, ids: &[ObservationId]) -> StorageResult<Vec<Observation>>;
+  async fn get_observations(
+    &self,
+    ids: &[ObservationId],
+  ) -> StorageResult<Vec<ObservationWithPayloadPointer>>;
 
   /// List observations for an execution (with optional pagination and type
   /// filter)
@@ -43,7 +49,7 @@ pub trait MetadataStorage: Send + Sync {
     limit: Option<usize>,
     offset: Option<usize>,
     observation_type: Option<ObservationType>,
-  ) -> StorageResult<Vec<Observation>>;
+  ) -> StorageResult<Vec<ObservationWithPayloadPointer>>;
 
   /// Count total number of observations for an execution (with optional type
   /// filter)
@@ -129,22 +135,34 @@ impl MetadataStorage for SledStorage {
     Ok(tree.len())
   }
 
-  async fn store_observations(&self, observations: &[Observation]) -> StorageResult<()> {
+  async fn store_observations(
+    &self,
+    observations: Vec<ObservationWithPayloadPointer>,
+  ) -> StorageResult<()> {
     let obs_tree = self.observations_tree()?;
     let exec_obs_tree = self.execution_observations_tree()?;
-    for observation in observations {
-      let key = observation.id.to_string();
-      let value = serde_json::to_vec(observation)?;
+    for observation in observations.into_iter() {
+      let key = observation.observation.id.to_string();
+      let value = serde_json::to_vec(&observation)?;
       obs_tree.insert(key.as_bytes(), value)?;
       // Update the execution->observations index
-      let exec_key = format!("{}:{}", observation.execution_id, observation.id);
+      let exec_key = format!(
+        "{}:{}",
+        observation.observation.execution_id, observation.observation.id
+      );
       trace!("Storing execution-observation index: {}", exec_key);
-      exec_obs_tree.insert(exec_key.as_bytes(), observation.id.to_string().as_bytes())?;
+      exec_obs_tree.insert(
+        exec_key.as_bytes(),
+        observation.observation.id.to_string().as_bytes(),
+      )?;
     }
     Ok(())
   }
 
-  async fn get_observations(&self, ids: &[ObservationId]) -> StorageResult<Vec<Observation>> {
+  async fn get_observations(
+    &self,
+    ids: &[ObservationId],
+  ) -> StorageResult<Vec<ObservationWithPayloadPointer>> {
     let tree = self.observations_tree()?;
     let mut observations = Vec::with_capacity(ids.len());
     for id in ids {
@@ -163,11 +181,11 @@ impl MetadataStorage for SledStorage {
     limit: Option<usize>,
     offset: Option<usize>,
     observation_type: Option<ObservationType>,
-  ) -> StorageResult<Vec<Observation>> {
+  ) -> StorageResult<Vec<ObservationWithPayloadPointer>> {
     let obs_tree = self.observations_tree()?;
     let exec_obs_tree = self.execution_observations_tree()?;
     let prefix = format!("{}:", execution_id);
-    let observations: Vec<Observation> = exec_obs_tree
+    let observations: Vec<ObservationWithPayloadPointer> = exec_obs_tree
       .scan_prefix(prefix.as_bytes())
       .values()
       .filter_map(|result| {
@@ -176,10 +194,10 @@ impl MetadataStorage for SledStorage {
             .get(&obs_id)
             .ok()
             .flatten()
-            .and_then(|v| serde_json::from_slice::<Observation>(&v).ok())
+            .and_then(|v| serde_json::from_slice::<ObservationWithPayloadPointer>(&v).ok())
         })
       })
-      .filter(|obs| observation_type.map_or(true, |t| obs.observation_type == t))
+      .filter(|obs| observation_type.map_or(true, |t| obs.observation.observation_type == t))
       .skip(offset.unwrap_or(0))
       .take(limit.unwrap_or(100))
       .collect();
@@ -203,10 +221,10 @@ impl MetadataStorage for SledStorage {
             .get(&obs_id)
             .ok()
             .flatten()
-            .and_then(|v| serde_json::from_slice::<Observation>(&v).ok())
+            .and_then(|v| serde_json::from_slice::<ObservationWithPayloadPointer>(&v).ok())
         })
       })
-      .filter(|obs| observation_type.map_or(true, |t| obs.observation_type == t))
+      .filter(|obs| observation_type.map_or(true, |t| obs.observation.observation_type == t))
       .count();
     Ok(count)
   }
