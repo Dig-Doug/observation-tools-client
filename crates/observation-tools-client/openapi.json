@@ -18,26 +18,6 @@
         "description": "Response after creating an execution",
         "type": "object"
       },
-      "CreateObservationsRequest": {
-        "description": "Request to create observations (can be a batch)",
-        "properties": {
-          "observations": {
-            "description": "List of observations to create",
-            "items": {
-              "$ref": "#/components/schemas/Observation"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "observations"
-        ],
-        "type": "object"
-      },
-      "CreateObservationsResponse": {
-        "description": "Response after creating observations",
-        "type": "object"
-      },
       "Execution": {
         "description": "An execution represents the root scope for data collection.\nAll observations are associated with one execution.",
         "properties": {
@@ -96,12 +76,28 @@
         ],
         "type": "object"
       },
+      "GetObservation": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Observation"
+          },
+          {
+            "properties": {
+              "payload": {
+                "$ref": "#/components/schemas/PayloadOrPointerResponse"
+              }
+            },
+            "required": [
+              "payload"
+            ],
+            "type": "object"
+          }
+        ]
+      },
       "GetObservationResponse": {
-        "description": "Response for getting a single observation",
         "properties": {
           "observation": {
-            "$ref": "#/components/schemas/Observation",
-            "description": "The observation"
+            "$ref": "#/components/schemas/GetObservation"
           }
         },
         "required": [
@@ -140,7 +136,7 @@
           "observations": {
             "description": "List of observations",
             "items": {
-              "$ref": "#/components/schemas/Observation"
+              "$ref": "#/components/schemas/GetObservation"
             },
             "type": "array"
           }
@@ -199,6 +195,10 @@
             },
             "type": "object"
           },
+          "mime_type": {
+            "description": "MIME type of the payload (e.g., \"text/plain\", \"application/json\")",
+            "type": "string"
+          },
           "name": {
             "description": "User-defined name for this observation",
             "type": "string"
@@ -212,9 +212,10 @@
             "nullable": true,
             "type": "string"
           },
-          "payload": {
-            "$ref": "#/components/schemas/Payload",
-            "description": "The observation payload"
+          "payload_size": {
+            "description": "Size of the payload in bytes",
+            "minimum": 0,
+            "type": "integer"
           },
           "source": {
             "$ref": "#/components/schemas/SourceInfo",
@@ -228,8 +229,9 @@
           "name",
           "observation_type",
           "log_level",
-          "payload",
-          "created_at"
+          "created_at",
+          "mime_type",
+          "payload_size"
         ],
         "type": "object"
       },
@@ -246,29 +248,83 @@
         ],
         "type": "string"
       },
-      "Payload": {
-        "description": "Payload data for an observation",
-        "properties": {
-          "data": {
-            "description": "The actual payload data",
-            "type": "string"
+      "PayloadOrPointerResponse": {
+        "oneOf": [
+          {
+            "properties": {
+              "Text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "Text"
+            ],
+            "type": "object"
           },
-          "mime_type": {
-            "description": "MIME type of the payload (e.g., \"text/plain\", \"application/json\")",
-            "type": "string"
+          {
+            "properties": {
+              "Json": {}
+            },
+            "required": [
+              "Json"
+            ],
+            "type": "object"
           },
-          "size": {
-            "description": "Size of the payload in bytes",
-            "minimum": 0,
-            "type": "integer"
+          {
+            "properties": {
+              "Markdown": {
+                "properties": {
+                  "raw": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "raw"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "Markdown"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "InlineBinary": {
+                "items": {
+                  "format": "int32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "InlineBinary"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "Pointer": {
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "Pointer"
+            ],
+            "type": "object"
           }
-        },
-        "required": [
-          "data",
-          "mime_type",
-          "size"
-        ],
-        "type": "object"
+        ]
       },
       "SourceInfo": {
         "description": "Source location information for an observation",
@@ -445,49 +501,6 @@
           }
         },
         "summary": "List observations for an execution",
-        "tags": [
-          "observations"
-        ]
-      },
-      "post": {
-        "operationId": "create_observations",
-        "parameters": [
-          {
-            "description": "Execution ID",
-            "in": "path",
-            "name": "execution_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateObservationsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateObservationsResponse"
-                }
-              }
-            },
-            "description": "Observations created successfully"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        },
-        "summary": "Create observations (batch)",
         "tags": [
           "observations"
         ]

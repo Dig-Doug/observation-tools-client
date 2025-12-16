@@ -52,11 +52,11 @@
     <h2 class="text-xl font-bold my-4">payload</h2>
     <p class="mb-2">
       <span class="text-base-content/60 text-sm">type:</span>
-      {{ observation.payload.mime_type }}
+      {{ observation.mime_type }}
     </p>
     <p class="mb-2">
       <span class="text-base-content/60 text-sm">size:</span>
-      {{ observation.payload.size }} bytes
+      {{ observation.payload_size }} bytes
     </p>
     <p class="mb-2">
       <a
@@ -69,30 +69,32 @@
     </p>
   </div>
 
-  {% if observation.payload.size > display_threshold %}
+  {% if observation.payload_size > display_threshold %}
     <div class="flex-grow">
       <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
     </div>
-  {% elif observation.payload.mime_type == "text/markdown" %}
+  {% elif observation.payload.Markdown is defined %}
     <div data-testid="ObservationPayload" class="markdown-body">
-      {{ observation.payload.data|render_markdown|safe }}
+      {{ observation.payload.Markdown.raw|render_markdown|safe }}
     </div>
-  {% elif observation.payload.mime_type == "application/json" %}
-    {% set json_result = observation.payload.data | parse_json %}
-    {% if json_result.ok %}
-      <div data-testid="ObservationPayload" class="json-body">
-        {{ render_json(json_result.value) }}
-      </div>
-    {% else %}
-      <pre data-testid="ObservationPayload">
-        {{ observation.payload.data|unescape }}
-      </pre
+  {% elif observation.payload.Json is defined %}
+    <div data-testid="ObservationPayload" class="json-body">
+      {{ render_json(observation.payload.Json) }}
+    </div>
+  {% elif observation.payload.Text is defined %}
+    <pre data-testid="ObservationPayload">{{ observation.payload.Text|unescape }}</pre>
+  {% elif observation.payload.Pointer is defined %}
+    <div data-testid="ObservationPayload">
+      <p class="mb-2">Payload stored externally.</p>
+      <a href="{{ observation.payload.Pointer.url }}" target="_blank" class="link"
+        >Load external content</a
       >
-    {% endif %}
-  {% else %}
+    </div>
+  {% elif observation.payload.InlineBinary is defined %}
     <pre data-testid="ObservationPayload">
-      {{ observation.payload.data|unescape }}
-    </pre
+[Binary content - {{ observation.payload_size }} bytes]</pre
     >
+  {% else %}
+    <pre data-testid="ObservationPayload">[Unknown payload type]</pre>
   {% endif %}
 </div>

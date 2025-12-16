@@ -55,7 +55,8 @@ pub fn parse_json(value: String) -> Value {
       map.insert("value".to_string(), Value::from_serialize(&json));
       Value::from_iter(map)
     }
-    Err(_) => {
+    Err(e) => {
+      error!("Failed to parse JSON in parse_json filter: {}", e);
       let mut map = std::collections::BTreeMap::new();
       map.insert("ok".to_string(), Value::from(false));
       Value::from_iter(map)
@@ -77,13 +78,8 @@ pub fn init_templates() -> Arc<AutoReloader> {
         .replace("\\\\", "\\")
     });
 
-    // Add items filter to convert maps to iterable key-value pairs
     env.add_filter("items", items_filter);
-
-    // Add render_markdown filter to convert markdown to sanitized HTML
     env.add_filter("render_markdown", render_markdown);
-
-    // Add parse_json filter to parse JSON strings for template rendering
     env.add_filter("parse_json", parse_json);
 
     if cfg!(debug_assertions) {

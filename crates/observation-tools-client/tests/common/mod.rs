@@ -1,9 +1,8 @@
+use observation_tools_client::server_client::types::GetObservation;
 use observation_tools_client::Client;
 use observation_tools_client::ClientBuilder;
 use observation_tools_server::auth::generate_api_key;
 use observation_tools_server::auth::ApiKeySecret;
-use std::time::Duration;
-use tokio::time::sleep;
 
 /// Test server wrapper that provides convenient client creation
 pub struct TestServer {
@@ -57,8 +56,6 @@ impl TestServer {
       let _data_dir = data_dir;
       server.run(listener).await.expect("Server failed to run");
     });
-
-    sleep(Duration::from_millis(300)).await;
 
     Self {
       base_url: format!("http://{}", addr),
@@ -117,5 +114,20 @@ impl TestServer {
       &self.base_url,
       Some(api_key.to_string()),
     )
+  }
+
+  /// List all observations for an execution
+  #[allow(unused)]
+  pub async fn list_observations(
+    &self,
+    execution_id: &impl ToString,
+  ) -> anyhow::Result<Vec<GetObservation>> {
+    let api_client = self.create_api_client()?;
+    let response = api_client
+      .list_observations()
+      .execution_id(&execution_id.to_string())
+      .send()
+      .await?;
+    Ok(response.observations.clone())
   }
 }

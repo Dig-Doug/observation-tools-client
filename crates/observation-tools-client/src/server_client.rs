@@ -1,9 +1,25 @@
-use std::env;
-use std::error::Error as StdError;
-use std::fmt::Debug;
+use crate::server_client::types::PayloadOrPointerResponse;
+use crate::ObservationWithPayload;
+use reqwest::multipart::Part;
 use std::time::Duration;
 
 include!(concat!(env!("OUT_DIR"), "/observation_tools_openapi.rs"));
+
+impl PayloadOrPointerResponse {
+  pub fn as_str(&self) -> Option<&str> {
+    match self {
+      PayloadOrPointerResponse::Text(t) => Some(t.as_str()),
+      _ => None,
+    }
+  }
+
+  pub fn as_json(&self) -> Option<&serde_json::Value> {
+    match self {
+      PayloadOrPointerResponse::Json(j) => Some(j),
+      _ => None,
+    }
+  }
+}
 
 pub fn create_client(base_url: &str, api_key: Option<String>) -> anyhow::Result<Client> {
   Ok(Client::new_with_client(
@@ -37,118 +53,48 @@ pub async fn pre_hook_async(
 
 // Extension methods for Client
 impl Client {
-  /// Upload a blob for an observation
-  ///
-  /// This endpoint is not part of the generated OpenAPI client because
-  /// progenitor doesn't support binary request bodies.
-  pub async fn upload_observation_blob(
+  pub(crate) async fn create_observations_multipart(
     &self,
     execution_id: &str,
-    observation_id: &str,
-    data: Vec<u8>,
+    observations: Vec<ObservationWithPayload>,
   ) -> anyhow::Result<()> {
-    let url = format!(
-      "{}/api/exe/{}/obs/{}/blob",
-      self.baseurl, execution_id, observation_id
-    );
-    let data_size = data.len();
+    let url = format!("{}/api/exe/{}/obs", self.baseurl, execution_id);
+    let observation_count = observations.len();
 
     log::trace!(
-      "Uploading blob: url={}, observation_id={}, size={} bytes",
+      "Creating observations via multipart: url={}, count={}",
       url,
-      observation_id,
-      data_size
+      observation_count
     );
 
-    let mut request_builder = self
-      .client
-      .post(&url)
-      .header("Content-Type", "application/octet-stream");
+    // Build multipart form
+    let mut form = reqwest::multipart::Form::new();
 
-    // Add Authorization header if API key is configured
+    let (observations, payloads): (Vec<_>, Vec<_>) = observations
+      .into_iter()
+      .map(|obs| (obs.observation, obs.payload))
+      .unzip();
+    let payloads = observations
+      .iter()
+      .zip(payloads.into_iter())
+      .map(|(obs, payload)| (obs.id.to_string(), payload.data))
+      .collect::<Vec<_>>();
+
+    let observations_json = serde_json::to_vec(&observations)?;
+    let observations_part = Part::bytes(observations_json).mime_str("application/json")?;
+    form = form.part("observations", observations_part);
+    for (obs_id, payload_data) in payloads {
+      let part = Part::bytes(payload_data);
+      form = form.part(obs_id, part);
+    }
+
+    let mut request_builder = self.client.post(&url).multipart(form);
     if let Some(ref api_key) = self.inner.api_key {
-      request_builder = request_builder.header("Authorization", format!("Bearer {}", api_key));
+      request_builder = request_builder.bearer_auth(api_key);
     }
 
-    let response = match request_builder.body(data).send().await {
-      Ok(resp) => resp,
-      Err(e) => {
-        // Try to determine the specific error type for better diagnostics
-        let error_type = if e.is_timeout() {
-          "timeout"
-        } else if e.is_connect() {
-          "connection failed"
-        } else if e.is_request() {
-          "request error"
-        } else if e.is_body() {
-          "body error"
-        } else if e.is_decode() {
-          "decode error"
-        } else {
-          "unknown error"
-        };
-
-        let mut error_details = format!("{}", e);
-
-        // Add source chain for more context
-        if let Some(source) = e.source() {
-          error_details.push_str(&format!(" | caused by: {}", source));
-          let mut current_source = source;
-          while let Some(next_source) = current_source.source() {
-            error_details.push_str(&format!(" | {}", next_source));
-            current_source = next_source;
-          }
-        }
-
-        log::error!(
-          "Failed to send blob upload request: url={}, observation_id={}, size={} bytes, error_type={}, error={}",
-          url,
-          observation_id,
-          data_size,
-          error_type,
-          error_details
-        );
-
-        return Err(anyhow::anyhow!(
-          "Failed to send blob upload request to {} ({}): {} (observation_id={}, size={} bytes)",
-          url,
-          error_type,
-          error_details,
-          observation_id,
-          data_size
-        ));
-      }
-    };
-
-    let status = response.status();
-    if !status.is_success() {
-      let error_text = response
-        .text()
-        .await
-        .unwrap_or_else(|e| format!("(failed to read error response body: {})", e));
-      log::error!(
-        "Blob upload failed with HTTP error: url={}, observation_id={}, status={}, body={}",
-        url,
-        observation_id,
-        status,
-        error_text
-      );
-      return Err(anyhow::anyhow!(
-        "Blob upload failed: HTTP {} from {} - {} (observation_id={}, size={} bytes)",
-        status,
-        url,
-        error_text,
-        observation_id,
-        data_size
-      ));
-    }
-
-    log::trace!(
-      "Blob uploaded successfully: observation_id={}, size={} bytes",
-      observation_id,
-      data_size
-    );
-
+    let response = request_builder.send().await?;
+    let _response = response.error_for_status()?;
     Ok(())
   }
 }

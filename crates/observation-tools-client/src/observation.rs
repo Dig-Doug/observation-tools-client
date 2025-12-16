@@ -7,16 +7,17 @@ use crate::execution::ExecutionHandle;
 use crate::observation_handle::ObservationHandle;
 use crate::observation_handle::SendObservation;
 use crate::Error;
+use crate::ObservationWithPayload;
 use napi_derive::napi;
-use observation_tools_shared::models::IntoPayload;
-use observation_tools_shared::models::Observation;
-use observation_tools_shared::models::ObservationId;
-use observation_tools_shared::models::Payload;
-use observation_tools_shared::models::SourceInfo;
-use observation_tools_shared::IntoCustomPayload;
 use observation_tools_shared::LogLevel;
 use observation_tools_shared::Markdown;
+use observation_tools_shared::Observation;
+use observation_tools_shared::ObservationId;
 use observation_tools_shared::ObservationType;
+use observation_tools_shared::Payload;
+use observation_tools_shared::SourceInfo;
+use serde::Serialize;
+use std::any::TypeId;
 use std::collections::HashMap;
 
 /// Builder for creating observations (without payload set yet)
@@ -33,6 +34,8 @@ pub struct ObservationBuilder {
   parent_span_id: Option<String>,
   observation_type: ObservationType,
   log_level: LogLevel,
+  /// Custom observation ID (for testing)
+  custom_id: Option<ObservationId>,
 }
 
 impl ObservationBuilder {
@@ -46,7 +49,17 @@ impl ObservationBuilder {
       parent_span_id: None,
       observation_type: ObservationType::Payload,
       log_level: LogLevel::Info,
+      custom_id: None,
     }
+  }
+
+  /// Set a custom observation ID (for testing)
+  ///
+  /// This allows tests to create an observation with a known ID, enabling
+  /// navigation to the observation URL before the observation is uploaded.
+  pub fn with_id(&mut self, id: ObservationId) -> &mut Self {
+    self.custom_id = Some(id);
+    self
   }
 
   /// Add a label to the observation
@@ -96,18 +109,20 @@ impl ObservationBuilder {
   }
 
   /// Set the payload and return a builder that can be built
-  pub fn payload<T: ?Sized + IntoPayload>(&self, value: &T) -> ObservationBuilderWithPayload {
+  pub fn serde<T: ?Sized + Serialize + 'static>(&self, value: &T) -> ObservationBuilderWithPayload {
+    if TypeId::of::<T>() == TypeId::of::<Payload>() {
+      panic!("Use payload() method to set Payload directly");
+    }
     ObservationBuilderWithPayload {
       fields: self.clone(),
-      payload: value.to_payload(),
+      payload: Payload::json(serde_json::to_string(value).unwrap_or_default()),
     }
   }
 
-  /// Set a custom payload and return a builder that can be built
-  pub fn custom_payload<T: IntoCustomPayload>(&self, value: &T) -> ObservationBuilderWithPayload {
+  pub fn payload<T: Into<Payload>>(&self, value: T) -> ObservationBuilderWithPayload {
     ObservationBuilderWithPayload {
       fields: self.clone(),
-      payload: value.to_payload(),
+      payload: value.into(),
     }
   }
 }
@@ -118,6 +133,17 @@ impl ObservationBuilder {
   #[napi(constructor)]
   pub fn new_napi(name: String) -> Self {
     Self::new(name)
+  }
+
+  /// Set a custom observation ID (for testing)
+  ///
+  /// This allows tests to create an observation with a known ID, enabling
+  /// navigation to the observation URL before the observation is uploaded.
+  #[napi(js_name = "withId")]
+  pub fn with_id_napi(&mut self, id: String) -> napi::Result<&Self> {
+    let observation_id = ObservationId::parse(&id)
+      .map_err(|e| napi::Error::from_reason(format!("Invalid observation ID: {}", e)))?;
+    Ok(self.with_id(observation_id))
   }
 
   /// Add a label to the observation
@@ -144,22 +170,21 @@ impl ObservationBuilder {
     &self,
     json_string: String,
   ) -> napi::Result<ObservationBuilderWithPayload> {
-    serde_json::from_str::<serde_json::Value>(&json_string)
+    let value = serde_json::from_str::<serde_json::Value>(&json_string)
       .map_err(|e| napi::Error::from_reason(format!("Invalid JSON payload: {}", e)))?;
-
-    Ok(self.payload(&Payload::json(json_string)))
+    Ok(self.serde(&value))
   }
 
   /// Set the payload with custom data and MIME type
   #[napi(js_name = "rawPayload")]
   pub fn raw_payload_napi(&self, data: String, mime_type: String) -> ObservationBuilderWithPayload {
-    self.payload(&Payload::with_mime_type(data, mime_type))
+    self.serde(&Payload::with_mime_type(data, mime_type))
   }
 
   /// Set the payload as markdown content
   #[napi(js_name = "markdownPayload")]
   pub fn markdown_payload_napi(&self, content: String) -> ObservationBuilderWithPayload {
-    self.custom_payload(&Markdown::from(content))
+    self.payload(Markdown::from(content))
   }
 }
 
@@ -202,7 +227,7 @@ impl ObservationBuilderWithPayload {
   /// to be uploaded. If sending fails, returns a stub that will fail on
   /// `wait_for_upload()`.
   pub fn build_with_execution(self, execution: &ExecutionHandle) -> SendObservation {
-    let observation_id = ObservationId::new();
+    let observation_id = self.fields.custom_id.unwrap_or_else(ObservationId::new);
 
     let handle = ObservationHandle {
       base_url: execution.base_url().to_string(),
@@ -220,8 +245,9 @@ impl ObservationBuilderWithPayload {
       metadata: self.fields.metadata,
       source: self.fields.source,
       parent_span_id: self.fields.parent_span_id,
-      payload: self.payload,
       created_at: chrono::Utc::now(),
+      mime_type: self.payload.mime_type.clone(),
+      payload_size: self.payload.size,
     };
 
     let (uploaded_tx, uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
@@ -237,7 +263,10 @@ impl ObservationBuilderWithPayload {
     if let Err(e) = execution
       .uploader_tx
       .try_send(UploaderMessage::Observations {
-        observations: vec![observation],
+        observations: vec![ObservationWithPayload {
+          observation,
+          payload: self.payload,
+        }],
         handle: handle.clone(),
         uploaded_tx,
       })

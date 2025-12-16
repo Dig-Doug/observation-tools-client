@@ -2,19 +2,20 @@
 
 pub mod error;
 pub mod models;
+mod observation;
+mod payload;
 
 pub use error::Error;
 pub use error::Result;
 pub use models::Execution;
 pub use models::ExecutionId;
-pub use models::IntoCustomPayload;
-pub use models::IntoPayload;
-pub use models::LogLevel;
-pub use models::Markdown;
-pub use models::Observation;
-pub use models::ObservationId;
-pub use models::ObservationType;
-pub use models::Payload;
+pub use observation::LogLevel;
+pub use observation::Observation;
+pub use observation::ObservationId;
+pub use observation::ObservationType;
+pub use observation::SourceInfo;
+pub use payload::Markdown;
+pub use payload::Payload;
 
 /// Payload size threshold for blob storage (64KB)
 /// Payloads larger than this will be uploaded as separate blobs
@@ -33,8 +34,15 @@ pub const BATCH_SIZE: usize = 100;
 /// - IDs, timestamps, JSON structure: ~512 bytes
 pub const MAX_OBSERVATION_METADATA_OVERHEAD: usize = 4096; // 4KB
 
+/// JSON expansion factor for byte array serialization
+/// Vec<u8> serializes as [0,1,2,...] where each byte becomes ~4 characters
+pub const BYTE_ARRAY_JSON_EXPANSION: usize = 4;
+
 /// Maximum size for a single observation (payload + metadata)
-pub const MAX_OBSERVATION_SIZE: usize = BLOB_THRESHOLD_BYTES + MAX_OBSERVATION_METADATA_OVERHEAD;
+/// Note: payload.data is Vec<u8> which expands ~4x when serialized as JSON
+/// array
+pub const MAX_OBSERVATION_SIZE: usize =
+  (BLOB_THRESHOLD_BYTES * BYTE_ARRAY_JSON_EXPANSION) + MAX_OBSERVATION_METADATA_OVERHEAD;
 
 /// Maximum size for a batch of observations
 /// This is used to set the HTTP body limit for observation creation endpoints

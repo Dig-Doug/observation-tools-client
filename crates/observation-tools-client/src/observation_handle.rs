@@ -5,7 +5,7 @@ use crate::error::Result;
 use crate::Error;
 use napi_derive::napi;
 use observation_tools_shared::models::ExecutionId;
-use observation_tools_shared::models::ObservationId;
+use observation_tools_shared::ObservationId;
 
 #[napi]
 pub struct SendObservation {
@@ -111,6 +111,11 @@ impl ObservationHandle {
       "{}/exe/{}/obs/{}",
       self.base_url, self.execution_id, self.observation_id
     )
+  }
+
+  #[napi(getter, js_name = "id")]
+  pub fn id_napi(&self) -> String {
+    self.observation_id.to_string()
   }
 }
 

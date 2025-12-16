@@ -1,6 +1,7 @@
 mod common;
 
 use common::TestServer;
+use observation_tools_client::server_client::types::PayloadOrPointerResponse;
 
 #[test_log::test(tokio::test)]
 async fn test_api_without_auth_when_no_key_configured() -> anyhow::Result<()> {
@@ -57,17 +58,12 @@ async fn test_api_with_valid_key() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client_with_api_key(&api_key)?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "test-observation");
-  assert_eq!(obs.payload.data, "test payload data");
+  assert_eq!(obs.payload.as_str(), Some("test payload data"));
 
   Ok(())
 }
@@ -204,19 +200,14 @@ async fn test_blob_upload_with_auth() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  let api_client = server.create_api_client_with_api_key(&api_key)?;
-  let list_response = api_client
-    .list_observations()
-    .execution_id(&execution_id.to_string())
-    .send()
-    .await?;
+  let observations = server.list_observations(&execution_id).await?;
 
-  assert_eq!(list_response.observations.len(), 1);
-  let obs = &list_response.observations[0];
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
   assert_eq!(obs.name, "large-observation");
 
-  assert_eq!(
-    obs.payload.data, "",
+  assert!(
+    matches!(obs.payload, PayloadOrPointerResponse::Pointer { .. }),
     "Large payload data should be empty in metadata (stored as blob)"
   );
 

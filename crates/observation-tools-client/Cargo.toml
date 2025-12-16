@@ -8,6 +8,19 @@ repository.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = []
+axum = [
+  "dep:axum",
+  "dep:tower",
+  "dep:http",
+  "dep:http-body",
+  "dep:http-body-util",
+  "dep:pin-project-lite",
+  "dep:bytes",
+  "dep:base64",
+]
+
 [dependencies]
 anyhow.workspace = true
 async-channel = "2.3"
@@ -18,12 +31,22 @@ napi-derive = { version = "3", features = ["type-def"] }
 observation-tools-macros.workspace = true
 observation-tools-shared = { workspace = true, features = ["testing"] }
 progenitor-client.workspace = true
-reqwest = { workspace = true, features = ["json"] }
+reqwest = { workspace = true, features = ["json", "multipart"] }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["macros", "rt", "time"] }
 tracing.workspace = true
+
+# Optional axum dependencies (only included with "axum" feature)
+axum = { workspace = true, optional = true }
+tower = { workspace = true, optional = true }
+http = { workspace = true, optional = true }
+http-body = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
+pin-project-lite = { workspace = true, optional = true }
+bytes = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
 
 [build-dependencies]
 napi-build.workspace = true
@@ -37,11 +60,14 @@ utoipa.workspace = true
 
 [dev-dependencies]
 anyhow.workspace = true
+axum.workspace = true
 bytes.workspace = true
 futures.workspace = true
+http.workspace = true
 observation-tools-server.workspace = true
 rand.workspace = true
 reqwest.workspace = true
 tempfile = { workspace = true }
 test-log.workspace = true
+tower.workspace = true
 tracing-subscriber.workspace = true

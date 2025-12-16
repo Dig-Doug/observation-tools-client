@@ -4,13 +4,13 @@ use crate::error::Result;
 use crate::execution::BeginExecution;
 use crate::execution::ExecutionHandle;
 use crate::observation_handle::ObservationHandle;
+use crate::ObservationWithPayload;
 use async_channel;
 use log::error;
 use log::info;
 use log::trace;
 use napi_derive::napi;
 use observation_tools_shared::models::Execution;
-use observation_tools_shared::models::Observation;
 // Re-export constants from shared crate for convenience
 pub use observation_tools_shared::BATCH_SIZE;
 pub use observation_tools_shared::BLOB_THRESHOLD_BYTES;
@@ -32,7 +32,7 @@ pub(crate) enum UploaderMessage {
     uploaded_tx: tokio::sync::watch::Sender<ExecutionUploadResult>,
   },
   Observations {
-    observations: Vec<Observation>,
+    observations: Vec<ObservationWithPayload>,
     handle: ObservationHandle,
     uploaded_tx: tokio::sync::watch::Sender<ObservationUploadResult>,
   },
@@ -96,7 +96,7 @@ pub fn generate_execution_id() -> String {
 #[napi(js_name = "generateObservationId")]
 #[allow(unused)]
 pub fn generate_observation_id() -> String {
-  observation_tools_shared::models::ObservationId::new().to_string()
+  observation_tools_shared::ObservationId::new().to_string()
 }
 
 #[napi]
@@ -291,7 +291,7 @@ async fn uploader_task(
     tokio::sync::watch::Sender<ObservationUploadResult>,
   );
 
-  let flush_observations = async |buffer: &mut Vec<Observation>,
+  let flush_observations = async |buffer: &mut Vec<ObservationWithPayload>,
                                   senders: &mut Vec<ObservationSender>| {
     if buffer.is_empty() {
       return;
@@ -314,7 +314,7 @@ async fn uploader_task(
       }
     }
   };
-  let mut observation_buffer: Vec<Observation> = Vec::new();
+  let mut observation_buffer: Vec<ObservationWithPayload> = Vec::new();
   let mut sender_buffer: Vec<ObservationSender> = Vec::new();
   loop {
     let msg = rx.recv().await.ok();
@@ -383,7 +383,7 @@ async fn upload_execution(
 
 async fn upload_observations(
   client: &crate::server_client::Client,
-  observations: Vec<Observation>,
+  observations: Vec<ObservationWithPayload>,
 ) -> Result<()> {
   if observations.is_empty() {
     return Ok(());
@@ -392,65 +392,22 @@ async fn upload_observations(
   // Group by execution_id
   let mut by_execution: std::collections::HashMap<_, Vec<_>> = std::collections::HashMap::new();
   for obs in observations {
-    by_execution.entry(obs.execution_id).or_default().push(obs);
+    by_execution
+      .entry(obs.observation.execution_id)
+      .or_default()
+      .push(obs);
   }
 
-  // Upload each batch
-  for (execution_id, mut observations) in by_execution {
-    // Check each observation's payload size and upload large payloads as blobs
-    for obs in &mut observations {
-      trace!(
-        "Processing observation {} with payload size {} bytes",
-        obs.id,
-        obs.payload.size
-      );
-
-      if obs.payload.size >= BLOB_THRESHOLD_BYTES && !obs.payload.data.is_empty() {
-        trace!(
-          "Uploading large payload ({} bytes) for observation {} as blob",
-          obs.payload.size,
-          obs.id
-        );
-
-        // Upload the payload data as a blob
-        let blob_data = obs.payload.data.as_bytes().to_vec();
-        if let Err(e) = client
-          .upload_observation_blob(&execution_id.to_string(), &obs.id.to_string(), blob_data)
-          .await
-        {
-          error!("Failed to upload blob for observation {}: {}", obs.id, e);
-          return Err(crate::error::Error::Config(format!(
-            "Failed to upload blob for observation {}: {}",
-            obs.id, e
-          )));
-        }
-
-        // Clear the payload data since it's now stored as a blob
-        obs.payload.data = String::new();
-
-        trace!(
-          "Successfully uploaded blob for observation {}, payload.data now empty",
-          obs.id
-        );
-      } else {
-        trace!(
-          "Observation {} has small payload ({} bytes), keeping data inline",
-          obs.id,
-          obs.payload.size
-        );
-      }
-    }
-
-    // Convert from shared type to OpenAPI type via serde
-    let observations_json = serde_json::to_value(&observations)?;
-    let openapi_observations: Vec<crate::server_client::types::Observation> =
-      serde_json::from_value(observations_json)?;
+  // Upload each batch via multipart form
+  for (execution_id, observations) in by_execution {
+    trace!(
+      "Uploading {} observations for execution {}",
+      observations.len(),
+      execution_id
+    );
 
     client
-      .create_observations()
-      .execution_id(execution_id.to_string())
-      .body_map(|b| b.observations(openapi_observations))
-      .send()
+      .create_observations_multipart(&execution_id.to_string(), observations)
       .await
       .map_err(|e| crate::error::Error::Config(e.to_string()))?;
   }

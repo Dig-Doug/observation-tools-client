@@ -13,22 +13,25 @@
       hx-swap="innerHTML"
     >
       {% if observation %}
-        {{ breadcrumbs([
-          {"href": "/", "text": "home"},
-          {"href": "/exe", "text": "executions"},
-          {"href": "/exe/" ~ observation.execution_id, "text": observation.execution_id},
-          {"text": observation.name}
-        ]) }}
-
+        {{
+          breadcrumbs([
+            {"href": "/", "text": "home"},
+            {"href": "/exe", "text": "executions"},
+            {"href": "/exe/" ~ observation.execution_id, "text": observation.execution_id},
+            {"text": observation.name}
+          ])
+        }}
         {% include "_observation_content.html" %}
       {% else %}
         <div>
-          {{ breadcrumbs([
-            {"href": "/", "text": "home"},
-            {"href": "/exe", "text": "executions"},
-            {"href": "/exe/" ~ execution_id, "text": execution_id},
-            {"text": "waiting..."}
-          ]) }}
+          {{
+            breadcrumbs([
+              {"href": "/", "text": "home"},
+              {"href": "/exe", "text": "executions"},
+              {"href": "/exe/" ~ execution_id, "text": execution_id},
+              {"text": "waiting..."}
+            ])
+          }}
 
           <h1 class="text-2xl font-bold my-4 text-base-content/40">Waiting for observation...</h1>
 
