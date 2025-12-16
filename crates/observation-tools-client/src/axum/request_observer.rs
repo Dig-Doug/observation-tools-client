@@ -123,7 +123,7 @@ where
         .label("http/request/headers")
         .metadata("method", parts.method.to_string())
         .metadata("uri", parts.uri.to_string())
-        .payload(&json!(filter_headers(
+        .serde(&json!(filter_headers(
           &parts.headers,
           &config.excluded_headers
         )))
@@ -134,16 +134,14 @@ where
         .await
         .map(|collected| collected.to_bytes())
         .unwrap_or_else(|_| Bytes::new());
-      if !request_body_bytes.is_empty() {
-        let mut request_body_builder = ObservationBuilder::new("http/request/body");
-        request_body_builder
-          .label("http/request")
-          .label("http/request/body")
-          .metadata("method", parts.method.to_string())
-          .metadata("uri", parts.uri.to_string())
-          .payload(&bytes_to_payload(&request_body_bytes, &parts.headers))
-          .build();
-      }
+      let mut request_body_builder = ObservationBuilder::new("http/request/body");
+      request_body_builder
+        .label("http/request")
+        .label("http/request/body")
+        .metadata("method", parts.method.to_string())
+        .metadata("uri", parts.uri.to_string())
+        .payload(bytes_to_payload(&request_body_bytes, &parts.headers))
+        .build();
 
       let response = inner
         .call(Request::from_parts(parts, Body::from(request_body_bytes)))
@@ -162,7 +160,7 @@ where
         .label("http/response/headers")
         .metadata("status", &parts.status.as_u16().to_string())
         .log_level(log_level)
-        .payload(&json!(filter_headers(
+        .serde(&json!(filter_headers(
           &parts.headers,
           &config.excluded_headers
         )))
@@ -173,16 +171,14 @@ where
         .await
         .map(|collected| collected.to_bytes())
         .unwrap_or_else(|_| Bytes::new());
-      if !response_body_bytes.is_empty() {
-        let mut response_body_builder = ObservationBuilder::new("http/response/body");
-        response_body_builder
-          .label("http/response")
-          .label("http/response/body")
-          .metadata("status", &parts.status.as_u16().to_string())
-          .log_level(log_level)
-          .payload(&bytes_to_payload(&response_body_bytes, &parts.headers))
-          .build();
-      }
+      let mut response_body_builder = ObservationBuilder::new("http/response/body");
+      response_body_builder
+        .label("http/response")
+        .label("http/response/body")
+        .metadata("status", &parts.status.as_u16().to_string())
+        .log_level(log_level)
+        .payload(bytes_to_payload(&response_body_bytes, &parts.headers))
+        .build();
 
       Ok(Response::from_parts(parts, Body::from(response_body_bytes)))
     })

@@ -2,6 +2,7 @@ mod common;
 
 use common::TestServer;
 use observation_tools_client::observe;
+use observation_tools_shared::Payload;
 use serde::Serialize;
 
 #[test_log::test(tokio::test)]
@@ -115,9 +116,9 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
       message: String,
     }
 
-    impl observation_tools_client::IntoCustomPayload for CustomStruct {
-      fn to_payload(&self) -> observation_tools_client::Payload {
-        observation_tools_client::Payload::text(self.message.clone())
+    impl From<&CustomStruct> for Payload {
+      fn from(value: &CustomStruct) -> Self {
+        Payload::text(value.message.clone())
       }
     }
 
@@ -168,9 +169,9 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
       value: String,
     }
 
-    impl observation_tools_client::IntoCustomPayload for CustomStruct {
-      fn to_payload(&self) -> observation_tools_client::Payload {
-        observation_tools_client::Payload::text(format!("custom: {}", self.value))
+    impl From<&CustomStruct> for Payload {
+      fn from(value: &CustomStruct) -> Self {
+        Payload::text(format!("custom: {}", value.value))
       }
     }
 

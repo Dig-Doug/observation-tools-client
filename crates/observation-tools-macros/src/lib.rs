@@ -250,9 +250,9 @@ pub fn observe(input: TokenStream) -> TokenStream {
   let line = line!();
 
   let payload_method = if custom {
-    quote! { custom_payload }
-  } else {
     quote! { payload }
+  } else {
+    quote! { serde }
   };
 
   let label_call = if let Some(label_expr) = label {

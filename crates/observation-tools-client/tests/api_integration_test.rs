@@ -102,7 +102,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     // Create BATCH_SIZE observations to test batching behavior
     for i in 0..observation_tools_client::BATCH_SIZE {
       let obs_name = format!("observation-{}", i);
-      observe!(&obs_name, payload_data);
+      observe!(&obs_name, payload_data, custom = true);
       expected_names.insert(obs_name);
     }
 

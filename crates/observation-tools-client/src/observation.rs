@@ -9,8 +9,6 @@ use crate::observation_handle::SendObservation;
 use crate::Error;
 use crate::ObservationWithPayload;
 use napi_derive::napi;
-use observation_tools_shared::IntoCustomPayload;
-use observation_tools_shared::IntoPayload;
 use observation_tools_shared::LogLevel;
 use observation_tools_shared::Markdown;
 use observation_tools_shared::Observation;
@@ -18,6 +16,8 @@ use observation_tools_shared::ObservationId;
 use observation_tools_shared::ObservationType;
 use observation_tools_shared::Payload;
 use observation_tools_shared::SourceInfo;
+use serde::Serialize;
+use std::any::TypeId;
 use std::collections::HashMap;
 
 /// Builder for creating observations (without payload set yet)
@@ -109,18 +109,20 @@ impl ObservationBuilder {
   }
 
   /// Set the payload and return a builder that can be built
-  pub fn payload<T: ?Sized + IntoPayload>(&self, value: &T) -> ObservationBuilderWithPayload {
+  pub fn serde<T: ?Sized + Serialize + 'static>(&self, value: &T) -> ObservationBuilderWithPayload {
+    if TypeId::of::<T>() == TypeId::of::<Payload>() {
+      panic!("Use payload() method to set Payload directly");
+    }
     ObservationBuilderWithPayload {
       fields: self.clone(),
-      payload: value.to_payload(),
+      payload: Payload::json(serde_json::to_string(value).unwrap_or_default()),
     }
   }
 
-  /// Set a custom payload and return a builder that can be built
-  pub fn custom_payload<T: IntoCustomPayload>(&self, value: &T) -> ObservationBuilderWithPayload {
+  pub fn payload<T: Into<Payload>>(&self, value: T) -> ObservationBuilderWithPayload {
     ObservationBuilderWithPayload {
       fields: self.clone(),
-      payload: value.to_payload(),
+      payload: value.into(),
     }
   }
 }
@@ -170,19 +172,19 @@ impl ObservationBuilder {
   ) -> napi::Result<ObservationBuilderWithPayload> {
     let value = serde_json::from_str::<serde_json::Value>(&json_string)
       .map_err(|e| napi::Error::from_reason(format!("Invalid JSON payload: {}", e)))?;
-    Ok(self.payload(&value))
+    Ok(self.serde(&value))
   }
 
   /// Set the payload with custom data and MIME type
   #[napi(js_name = "rawPayload")]
   pub fn raw_payload_napi(&self, data: String, mime_type: String) -> ObservationBuilderWithPayload {
-    self.payload(&Payload::with_mime_type(data, mime_type))
+    self.serde(&Payload::with_mime_type(data, mime_type))
   }
 
   /// Set the payload as markdown content
   #[napi(js_name = "markdownPayload")]
   pub fn markdown_payload_napi(&self, content: String) -> ObservationBuilderWithPayload {
-    self.custom_payload(&Markdown::from(content))
+    self.payload(Markdown::from(content))
   }
 }
 

@@ -1,6 +1,5 @@
 use serde::Deserialize;
 use serde::Serialize;
-use std::any::Any;
 
 /// Payload data for an observation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,37 +55,13 @@ impl Payload {
   }
 }
 
-/// Trait for types that can be converted into an observation payload.
-pub trait IntoPayload {
-  /// Convert this value into a payload
-  fn to_payload(&self) -> Payload;
-}
-
-impl IntoPayload for str {
-  fn to_payload(&self) -> Payload {
-    Payload::text(self.to_string())
-  }
-}
-
-impl<T> IntoPayload for T
+impl<T> From<T> for Payload
 where
-  T: Serialize + 'static,
+  T: Into<String>,
 {
-  fn to_payload(&self) -> Payload {
-    if let Some(string_ref) = (self as &dyn Any).downcast_ref::<String>() {
-      Payload::text(string_ref.clone())
-    } else {
-      let json = serde_json::to_string(self).unwrap_or_default();
-      Payload::json(json)
-    }
+  fn from(s: T) -> Self {
+    Payload::text(s)
   }
-}
-
-/// Implement IntoPayload for custom types if Serde serialization is not
-/// sufficient..
-pub trait IntoCustomPayload {
-  /// Convert this value into a payload
-  fn to_payload(&self) -> Payload;
 }
 
 /// A wrapper type for markdown content.
@@ -115,8 +90,8 @@ impl Markdown {
   }
 }
 
-impl IntoCustomPayload for Markdown {
-  fn to_payload(&self) -> Payload {
-    Payload::with_mime_type(self.content.clone(), "text/markdown")
+impl From<Markdown> for Payload {
+  fn from(md: Markdown) -> Self {
+    Payload::with_mime_type(md.content, "text/markdown")
   }
 }

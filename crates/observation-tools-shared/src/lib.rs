@@ -14,8 +14,6 @@ pub use observation::Observation;
 pub use observation::ObservationId;
 pub use observation::ObservationType;
 pub use observation::SourceInfo;
-pub use payload::IntoCustomPayload;
-pub use payload::IntoPayload;
 pub use payload::Markdown;
 pub use payload::Payload;
 

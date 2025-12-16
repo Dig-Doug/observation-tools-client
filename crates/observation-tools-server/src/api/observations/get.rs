@@ -53,23 +53,20 @@ impl PayloadOrPointerResponse {
       };
     };
 
-    match obs.mime_type.as_str() {
-      "application/json" => {
-        if let Ok(json_value) = serde_json::from_slice::<serde_json::Value>(&data) {
-          return PayloadOrPointerResponse::Json(json_value);
-        }
+    if obs.mime_type.starts_with("application/json") {
+      if let Ok(json_value) = serde_json::from_slice::<serde_json::Value>(&data) {
+        return PayloadOrPointerResponse::Json(json_value);
       }
-      "text/plain" | "text/html" | "text/csv" => {
-        if let Ok(text) = String::from_utf8(data.clone()) {
-          return PayloadOrPointerResponse::Text(text);
-        }
+    }
+    if obs.mime_type.starts_with("text/plain") {
+      if let Ok(text) = String::from_utf8(data.clone()) {
+        return PayloadOrPointerResponse::Text(text);
       }
-      "text/markdown" => {
-        if let Ok(text) = String::from_utf8(data.clone()) {
-          return PayloadOrPointerResponse::Markdown { raw: text };
-        }
+    }
+    if obs.mime_type.starts_with("text/markdown") {
+      if let Ok(text) = String::from_utf8(data.clone()) {
+        return PayloadOrPointerResponse::Markdown { raw: text };
       }
-      _ => {}
     }
 
     PayloadOrPointerResponse::InlineBinary(data)

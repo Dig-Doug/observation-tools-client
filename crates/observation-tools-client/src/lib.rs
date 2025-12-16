@@ -28,9 +28,7 @@ pub use observation_handle::ObservationHandle;
 pub use observation_handle::SendObservation;
 // Re-export procedural macro
 pub use observation_tools_macros::observe;
-pub use observation_tools_shared::IntoCustomPayload;
 // Re-export from shared for convenience
-pub use observation_tools_shared::IntoPayload;
 use observation_tools_shared::Observation;
 pub use observation_tools_shared::Payload;
 
