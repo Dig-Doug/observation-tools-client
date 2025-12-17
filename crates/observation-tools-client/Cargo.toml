@@ -1,5 +1,6 @@
 [package]
 name = "observation-tools"
+description = "Observation Tools Client Library"
 version.workspace = true
 edition.workspace = true
 license = "Apache-2.0"

@@ -1,5 +1,6 @@
 [package]
 name = "observation-tools-server"
+description = "Server for Observation Tools"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

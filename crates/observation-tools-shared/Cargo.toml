@@ -1,5 +1,6 @@
 [package]
 name = "observation-tools-shared"
+description = "Shared code for Observation Tools client and server"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
