@@ -45,9 +45,3 @@ ammonia.workspace = true
 minijinja-embed.workspace = true
 serde_json.workspace = true
 
-[dev-dependencies]
-observation-tools-client.workspace = true
-test-log.workspace = true
-tempfile.workspace = true
-reqwest.workspace = true
-

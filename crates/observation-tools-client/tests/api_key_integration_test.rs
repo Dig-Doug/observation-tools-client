@@ -1,7 +1,7 @@
 mod common;
 
 use common::TestServer;
-use observation_tools_client::server_client::types::PayloadOrPointerResponse;
+use observation_tools::server_client::types::PayloadOrPointerResponse;
 
 #[test_log::test(tokio::test)]
 async fn test_api_without_auth_when_no_key_configured() -> anyhow::Result<()> {
@@ -43,8 +43,8 @@ async fn test_api_with_valid_key() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
-    observation_tools_client::ObservationBuilder::new("test-observation")
+  observation_tools::with_execution(execution, async {
+    observation_tools::ObservationBuilder::new("test-observation")
       .label("test/label")
       .metadata("key1", "value1")
       .payload("test payload data")
@@ -187,8 +187,8 @@ async fn test_blob_upload_with_auth() -> anyhow::Result<()> {
     "size": large_data.len(),
   });
 
-  let observation_id = observation_tools_client::with_execution(execution, async {
-    observation_tools_client::observe!(
+  let observation_id = observation_tools::with_execution(execution, async {
+    observation_tools::observe!(
       name = "large-observation",
       label = "test/large-payload",
       payload = large_payload
@@ -279,8 +279,8 @@ async fn test_observation_without_auth_after_execution_with_auth() -> anyhow::Re
   auth_client.shutdown().await?;
 
   let unauth_client = server.create_client()?;
-  let result = observation_tools_client::with_execution(execution, async {
-    observation_tools_client::observe!(name = "test-observation", payload = "test data")
+  let result = observation_tools::with_execution(execution, async {
+    observation_tools::observe!(name = "test-observation", payload = "test data")
       .wait_for_upload()
       .await
   })
@@ -372,8 +372,8 @@ async fn test_blob_retrieval_without_auth_succeeds() -> anyhow::Result<()> {
     "data": large_data,
   });
 
-  let observation_id = observation_tools_client::with_execution(execution, async {
-    observation_tools_client::observe!(name = "large-observation", payload = large_payload)
+  let observation_id = observation_tools::with_execution(execution, async {
+    observation_tools::observe!(name = "large-observation", payload = large_payload)
       .wait_for_upload()
       .await
   })

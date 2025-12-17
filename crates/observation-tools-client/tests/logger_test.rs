@@ -1,10 +1,10 @@
 mod common;
 
 use common::TestServer;
-use observation_tools_client::observe;
-use observation_tools_client::server_client::types::LogLevel;
-use observation_tools_client::server_client::types::ObservationType;
-use observation_tools_client::ObservationLogger;
+use observation_tools::observe;
+use observation_tools::server_client::types::LogLevel;
+use observation_tools::server_client::types::ObservationType;
+use observation_tools::ObservationLogger;
 
 #[tokio::test]
 async fn test_logger() -> anyhow::Result<()> {
@@ -18,7 +18,7 @@ async fn test_logger() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
   let execution_id = execution.id();
-  observation_tools_client::with_execution(execution, async {
+  observation_tools::with_execution(execution, async {
     log::info!("info-log");
     observe!("direct-log", "direct-log-payload")
       .wait_for_upload()

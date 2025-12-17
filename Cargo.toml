@@ -8,7 +8,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.0.13"
 edition = "2021"
 license = "AGPL-3"
 repository = "https://github.com/Dig-Doug/observation-tools-client"
@@ -32,14 +32,14 @@ minijinja = { version = "2.12", features = ["loader"] }
 minijinja-autoreload = "2.12.0"
 minijinja-embed = "2.12.0"
 object_store = "0.12.4"
-observation-tools-client = { path = "crates/observation-tools-client" }
-observation-tools-macros = { path = "crates/observation-tools-macros" }
-observation-tools-server = { path = "crates/observation-tools-server" }
-observation-tools-shared = { path = "crates/observation-tools-shared" }
+observation-tools = { path = "crates/observation-tools-client", version = "0.0.13" }
+observation-tools-macros = { path = "crates/observation-tools-macros", version = "0.0.13" }
+observation-tools-server = { path = "crates/observation-tools-server", version = "0.0.13" }
+observation-tools-shared = { path = "crates/observation-tools-shared", version = "0.0.13" }
 openapiv3 = "2.2"
 prettyplease = "0.2"
-progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
-progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
+progenitor = "0.11.2"
+progenitor-client = "0.11.2"
 proc-macro2 = "1.0"
 quote = "1.0"
 reqwest = { version = "0.12.24", default-features = false, features = ["rustls-tls"] }
@@ -59,7 +59,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
 utoipa-swagger-ui = { version = "9", features = ["axum"] }
 uuid = { version = "1.11", features = ["v4", "v7", "serde", "js"] }
-utoipa-axum = { version = "0.2"}
+utoipa-axum = { version = "0.2" }
 pulldown-cmark = "0.12"
 ammonia = "4"
 http = "1.0"

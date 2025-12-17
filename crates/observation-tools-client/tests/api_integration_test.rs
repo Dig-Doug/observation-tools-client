@@ -7,8 +7,8 @@ mod common;
 
 use anyhow::anyhow;
 use common::TestServer;
-use observation_tools_client::observe;
-use observation_tools_client::server_client::types::PayloadOrPointerResponse;
+use observation_tools::observe;
+use observation_tools::server_client::types::PayloadOrPointerResponse;
 use std::collections::HashSet;
 use tracing::debug;
 
@@ -50,8 +50,8 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  observation_tools_client::with_execution(execution, async {
-    observation_tools_client::ObservationBuilder::new("test-observation")
+  observation_tools::with_execution(execution, async {
+    observation_tools::ObservationBuilder::new("test-observation")
       .label("test/label1")
       .label("test/label2")
       .metadata("key1", "value1")
@@ -96,11 +96,11 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   // Create a payload that is exactly 1 byte smaller than the blob threshold
   // String payloads are now stored without JSON quotes, so the payload size
   // is exactly the string length
-  let payload_data = "x".repeat(observation_tools_client::BLOB_THRESHOLD_BYTES - 1);
-  let expected_names = observation_tools_client::with_execution(execution.clone(), async {
+  let payload_data = "x".repeat(observation_tools::BLOB_THRESHOLD_BYTES - 1);
+  let expected_names = observation_tools::with_execution(execution.clone(), async {
     let mut expected_names = HashSet::new();
     // Create BATCH_SIZE observations to test batching behavior
-    for i in 0..observation_tools_client::BATCH_SIZE {
+    for i in 0..observation_tools::BATCH_SIZE {
       let obs_name = format!("observation-{}", i);
       observe!(&obs_name, payload_data, custom = true);
       expected_names.insert(obs_name);
@@ -124,7 +124,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     );
     assert_eq!(
       obs.payload_size,
-      observation_tools_client::BLOB_THRESHOLD_BYTES as u64 - 1,
+      observation_tools::BLOB_THRESHOLD_BYTES as u64 - 1,
       "Observation {} payload size should be exactly 1 byte under threshold",
       obs.name
     );
@@ -178,10 +178,10 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
   let (task1_sender, mut task1_receiver) = tokio::sync::mpsc::unbounded_channel();
   let (task2_sender, mut task2_receiver) = tokio::sync::mpsc::unbounded_channel();
   tokio::try_join!(
-    observation_tools_client::with_execution(execution1.clone(), async {
+    observation_tools::with_execution(execution1.clone(), async {
       for _ in 0..NUM_OBSERVATIONS {
         debug!("Task 1 sending observation");
-        observation_tools_client::observe!(
+        observation_tools::observe!(
           name = TASK_1_NAME,
           label = "concurrent/task1",
           payload = "data from task 1"
@@ -198,10 +198,10 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
       drop(task1_sender);
       Ok::<_, anyhow::Error>(())
     }),
-    observation_tools_client::with_execution(execution2.clone(), async {
+    observation_tools::with_execution(execution2.clone(), async {
       while let Some(_) = task1_receiver.recv().await {
         debug!("Task 2 sending observation");
-        observation_tools_client::observe!(
+        observation_tools::observe!(
           name = TASK_2_NAME,
           label = "concurrent/task2",
           payload = "data from task 2"
@@ -259,7 +259,7 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   // Calculate the expected size (serialized JSON)
   let expected_size = serde_json::to_string(&large_payload)?.len();
 
-  let observation_id = observation_tools_client::with_execution(execution, async {
+  let observation_id = observation_tools::with_execution(execution, async {
     observe!(
       name = "large-observation",
       label = "test/large-payload",
