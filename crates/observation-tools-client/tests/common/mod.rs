@@ -1,6 +1,6 @@
-use observation_tools_client::server_client::types::GetObservation;
-use observation_tools_client::Client;
-use observation_tools_client::ClientBuilder;
+use observation_tools::server_client::types::GetObservation;
+use observation_tools::Client;
+use observation_tools::ClientBuilder;
 use observation_tools_server::auth::generate_api_key;
 use observation_tools_server::auth::ApiKeySecret;
 
@@ -98,10 +98,8 @@ impl TestServer {
 
   /// Create an OpenAPI client connected to this test server
   #[allow(unused)]
-  pub fn create_api_client(
-    &self,
-  ) -> anyhow::Result<observation_tools_client::server_client::Client> {
-    observation_tools_client::server_client::create_client(&self.base_url, None)
+  pub fn create_api_client(&self) -> anyhow::Result<observation_tools::server_client::Client> {
+    observation_tools::server_client::create_client(&self.base_url, None)
   }
 
   /// Create an OpenAPI client with API key authentication
@@ -109,11 +107,8 @@ impl TestServer {
   pub fn create_api_client_with_api_key(
     &self,
     api_key: &str,
-  ) -> anyhow::Result<observation_tools_client::server_client::Client> {
-    observation_tools_client::server_client::create_client(
-      &self.base_url,
-      Some(api_key.to_string()),
-    )
+  ) -> anyhow::Result<observation_tools::server_client::Client> {
+    observation_tools::server_client::create_client(&self.base_url, Some(api_key.to_string()))
   }
 
   /// List all observations for an execution

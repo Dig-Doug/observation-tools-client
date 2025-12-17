@@ -23,7 +23,7 @@ impl ObservationLogger {
 
 impl Log for ObservationLogger {
   fn enabled(&self, metadata: &Metadata) -> bool {
-    if metadata.target().starts_with("observation_tools_client::") {
+    if metadata.target().starts_with("observation_tools::") {
       return false;
     }
     metadata.level() <= log::max_level()

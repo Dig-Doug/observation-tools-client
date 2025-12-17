@@ -1,7 +1,7 @@
 mod common;
 
 use common::TestServer;
-use observation_tools_client::observe;
+use observation_tools::observe;
 use observation_tools_shared::Payload;
 use serde::Serialize;
 
@@ -17,7 +17,7 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     let handle = observe!("simple_string", "hello world")
       .wait_for_upload()
       .await?;
@@ -57,7 +57,7 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     #[derive(Serialize)]
     struct MyStruct {
       message: String,
@@ -111,7 +111,7 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     struct CustomStruct {
       message: String,
     }
@@ -164,7 +164,7 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     struct CustomStruct {
       value: String,
     }
@@ -217,7 +217,7 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     let my_data = "captured variable name";
     let handle = observe!(my_data).wait_for_upload().await?;
 
@@ -256,7 +256,7 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     let handle = observe!(
       name = "structured_observation",
       payload = "test payload",
@@ -300,7 +300,7 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     let duration_ms = 123;
     let handle = observe!(
       name = "with_metadata",
@@ -347,7 +347,7 @@ async fn test_observe_expression_name() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     const OBSERVATION_NAME: &str = "const_name";
 
     let handle = observe!(name = OBSERVATION_NAME, payload = "test data")
@@ -384,7 +384,7 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     let prefix = "dynamic";
     let name = format!("{}_observation", prefix);
 
@@ -420,7 +420,7 @@ async fn test_observe_dynamic_label() -> anyhow::Result<()> {
 
   let execution_id = execution.id();
 
-  let observation = observation_tools_client::with_execution(execution, async {
+  let observation = observation_tools::with_execution(execution, async {
     let endpoint = "users";
     let label = format!("api/{}/create", endpoint);
 

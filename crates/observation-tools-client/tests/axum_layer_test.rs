@@ -13,10 +13,10 @@ use axum::Json;
 use axum::Router;
 use common::TestServer;
 use http::header::HeaderName;
-use observation_tools_client::axum::ExecutionLayer;
-use observation_tools_client::axum::RequestObserverConfig;
-use observation_tools_client::axum::RequestObserverLayer;
-use observation_tools_client::observe;
+use observation_tools::axum::ExecutionLayer;
+use observation_tools::axum::RequestObserverConfig;
+use observation_tools::axum::RequestObserverLayer;
+use observation_tools::observe;
 use serde_json::json;
 
 #[test_log::test(tokio::test)]
@@ -191,7 +191,7 @@ async fn test_error_response_has_error_log_level() -> anyhow::Result<()> {
   assert_eq!(observations.len(), 5);
   assert_eq!(
     observations[3].log_level,
-    observation_tools_client::server_client::types::LogLevel::Error,
+    observation_tools::server_client::types::LogLevel::Error,
     "5xx responses should have Error log level"
   );
 

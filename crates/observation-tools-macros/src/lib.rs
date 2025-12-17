@@ -272,7 +272,7 @@ pub fn observe(input: TokenStream) -> TokenStream {
   // .build()
   let expanded = quote! {
       {
-          ::observation_tools_client::ObservationBuilder::new(#name)
+          ::observation_tools::ObservationBuilder::new(#name)
               .source(#file, #line)
               #label_call
               #(#metadata_calls)*
