@@ -1,6 +1,6 @@
 {
   "name": "@observation-tools/client",
-  "version": "0.1.0",
+  "version": "0.0.13",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -8,6 +8,10 @@
   },
   "main": "index.js",
   "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
   "napi": {
     "binaryName": "observation-tools-client",
     "targets": [
@@ -16,15 +20,26 @@
       "x86_64-apple-darwin",
       "aarch64-apple-darwin",
       "x86_64-pc-windows-msvc"
-    ]
+    ],
+    "package": {
+      "name": "@observation-tools/client"
+    }
   },
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
     "artifacts": "napi artifacts",
+    "prepublishOnly": "napi prepublish -t npm",
     "version": "napi version"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0-alpha.71"
+  },
+  "optionalDependencies": {
+    "@observation-tools/client-linux-x64-gnu": "0.0.13",
+    "@observation-tools/client-linux-arm64-gnu": "0.0.13",
+    "@observation-tools/client-darwin-x64": "0.0.13",
+    "@observation-tools/client-darwin-arm64": "0.0.13",
+    "@observation-tools/client-win32-x64-msvc": "0.0.13"
   }
 }
