@@ -87,7 +87,8 @@ where
     let duration = data.created_at.elapsed();
     let duration_ms = duration.as_secs_f64() * 1000.0;
 
-    // Get parent span ID from tracing's span stack
+    // Get the span's own ID and parent span ID
+    let span_id = id.into_u64().to_string();
     let parent_span_id = span
       .parent()
       .map(|parent| parent.id().into_u64().to_string());
@@ -98,6 +99,7 @@ where
       .observation_type(ObservationType::Span)
       .log_level(tracing_level_to_log_level(data.level))
       .label(format!("tracing/spans/{}", data.target))
+      .metadata("span_id", &span_id)
       .metadata("duration_ms", format!("{:.3}", duration_ms))
       .metadata("target", &data.target);
 

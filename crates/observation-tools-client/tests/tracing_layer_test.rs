@@ -36,6 +36,8 @@ async fn test_span_captured_on_close() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn test_event_captured() -> anyhow::Result<()> {
+  use observation_tools::server_client::types::LogLevel;
+
   let _guard = tracing_subscriber::registry()
     .with(ObservationLayer::new())
     .set_default();
@@ -52,6 +54,12 @@ async fn test_event_captured() -> anyhow::Result<()> {
 
   let obs = &observations[0];
   assert_eq!(obs.observation_type, ObservationType::LogEntry);
+  assert_eq!(obs.log_level, LogLevel::Info);
+
+  // Check payload contains the event message
+  let payload = obs.payload.as_json().expect("Expected JSON payload");
+  assert_eq!(payload["message"], "test event message");
+  assert_eq!(payload["key"], "value");
 
   Ok(())
 }
@@ -107,7 +115,6 @@ async fn test_parent_span_attribution() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   // Find our specific observations
-  // Events have names like "event <file>:<line>" in tracing
   let event = observations
     .iter()
     .find(|o| {
@@ -124,22 +131,34 @@ async fn test_parent_span_attribution() -> anyhow::Result<()> {
     .find(|o| o.name == "outer")
     .expect("Expected outer span");
 
-  // The event should have inner's span as parent
-  assert!(
-    event.parent_span_id.is_some(),
-    "Event should have a parent span"
-  );
+  // Get span IDs from metadata
+  let outer_span_id = outer
+    .metadata
+    .get("span_id")
+    .expect("Outer span should have span_id metadata");
+  let inner_span_id = inner
+    .metadata
+    .get("span_id")
+    .expect("Inner span should have span_id metadata");
 
-  // inner should have outer's span as parent
-  assert!(
-    inner.parent_span_id.is_some(),
-    "Inner span should have a parent"
-  );
-
-  // outer should have no parent
+  // outer should have no parent (it's the root span)
   assert!(
     outer.parent_span_id.is_none(),
     "Outer span should not have a parent"
+  );
+
+  // inner's parent_span_id should match outer's span_id
+  assert_eq!(
+    inner.parent_span_id.as_ref(),
+    Some(outer_span_id),
+    "Inner span's parent should be outer span"
+  );
+
+  // The event's parent_span_id should match inner's span_id
+  assert_eq!(
+    event.parent_span_id.as_ref(),
+    Some(inner_span_id),
+    "Event's parent should be inner span"
   );
 
   Ok(())
@@ -176,15 +195,20 @@ async fn test_observe_macro_gets_parent_span() -> anyhow::Result<()> {
     .find(|o| o.name == "parent_span")
     .expect("Expected parent_span observation");
 
-  // The observe!() observation should have the parent span ID set automatically
-  assert!(
-    my_obs.parent_span_id.is_some(),
-    "observe!() should automatically get parent span ID"
-  );
-
-  // Verify the parent ID matches the span's ID (converted to string)
-  // The span doesn't have an ID in the observation, so we verify it has a parent
   assert_eq!(span_obs.observation_type, ObservationType::Span);
+
+  // Get the span's tracing ID from metadata
+  let span_id = span_obs
+    .metadata
+    .get("span_id")
+    .expect("parent_span should have span_id metadata");
+
+  // The observe!() observation's parent_span_id should match the span's span_id
+  assert_eq!(
+    my_obs.parent_span_id.as_ref(),
+    Some(span_id),
+    "observe!() should have parent_span as its parent"
+  );
 
   Ok(())
 }
