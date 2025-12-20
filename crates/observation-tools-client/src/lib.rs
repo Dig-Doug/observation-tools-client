@@ -3,6 +3,9 @@
 #[cfg(feature = "axum")]
 pub mod axum;
 
+#[cfg(feature = "tracing-layer")]
+pub mod tracing;
+
 mod client;
 pub(crate) mod context;
 mod error;

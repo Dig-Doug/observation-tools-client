@@ -41,39 +41,25 @@ async fn test_create_execution_with_client() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-execution-with-observation")?
-    .wait_for_upload()
+  let execution = server
+    .with_execution("test-execution-with-observation", async {
+      observation_tools::ObservationBuilder::new("test-observation")
+        .label("test/label1")
+        .label("test/label2")
+        .metadata("key1", "value1")
+        .metadata("key2", "value2")
+        .payload("test payload data")
+        .build();
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  observation_tools::with_execution(execution, async {
-    observation_tools::ObservationBuilder::new("test-observation")
-      .label("test/label1")
-      .label("test/label2")
-      .metadata("key1", "value1")
-      .metadata("key2", "value2")
-      .payload("test payload data")
-      .build()
-      .wait_for_upload()
-      .await?;
-
-    Ok::<_, anyhow::Error>(())
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
 
   let obs = &observations[0];
   assert_eq!(obs.name, "test-observation");
-  assert_eq!(obs.execution_id.to_string(), execution_id.to_string());
+  assert_eq!(obs.execution_id.to_string(), execution.id().to_string());
   assert!(obs.labels.contains(&"test/label1".to_string()));
   assert!(obs.labels.contains(&"test/label2".to_string()));
   assert_eq!(obs.metadata.get("key1"), Some(&"value1".to_string()));
@@ -239,14 +225,6 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   use futures::TryStreamExt;
 
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-execution-with-large-payload")?
-    .wait_for_upload()
-    .await?;
-
-  let execution_id = execution.id();
 
   // Create a large payload (>64KB threshold)
   let large_data = "x".repeat(70_000);
@@ -259,26 +237,22 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   // Calculate the expected size (serialized JSON)
   let expected_size = serde_json::to_string(&large_payload)?.len();
 
-  let observation_id = observation_tools::with_execution(execution, async {
-    observe!(
-      name = "large-observation",
-      label = "test/large-payload",
-      payload = large_payload
-    )
-    .wait_for_upload()
-    .await
-  })
-  .await?;
-
-  client.shutdown().await?;
+  let execution = server
+    .with_execution("test-execution-with-large-payload", async {
+      observe!(
+        name = "large-observation",
+        label = "test/large-payload",
+        payload = large_payload
+      );
+    })
+    .await?;
 
   // Verify the observation metadata was stored
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "large-observation");
-  assert_eq!(obs.id.to_string(), observation_id.id().to_string());
 
   // The payload.data should be empty because it was uploaded as a blob
   assert!(
@@ -296,8 +270,8 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   let api_client = server.create_api_client()?;
   let blob_response = api_client
     .get_observation_blob()
-    .execution_id(&execution_id.to_string())
-    .observation_id(&observation_id.id().to_string())
+    .execution_id(&execution.id().to_string())
+    .observation_id(&obs.id.to_string())
     .send()
     .await?;
 

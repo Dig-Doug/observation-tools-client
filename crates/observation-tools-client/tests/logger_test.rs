@@ -11,24 +11,14 @@ async fn test_logger() -> anyhow::Result<()> {
   ObservationLogger::init()?;
 
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-logger")?
-    .wait_for_upload()
+  let execution = server
+    .with_execution("test-logger", async {
+      log::info!("info-log");
+      observe!("direct-log", "direct-log-payload");
+    })
     .await?;
-  let execution_id = execution.id();
-  observation_tools::with_execution(execution, async {
-    log::info!("info-log");
-    observe!("direct-log", "direct-log-payload")
-      .wait_for_upload()
-      .await?;
-    Ok::<_, anyhow::Error>(())
-  })
-  .await?;
-  client.shutdown().await?;
 
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 2);
   let obs = &observations[0];

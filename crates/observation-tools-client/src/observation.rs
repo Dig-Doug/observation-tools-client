@@ -235,6 +235,16 @@ impl ObservationBuilderWithPayload {
       observation_id,
     };
 
+    // Auto-set parent_span_id from current tracing span if not explicitly set
+    #[cfg(feature = "tracing-layer")]
+    let parent_span_id = self
+      .fields
+      .parent_span_id
+      .or_else(context::get_current_tracing_span_id);
+
+    #[cfg(not(feature = "tracing-layer"))]
+    let parent_span_id = self.fields.parent_span_id;
+
     let observation = Observation {
       id: observation_id,
       execution_id: execution.id(),
@@ -244,7 +254,7 @@ impl ObservationBuilderWithPayload {
       labels: self.fields.labels,
       metadata: self.fields.metadata,
       source: self.fields.source,
-      parent_span_id: self.fields.parent_span_id,
+      parent_span_id,
       created_at: chrono::Utc::now(),
       mime_type: self.payload.mime_type.clone(),
       payload_size: self.payload.size,

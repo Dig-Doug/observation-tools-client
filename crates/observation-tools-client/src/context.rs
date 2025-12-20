@@ -84,3 +84,14 @@ where
 {
   TASK_EXECUTION.scope(execution, future).await
 }
+
+/// Get the current tracing span ID as a string.
+///
+/// Returns the ID of the currently active tracing span, or `None` if there is
+/// no active span. This is used for automatically attributing observations
+/// to the current span when the `tracing-layer` feature is enabled.
+#[cfg(feature = "tracing-layer")]
+pub(crate) fn get_current_tracing_span_id() -> Option<String> {
+  let current = tracing::Span::current();
+  current.id().map(|id| id.into_u64().to_string())
+}
