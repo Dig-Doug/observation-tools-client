@@ -15,7 +15,7 @@ async fn test_span_captured_on_close() -> anyhow::Result<()> {
     .set_default();
 
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-tracing-span", async {
       let span = tracing::info_span!("test_span", key = "value");
       let _guard = span.enter();
@@ -41,7 +41,7 @@ async fn test_event_captured() -> anyhow::Result<()> {
     .set_default();
 
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-tracing-event", async {
       tracing::info!(key = "value", "test event message");
     })
@@ -92,7 +92,7 @@ async fn test_parent_span_attribution() -> anyhow::Result<()> {
     .set_default();
 
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-parent-span", async {
       let outer = tracing::info_span!("outer");
       let _outer_guard = outer.enter();
@@ -152,7 +152,7 @@ async fn test_observe_macro_gets_parent_span() -> anyhow::Result<()> {
     .set_default();
 
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-observe-parent", async {
       let span = tracing::info_span!("parent_span");
       let _guard = span.enter();
@@ -196,7 +196,7 @@ async fn test_internal_events_filtered() -> anyhow::Result<()> {
     .set_default();
 
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-internal-filter", async {
       // Generate internal log/tracing events from observation_tools crate
       // These should NOT be captured as observations
@@ -235,7 +235,7 @@ async fn test_span_with_multiple_fields() -> anyhow::Result<()> {
     .set_default();
 
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-span-fields", async {
       let span = tracing::info_span!(
         "test_span",

@@ -41,7 +41,7 @@ async fn test_create_execution_with_client() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-execution-with-observation", async {
       observation_tools::ObservationBuilder::new("test-observation")
         .label("test/label1")
@@ -237,7 +237,7 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   // Calculate the expected size (serialized JSON)
   let expected_size = serde_json::to_string(&large_payload)?.len();
 
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-execution-with-large-payload", async {
       observe!(
         name = "large-observation",

@@ -132,7 +132,7 @@ impl TestServer {
     &self,
     name: impl Into<String>,
     future: F,
-  ) -> anyhow::Result<ExecutionHandle>
+  ) -> anyhow::Result<(ExecutionHandle, T)>
   where
     F: std::future::Future<Output = T>,
   {
@@ -142,8 +142,8 @@ impl TestServer {
       .begin_execution(name.into().as_str())?
       .wait_for_upload()
       .await?;
-    with_execution(execution.clone(), future).await;
+    let result = with_execution(execution.clone(), future).await;
     client.shutdown().await?;
-    Ok(execution)
+    Ok((execution, result))
   }
 }

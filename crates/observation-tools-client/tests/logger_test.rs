@@ -11,7 +11,7 @@ async fn test_logger() -> anyhow::Result<()> {
   ObservationLogger::init()?;
 
   let server = TestServer::new().await;
-  let execution = server
+  let (execution, _) = server
     .with_execution("test-logger", async {
       log::info!("info-log");
       observe!("direct-log", "direct-log-payload");
