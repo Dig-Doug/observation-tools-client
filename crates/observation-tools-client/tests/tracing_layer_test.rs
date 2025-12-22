@@ -1,4 +1,4 @@
-#![cfg(feature = "tracing-layer")]
+#![cfg(feature = "tracing")]
 
 mod common;
 
@@ -56,10 +56,12 @@ async fn test_event_captured() -> anyhow::Result<()> {
   assert_eq!(obs.observation_type, ObservationType::LogEntry);
   assert_eq!(obs.log_level, LogLevel::Info);
 
-  // Check payload contains the event message
-  let payload = obs.payload.as_json().expect("Expected JSON payload");
-  assert_eq!(payload["message"], "test event message");
-  assert_eq!(payload["key"], "value");
+  // Check payload is the message text
+  let payload = obs.payload.as_str().expect("Expected text payload");
+  assert_eq!(payload, "test event message");
+
+  // Check event fields are in metadata
+  assert_eq!(obs.metadata.get("key"), Some(&"value".to_string()));
 
   Ok(())
 }

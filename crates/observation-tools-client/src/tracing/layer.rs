@@ -3,6 +3,7 @@ use crate::context;
 use crate::observation::ObservationBuilder;
 use observation_tools_shared::LogLevel;
 use observation_tools_shared::ObservationType;
+use observation_tools_shared::Payload;
 use std::time::Instant;
 use tracing::span::Attributes;
 use tracing::Event;
@@ -140,6 +141,16 @@ where
       }
     }
 
+    // Extract the message field as the payload, use remaining fields as metadata
+    let message = visitor
+      .fields
+      .remove("message")
+      .and_then(|v| match v {
+        serde_json::Value::String(s) => Some(s),
+        other => Some(other.to_string()),
+      })
+      .unwrap_or_default();
+
     // Get current span from tracing's span stack for parent attribution
     let parent_span_id = ctx.current_span().id().map(|id| id.into_u64().to_string());
 
@@ -160,7 +171,16 @@ where
       builder.parent_span_id(parent_id);
     }
 
-    let _ = builder.serde(&visitor.into_json()).build();
+    // Add remaining event fields as metadata
+    for (key, value) in visitor.fields {
+      let value_str = match value {
+        serde_json::Value::String(s) => s,
+        other => other.to_string(),
+      };
+      builder.metadata(key, value_str);
+    }
+
+    let _ = builder.payload(Payload::text(message)).build();
   }
 }
 

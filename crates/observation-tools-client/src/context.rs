@@ -89,8 +89,8 @@ where
 ///
 /// Returns the ID of the currently active tracing span, or `None` if there is
 /// no active span. This is used for automatically attributing observations
-/// to the current span when the `tracing-layer` feature is enabled.
-#[cfg(feature = "tracing-layer")]
+/// to the current span when the `tracing` feature is enabled.
+#[cfg(feature = "tracing")]
 pub(crate) fn get_current_tracing_span_id() -> Option<String> {
   let current = tracing::Span::current();
   current.id().map(|id| id.into_u64().to_string())

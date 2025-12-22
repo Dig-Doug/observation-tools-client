@@ -3,7 +3,7 @@
 #[cfg(feature = "axum")]
 pub mod axum;
 
-#[cfg(feature = "tracing-layer")]
+#[cfg(feature = "tracing")]
 pub mod tracing;
 
 mod client;

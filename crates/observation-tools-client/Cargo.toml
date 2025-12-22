@@ -21,7 +21,7 @@ axum = [
   "dep:bytes",
   "dep:base64",
 ]
-tracing-layer = [
+tracing = [
   "dep:tracing-subscriber",
 ]
 
@@ -52,7 +52,7 @@ pin-project-lite = { workspace = true, optional = true }
 bytes = { workspace = true, optional = true }
 base64 = { workspace = true, optional = true }
 
-# Optional tracing dependencies (only included with "tracing-layer" feature)
+# Optional tracing dependencies (only included with "tracing" feature)
 tracing-subscriber = { workspace = true, optional = true }
 
 [build-dependencies]

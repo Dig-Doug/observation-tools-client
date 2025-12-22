@@ -236,13 +236,13 @@ impl ObservationBuilderWithPayload {
     };
 
     // Auto-set parent_span_id from current tracing span if not explicitly set
-    #[cfg(feature = "tracing-layer")]
+    #[cfg(feature = "tracing")]
     let parent_span_id = self
       .fields
       .parent_span_id
       .or_else(context::get_current_tracing_span_id);
 
-    #[cfg(not(feature = "tracing-layer"))]
+    #[cfg(not(feature = "tracing"))]
     let parent_span_id = self.fields.parent_span_id;
 
     let observation = Observation {
