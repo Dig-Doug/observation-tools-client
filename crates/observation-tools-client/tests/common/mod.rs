@@ -1,6 +1,7 @@
 use observation_tools::server_client::types::GetObservation;
 use observation_tools::Client;
 use observation_tools::ClientBuilder;
+use observation_tools::ExecutionHandle;
 use observation_tools_server::auth::generate_api_key;
 use observation_tools_server::auth::ApiKeySecret;
 
@@ -124,5 +125,25 @@ impl TestServer {
       .send()
       .await?;
     Ok(response.observations.clone())
+  }
+
+  #[allow(unused)]
+  pub async fn with_execution<F, T>(
+    &self,
+    name: impl Into<String>,
+    future: F,
+  ) -> anyhow::Result<(ExecutionHandle, T)>
+  where
+    F: std::future::Future<Output = T>,
+  {
+    use observation_tools::with_execution;
+    let client = self.create_client()?;
+    let execution = client
+      .begin_execution(name.into().as_str())?
+      .wait_for_upload()
+      .await?;
+    let result = with_execution(execution.clone(), future).await;
+    client.shutdown().await?;
+    Ok((execution, result))
   }
 }

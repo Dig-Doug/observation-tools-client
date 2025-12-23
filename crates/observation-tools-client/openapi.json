@@ -244,7 +244,8 @@
         "description": "Type of observation",
         "enum": [
           "LogEntry",
-          "Payload"
+          "Payload",
+          "Span"
         ],
         "type": "string"
       },

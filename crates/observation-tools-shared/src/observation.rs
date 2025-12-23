@@ -102,6 +102,7 @@ pub struct Observation {
 pub enum ObservationType {
   LogEntry,
   Payload,
+  Span,
 }
 
 /// Log level for observations

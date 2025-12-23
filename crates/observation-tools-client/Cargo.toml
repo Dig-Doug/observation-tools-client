@@ -22,6 +22,9 @@ axum = [
   "dep:bytes",
   "dep:base64",
 ]
+tracing = [
+  "dep:tracing-subscriber",
+]
 
 [dependencies]
 anyhow.workspace = true
@@ -49,6 +52,9 @@ http-body-util = { workspace = true, optional = true }
 pin-project-lite = { workspace = true, optional = true }
 bytes = { workspace = true, optional = true }
 base64 = { workspace = true, optional = true }
+
+# Optional tracing dependencies (only included with "tracing" feature)
+tracing-subscriber = { workspace = true, optional = true }
 
 [build-dependencies]
 napi-build.workspace = true

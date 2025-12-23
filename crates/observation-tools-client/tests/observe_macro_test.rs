@@ -8,27 +8,13 @@ use serde::Serialize;
 #[test_log::test(tokio::test)]
 async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-simple-string")?
-    .wait_for_upload()
+  let (execution, observation) = server
+    .with_execution("test-simple-string", async {
+      observe!("simple_string", "hello world")
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    let handle = observe!("simple_string", "hello world")
-      .wait_for_upload()
-      .await?;
-
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
@@ -39,7 +25,7 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
   );
   assert_eq!(obs.mime_type, "application/json");
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -48,39 +34,25 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_serde_struct() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-serde-struct")?
-    .wait_for_upload()
-    .await?;
-
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    #[derive(Serialize)]
-    struct MyStruct {
-      message: String,
-      count: i32,
-    }
-
-    let handle = observe!(
-      "serde_struct",
-      MyStruct {
-        message: "test message".to_string(),
-        count: 42,
+  let (execution, observation) = server
+    .with_execution("test-serde-struct", async {
+      #[derive(Serialize)]
+      struct MyStruct {
+        message: String,
+        count: i32,
       }
-    )
-    .wait_for_upload()
+
+      observe!(
+        "serde_struct",
+        MyStruct {
+          message: "test message".to_string(),
+          count: 42,
+        }
+      )
+    })
     .await?;
 
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
@@ -93,7 +65,7 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
   );
   assert_eq!(obs.mime_type, "application/json");
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -102,43 +74,29 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_custom_payload() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-custom-payload")?
-    .wait_for_upload()
-    .await?;
-
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    struct CustomStruct {
-      message: String,
-    }
-
-    impl From<&CustomStruct> for Payload {
-      fn from(value: &CustomStruct) -> Self {
-        Payload::text(value.message.clone())
+  let (execution, observation) = server
+    .with_execution("test-custom-payload", async {
+      struct CustomStruct {
+        message: String,
       }
-    }
 
-    let handle = observe!(
-      "custom_payload",
-      CustomStruct {
-        message: "custom message".to_string()
-      },
-      custom_serialization = true
-    )
-    .wait_for_upload()
+      impl From<&CustomStruct> for Payload {
+        fn from(value: &CustomStruct) -> Self {
+          Payload::text(value.message.clone())
+        }
+      }
+
+      observe!(
+        "custom_payload",
+        CustomStruct {
+          message: "custom message".to_string()
+        },
+        custom_serialization = true
+      )
+    })
     .await?;
 
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
@@ -146,7 +104,7 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
   assert_eq!(obs.payload.as_str(), Some("custom message"));
   assert_eq!(obs.mime_type, "text/plain");
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -155,43 +113,29 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-custom-new-syntax")?
-    .wait_for_upload()
-    .await?;
-
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    struct CustomStruct {
-      value: String,
-    }
-
-    impl From<&CustomStruct> for Payload {
-      fn from(value: &CustomStruct) -> Self {
-        Payload::text(format!("custom: {}", value.value))
+  let (execution, observation) = server
+    .with_execution("test-custom-new-syntax", async {
+      struct CustomStruct {
+        value: String,
       }
-    }
 
-    let handle = observe!(
-      "custom_new_syntax",
-      CustomStruct {
-        value: "test".to_string()
-      },
-      custom = true
-    )
-    .wait_for_upload()
+      impl From<&CustomStruct> for Payload {
+        fn from(value: &CustomStruct) -> Self {
+          Payload::text(format!("custom: {}", value.value))
+        }
+      }
+
+      observe!(
+        "custom_new_syntax",
+        CustomStruct {
+          value: "test".to_string()
+        },
+        custom = true
+      )
+    })
     .await?;
 
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
@@ -199,7 +143,7 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
   assert_eq!(obs.payload.as_str(), Some("custom: test"));
   assert_eq!(obs.mime_type, "text/plain");
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -208,26 +152,14 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-var-capture")?
-    .wait_for_upload()
+  let (execution, observation) = server
+    .with_execution("test-var-capture", async {
+      let my_data = "captured variable name";
+      observe!(my_data)
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    let my_data = "captured variable name";
-    let handle = observe!(my_data).wait_for_upload().await?;
-
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
@@ -238,7 +170,7 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
     Some(&serde_json::to_value("captured variable name")?)
   );
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -247,31 +179,17 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_structured_syntax() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-structured")?
-    .wait_for_upload()
+  let (execution, observation) = server
+    .with_execution("test-structured", async {
+      observe!(
+        name = "structured_observation",
+        payload = "test payload",
+        label = "test/category"
+      )
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    let handle = observe!(
-      name = "structured_observation",
-      payload = "test payload",
-      label = "test/category"
-    )
-    .wait_for_upload()
-    .await?;
-
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
@@ -282,7 +200,7 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
     Some(&serde_json::to_value("test payload")?)
   );
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -291,36 +209,22 @@ async fn test_observe_structured_syntax() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-metadata")?
-    .wait_for_upload()
+  let (execution, observation) = server
+    .with_execution("test-metadata", async {
+      let duration_ms = 123;
+      observe!(
+        name = "with_metadata",
+        payload = "data",
+        metadata {
+          request_type: "GET",
+          status_code: "200",
+          duration_ms: duration_ms.to_string()
+        }
+      )
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    let duration_ms = 123;
-    let handle = observe!(
-      name = "with_metadata",
-      payload = "data",
-      metadata {
-        request_type: "GET",
-        status_code: "200",
-        duration_ms: duration_ms.to_string()
-      }
-    )
-    .wait_for_upload()
-    .await?;
-
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
@@ -329,7 +233,7 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
   assert_eq!(obs.metadata.get("status_code"), Some(&"200".to_string()));
   assert_eq!(obs.metadata.get("duration_ms"), Some(&"123".to_string()));
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -338,35 +242,20 @@ async fn test_observe_metadata_syntax() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_expression_name() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-expr-name")?
-    .wait_for_upload()
+  let (execution, observation) = server
+    .with_execution("test-expr-name", async {
+      const OBSERVATION_NAME: &str = "const_name";
+      observe!(name = OBSERVATION_NAME, payload = "test data")
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    const OBSERVATION_NAME: &str = "const_name";
-
-    let handle = observe!(name = OBSERVATION_NAME, payload = "test data")
-      .wait_for_upload()
-      .await?;
-
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "const_name");
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -375,34 +264,21 @@ async fn test_observe_expression_name() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_dynamic_name() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-dynamic-name")?
-    .wait_for_upload()
+  let (execution, observation) = server
+    .with_execution("test-dynamic-name", async {
+      let prefix = "dynamic";
+      let name = format!("{}_observation", prefix);
+      observe!(&name, "test payload")
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    let prefix = "dynamic";
-    let name = format!("{}_observation", prefix);
-
-    let handle = observe!(&name, "test payload").wait_for_upload().await?;
-
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "dynamic_observation");
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
@@ -411,37 +287,22 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
 #[test_log::test(tokio::test)]
 async fn test_observe_dynamic_label() -> anyhow::Result<()> {
   let server = TestServer::new().await;
-  let client = server.create_client()?;
-
-  let execution = client
-    .begin_execution("test-dynamic-label")?
-    .wait_for_upload()
+  let (execution, observation) = server
+    .with_execution("test-dynamic-label", async {
+      let endpoint = "users";
+      let label = format!("api/{}/create", endpoint);
+      observe!(name = "request", payload = "data", label = label)
+    })
     .await?;
 
-  let execution_id = execution.id();
-
-  let observation = observation_tools::with_execution(execution, async {
-    let endpoint = "users";
-    let label = format!("api/{}/create", endpoint);
-
-    let handle = observe!(name = "request", payload = "data", label = label)
-      .wait_for_upload()
-      .await?;
-
-    Ok::<_, anyhow::Error>(handle)
-  })
-  .await?;
-
-  client.shutdown().await?;
-
-  let observations = server.list_observations(&execution_id).await?;
+  let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
   let obs = &observations[0];
   assert_eq!(obs.name, "request");
   assert_eq!(obs.labels, vec!["api/users/create"]);
 
-  let response = reqwest::get(&observation.url()).await?;
+  let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
 
   Ok(())
