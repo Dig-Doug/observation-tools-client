@@ -20,6 +20,8 @@ pub use client::ClientBuilder;
 pub use client::BATCH_SIZE;
 pub use client::BLOB_THRESHOLD_BYTES;
 pub use context::with_execution;
+pub use context::WithObservations;
+pub use context::WithObservationsFuture;
 pub use error::Error;
 pub use error::Result;
 pub use execution::BeginExecution;

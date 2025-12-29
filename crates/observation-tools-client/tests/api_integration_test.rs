@@ -221,6 +221,66 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
 }
 
 #[test_log::test(tokio::test)]
+async fn test_with_observations_spawned_task() -> anyhow::Result<()> {
+  use observation_tools::WithObservations;
+
+  const SPAWNED_OBS_NAME: &str = "spawned-task-observation";
+  let server = TestServer::new().await;
+  let client = server.create_client()?;
+
+  let execution = client
+    .begin_execution("test-with-observations")?
+    .wait_for_upload()
+    .await?;
+
+  // Use with_execution to set up the context, then spawn a task with with_observations
+  observation_tools::with_execution(execution.clone(), async {
+    // Spawn a task that uses with_observations to inherit the execution context
+    let handle = tokio::spawn(
+      async move {
+        // This observation should be associated with the parent execution
+        observe!(
+          name = SPAWNED_OBS_NAME,
+          label = "spawned/task",
+          payload = "data from spawned task"
+        )
+        .wait_for_upload()
+        .await
+      }
+      .with_observations(),
+    );
+
+    handle.await.expect("Spawned task failed")
+  })
+  .await?;
+
+  client.shutdown().await?;
+
+  // Verify the observation from the spawned task was associated with the correct execution
+  let observations = server.list_observations(&execution.id()).await?;
+  assert_eq!(observations.len(), 1);
+  assert_eq!(observations[0].name, SPAWNED_OBS_NAME);
+  assert_eq!(
+    observations[0].execution_id.to_string(),
+    execution.id().to_string()
+  );
+
+  Ok(())
+}
+
+#[test_log::test(tokio::test)]
+async fn test_with_observations_no_context() -> anyhow::Result<()> {
+  use observation_tools::WithObservations;
+
+  // Test that with_observations works even when there's no execution context
+  // (the future should just run normally without panicking)
+  let result = async { 42 }.with_observations().await;
+  assert_eq!(result, 42);
+
+  Ok(())
+}
+
+#[test_log::test(tokio::test)]
 async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   use futures::TryStreamExt;
 
