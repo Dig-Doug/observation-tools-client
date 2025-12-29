@@ -22,12 +22,26 @@
 //!     .layer(RequestObserverLayer::new())
 //!     .layer(ExecutionLayer::new(client));
 //! ```
+//!
+//! # Filtering Requests
+//!
+//! You can use `with_filter` to skip execution creation for certain requests:
+//!
+//! ```rust,ignore
+//! let app = Router::new()
+//!     .route("/", get(handler))
+//!     .layer(ExecutionLayer::new(client).with_filter(|req| {
+//!         // Skip health check endpoints
+//!         !req.uri().path().starts_with("/health")
+//!     }));
+//! ```
 
 mod execution_layer;
 mod request_observer;
 
 pub use execution_layer::ExecutionLayer;
 pub use execution_layer::ExecutionService;
+pub use execution_layer::RequestFilter;
 pub use request_observer::RequestObserverConfig;
 pub use request_observer::RequestObserverLayer;
 pub use request_observer::RequestObserverService;

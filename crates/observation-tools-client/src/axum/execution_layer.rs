@@ -10,10 +10,16 @@ use std::task::Poll;
 use tower::Layer;
 use tower::Service;
 
+/// A filter function that determines whether an execution should be created for a request.
+///
+/// Returns `true` to create an execution, `false` to skip.
+pub type RequestFilter = Arc<dyn Fn(&Request) -> bool + Send + Sync>;
+
 /// Layer that creates an execution context for each request
 #[derive(Clone)]
 pub struct ExecutionLayer {
   client: Arc<Client>,
+  filter: Option<RequestFilter>,
 }
 
 impl ExecutionLayer {
@@ -21,7 +27,31 @@ impl ExecutionLayer {
   pub fn new(client: Client) -> Self {
     Self {
       client: Arc::new(client),
+      filter: None,
     }
+  }
+
+  /// Set a filter function that determines whether an execution should be created.
+  ///
+  /// The filter receives a reference to the incoming request and returns `true` to
+  /// create an execution context, or `false` to skip execution creation.
+  /// When skipped, the request proceeds without an execution context.
+  ///
+  /// # Example
+  ///
+  /// ```rust,ignore
+  /// ExecutionLayer::new(client)
+  ///     .with_filter(|req| {
+  ///         // Skip health check endpoints
+  ///         !req.uri().path().starts_with("/health")
+  ///     })
+  /// ```
+  pub fn with_filter<F>(mut self, filter: F) -> Self
+  where
+    F: Fn(&Request) -> bool + Send + Sync + 'static,
+  {
+    self.filter = Some(Arc::new(filter));
+    self
   }
 }
 
@@ -32,6 +62,7 @@ impl<S> Layer<S> for ExecutionLayer {
     ExecutionService {
       inner,
       client: self.client.clone(),
+      filter: self.filter.clone(),
     }
   }
 }
@@ -41,6 +72,7 @@ impl<S> Layer<S> for ExecutionLayer {
 pub struct ExecutionService<S> {
   inner: S,
   client: Arc<Client>,
+  filter: Option<RequestFilter>,
 }
 
 impl<S> Service<Request> for ExecutionService<S>
@@ -58,9 +90,18 @@ where
 
   fn call(&mut self, req: Request) -> Self::Future {
     let client = self.client.clone();
+    let filter = self.filter.clone();
     let mut inner = self.inner.clone();
 
     Box::pin(async move {
+      // Check filter if provided
+      if let Some(ref filter) = filter {
+        if !filter(&req) {
+          // Filter returned false, skip execution creation
+          return inner.call(req).await;
+        }
+      }
+
       let execution =
         match client.begin_execution(&format!("{} {}", req.method(), req.uri().path())) {
           Ok(begin) => begin.into_handle(),
