@@ -303,3 +303,64 @@ async fn test_request_observer_handles_text_body() -> anyhow::Result<()> {
 
   Ok(())
 }
+
+#[test_log::test(tokio::test)]
+async fn test_execution_layer_filter_skips_execution() -> anyhow::Result<()> {
+  let server = TestServer::new().await;
+  let client = server.create_client()?;
+
+  let app = Router::new()
+    .route(
+      "/health",
+      get(|| async {
+        observe!("health_observation", "Health check");
+        "OK"
+      }),
+    )
+    .route(
+      "/api",
+      get(|| async {
+        observe!("api_observation", "API call");
+        "API Response"
+      }),
+    )
+    .layer(
+      ExecutionLayer::new(client.clone()).with_filter(|req| {
+        // Skip health check endpoints
+        !req.uri().path().starts_with("/health")
+      }),
+    );
+
+  let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+  let addr = listener.local_addr()?;
+  tokio::spawn(async move {
+    axum::serve(listener, app).await.expect("Server failed");
+  });
+
+  // Call health endpoint - should be filtered out
+  let response = reqwest::get(format!("http://{}/health", addr)).await?;
+  assert_eq!(response.status(), 200);
+  assert_eq!(response.text().await?, "OK");
+
+  // Call API endpoint - should create execution
+  let response = reqwest::get(format!("http://{}/api", addr)).await?;
+  assert_eq!(response.status(), 200);
+  assert_eq!(response.text().await?, "API Response");
+
+  client.shutdown().await?;
+
+  let api_client = server.create_api_client()?;
+  let executions = api_client.list_executions().send().await?;
+
+  // Only one execution should be created (for /api)
+  assert_eq!(executions.executions.len(), 1);
+  assert!(executions.executions[0].name.contains("/api"));
+
+  let observations = server
+    .list_observations(&executions.executions[0].id)
+    .await?;
+  assert_eq!(observations.len(), 1);
+  assert_eq!(observations[0].name, "api_observation");
+
+  Ok(())
+}
