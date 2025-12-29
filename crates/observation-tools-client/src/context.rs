@@ -2,6 +2,8 @@
 
 use crate::error::Result;
 use crate::execution::ExecutionHandle;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::OnceLock;
 use std::sync::RwLock;
 use tokio::task_local;
@@ -94,4 +96,51 @@ where
 pub(crate) fn get_current_tracing_span_id() -> Option<String> {
   let current = tracing::Span::current();
   current.id().map(|id| id.into_u64().to_string())
+}
+
+/// Extension trait for propagating observation context to spawned async tasks.
+///
+/// This trait allows you to easily attach the current execution context to
+/// futures that will be spawned with `tokio::spawn` or similar.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use observation_tools::WithObservations;
+///
+/// // The spawned task will inherit the current execution context
+/// tokio::spawn(async move {
+///     observe!("spawned-task", "data from spawned task")?;
+///     Ok::<_, Error>(())
+/// }.with_observations());
+/// ```
+pub trait WithObservations: Future + Sized {
+  /// Attach the current execution context to this future.
+  ///
+  /// If there is a current execution context (either task-local or global),
+  /// the returned future will run with that context. If there is no current
+  /// execution context, the future runs unchanged.
+  fn with_observations(self) -> WithObservationsFuture<Self::Output>;
+}
+
+impl<F: Future + Send + 'static> WithObservations for F {
+  fn with_observations(self) -> WithObservationsFuture<Self::Output> {
+    match get_current_execution() {
+      Some(execution) => {
+        WithObservationsFuture(Box::pin(TASK_EXECUTION.scope(execution, self)))
+      }
+      None => WithObservationsFuture(Box::pin(self)),
+    }
+  }
+}
+
+/// Future wrapper that propagates execution context.
+pub struct WithObservationsFuture<T>(Pin<Box<dyn Future<Output = T> + Send>>);
+
+impl<T> Future for WithObservationsFuture<T> {
+  type Output = T;
+
+  fn poll(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<T> {
+    self.0.as_mut().poll(cx)
+  }
 }
