@@ -1,25 +1,197 @@
 use crate::context;
+use crate::execution::ExecutionHandle;
 use crate::observation::ObservationBuilder;
 use axum::body::Body;
 use axum::extract::Request;
 use axum::response::Response;
-use bytes::Bytes;
+use bytes::{Bytes, BytesMut};
 use http::header::HeaderMap;
 use http::header::HeaderName;
 use http::header::AUTHORIZATION;
 use http::header::CONTENT_TYPE;
 use http::header::COOKIE;
 use http::header::SET_COOKIE;
+use http_body::Frame;
 use http_body_util::BodyExt;
 use observation_tools_shared::LogLevel;
 use observation_tools_shared::Payload;
+use pin_project_lite::pin_project;
 use serde_json::json;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::task::Context;
 use std::task::Poll;
 use tower::Layer;
 use tower::Service;
+
+/// State shared between the streaming body and the observation emitter.
+/// This is used to collect data as it streams and emit the observation when complete.
+struct StreamingObserverState {
+  buffer: BytesMut,
+  content_type: String,
+  log_level: LogLevel,
+  status_code: u16,
+  execution: ExecutionHandle,
+  emitted: bool,
+}
+
+impl StreamingObserverState {
+  fn new(
+    content_type: String,
+    log_level: LogLevel,
+    status_code: u16,
+    execution: ExecutionHandle,
+  ) -> Self {
+    Self {
+      buffer: BytesMut::new(),
+      content_type,
+      log_level,
+      status_code,
+      execution,
+      emitted: false,
+    }
+  }
+
+  fn append(&mut self, data: &Bytes) {
+    self.buffer.extend_from_slice(data);
+  }
+
+  fn emit_observation(&mut self) {
+    if self.emitted {
+      tracing::debug!("StreamingObserverBody: observation already emitted, skipping");
+      return;
+    }
+    self.emitted = true;
+
+    let bytes = self.buffer.clone().freeze();
+    tracing::debug!(
+      "StreamingObserverBody: emitting observation with {} bytes",
+      bytes.len()
+    );
+    let payload = Payload {
+      data: bytes.to_vec(),
+      mime_type: self.content_type.clone(),
+      size: bytes.len(),
+    };
+
+    let mut response_body_builder = ObservationBuilder::new("http/response/body");
+    response_body_builder
+      .label("http/response")
+      .label("http/response/body")
+      .metadata("status", &self.status_code.to_string())
+      .log_level(self.log_level)
+      .payload(payload)
+      .build_with_execution(&self.execution);
+  }
+}
+
+pin_project! {
+  /// A body wrapper that streams data through while collecting it for observation.
+  /// When the stream completes, it emits the observation with the collected body.
+  pub struct StreamingObserverBody {
+    #[pin]
+    inner: Body,
+    state: Arc<Mutex<StreamingObserverState>>,
+  }
+}
+
+impl StreamingObserverBody {
+  fn new(
+    inner: Body,
+    content_type: String,
+    log_level: LogLevel,
+    status_code: u16,
+    execution: ExecutionHandle,
+  ) -> Self {
+    Self {
+      inner,
+      state: Arc::new(Mutex::new(StreamingObserverState::new(
+        content_type,
+        log_level,
+        status_code,
+        execution,
+      ))),
+    }
+  }
+}
+
+impl http_body::Body for StreamingObserverBody {
+  type Data = Bytes;
+  type Error = axum::Error;
+
+  fn poll_frame(
+    self: Pin<&mut Self>,
+    cx: &mut Context<'_>,
+  ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
+    let this = self.project();
+
+    tracing::trace!("StreamingObserverBody: poll_frame called");
+    match this.inner.poll_frame(cx) {
+      Poll::Ready(Some(Ok(frame))) => {
+        tracing::trace!("StreamingObserverBody: got data frame");
+        // If this is a data frame, capture the data
+        if let Some(data) = frame.data_ref() {
+          if let Ok(mut state) = this.state.lock() {
+            state.append(data);
+          }
+        }
+        Poll::Ready(Some(Ok(frame)))
+      }
+      Poll::Ready(Some(Err(e))) => {
+        tracing::trace!("StreamingObserverBody: got error");
+        Poll::Ready(Some(Err(e)))
+      }
+      Poll::Ready(None) => {
+        // Stream completed, emit the observation
+        tracing::debug!("StreamingObserverBody: stream completed, emitting observation");
+        match this.state.lock() {
+          Ok(mut state) => {
+            state.emit_observation();
+          }
+          Err(e) => {
+            tracing::error!("StreamingObserverBody: failed to lock state: {}", e);
+          }
+        }
+        Poll::Ready(None)
+      }
+      Poll::Pending => {
+        tracing::trace!("StreamingObserverBody: pending");
+        Poll::Pending
+      }
+    }
+  }
+
+  fn is_end_stream(&self) -> bool {
+    // Check if we've emitted our observation yet
+    // If not, return false to force the framework to poll again so we can emit
+    let emitted = match self.state.lock() {
+      Ok(state) => state.emitted,
+      Err(_) => false,
+    };
+    let inner_end = self.inner.is_end_stream();
+    // Only report end-of-stream if we've already emitted our observation
+    let result = inner_end && emitted;
+    tracing::trace!(
+      "StreamingObserverBody: is_end_stream = {} (inner={}, emitted={})",
+      result,
+      inner_end,
+      emitted
+    );
+    result
+  }
+
+  fn size_hint(&self) -> http_body::SizeHint {
+    // Return a size hint without an upper bound to prevent the framework
+    // from knowing the exact size and short-circuiting the polling
+    let inner = self.inner.size_hint();
+    let mut hint = http_body::SizeHint::new();
+    hint.set_lower(inner.lower());
+    // Don't set upper - this makes the size unknown
+    hint
+  }
+}
 
 #[derive(Clone)]
 pub struct RequestObserverConfig {
@@ -109,12 +281,15 @@ where
     let mut inner = self.inner.clone();
 
     Box::pin(async move {
-      if !context::get_current_execution().is_some() {
-        tracing::debug!(
-          "RequestObserverLayer: No execution context available, skipping observation"
-        );
-        return inner.call(req).await;
-      }
+      let execution = match context::get_current_execution() {
+        Some(exec) => exec,
+        None => {
+          tracing::debug!(
+            "RequestObserverLayer: No execution context available, skipping observation"
+          );
+          return inner.call(req).await;
+        }
+      };
 
       let (parts, body) = req.into_parts();
       let mut request_headers_builder = ObservationBuilder::new("http/request/headers");
@@ -166,21 +341,18 @@ where
         )))
         .build();
 
-      let response_body_bytes = body
-        .collect()
-        .await
-        .map(|collected| collected.to_bytes())
-        .unwrap_or_else(|_| Bytes::new());
-      let mut response_body_builder = ObservationBuilder::new("http/response/body");
-      response_body_builder
-        .label("http/response")
-        .label("http/response/body")
-        .metadata("status", &parts.status.as_u16().to_string())
-        .log_level(log_level)
-        .payload(bytes_to_payload(&response_body_bytes, &parts.headers))
-        .build();
+      // Wrap the response body in a streaming observer that captures data as it flows through
+      // and emits the observation when the stream completes
+      let content_type = parts
+        .headers
+        .get(CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream")
+        .to_string();
+      let streaming_body =
+        StreamingObserverBody::new(body, content_type, log_level, parts.status.as_u16(), execution);
 
-      Ok(Response::from_parts(parts, Body::from(response_body_bytes)))
+      Ok(Response::from_parts(parts, Body::new(streaming_body)))
     })
   }
 }
