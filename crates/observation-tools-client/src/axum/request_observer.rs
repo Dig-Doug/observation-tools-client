@@ -28,13 +28,13 @@ use tower::Service;
 
 /// State shared between the streaming body and the observation emitter.
 /// This is used to collect data as it streams and emit the observation when complete.
+/// The observation is emitted in the Drop implementation when the body is finished.
 struct StreamingObserverState {
   buffer: BytesMut,
   content_type: String,
   log_level: LogLevel,
   status_code: u16,
   execution: ExecutionHandle,
-  emitted: bool,
 }
 
 impl StreamingObserverState {
@@ -50,24 +50,19 @@ impl StreamingObserverState {
       log_level,
       status_code,
       execution,
-      emitted: false,
     }
   }
 
   fn append(&mut self, data: &Bytes) {
     self.buffer.extend_from_slice(data);
   }
+}
 
-  fn emit_observation(&mut self) {
-    if self.emitted {
-      tracing::debug!("StreamingObserverBody: observation already emitted, skipping");
-      return;
-    }
-    self.emitted = true;
-
+impl Drop for StreamingObserverState {
+  fn drop(&mut self) {
     let bytes = self.buffer.clone().freeze();
     tracing::debug!(
-      "StreamingObserverBody: emitting observation with {} bytes",
+      "StreamingObserverBody: emitting observation with {} bytes on drop",
       bytes.len()
     );
     let payload = Payload {
@@ -127,10 +122,8 @@ impl http_body::Body for StreamingObserverBody {
   ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
     let this = self.project();
 
-    tracing::trace!("StreamingObserverBody: poll_frame called");
     match this.inner.poll_frame(cx) {
       Poll::Ready(Some(Ok(frame))) => {
-        tracing::trace!("StreamingObserverBody: got data frame");
         // If this is a data frame, capture the data
         if let Some(data) = frame.data_ref() {
           if let Ok(mut state) = this.state.lock() {
@@ -139,57 +132,18 @@ impl http_body::Body for StreamingObserverBody {
         }
         Poll::Ready(Some(Ok(frame)))
       }
-      Poll::Ready(Some(Err(e))) => {
-        tracing::trace!("StreamingObserverBody: got error");
-        Poll::Ready(Some(Err(e)))
-      }
-      Poll::Ready(None) => {
-        // Stream completed, emit the observation
-        tracing::debug!("StreamingObserverBody: stream completed, emitting observation");
-        match this.state.lock() {
-          Ok(mut state) => {
-            state.emit_observation();
-          }
-          Err(e) => {
-            tracing::error!("StreamingObserverBody: failed to lock state: {}", e);
-          }
-        }
-        Poll::Ready(None)
-      }
-      Poll::Pending => {
-        tracing::trace!("StreamingObserverBody: pending");
-        Poll::Pending
-      }
+      Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
+      Poll::Ready(None) => Poll::Ready(None),
+      Poll::Pending => Poll::Pending,
     }
   }
 
   fn is_end_stream(&self) -> bool {
-    // Check if we've emitted our observation yet
-    // If not, return false to force the framework to poll again so we can emit
-    let emitted = match self.state.lock() {
-      Ok(state) => state.emitted,
-      Err(_) => false,
-    };
-    let inner_end = self.inner.is_end_stream();
-    // Only report end-of-stream if we've already emitted our observation
-    let result = inner_end && emitted;
-    tracing::trace!(
-      "StreamingObserverBody: is_end_stream = {} (inner={}, emitted={})",
-      result,
-      inner_end,
-      emitted
-    );
-    result
+    self.inner.is_end_stream()
   }
 
   fn size_hint(&self) -> http_body::SizeHint {
-    // Return a size hint without an upper bound to prevent the framework
-    // from knowing the exact size and short-circuiting the polling
-    let inner = self.inner.size_hint();
-    let mut hint = http_body::SizeHint::new();
-    hint.set_lower(inner.lower());
-    // Don't set upper - this makes the size unknown
-    hint
+    self.inner.size_hint()
   }
 }
 
