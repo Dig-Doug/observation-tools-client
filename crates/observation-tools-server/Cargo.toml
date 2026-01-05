@@ -23,6 +23,7 @@ hmac.workspace = true
 minijinja-autoreload = { workspace = true }
 minijinja-embed = {workspace = true}
 minijinja.workspace = true
+nom.workspace = true
 object_store.workspace = true
 observation-tools-shared.workspace = true
 rand.workspace = true

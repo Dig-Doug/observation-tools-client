@@ -29,6 +29,7 @@ rand = "0.8"
 sha2 = "0.10"
 url = "2.5"
 minijinja = { version = "2.12", features = ["loader"] }
+nom = "7"
 minijinja-autoreload = "2.12.0"
 minijinja-embed = "2.12.0"
 object_store = "0.12.4"

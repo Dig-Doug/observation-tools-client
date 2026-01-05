@@ -2,6 +2,7 @@ mod common;
 
 use common::TestServer;
 use observation_tools::observe;
+use observation_tools::ObservationBuilder;
 use observation_tools_shared::Payload;
 use serde::Serialize;
 
@@ -301,6 +302,46 @@ async fn test_observe_dynamic_label() -> anyhow::Result<()> {
   let obs = &observations[0];
   assert_eq!(obs.name, "request");
   assert_eq!(obs.labels, vec!["api/users/create"]);
+
+  let response = reqwest::get(&observation.handle().url()).await?;
+  assert_eq!(response.status(), 200);
+
+  Ok(())
+}
+
+#[test_log::test(tokio::test)]
+async fn test_observe_debug_struct() -> anyhow::Result<()> {
+  let server = TestServer::new().await;
+  let (execution, observation) = server
+    .with_execution("test-debug-struct", async {
+      // This struct only implements Debug, not Serialize
+      #[derive(Debug)]
+      struct DebugOnlyStruct {
+        name: String,
+        value: i32,
+      }
+
+      let data = DebugOnlyStruct {
+        name: "test".to_string(),
+        value: 42,
+      };
+
+      ObservationBuilder::new("debug_struct").debug(&data).build()
+    })
+    .await?;
+
+  let observations = server.list_observations(&execution.id()).await?;
+
+  assert_eq!(observations.len(), 1);
+  let obs = &observations[0];
+  assert_eq!(obs.name, "debug_struct");
+  assert_eq!(obs.mime_type, "text/x-rust-debug");
+
+  // The payload should be parsed to JSON with _type field
+  let json = obs.payload.as_json().expect("payload should be parsed as JSON");
+  assert_eq!(json.get("_type"), Some(&serde_json::json!("DebugOnlyStruct")));
+  assert_eq!(json.get("name"), Some(&serde_json::json!("test")));
+  assert_eq!(json.get("value"), Some(&serde_json::json!(42)));
 
   let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);

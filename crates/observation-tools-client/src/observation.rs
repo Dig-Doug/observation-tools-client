@@ -19,6 +19,7 @@ use observation_tools_shared::SourceInfo;
 use serde::Serialize;
 use std::any::TypeId;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Builder for creating observations (without payload set yet)
 ///
@@ -125,6 +126,18 @@ impl ObservationBuilder {
       payload: value.into(),
     }
   }
+
+  /// Set the payload from a Debug-formatted value and return a builder that can be built
+  ///
+  /// Uses `{:#?}` (pretty-printed Debug) for consistent, parseable output.
+  /// The payload will have MIME type `text/x-rust-debug` which enables
+  /// special parsing and rendering on the server.
+  pub fn debug<T: Debug + ?Sized>(&self, value: &T) -> ObservationBuilderWithPayload {
+    ObservationBuilderWithPayload {
+      fields: self.clone(),
+      payload: Payload::debug(format!("{:#?}", value)),
+    }
+  }
 }
 
 #[napi]
@@ -212,7 +225,7 @@ impl ObservationBuilderWithPayload {
     match context::get_current_execution() {
       Some(execution) => self.build_with_execution(&execution),
       None => {
-        log::error!(
+        log::trace!(
           "No execution context available for observation '{}'",
           self.fields.name
         );
