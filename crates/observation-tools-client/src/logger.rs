@@ -37,15 +37,16 @@ impl Log for ObservationLogger {
       return;
     }
 
-    let mut builder = ObservationBuilder::new("ObservationLogger");
-    builder
+    let builder = ObservationBuilder::new("ObservationLogger")
       .observation_type(ObservationType::LogEntry)
       .log_level(record.level().into())
       .label(format!("log/{}", record.target()));
-    if let (Some(file), Some(line)) = (record.file(), record.line()) {
-      builder.source(file, line);
-    }
-    let _ = builder.payload(&format!("{}", record.args())).build();
+    let builder = if let (Some(file), Some(line)) = (record.file(), record.line()) {
+      builder.source(file, line)
+    } else {
+      builder
+    };
+    let _ = builder.payload(format!("{}", record.args())).build();
   }
 
   fn flush(&self) {

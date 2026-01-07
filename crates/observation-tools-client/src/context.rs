@@ -71,11 +71,11 @@ pub(crate) fn clear_global_execution() {
 /// // Run two tasks concurrently with different execution contexts
 /// let (result1, result2) = tokio::join!(
 ///   with_execution(execution1, async {
-///     observe!("observation-1", "data from task 1")?;
+///     observe!("observation-1").serde(&"data from task 1").build();
 ///     Ok::<_, Error>(())
 ///   }),
 ///   with_execution(execution2, async {
-///     observe!("observation-2", "data from task 2")?;
+///     observe!("observation-2").serde(&"data from task 2").build();
 ///     Ok::<_, Error>(())
 ///   })
 /// );
@@ -110,7 +110,7 @@ pub(crate) fn get_current_tracing_span_id() -> Option<String> {
 ///
 /// // The spawned task will inherit the current execution context
 /// tokio::spawn(async move {
-///     observe!("spawned-task", "data from spawned task")?;
+///     observe!("spawned-task").serde(&"data from spawned task").build();
 ///     Ok::<_, Error>(())
 /// }.with_observations());
 /// ```

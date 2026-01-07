@@ -35,7 +35,7 @@ async fn test_execution_layer_creates_context() -> anyhow::Result<()> {
     .route(
       "/hello",
       get(|| async {
-        observe!("handler_observation", "Hello from handler");
+        observe!("handler_observation").serde(&"Hello from handler").build();
         "Hello, World!"
       }),
     )
@@ -175,7 +175,7 @@ async fn test_error_response_has_error_log_level() -> anyhow::Result<()> {
     .route(
       "/error",
       get(|| async {
-        observe!("error_observation", "An error occurred");
+        observe!("error_observation").serde(&"An error occurred").build();
         (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Error")
       }),
     )
@@ -321,14 +321,14 @@ async fn test_execution_layer_filter_skips_execution() -> anyhow::Result<()> {
     .route(
       "/health",
       get(|| async {
-        observe!("health_observation", "Health check");
+        observe!("health_observation").serde(&"Health check").build();
         "OK"
       }),
     )
     .route(
       "/api",
       get(|| async {
-        observe!("api_observation", "API call");
+        observe!("api_observation").serde(&"API call").build();
         "API Response"
       }),
     )

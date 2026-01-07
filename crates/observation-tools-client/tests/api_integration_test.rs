@@ -9,6 +9,7 @@ use anyhow::anyhow;
 use common::TestServer;
 use observation_tools::observe;
 use observation_tools::server_client::types::PayloadOrPointerResponse;
+use observation_tools_shared::Payload;
 use std::collections::HashSet;
 use tracing::debug;
 
@@ -88,7 +89,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     // Create BATCH_SIZE observations to test batching behavior
     for i in 0..observation_tools::BATCH_SIZE {
       let obs_name = format!("observation-{}", i);
-      observe!(&obs_name, payload_data, custom = true);
+      observe!(&obs_name).payload(Payload::text(&payload_data)).build();
       expected_names.insert(obs_name);
     }
 
@@ -167,11 +168,10 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
     observation_tools::with_execution(execution1.clone(), async {
       for _ in 0..NUM_OBSERVATIONS {
         debug!("Task 1 sending observation");
-        observation_tools::observe!(
-          name = TASK_1_NAME,
-          label = "concurrent/task1",
-          payload = "data from task 1"
-        )
+        observation_tools::observe!(TASK_1_NAME)
+          .label("concurrent/task1")
+          .serde(&"data from task 1")
+          .build()
         .wait_for_upload()
         .await?;
         let _ = task1_sender.send(());
@@ -187,11 +187,10 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
     observation_tools::with_execution(execution2.clone(), async {
       while let Some(_) = task1_receiver.recv().await {
         debug!("Task 2 sending observation");
-        observation_tools::observe!(
-          name = TASK_2_NAME,
-          label = "concurrent/task2",
-          payload = "data from task 2"
-        )
+        observation_tools::observe!(TASK_2_NAME)
+          .label("concurrent/task2")
+          .serde(&"data from task 2")
+          .build()
         .wait_for_upload()
         .await?;
         debug!("Task 2 waiting for task 1");
@@ -239,11 +238,10 @@ async fn test_with_observations_spawned_task() -> anyhow::Result<()> {
     let handle = tokio::spawn(
       async move {
         // This observation should be associated with the parent execution
-        observe!(
-          name = SPAWNED_OBS_NAME,
-          label = "spawned/task",
-          payload = "data from spawned task"
-        )
+        observe!(SPAWNED_OBS_NAME)
+          .label("spawned/task")
+          .serde(&"data from spawned task")
+          .build()
         .wait_for_upload()
         .await
       }
@@ -299,11 +297,10 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
 
   let (execution, _) = server
     .with_execution("test-execution-with-large-payload", async {
-      observe!(
-        name = "large-observation",
-        label = "test/large-payload",
-        payload = large_payload
-      );
+      observe!("large-observation")
+        .label("test/large-payload")
+        .serde(&large_payload)
+        .build();
     })
     .await?;
 

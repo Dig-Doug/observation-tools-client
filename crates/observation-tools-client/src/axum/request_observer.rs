@@ -71,8 +71,7 @@ impl Drop for StreamingObserverState {
       size: bytes.len(),
     };
 
-    let mut response_body_builder = ObservationBuilder::new("http/response/body");
-    response_body_builder
+    ObservationBuilder::new("http/response/body")
       .label("http/response")
       .label("http/response/body")
       .metadata("status", &self.status_code.to_string())
@@ -246,8 +245,7 @@ where
       };
 
       let (parts, body) = req.into_parts();
-      let mut request_headers_builder = ObservationBuilder::new("http/request/headers");
-      request_headers_builder
+      ObservationBuilder::new("http/request/headers")
         .label("http/request")
         .label("http/request/headers")
         .metadata("method", parts.method.to_string())
@@ -263,8 +261,7 @@ where
         .await
         .map(|collected| collected.to_bytes())
         .unwrap_or_else(|_| Bytes::new());
-      let mut request_body_builder = ObservationBuilder::new("http/request/body");
-      request_body_builder
+      ObservationBuilder::new("http/request/body")
         .label("http/request")
         .label("http/request/body")
         .metadata("method", parts.method.to_string())
@@ -283,8 +280,7 @@ where
         500..=599 => LogLevel::Error,
         _ => LogLevel::Info,
       };
-      let mut response_headers_builder = ObservationBuilder::new("http/response/headers");
-      response_headers_builder
+      ObservationBuilder::new("http/response/headers")
         .label("http/response")
         .label("http/response/headers")
         .metadata("status", &parts.status.as_u16().to_string())

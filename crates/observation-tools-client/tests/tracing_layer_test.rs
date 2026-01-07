@@ -179,7 +179,7 @@ async fn test_observe_macro_gets_parent_span() -> anyhow::Result<()> {
       let _guard = span.enter();
 
       // observe!() should automatically get the current span as parent
-      observe!("my_observation", "test data");
+      observe!("my_observation").serde(&"test data").build();
     })
     .await?;
 

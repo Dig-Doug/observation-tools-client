@@ -95,8 +95,7 @@ where
       .map(|parent| parent.id().into_u64().to_string());
 
     // Build and send observation
-    let mut builder = ObservationBuilder::new(&data.name);
-    builder
+    let builder = ObservationBuilder::new(&data.name)
       .observation_type(ObservationType::Span)
       .log_level(tracing_level_to_log_level(data.level))
       .label(format!("tracing/spans/{}", data.target))
@@ -104,15 +103,17 @@ where
       .metadata("duration_ms", format!("{:.3}", duration_ms))
       .metadata("target", &data.target);
 
-    if let Some(file) = data.file {
-      if let Some(line) = data.line {
-        builder.source(file, line);
-      }
-    }
+    let builder = if let (Some(file), Some(line)) = (data.file, data.line) {
+      builder.source(file, line)
+    } else {
+      builder
+    };
 
-    if let Some(parent_id) = parent_span_id {
-      builder.parent_span_id(parent_id);
-    }
+    let builder = if let Some(parent_id) = parent_span_id {
+      builder.parent_span_id(parent_id)
+    } else {
+      builder
+    };
 
     let _ = builder.serde(&data.fields).build();
   }
@@ -155,30 +156,31 @@ where
     let parent_span_id = ctx.current_span().id().map(|id| id.into_u64().to_string());
 
     // Build and send observation
-    let mut builder = ObservationBuilder::new(metadata.name());
-    builder
+    let builder = ObservationBuilder::new(metadata.name())
       .observation_type(ObservationType::LogEntry)
       .log_level(tracing_level_to_log_level(*metadata.level()))
       .label(format!("tracing/events/{}", metadata.target()));
 
-    if let Some(file) = metadata.file() {
-      if let Some(line) = metadata.line() {
-        builder.source(file, line);
-      }
-    }
+    let builder = if let (Some(file), Some(line)) = (metadata.file(), metadata.line()) {
+      builder.source(file, line)
+    } else {
+      builder
+    };
 
-    if let Some(parent_id) = parent_span_id {
-      builder.parent_span_id(parent_id);
-    }
+    let builder = if let Some(parent_id) = parent_span_id {
+      builder.parent_span_id(parent_id)
+    } else {
+      builder
+    };
 
     // Add remaining event fields as metadata
-    for (key, value) in visitor.fields {
+    let builder = visitor.fields.into_iter().fold(builder, |b, (key, value)| {
       let value_str = match value {
         serde_json::Value::String(s) => s,
         other => other.to_string(),
       };
-      builder.metadata(key, value_str);
-    }
+      b.metadata(key, value_str)
+    });
 
     let _ = builder.payload(Payload::text(message)).build();
   }
