@@ -58,6 +58,12 @@ impl PayloadOrPointerResponse {
         return PayloadOrPointerResponse::Json(json_value);
       }
     }
+    if obs.mime_type.starts_with("text/x-rust-debug") {
+      if let Ok(text) = String::from_utf8(data.clone()) {
+        let parsed = crate::debug_parser::parse_debug_to_json(&text);
+        return PayloadOrPointerResponse::Json(parsed);
+      }
+    }
     if obs.mime_type.starts_with("text/plain") {
       if let Ok(text) = String::from_utf8(data.clone()) {
         return PayloadOrPointerResponse::Text(text);

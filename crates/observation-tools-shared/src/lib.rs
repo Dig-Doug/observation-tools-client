@@ -16,6 +16,7 @@ pub use observation::ObservationType;
 pub use observation::SourceInfo;
 pub use payload::Markdown;
 pub use payload::Payload;
+pub use payload::MIME_TYPE_RUST_DEBUG;
 
 /// Payload size threshold for blob storage (64KB)
 /// Payloads larger than this will be uploaded as separate blobs

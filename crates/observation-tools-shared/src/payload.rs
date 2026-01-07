@@ -1,6 +1,9 @@
 use serde::Deserialize;
 use serde::Serialize;
 
+/// MIME type for Rust Debug output
+pub const MIME_TYPE_RUST_DEBUG: &str = "text/x-rust-debug";
+
 /// Payload data for an observation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Payload {
@@ -44,6 +47,20 @@ impl Payload {
     Self {
       data,
       mime_type: mime_type.into(),
+      size,
+    }
+  }
+
+  /// Create a new payload from Rust Debug format
+  ///
+  /// Uses the `text/x-rust-debug` MIME type which enables special parsing
+  /// and rendering on the server.
+  pub fn debug(data: impl Into<String>) -> Self {
+    let data = data.into().into_bytes();
+    let size = data.len();
+    Self {
+      data,
+      mime_type: MIME_TYPE_RUST_DEBUG.to_string(),
       size,
     }
   }

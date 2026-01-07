@@ -10,7 +10,8 @@
   "types": "index.d.ts",
   "files": [
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "*.node"
   ],
   "napi": {
     "binaryName": "observation-tools-client",

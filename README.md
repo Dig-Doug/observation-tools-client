@@ -36,7 +36,7 @@ To run the tests, you must build the NodeJS client library so the test can impor
 
 ```bash
 pnpm --dir crates/observation-tools-client install
-pnpm --dir crates/observation-tools-client build
+pnpm --dir crates/observation-tools-client build:debug
 pnpm --dir tests install
 pnpm --dir tests run test
 ```
