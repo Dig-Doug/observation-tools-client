@@ -317,7 +317,9 @@ async fn test_observe_debug_struct() -> anyhow::Result<()> {
       // This struct only implements Debug, not Serialize
       #[derive(Debug)]
       struct DebugOnlyStruct {
+        #[allow(unused)]
         name: String,
+        #[allow(unused)]
         value: i32,
       }
 
