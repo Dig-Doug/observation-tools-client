@@ -35,7 +35,7 @@ async fn test_execution_layer_creates_context() -> anyhow::Result<()> {
     .route(
       "/hello",
       get(|| async {
-        observe!("handler_observation", "Hello from handler");
+        observe!("handler_observation").serde(&"Hello from handler");
         "Hello, World!"
       }),
     )
@@ -175,7 +175,7 @@ async fn test_error_response_has_error_log_level() -> anyhow::Result<()> {
     .route(
       "/error",
       get(|| async {
-        observe!("error_observation", "An error occurred");
+        observe!("error_observation").serde(&"An error occurred");
         (axum::http::StatusCode::INTERNAL_SERVER_ERROR, "Error")
       }),
     )
@@ -321,23 +321,21 @@ async fn test_execution_layer_filter_skips_execution() -> anyhow::Result<()> {
     .route(
       "/health",
       get(|| async {
-        observe!("health_observation", "Health check");
+        observe!("health_observation").serde(&"Health check");
         "OK"
       }),
     )
     .route(
       "/api",
       get(|| async {
-        observe!("api_observation", "API call");
+        observe!("api_observation").serde(&"API call");
         "API Response"
       }),
     )
-    .layer(
-      ExecutionLayer::new(client.clone()).with_filter(|req| {
-        // Skip health check endpoints
-        !req.uri().path().starts_with("/health")
-      }),
-    );
+    .layer(ExecutionLayer::new(client.clone()).with_filter(|req| {
+      // Skip health check endpoints
+      !req.uri().path().starts_with("/health")
+    }));
 
   let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
   let addr = listener.local_addr()?;
@@ -373,8 +371,9 @@ async fn test_execution_layer_filter_skips_execution() -> anyhow::Result<()> {
   Ok(())
 }
 
-/// Test that Server-Sent Events (SSE) are streamed in real-time through the observer layer.
-/// This verifies that the layer doesn't buffer the entire response before returning it.
+/// Test that Server-Sent Events (SSE) are streamed in real-time through the
+/// observer layer. This verifies that the layer doesn't buffer the entire
+/// response before returning it.
 #[test_log::test(tokio::test)]
 async fn test_streaming_sse_events_are_received_incrementally() -> anyhow::Result<()> {
   let server = TestServer::new().await;
@@ -449,14 +448,15 @@ async fn test_streaming_sse_events_are_received_incrementally() -> anyhow::Resul
 
   // Verify the events were received incrementally (not all at once)
   // If streaming works, there should be measurable time gaps between events
-  // The delays are 50ms, so we expect at least some gap between first and last event
+  // The delays are 50ms, so we expect at least some gap between first and last
+  // event
   if timings.len() >= 2 {
     let first_event_time = timings[0].1;
     let last_event_time = timings[timings.len() - 1].1;
     let time_spread = last_event_time - first_event_time;
 
-    // With 50ms delays between events, we expect at least 80ms spread across 3 events
-    // (accounting for some timing variance)
+    // With 50ms delays between events, we expect at least 80ms spread across 3
+    // events (accounting for some timing variance)
     assert!(
       time_spread >= Duration::from_millis(80),
       "Events should be spread over time (streaming), but received with only {:?} spread. \
@@ -476,7 +476,8 @@ async fn test_streaming_sse_events_are_received_incrementally() -> anyhow::Resul
     .list_observations(&executions.executions[0].id)
     .await?;
 
-  // Should have 4 observations: request headers, request body, response headers, response body
+  // Should have 4 observations: request headers, request body, response headers,
+  // response body
   assert_eq!(observations.len(), 4);
   assert_eq!(observations[0].name, "http/request/headers");
   assert_eq!(observations[1].name, "http/request/body");

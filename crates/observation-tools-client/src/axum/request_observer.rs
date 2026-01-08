@@ -4,7 +4,8 @@ use crate::observation::ObservationBuilder;
 use axum::body::Body;
 use axum::extract::Request;
 use axum::response::Response;
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
+use bytes::BytesMut;
 use http::header::HeaderMap;
 use http::header::HeaderName;
 use http::header::AUTHORIZATION;
@@ -27,8 +28,9 @@ use tower::Layer;
 use tower::Service;
 
 /// State shared between the streaming body and the observation emitter.
-/// This is used to collect data as it streams and emit the observation when complete.
-/// The observation is emitted in the Drop implementation when the body is finished.
+/// This is used to collect data as it streams and emit the observation when
+/// complete. The observation is emitted in the Drop implementation when the
+/// body is finished.
 struct StreamingObserverState {
   buffer: BytesMut,
   content_type: String,
@@ -71,14 +73,12 @@ impl Drop for StreamingObserverState {
       size: bytes.len(),
     };
 
-    let mut response_body_builder = ObservationBuilder::new("http/response/body");
-    response_body_builder
+    ObservationBuilder::new("http/response/body")
       .label("http/response")
       .label("http/response/body")
       .metadata("status", &self.status_code.to_string())
       .log_level(self.log_level)
-      .payload(payload)
-      .build_with_execution(&self.execution);
+      .payload_with_execution(payload, &self.execution);
   }
 }
 
@@ -246,8 +246,7 @@ where
       };
 
       let (parts, body) = req.into_parts();
-      let mut request_headers_builder = ObservationBuilder::new("http/request/headers");
-      request_headers_builder
+      ObservationBuilder::new("http/request/headers")
         .label("http/request")
         .label("http/request/headers")
         .metadata("method", parts.method.to_string())
@@ -255,22 +254,19 @@ where
         .serde(&json!(filter_headers(
           &parts.headers,
           &config.excluded_headers
-        )))
-        .build();
+        )));
 
       let request_body_bytes = body
         .collect()
         .await
         .map(|collected| collected.to_bytes())
         .unwrap_or_else(|_| Bytes::new());
-      let mut request_body_builder = ObservationBuilder::new("http/request/body");
-      request_body_builder
+      ObservationBuilder::new("http/request/body")
         .label("http/request")
         .label("http/request/body")
         .metadata("method", parts.method.to_string())
         .metadata("uri", parts.uri.to_string())
-        .payload(bytes_to_payload(&request_body_bytes, &parts.headers))
-        .build();
+        .payload(bytes_to_payload(&request_body_bytes, &parts.headers));
 
       let response = inner
         .call(Request::from_parts(parts, Body::from(request_body_bytes)))
@@ -283,8 +279,7 @@ where
         500..=599 => LogLevel::Error,
         _ => LogLevel::Info,
       };
-      let mut response_headers_builder = ObservationBuilder::new("http/response/headers");
-      response_headers_builder
+      ObservationBuilder::new("http/response/headers")
         .label("http/response")
         .label("http/response/headers")
         .metadata("status", &parts.status.as_u16().to_string())
@@ -292,19 +287,23 @@ where
         .serde(&json!(filter_headers(
           &parts.headers,
           &config.excluded_headers
-        )))
-        .build();
+        )));
 
-      // Wrap the response body in a streaming observer that captures data as it flows through
-      // and emits the observation when the stream completes
+      // Wrap the response body in a streaming observer that captures data as it flows
+      // through and emits the observation when the stream completes
       let content_type = parts
         .headers
         .get(CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream")
         .to_string();
-      let streaming_body =
-        StreamingObserverBody::new(body, content_type, log_level, parts.status.as_u16(), execution);
+      let streaming_body = StreamingObserverBody::new(
+        body,
+        content_type,
+        log_level,
+        parts.status.as_u16(),
+        execution,
+      );
 
       Ok(Response::from_parts(parts, Body::new(streaming_body)))
     })

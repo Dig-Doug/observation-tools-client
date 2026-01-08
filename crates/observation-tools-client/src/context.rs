@@ -71,11 +71,11 @@ pub(crate) fn clear_global_execution() {
 /// // Run two tasks concurrently with different execution contexts
 /// let (result1, result2) = tokio::join!(
 ///   with_execution(execution1, async {
-///     observe!("observation-1", "data from task 1")?;
+///     observe!("observation-1").serde(&"data from task 1");
 ///     Ok::<_, Error>(())
 ///   }),
 ///   with_execution(execution2, async {
-///     observe!("observation-2", "data from task 2")?;
+///     observe!("observation-2").serde(&"data from task 2");
 ///     Ok::<_, Error>(())
 ///   })
 /// );
@@ -110,7 +110,7 @@ pub(crate) fn get_current_tracing_span_id() -> Option<String> {
 ///
 /// // The spawned task will inherit the current execution context
 /// tokio::spawn(async move {
-///     observe!("spawned-task", "data from spawned task")?;
+///     observe!("spawned-task").serde(&"data from spawned task");
 ///     Ok::<_, Error>(())
 /// }.with_observations());
 /// ```
@@ -126,9 +126,7 @@ pub trait WithObservations: Future + Sized {
 impl<F: Future + Send + 'static> WithObservations for F {
   fn with_observations(self) -> WithObservationsFuture<Self::Output> {
     match get_current_execution() {
-      Some(execution) => {
-        WithObservationsFuture(Box::pin(TASK_EXECUTION.scope(execution, self)))
-      }
+      Some(execution) => WithObservationsFuture(Box::pin(TASK_EXECUTION.scope(execution, self))),
       None => WithObservationsFuture(Box::pin(self)),
     }
   }

@@ -10,7 +10,8 @@ use std::task::Poll;
 use tower::Layer;
 use tower::Service;
 
-/// A filter function that determines whether an execution should be created for a request.
+/// A filter function that determines whether an execution should be created for
+/// a request.
 ///
 /// Returns `true` to create an execution, `false` to skip.
 pub type RequestFilter = Arc<dyn Fn(&Request) -> bool + Send + Sync>;
@@ -31,10 +32,11 @@ impl ExecutionLayer {
     }
   }
 
-  /// Set a filter function that determines whether an execution should be created.
+  /// Set a filter function that determines whether an execution should be
+  /// created.
   ///
-  /// The filter receives a reference to the incoming request and returns `true` to
-  /// create an execution context, or `false` to skip execution creation.
+  /// The filter receives a reference to the incoming request and returns `true`
+  /// to create an execution context, or `false` to skip execution creation.
   /// When skipped, the request proceeds without an execution context.
   ///
   /// # Example
