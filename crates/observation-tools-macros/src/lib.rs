@@ -20,8 +20,9 @@ impl Parse for ObserveArg {
   }
 }
 
-/// Returns true if the identifier looks like a local variable (snake_case starting with lowercase)
-/// Returns false for constants (SCREAMING_SNAKE_CASE) or other patterns
+/// Returns true if the identifier looks like a local variable (snake_case
+/// starting with lowercase) Returns false for constants (SCREAMING_SNAKE_CASE)
+/// or other patterns
 fn is_variable_name(name: &str) -> bool {
   // If it starts with lowercase, treat it as a variable name to auto-capture
   // Constants are typically SCREAMING_SNAKE_CASE (all uppercase with underscores)
@@ -30,42 +31,51 @@ fn is_variable_name(name: &str) -> bool {
 
 /// The observe! procedural macro
 ///
-/// Creates an ObservationBuilder with the given name and source info automatically set.
-/// The caller then chains builder methods to set payload and other fields.
+/// Creates an ObservationBuilder with the given name and source info
+/// automatically set. The caller then chains builder methods to set payload and
+/// other fields.
 ///
 /// Supports:
 /// - `observe!("name")` - String literal name
-/// - `observe!(CONST_NAME)` - Constant or expression for name (SCREAMING_SNAKE_CASE uses value)
-/// - `observe!(variable)` - Auto-captures variable name as the observation name (snake_case)
+/// - `observe!(CONST_NAME)` - Constant or expression for name
+///   (SCREAMING_SNAKE_CASE uses value)
+/// - `observe!(variable)` - Auto-captures variable name as the observation name
+///   (snake_case)
 ///
 /// Examples:
 /// ```ignore
-/// // Simple observation with serde serialization
-/// observe!("request").serde(&data).build();
+/// // Simple observation with serde serialization (fire-and-forget)
+/// observe!("request").serde(&data);
 ///
 /// // With label and metadata
 /// observe!("response")
 ///     .label("api/users")
 ///     .metadata("status", "200")
-///     .serde(&response)
-///     .build();
+///     .serde(&response);
 ///
 /// // Using Debug trait instead of serde
-/// observe!("debug_data").debug(&my_struct).build();
+/// observe!("debug_data").debug(&my_struct);
 ///
 /// // Auto-capture variable name (snake_case identifiers)
 /// let my_data = get_data();
-/// observe!(my_data).serde(&my_data).build();
+/// observe!(my_data).serde(&my_data);
 ///
 /// // Use constant value (SCREAMING_SNAKE_CASE identifiers)
 /// const OBS_NAME: &str = "my_observation";
-/// observe!(OBS_NAME).serde(&data).build();
+/// observe!(OBS_NAME).serde(&data);
+///
+/// // Wait for upload completion
+/// observe!("important").serde(&data).wait_for_upload().await?;
+///
+/// // Get observation handle
+/// let handle = observe!("tracked").serde(&data).handle();
 /// ```
 #[proc_macro]
 pub fn observe(input: TokenStream) -> TokenStream {
   let args = parse_macro_input!(input as ObserveArg);
 
-  // Determine the name - either from a string literal, expression, or auto-captured variable name
+  // Determine the name - either from a string literal, expression, or
+  // auto-captured variable name
   let name_expr = match &args.name_expr {
     // If it's a simple identifier, check if it looks like a variable name (snake_case)
     // Constants (SCREAMING_SNAKE_CASE) should use their value, not their name

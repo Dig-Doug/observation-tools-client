@@ -33,10 +33,13 @@ export declare class ExecutionHandle {
 }
 
 /**
- * Builder for creating observations (without payload set yet)
+ * Builder for creating observations
  *
- * Call `.payload()` or `.custom_payload()` to get an
- * `ObservationBuilderWithPayload` that can be built.
+ * Use the `observe!` macro or `ObservationBuilder::new()` to create a builder,
+ * then chain methods to configure and send the observation.
+ *
+ * Payload methods (`.serde()`, `.debug()`, `.payload()`) send the observation
+ * immediately and return `SendObservation` for optional waiting.
  */
 export declare class ObservationBuilder {
   /** Create a new observation builder with the given name */
@@ -54,30 +57,17 @@ export declare class ObservationBuilder {
   metadata(key: string, value: string): this
   /** Set the source info for the observation */
   source(file: string, line: number): this
-  /** Set the payload as JSON data */
-  jsonPayload(jsonString: string): ObservationBuilderWithPayload
-  /** Set the payload with custom data and MIME type */
-  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayload
-  /** Set the payload as markdown content */
-  markdownPayload(content: string): ObservationBuilderWithPayload
+  /** Set the payload as JSON data, returning a builder that can be sent with an execution */
+  jsonPayload(jsonString: string): ObservationBuilderWithPayloadNapi
+  /** Set the payload with custom data and MIME type, returning a builder that can be sent */
+  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayloadNapi
+  /** Set the payload as markdown content, returning a builder that can be sent */
+  markdownPayload(content: string): ObservationBuilderWithPayloadNapi
 }
 
-/**
- * Builder for creating observations (with payload set)
- *
- * This struct is returned by `ObservationBuilder::payload()` and
- * `ObservationBuilder::custom_payload()`. It has the `build()` methods
- * since a payload is required.
- */
-export declare class ObservationBuilderWithPayload {
-  /**
-   * Build and send the observation
-   *
-   * Returns a SendObservation which allows you to wait for the upload to
-   * complete or get the ObservationHandle immediately.
-   *
-   * If sending fails, returns a stub that will fail on `wait_for_upload()`.
-   */
+/** Intermediate NAPI type that holds a builder and payload, allowing `.send(exe)` pattern */
+export declare class ObservationBuilderWithPayloadNapi {
+  /** Send the observation using the provided execution handle */
   send(execution: ExecutionHandle): SendObservation
 }
 

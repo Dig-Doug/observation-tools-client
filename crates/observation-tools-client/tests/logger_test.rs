@@ -14,7 +14,7 @@ async fn test_logger() -> anyhow::Result<()> {
   let (execution, _) = server
     .with_execution("test-logger", async {
       log::info!("info-log");
-      observe!("direct-log").serde(&"direct-log-payload").build();
+      observe!("direct-log").serde(&"direct-log-payload");
     })
     .await?;
 

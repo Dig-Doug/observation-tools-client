@@ -49,8 +49,7 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
         .label("test/label2")
         .metadata("key1", "value1")
         .metadata("key2", "value2")
-        .payload("test payload data")
-        .build();
+        .payload("test payload data");
     })
     .await?;
 
@@ -89,7 +88,7 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
     // Create BATCH_SIZE observations to test batching behavior
     for i in 0..observation_tools::BATCH_SIZE {
       let obs_name = format!("observation-{}", i);
-      observe!(&obs_name).payload(Payload::text(&payload_data)).build();
+      observe!(&obs_name).payload(Payload::text(&payload_data));
       expected_names.insert(obs_name);
     }
 
@@ -171,9 +170,8 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
         observation_tools::observe!(TASK_1_NAME)
           .label("concurrent/task1")
           .serde(&"data from task 1")
-          .build()
-        .wait_for_upload()
-        .await?;
+          .wait_for_upload()
+          .await?;
         let _ = task1_sender.send(());
         debug!("Task 1 waiting for task 2");
         let Some(_) = task2_receiver.recv().await else {
@@ -190,9 +188,8 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
         observation_tools::observe!(TASK_2_NAME)
           .label("concurrent/task2")
           .serde(&"data from task 2")
-          .build()
-        .wait_for_upload()
-        .await?;
+          .wait_for_upload()
+          .await?;
         debug!("Task 2 waiting for task 1");
         let _ = task2_sender.send(());
       }
@@ -232,7 +229,8 @@ async fn test_with_observations_spawned_task() -> anyhow::Result<()> {
     .wait_for_upload()
     .await?;
 
-  // Use with_execution to set up the context, then spawn a task with with_observations
+  // Use with_execution to set up the context, then spawn a task with
+  // with_observations
   observation_tools::with_execution(execution.clone(), async {
     // Spawn a task that uses with_observations to inherit the execution context
     let handle = tokio::spawn(
@@ -241,9 +239,8 @@ async fn test_with_observations_spawned_task() -> anyhow::Result<()> {
         observe!(SPAWNED_OBS_NAME)
           .label("spawned/task")
           .serde(&"data from spawned task")
-          .build()
-        .wait_for_upload()
-        .await
+          .wait_for_upload()
+          .await
       }
       .with_observations(),
     );
@@ -254,7 +251,8 @@ async fn test_with_observations_spawned_task() -> anyhow::Result<()> {
 
   client.shutdown().await?;
 
-  // Verify the observation from the spawned task was associated with the correct execution
+  // Verify the observation from the spawned task was associated with the correct
+  // execution
   let observations = server.list_observations(&execution.id()).await?;
   assert_eq!(observations.len(), 1);
   assert_eq!(observations[0].name, SPAWNED_OBS_NAME);
@@ -299,8 +297,7 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
     .with_execution("test-execution-with-large-payload", async {
       observe!("large-observation")
         .label("test/large-payload")
-        .serde(&large_payload)
-        .build();
+        .serde(&large_payload);
     })
     .await?;
 

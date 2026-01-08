@@ -10,7 +10,7 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
   let server = TestServer::new().await;
   let (execution, observation) = server
     .with_execution("test-simple-string", async {
-      observe!("simple_string").serde(&"hello world").build()
+      observe!("simple_string").serde(&"hello world")
     })
     .await?;
 
@@ -42,12 +42,10 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
         count: i32,
       }
 
-      observe!("serde_struct")
-        .serde(&MyStruct {
-          message: "test message".to_string(),
-          count: 42,
-        })
-        .build()
+      observe!("serde_struct").serde(&MyStruct {
+        message: "test message".to_string(),
+        count: 42,
+      })
     })
     .await?;
 
@@ -85,11 +83,9 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
         }
       }
 
-      observe!("custom_payload")
-        .payload(CustomStruct {
-          message: "custom message".to_string(),
-        })
-        .build()
+      observe!("custom_payload").payload(CustomStruct {
+        message: "custom message".to_string(),
+      })
     })
     .await?;
 
@@ -122,11 +118,9 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
         }
       }
 
-      observe!("custom_new_syntax")
-        .payload(CustomStruct {
-          value: "test".to_string(),
-        })
-        .build()
+      observe!("custom_new_syntax").payload(CustomStruct {
+        value: "test".to_string(),
+      })
     })
     .await?;
 
@@ -150,7 +144,7 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
   let (execution, observation) = server
     .with_execution("test-var-capture", async {
       let my_data = "captured variable name";
-      observe!(my_data).serde(&my_data).build()
+      observe!(my_data).serde(&my_data)
     })
     .await?;
 
@@ -179,7 +173,6 @@ async fn test_observe_with_label() -> anyhow::Result<()> {
       observe!("structured_observation")
         .label("test/category")
         .serde(&"test payload")
-        .build()
     })
     .await?;
 
@@ -211,7 +204,6 @@ async fn test_observe_with_metadata() -> anyhow::Result<()> {
         .metadata("status_code", "200")
         .metadata("duration_ms", duration_ms.to_string())
         .serde(&"data")
-        .build()
     })
     .await?;
 
@@ -236,7 +228,7 @@ async fn test_observe_const_name() -> anyhow::Result<()> {
   let (execution, observation) = server
     .with_execution("test-expr-name", async {
       const OBSERVATION_NAME: &str = "const_name";
-      observe!(OBSERVATION_NAME).serde(&"test data").build()
+      observe!(OBSERVATION_NAME).serde(&"test data")
     })
     .await?;
 
@@ -259,7 +251,7 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
     .with_execution("test-dynamic-name", async {
       let prefix = "dynamic";
       let name = format!("{}_observation", prefix);
-      observe!(&name).serde(&"test payload").build()
+      observe!(&name).serde(&"test payload")
     })
     .await?;
 
@@ -282,7 +274,7 @@ async fn test_observe_dynamic_label() -> anyhow::Result<()> {
     .with_execution("test-dynamic-label", async {
       let endpoint = "users";
       let label = format!("api/{}/create", endpoint);
-      observe!("request").label(label).serde(&"data").build()
+      observe!("request").label(label).serde(&"data")
     })
     .await?;
 
@@ -318,7 +310,7 @@ async fn test_observe_debug_struct() -> anyhow::Result<()> {
         value: 42,
       };
 
-      observe!("debug_struct").debug(&data).build()
+      observe!("debug_struct").debug(&data)
     })
     .await?;
 
@@ -330,8 +322,14 @@ async fn test_observe_debug_struct() -> anyhow::Result<()> {
   assert_eq!(obs.mime_type, "text/x-rust-debug");
 
   // The payload should be parsed to JSON with _type field
-  let json = obs.payload.as_json().expect("payload should be parsed as JSON");
-  assert_eq!(json.get("_type"), Some(&serde_json::json!("DebugOnlyStruct")));
+  let json = obs
+    .payload
+    .as_json()
+    .expect("payload should be parsed as JSON");
+  assert_eq!(
+    json.get("_type"),
+    Some(&serde_json::json!("DebugOnlyStruct"))
+  );
   assert_eq!(json.get("name"), Some(&serde_json::json!("test")));
   assert_eq!(json.get("value"), Some(&serde_json::json!(42)));
 

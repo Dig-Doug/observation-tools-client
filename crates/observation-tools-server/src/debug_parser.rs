@@ -3,13 +3,22 @@
 //! Converts Rust's `{:#?}` Debug output into JSON for rendering in the web UI.
 
 use nom::branch::alt;
-use nom::bytes::complete::{escaped, tag, take_while1};
-use nom::character::complete::{char, multispace0, none_of, one_of};
-use nom::combinator::{opt, recognize, value};
+use nom::bytes::complete::escaped;
+use nom::bytes::complete::tag;
+use nom::bytes::complete::take_while1;
+use nom::character::complete::char;
+use nom::character::complete::multispace0;
+use nom::character::complete::none_of;
+use nom::character::complete::one_of;
+use nom::combinator::opt;
+use nom::combinator::recognize;
+use nom::combinator::value;
 use nom::multi::separated_list0;
-use nom::sequence::{pair, tuple};
+use nom::sequence::pair;
+use nom::sequence::tuple;
 use nom::IResult;
-use serde_json::{Map, Value};
+use serde_json::Map;
+use serde_json::Value;
 
 /// Parse Rust Debug output into a JSON value
 ///
@@ -88,10 +97,8 @@ fn boolean(input: &str) -> IResult<&str, Value> {
 fn array(input: &str) -> IResult<&str, Value> {
   let (input, _) = char('[')(input)?;
   let (input, _) = multispace0(input)?;
-  let (input, items) = separated_list0(
-    tuple((multispace0, char(','), multispace0)),
-    debug_value,
-  )(input)?;
+  let (input, items) =
+    separated_list0(tuple((multispace0, char(','), multispace0)), debug_value)(input)?;
   let (input, _) = multispace0(input)?;
   let (input, _) = opt(char(','))(input)?;
   let (input, _) = multispace0(input)?;
@@ -104,10 +111,8 @@ fn array(input: &str) -> IResult<&str, Value> {
 fn tuple_value(input: &str) -> IResult<&str, Value> {
   let (input, _) = char('(')(input)?;
   let (input, _) = multispace0(input)?;
-  let (input, items) = separated_list0(
-    tuple((multispace0, char(','), multispace0)),
-    debug_value,
-  )(input)?;
+  let (input, items) =
+    separated_list0(tuple((multispace0, char(','), multispace0)), debug_value)(input)?;
   let (input, _) = multispace0(input)?;
   let (input, _) = opt(char(','))(input)?;
   let (input, _) = multispace0(input)?;
@@ -135,10 +140,8 @@ fn named_struct(input: &str) -> IResult<&str, Value> {
   let (input, _) = multispace0(input)?;
   let (input, _) = char('{')(input)?;
   let (input, _) = multispace0(input)?;
-  let (input, fields) = separated_list0(
-    tuple((multispace0, char(','), multispace0)),
-    struct_field,
-  )(input)?;
+  let (input, fields) =
+    separated_list0(tuple((multispace0, char(','), multispace0)), struct_field)(input)?;
   let (input, _) = multispace0(input)?;
   let (input, _) = opt(char(','))(input)?;
   let (input, _) = multispace0(input)?;
@@ -159,10 +162,8 @@ fn tuple_struct(input: &str) -> IResult<&str, Value> {
   let (input, _) = multispace0(input)?;
   let (input, _) = char('(')(input)?;
   let (input, _) = multispace0(input)?;
-  let (input, values) = separated_list0(
-    tuple((multispace0, char(','), multispace0)),
-    debug_value,
-  )(input)?;
+  let (input, values) =
+    separated_list0(tuple((multispace0, char(','), multispace0)), debug_value)(input)?;
   let (input, _) = multispace0(input)?;
   let (input, _) = opt(char(','))(input)?;
   let (input, _) = multispace0(input)?;
@@ -198,10 +199,8 @@ fn unit_variant(input: &str) -> IResult<&str, Value> {
 fn map_value(input: &str) -> IResult<&str, Value> {
   let (input, _) = char('{')(input)?;
   let (input, _) = multispace0(input)?;
-  let (input, entries) = separated_list0(
-    tuple((multispace0, char(','), multispace0)),
-    map_entry,
-  )(input)?;
+  let (input, entries) =
+    separated_list0(tuple((multispace0, char(','), multispace0)), map_entry)(input)?;
   let (input, _) = multispace0(input)?;
   let (input, _) = opt(char(','))(input)?;
   let (input, _) = multispace0(input)?;
@@ -215,7 +214,8 @@ fn map_value(input: &str) -> IResult<&str, Value> {
   Ok((input, Value::Object(map)))
 }
 
-// Parse a map entry: key: value (key can be a value too, but we convert to string)
+// Parse a map entry: key: value (key can be a value too, but we convert to
+// string)
 fn map_entry(input: &str) -> IResult<&str, (String, Value)> {
   let (input, _) = multispace0(input)?;
   let (input, key) = debug_value(input)?;

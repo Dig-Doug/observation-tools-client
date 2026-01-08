@@ -115,7 +115,7 @@ where
       builder
     };
 
-    let _ = builder.serde(&data.fields).build();
+    let _ = builder.serde(&data.fields);
   }
 
   fn on_event(&self, event: &Event<'_>, ctx: Context<'_, S>) {
@@ -182,7 +182,7 @@ where
       b.metadata(key, value_str)
     });
 
-    let _ = builder.payload(Payload::text(message)).build();
+    let _ = builder.payload(Payload::text(message));
   }
 }
 

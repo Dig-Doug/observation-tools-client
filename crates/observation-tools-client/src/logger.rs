@@ -46,7 +46,7 @@ impl Log for ObservationLogger {
     } else {
       builder
     };
-    let _ = builder.payload(format!("{}", record.args())).build();
+    let _ = builder.payload(format!("{}", record.args()));
   }
 
   fn flush(&self) {

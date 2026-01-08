@@ -21,10 +21,13 @@ use std::any::TypeId;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-/// Builder for creating observations (without payload set yet)
+/// Builder for creating observations
 ///
-/// Call `.payload()` or `.custom_payload()` to get an
-/// `ObservationBuilderWithPayload` that can be built.
+/// Use the `observe!` macro or `ObservationBuilder::new()` to create a builder,
+/// then chain methods to configure and send the observation.
+///
+/// Payload methods (`.serde()`, `.debug()`, `.payload()`) send the observation
+/// immediately and return `SendObservation` for optional waiting.
 #[derive(Clone)]
 #[napi]
 pub struct ObservationBuilder {
@@ -109,34 +112,176 @@ impl ObservationBuilder {
     self
   }
 
-  /// Set the payload and return a builder that can be built
-  pub fn serde<T: ?Sized + Serialize + 'static>(self, value: &T) -> ObservationBuilderWithPayload {
+  /// Serialize the value as JSON and send the observation
+  ///
+  /// Returns a `SendObservation` which allows you to wait for the upload
+  /// or get the observation handle.
+  pub fn serde<T: ?Sized + Serialize + 'static>(self, value: &T) -> SendObservation {
     if TypeId::of::<T>() == TypeId::of::<Payload>() {
       panic!("Use payload() method to set Payload directly");
     }
-    ObservationBuilderWithPayload {
-      fields: self,
-      payload: Payload::json(serde_json::to_string(value).unwrap_or_default()),
-    }
+    let payload = Payload::json(serde_json::to_string(value).unwrap_or_default());
+    self.send_observation(payload)
   }
 
-  pub fn payload<T: Into<Payload>>(self, value: T) -> ObservationBuilderWithPayload {
-    ObservationBuilderWithPayload {
-      fields: self,
-      payload: value.into(),
-    }
+  /// Send the observation with a custom payload
+  ///
+  /// Returns a `SendObservation` which allows you to wait for the upload
+  /// or get the observation handle.
+  pub fn payload<T: Into<Payload>>(self, value: T) -> SendObservation {
+    self.send_observation(value.into())
   }
 
-  /// Set the payload from a Debug-formatted value and return a builder that can be built
+  /// Format the value using Debug and send the observation
   ///
   /// Uses `{:#?}` (pretty-printed Debug) for consistent, parseable output.
   /// The payload will have MIME type `text/x-rust-debug` which enables
   /// special parsing and rendering on the server.
-  pub fn debug<T: Debug + ?Sized>(self, value: &T) -> ObservationBuilderWithPayload {
-    ObservationBuilderWithPayload {
-      fields: self,
-      payload: Payload::debug(format!("{:#?}", value)),
+  pub fn debug<T: Debug + ?Sized>(self, value: &T) -> SendObservation {
+    let payload = Payload::debug(format!("{:#?}", value));
+    self.send_observation(payload)
+  }
+
+  /// Serialize the value as JSON and send the observation with an explicit
+  /// execution
+  ///
+  /// Use this when you have an execution handle but no execution context is
+  /// set.
+  pub fn serde_with_execution<T: ?Sized + Serialize + 'static>(
+    self,
+    value: &T,
+    execution: &ExecutionHandle,
+  ) -> SendObservation {
+    if TypeId::of::<T>() == TypeId::of::<Payload>() {
+      panic!("Use payload_with_execution() method to set Payload directly");
     }
+    let payload = Payload::json(serde_json::to_string(value).unwrap_or_default());
+    self.send_observation_with_execution(payload, execution)
+  }
+
+  /// Send the observation with a custom payload and explicit execution
+  ///
+  /// Use this when you have an execution handle but no execution context is
+  /// set.
+  pub fn payload_with_execution<T: Into<Payload>>(
+    self,
+    value: T,
+    execution: &ExecutionHandle,
+  ) -> SendObservation {
+    self.send_observation_with_execution(value.into(), execution)
+  }
+
+  /// Format the value using Debug and send the observation with explicit
+  /// execution
+  ///
+  /// Use this when you have an execution handle but no execution context is
+  /// set.
+  pub fn debug_with_execution<T: Debug + ?Sized>(
+    self,
+    value: &T,
+    execution: &ExecutionHandle,
+  ) -> SendObservation {
+    let payload = Payload::debug(format!("{:#?}", value));
+    self.send_observation_with_execution(payload, execution)
+  }
+
+  /// Internal method to build and send the observation
+  fn send_observation(self, payload: Payload) -> SendObservation {
+    match context::get_current_execution() {
+      Some(execution) => self.send_observation_with_execution(payload, &execution),
+      None => {
+        log::trace!(
+          "No execution context available for observation '{}'",
+          self.name
+        );
+        SendObservation::stub(Error::NoExecutionContext)
+      }
+    }
+  }
+
+  /// Internal method to build and send the observation with explicit execution
+  fn send_observation_with_execution(
+    self,
+    payload: Payload,
+    execution: &ExecutionHandle,
+  ) -> SendObservation {
+    let observation_id = self.custom_id.unwrap_or_else(ObservationId::new);
+
+    let handle = ObservationHandle {
+      base_url: execution.base_url().to_string(),
+      execution_id: execution.id(),
+      observation_id,
+    };
+
+    // Auto-set parent_span_id from current tracing span if not explicitly set
+    #[cfg(feature = "tracing")]
+    let parent_span_id = self
+      .parent_span_id
+      .or_else(context::get_current_tracing_span_id);
+
+    #[cfg(not(feature = "tracing"))]
+    let parent_span_id = self.parent_span_id;
+
+    let observation = Observation {
+      id: observation_id,
+      execution_id: execution.id(),
+      name: self.name,
+      observation_type: self.observation_type,
+      log_level: self.log_level,
+      labels: self.labels,
+      metadata: self.metadata,
+      source: self.source,
+      parent_span_id,
+      created_at: chrono::Utc::now(),
+      mime_type: payload.mime_type.clone(),
+      payload_size: payload.size,
+    };
+
+    let (uploaded_tx, uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
+
+    // Log before sending so any error comes afterward
+    log::info!(
+      "Sending: {}/exe/{}/obs/{}",
+      execution.base_url(),
+      execution.id(),
+      observation_id
+    );
+
+    if let Err(e) = execution
+      .uploader_tx
+      .try_send(UploaderMessage::Observations {
+        observations: vec![ObservationWithPayload {
+          observation,
+          payload,
+        }],
+        handle: handle.clone(),
+        uploaded_tx,
+      })
+    {
+      log::error!("Failed to send observation: {}", e);
+      return SendObservation::stub(Error::ChannelClosed);
+    }
+
+    SendObservation::new(handle, uploaded_rx)
+  }
+}
+
+/// Intermediate NAPI type that holds a builder and payload, allowing `.send(exe)` pattern
+#[napi]
+pub struct ObservationBuilderWithPayloadNapi {
+  builder: ObservationBuilder,
+  payload: Payload,
+}
+
+#[napi]
+impl ObservationBuilderWithPayloadNapi {
+  /// Send the observation using the provided execution handle
+  #[napi]
+  pub fn send(&self, execution: &ExecutionHandle) -> SendObservation {
+    self
+      .builder
+      .clone()
+      .send_observation_with_execution(self.payload.clone(), execution)
   }
 }
 
@@ -185,154 +330,35 @@ impl ObservationBuilder {
     self
   }
 
-  /// Set the payload as JSON data
+  /// Set the payload as JSON data, returning a builder that can be sent with an execution
   #[napi(js_name = "jsonPayload")]
-  pub fn json_payload_napi(
-    &self,
-    json_string: String,
-  ) -> napi::Result<ObservationBuilderWithPayload> {
+  pub fn json_payload_napi(&self, json_string: String) -> napi::Result<ObservationBuilderWithPayloadNapi> {
     let value = serde_json::from_str::<serde_json::Value>(&json_string)
       .map_err(|e| napi::Error::from_reason(format!("Invalid JSON payload: {}", e)))?;
-    Ok(ObservationBuilderWithPayload {
-      fields: self.clone(),
-      payload: Payload::json(serde_json::to_string(&value).unwrap_or_default()),
+    let payload = Payload::json(serde_json::to_string(&value).unwrap_or_default());
+    Ok(ObservationBuilderWithPayloadNapi {
+      builder: self.clone(),
+      payload,
     })
   }
 
-  /// Set the payload with custom data and MIME type
+  /// Set the payload with custom data and MIME type, returning a builder that can be sent
   #[napi(js_name = "rawPayload")]
-  pub fn raw_payload_napi(&self, data: String, mime_type: String) -> ObservationBuilderWithPayload {
-    ObservationBuilderWithPayload {
-      fields: self.clone(),
-      payload: Payload::with_mime_type(data, mime_type),
+  pub fn raw_payload_napi(&self, data: String, mime_type: String) -> ObservationBuilderWithPayloadNapi {
+    let payload = Payload::with_mime_type(data, mime_type);
+    ObservationBuilderWithPayloadNapi {
+      builder: self.clone(),
+      payload,
     }
   }
 
-  /// Set the payload as markdown content
+  /// Set the payload as markdown content, returning a builder that can be sent
   #[napi(js_name = "markdownPayload")]
-  pub fn markdown_payload_napi(&self, content: String) -> ObservationBuilderWithPayload {
-    ObservationBuilderWithPayload {
-      fields: self.clone(),
-      payload: Markdown::from(content).into(),
+  pub fn markdown_payload_napi(&self, content: String) -> ObservationBuilderWithPayloadNapi {
+    let payload: Payload = Markdown::from(content).into();
+    ObservationBuilderWithPayloadNapi {
+      builder: self.clone(),
+      payload,
     }
-  }
-}
-
-/// Builder for creating observations (with payload set)
-///
-/// This struct is returned by `ObservationBuilder::payload()` and
-/// `ObservationBuilder::custom_payload()`. It has the `build()` methods
-/// since a payload is required.
-#[napi]
-pub struct ObservationBuilderWithPayload {
-  fields: ObservationBuilder,
-  payload: Payload,
-}
-
-impl ObservationBuilderWithPayload {
-  /// Build and send the observation using the current execution context
-  ///
-  /// Returns a `SendObservation` which allows you to wait for the observation
-  /// to be uploaded before proceeding, or to get the observation ID
-  /// immediately.
-  ///
-  /// If no execution context is available, logs an error and returns a stub
-  /// SendObservation that will fail on `wait_for_upload()`.
-  pub fn build(self) -> SendObservation {
-    match context::get_current_execution() {
-      Some(execution) => self.build_with_execution(&execution),
-      None => {
-        log::trace!(
-          "No execution context available for observation '{}'",
-          self.fields.name
-        );
-        SendObservation::stub(Error::NoExecutionContext)
-      }
-    }
-  }
-
-  /// Build and send the observation using an explicit execution handle
-  ///
-  /// Returns a `SendObservation` which allows you to wait for the observation
-  /// to be uploaded. If sending fails, returns a stub that will fail on
-  /// `wait_for_upload()`.
-  pub fn build_with_execution(self, execution: &ExecutionHandle) -> SendObservation {
-    let observation_id = self.fields.custom_id.unwrap_or_else(ObservationId::new);
-
-    let handle = ObservationHandle {
-      base_url: execution.base_url().to_string(),
-      execution_id: execution.id(),
-      observation_id,
-    };
-
-    // Auto-set parent_span_id from current tracing span if not explicitly set
-    #[cfg(feature = "tracing")]
-    let parent_span_id = self
-      .fields
-      .parent_span_id
-      .or_else(context::get_current_tracing_span_id);
-
-    #[cfg(not(feature = "tracing"))]
-    let parent_span_id = self.fields.parent_span_id;
-
-    let observation = Observation {
-      id: observation_id,
-      execution_id: execution.id(),
-      name: self.fields.name,
-      observation_type: self.fields.observation_type,
-      log_level: self.fields.log_level,
-      labels: self.fields.labels,
-      metadata: self.fields.metadata,
-      source: self.fields.source,
-      parent_span_id,
-      created_at: chrono::Utc::now(),
-      mime_type: self.payload.mime_type.clone(),
-      payload_size: self.payload.size,
-    };
-
-    let (uploaded_tx, uploaded_rx) = tokio::sync::watch::channel::<ObservationUploadResult>(None);
-
-    // Log before sending so any error comes afterward
-    log::info!(
-      "Sending: {}/exe/{}/obs/{}",
-      execution.base_url(),
-      execution.id(),
-      observation_id
-    );
-
-    if let Err(e) = execution
-      .uploader_tx
-      .try_send(UploaderMessage::Observations {
-        observations: vec![ObservationWithPayload {
-          observation,
-          payload: self.payload,
-        }],
-        handle: handle.clone(),
-        uploaded_tx,
-      })
-    {
-      log::error!("Failed to send observation: {}", e);
-      return SendObservation::stub(Error::ChannelClosed);
-    }
-
-    SendObservation::new(handle, uploaded_rx)
-  }
-}
-
-#[napi]
-impl ObservationBuilderWithPayload {
-  /// Build and send the observation
-  ///
-  /// Returns a SendObservation which allows you to wait for the upload to
-  /// complete or get the ObservationHandle immediately.
-  ///
-  /// If sending fails, returns a stub that will fail on `wait_for_upload()`.
-  #[napi]
-  pub fn send(&self, execution: &ExecutionHandle) -> SendObservation {
-    let with_payload = ObservationBuilderWithPayload {
-      fields: self.fields.clone(),
-      payload: self.payload.clone(),
-    };
-    with_payload.build_with_execution(execution)
   }
 }
