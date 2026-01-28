@@ -35,6 +35,9 @@ fn is_variable_name(name: &str) -> bool {
 /// automatically set. The caller then chains builder methods to set payload and
 /// other fields.
 ///
+/// When the `disabled` feature is enabled, this macro returns a
+/// `NoopObservationBuilder` that discards all observations at compile time.
+///
 /// Supports:
 /// - `observe!("name")` - String literal name
 /// - `observe!(CONST_NAME)` - Constant or expression for name
@@ -74,33 +77,48 @@ fn is_variable_name(name: &str) -> bool {
 pub fn observe(input: TokenStream) -> TokenStream {
   let args = parse_macro_input!(input as ObserveArg);
 
-  // Determine the name - either from a string literal, expression, or
-  // auto-captured variable name
-  let name_expr = match &args.name_expr {
-    // If it's a simple identifier, check if it looks like a variable name (snake_case)
-    // Constants (SCREAMING_SNAKE_CASE) should use their value, not their name
-    Expr::Path(expr_path) if expr_path.path.segments.len() == 1 => {
-      let ident_name = expr_path.path.segments[0].ident.to_string();
-      if is_variable_name(&ident_name) {
-        // snake_case: auto-capture the variable name as the observation name
-        Expr::Lit(syn::ExprLit {
-          attrs: vec![],
-          lit: syn::Lit::Str(LitStr::new(&ident_name, args.name_expr.span())),
-        })
-      } else {
-        // SCREAMING_SNAKE_CASE or other: use the constant/expression value
-        args.name_expr
-      }
+  // When the disabled feature is enabled, return a no-op builder
+  // This completely eliminates observation overhead at compile time
+  #[cfg(feature = "disabled")]
+  {
+    // Still parse the input to validate syntax, but return no-op builder
+    let _ = &args.name_expr;
+    return quote! {
+        ::observation_tools::NoopObservationBuilder
     }
-    // Otherwise use the expression as-is (string literal, etc.)
-    _ => args.name_expr,
-  };
+    .into();
+  }
 
-  // Build the observation builder with name and source info
-  let expanded = quote! {
-      ::observation_tools::ObservationBuilder::new(#name_expr)
-          .source(file!(), line!())
-  };
+  #[cfg(not(feature = "disabled"))]
+  {
+    // Determine the name - either from a string literal, expression, or
+    // auto-captured variable name
+    let name_expr = match &args.name_expr {
+      // If it's a simple identifier, check if it looks like a variable name (snake_case)
+      // Constants (SCREAMING_SNAKE_CASE) should use their value, not their name
+      Expr::Path(expr_path) if expr_path.path.segments.len() == 1 => {
+        let ident_name = expr_path.path.segments[0].ident.to_string();
+        if is_variable_name(&ident_name) {
+          // snake_case: auto-capture the variable name as the observation name
+          Expr::Lit(syn::ExprLit {
+            attrs: vec![],
+            lit: syn::Lit::Str(LitStr::new(&ident_name, args.name_expr.span())),
+          })
+        } else {
+          // SCREAMING_SNAKE_CASE or other: use the constant/expression value
+          args.name_expr
+        }
+      }
+      // Otherwise use the expression as-is (string literal, etc.)
+      _ => args.name_expr,
+    };
 
-  TokenStream::from(expanded)
+    // Build the observation builder with name and source info
+    let expanded = quote! {
+        ::observation_tools::ObservationBuilder::new(#name_expr)
+            .source(file!(), line!())
+    };
+
+    TokenStream::from(expanded)
+  }
 }

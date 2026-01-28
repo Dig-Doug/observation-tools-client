@@ -116,7 +116,15 @@ impl ObservationBuilder {
   ///
   /// Returns a `SendObservation` which allows you to wait for the upload
   /// or get the observation handle.
+  ///
+  /// If observations are globally disabled, returns a stub without
+  /// serializing the value.
   pub fn serde<T: ?Sized + Serialize + 'static>(self, value: &T) -> SendObservation {
+    // Early return if globally disabled - skip serialization
+    if crate::config::is_disabled() {
+      return SendObservation::stub(Error::GloballyDisabled);
+    }
+
     if TypeId::of::<T>() == TypeId::of::<Payload>() {
       panic!("Use payload() method to set Payload directly");
     }
@@ -128,7 +136,15 @@ impl ObservationBuilder {
   ///
   /// Returns a `SendObservation` which allows you to wait for the upload
   /// or get the observation handle.
+  ///
+  /// If observations are globally disabled, returns a stub without
+  /// processing the payload.
   pub fn payload<T: Into<Payload>>(self, value: T) -> SendObservation {
+    // Early return if globally disabled
+    if crate::config::is_disabled() {
+      return SendObservation::stub(Error::GloballyDisabled);
+    }
+
     self.send_observation(value.into())
   }
 
@@ -137,7 +153,15 @@ impl ObservationBuilder {
   /// Uses `{:#?}` (pretty-printed Debug) for consistent, parseable output.
   /// The payload will have MIME type `text/x-rust-debug` which enables
   /// special parsing and rendering on the server.
+  ///
+  /// If observations are globally disabled, returns a stub without
+  /// formatting the value.
   pub fn debug<T: Debug + ?Sized>(self, value: &T) -> SendObservation {
+    // Early return if globally disabled - skip Debug formatting
+    if crate::config::is_disabled() {
+      return SendObservation::stub(Error::GloballyDisabled);
+    }
+
     let payload = Payload::debug(format!("{:#?}", value));
     self.send_observation(payload)
   }
@@ -147,11 +171,19 @@ impl ObservationBuilder {
   ///
   /// Use this when you have an execution handle but no execution context is
   /// set.
+  ///
+  /// If observations are globally disabled, returns a stub without
+  /// serializing the value.
   pub fn serde_with_execution<T: ?Sized + Serialize + 'static>(
     self,
     value: &T,
     execution: &ExecutionHandle,
   ) -> SendObservation {
+    // Early return if globally disabled - skip serialization
+    if crate::config::is_disabled() {
+      return SendObservation::stub(Error::GloballyDisabled);
+    }
+
     if TypeId::of::<T>() == TypeId::of::<Payload>() {
       panic!("Use payload_with_execution() method to set Payload directly");
     }
@@ -163,11 +195,19 @@ impl ObservationBuilder {
   ///
   /// Use this when you have an execution handle but no execution context is
   /// set.
+  ///
+  /// If observations are globally disabled, returns a stub without
+  /// processing the payload.
   pub fn payload_with_execution<T: Into<Payload>>(
     self,
     value: T,
     execution: &ExecutionHandle,
   ) -> SendObservation {
+    // Early return if globally disabled
+    if crate::config::is_disabled() {
+      return SendObservation::stub(Error::GloballyDisabled);
+    }
+
     self.send_observation_with_execution(value.into(), execution)
   }
 
@@ -176,11 +216,19 @@ impl ObservationBuilder {
   ///
   /// Use this when you have an execution handle but no execution context is
   /// set.
+  ///
+  /// If observations are globally disabled, returns a stub without
+  /// formatting the value.
   pub fn debug_with_execution<T: Debug + ?Sized>(
     self,
     value: &T,
     execution: &ExecutionHandle,
   ) -> SendObservation {
+    // Early return if globally disabled - skip Debug formatting
+    if crate::config::is_disabled() {
+      return SendObservation::stub(Error::GloballyDisabled);
+    }
+
     let payload = Payload::debug(format!("{:#?}", value));
     self.send_observation_with_execution(payload, execution)
   }

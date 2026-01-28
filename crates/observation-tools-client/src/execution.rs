@@ -24,6 +24,17 @@ impl BeginExecution {
     }
   }
 
+  /// Create a no-op BeginExecution for when observations are disabled
+  ///
+  /// The returned handle is a placeholder that discards all observations.
+  pub(crate) fn noop() -> Self {
+    let (_tx, rx) = tokio::sync::watch::channel(Some(Ok(ExecutionHandle::noop())));
+    Self {
+      handle: ExecutionHandle::noop(),
+      uploaded_rx: rx,
+    }
+  }
+
   /// Wait for the execution to be uploaded to the server
   pub async fn wait_for_upload(mut self) -> Result<ExecutionHandle> {
     // Wait for value to change from None to Some
@@ -72,6 +83,21 @@ impl ExecutionHandle {
       execution_id,
       uploader_tx,
       base_url,
+    }
+  }
+
+  /// Create a no-op handle for when observations are disabled
+  ///
+  /// This handle has a nil execution ID and a closed channel.
+  /// Observations sent to this handle will be discarded.
+  pub(crate) fn noop() -> Self {
+    // Create a closed channel - sends will fail gracefully
+    let (tx, _rx) = async_channel::bounded(0);
+    tx.close();
+    Self {
+      execution_id: ExecutionId::nil(),
+      uploader_tx: tx,
+      base_url: String::new(),
     }
   }
 

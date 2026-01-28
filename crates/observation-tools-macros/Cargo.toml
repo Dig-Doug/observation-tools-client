@@ -9,6 +9,10 @@ repository.workspace = true
 [lib]
 proc-macro = true
 
+[features]
+default = []
+disabled = []
+
 [dependencies]
 syn = { workspace = true, features = ["full", "extra-traits"] }
 quote = "1.0"

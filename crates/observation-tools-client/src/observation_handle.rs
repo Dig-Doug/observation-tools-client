@@ -40,6 +40,18 @@ impl SendObservation {
     }
   }
 
+  /// Create a no-op SendObservation for when observations are intentionally disabled
+  ///
+  /// Unlike `stub()`, this does not record an error - it's used when observations
+  /// are disabled by design (compile-time `disabled` feature or runtime disable).
+  pub fn noop() -> Self {
+    Self {
+      handle: ObservationHandle::placeholder(),
+      uploaded_rx: None,
+      creation_error: None,
+    }
+  }
+
   pub async fn wait_for_upload(&mut self) -> Result<ObservationHandle> {
     // Return creation error if present
     if let Some(_err) = &self.creation_error {

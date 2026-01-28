@@ -134,7 +134,16 @@ impl Client {
   ///
   /// Returns a `BeginExecution` which allows you to wait for the execution
   /// to be uploaded before proceeding, or to get the handle immediately.
+  ///
+  /// If observations are globally disabled (see [`crate::config`]), returns
+  /// a no-op execution handle that discards all observations.
   pub fn begin_execution(&self, name: impl Into<String>) -> Result<BeginExecution> {
+    // Early return if globally disabled - skip execution creation
+    if crate::config::is_disabled() {
+      trace!("Observations disabled, returning noop execution");
+      return Ok(BeginExecution::noop());
+    }
+
     let execution = Execution::new(name.into());
     self.begin_execution_internal(execution)
   }

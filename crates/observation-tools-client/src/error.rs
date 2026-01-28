@@ -30,6 +30,10 @@ pub enum Error {
   #[error("No execution context available")]
   NoExecutionContext,
 
+  /// Observations are globally disabled
+  #[error("Observations are globally disabled")]
+  GloballyDisabled,
+
   /// Configuration error
   #[error("Configuration error: {0}")]
   Config(String),

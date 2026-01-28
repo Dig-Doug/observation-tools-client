@@ -7,10 +7,13 @@ pub mod axum;
 pub mod tracing;
 
 mod client;
+pub mod config;
 pub(crate) mod context;
 mod error;
 mod execution;
 mod logger;
+#[cfg(feature = "disabled")]
+mod noop;
 mod observation;
 mod observation_handle;
 pub mod server_client;
@@ -27,6 +30,8 @@ pub use error::Result;
 pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
 pub use logger::ObservationLogger;
+#[cfg(feature = "disabled")]
+pub use noop::NoopObservationBuilder;
 pub use observation::ObservationBuilder;
 pub use observation_handle::ObservationHandle;
 pub use observation_handle::SendObservation;
@@ -35,6 +40,11 @@ pub use observation_tools_macros::observe;
 // Re-export from shared for convenience
 use observation_tools_shared::Observation;
 pub use observation_tools_shared::Payload;
+
+// Re-export commonly used config functions
+pub use config::is_disabled;
+pub use config::is_enabled;
+pub use config::{disable as disable_observations, enable as enable_observations};
 
 /// Register a global execution shared across all threads
 ///

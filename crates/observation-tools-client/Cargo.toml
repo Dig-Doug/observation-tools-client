@@ -12,6 +12,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
+disabled = ["observation-tools-macros/disabled"]
 axum = [
   "dep:axum",
   "dep:tower",
