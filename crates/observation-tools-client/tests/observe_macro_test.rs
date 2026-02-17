@@ -17,13 +17,13 @@ async fn test_observe_simple_string_payload() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.name, "simple_string");
   assert_eq!(
-    obs.payload.as_json(),
+    obs.payload().as_json(),
     Some(&serde_json::to_value("hello world")?)
   );
-  assert_eq!(obs.mime_type, "application/json");
+  assert_eq!(obs.payloads[0].mime_type, "application/json");
 
   let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
@@ -52,15 +52,15 @@ async fn test_observe_serde_struct() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.name, "serde_struct");
   assert_eq!(
-    obs.payload.as_json(),
+    obs.payload().as_json(),
     Some(&serde_json::from_str(
       r#"{"message":"test message","count":42}"#
     )?)
   );
-  assert_eq!(obs.mime_type, "application/json");
+  assert_eq!(obs.payloads[0].mime_type, "application/json");
 
   let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
@@ -92,10 +92,10 @@ async fn test_observe_custom_payload() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.name, "custom_payload");
-  assert_eq!(obs.payload.as_str(), Some("custom message"));
-  assert_eq!(obs.mime_type, "text/plain");
+  assert_eq!(obs.payload().as_str(), Some("custom message"));
+  assert_eq!(obs.payloads[0].mime_type, "text/plain");
 
   let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
@@ -127,10 +127,10 @@ async fn test_observe_custom_with_new_syntax() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.name, "custom_new_syntax");
-  assert_eq!(obs.payload.as_str(), Some("custom: test"));
-  assert_eq!(obs.mime_type, "text/plain");
+  assert_eq!(obs.payload().as_str(), Some("custom: test"));
+  assert_eq!(obs.payloads[0].mime_type, "text/plain");
 
   let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
@@ -151,11 +151,11 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   // The observation name should match the variable name
   assert_eq!(obs.name, "my_data");
   assert_eq!(
-    obs.payload.as_json(),
+    obs.payload().as_json(),
     Some(&serde_json::to_value("captured variable name")?)
   );
 
@@ -166,24 +166,27 @@ async fn test_observe_variable_name_capture() -> anyhow::Result<()> {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_observe_with_label() -> anyhow::Result<()> {
+async fn test_observe_with_group() -> anyhow::Result<()> {
   let server = TestServer::new().await;
   let (execution, observation) = server
     .with_execution("test-structured", async {
+      let group = observation_tools::group!("test_category")
+        .build()
+        .into_handle();
       observe!("structured_observation")
-        .label("test/category")
+        .group(&group)
         .serde(&"test payload")
     })
     .await?;
 
   let observations = server.list_observations(&execution.id()).await?;
 
-  assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
-  assert_eq!(obs.name, "structured_observation");
-  assert_eq!(obs.labels, vec!["test/category"]);
+  // 2 observations: the group itself + the observation
+  assert_eq!(observations.len(), 2);
+  let obs_summary = observations.iter().find(|o| o.name == "structured_observation").unwrap();
+  let obs = server.get_observation(&execution.id(), &obs_summary.id).await?;
   assert_eq!(
-    obs.payload.as_json(),
+    obs.payload().as_json(),
     Some(&serde_json::to_value("test payload")?)
   );
 
@@ -268,22 +271,25 @@ async fn test_observe_dynamic_name() -> anyhow::Result<()> {
 }
 
 #[test_log::test(tokio::test)]
-async fn test_observe_dynamic_label() -> anyhow::Result<()> {
+async fn test_observe_with_dynamic_group() -> anyhow::Result<()> {
   let server = TestServer::new().await;
   let (execution, observation) = server
-    .with_execution("test-dynamic-label", async {
+    .with_execution("test-dynamic-group", async {
       let endpoint = "users";
-      let label = format!("api/{}/create", endpoint);
-      observe!("request").label(label).serde(&"data")
+      let name = format!("api/{}/create", endpoint);
+      let group = observation_tools::GroupBuilder::new(name)
+        .build()
+        .into_handle();
+      observe!("request").group(&group).serde(&"data")
     })
     .await?;
 
   let observations = server.list_observations(&execution.id()).await?;
 
-  assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+  // 2 observations: group + observation
+  assert_eq!(observations.len(), 2);
+  let obs = observations.iter().find(|o| o.name == "request").unwrap();
   assert_eq!(obs.name, "request");
-  assert_eq!(obs.labels, vec!["api/users/create"]);
 
   let response = reqwest::get(&observation.handle().url()).await?;
   assert_eq!(response.status(), 200);
@@ -317,13 +323,13 @@ async fn test_observe_debug_struct() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.name, "debug_struct");
-  assert_eq!(obs.mime_type, "text/x-rust-debug");
+  assert_eq!(obs.payloads[0].mime_type, "text/x-rust-debug");
 
   // The payload should be parsed to JSON with _type field
   let json = obs
-    .payload
+    .payload()
     .as_json()
     .expect("payload should be parsed as JSON");
   assert_eq!(

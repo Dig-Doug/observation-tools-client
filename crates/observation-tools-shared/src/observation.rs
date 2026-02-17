@@ -1,3 +1,4 @@
+use crate::group_id::GroupId;
 use crate::ExecutionId;
 use chrono::DateTime;
 use chrono::Utc;
@@ -78,10 +79,13 @@ pub struct Observation {
   #[serde(default)]
   pub metadata: HashMap<String, String>,
 
-  /// Hierarchical labels for grouping observations
-  /// Uses path convention (e.g., "api/request/headers")
+  /// IDs of groups this observation belongs to
   #[serde(default)]
-  pub labels: Vec<String>,
+  pub group_ids: Vec<GroupId>,
+
+  /// Parent group ID (used when observation_type == Group)
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub parent_group_id: Option<GroupId>,
 
   /// Parent span ID (for tracing integration)
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -89,12 +93,6 @@ pub struct Observation {
 
   /// When this observation was created
   pub created_at: DateTime<Utc>,
-
-  /// MIME type of the payload (e.g., "text/plain", "application/json")
-  pub mime_type: String,
-
-  /// Size of the payload in bytes
-  pub payload_size: usize,
 }
 
 /// Type of observation
@@ -103,6 +101,7 @@ pub enum ObservationType {
   LogEntry,
   Payload,
   Span,
+  Group,
 }
 
 /// Log level for observations

@@ -12,6 +12,10 @@ pub enum Error {
   /// Invalid observation ID format
   #[error("Invalid observation ID: {0}")]
   InvalidObservationId(uuid::Error),
+
+  /// Invalid payload ID format
+  #[error("Invalid payload ID: {0}")]
+  InvalidPayloadId(uuid::Error),
 }
 
 /// Result type for shared crate operations

@@ -45,7 +45,6 @@ async fn test_api_with_valid_key() -> anyhow::Result<()> {
 
   observation_tools::with_execution(execution, async {
     observation_tools::ObservationBuilder::new("test-observation")
-      .label("test/label")
       .metadata("key1", "value1")
       .payload("test payload data")
       .wait_for_upload()
@@ -60,9 +59,11 @@ async fn test_api_with_valid_key() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution_id).await?;
 
   assert_eq!(observations.len(), 1);
-  let obs = &observations[0];
+
+  // Get full observation with inline payload data
+  let obs = server.get_observation(&execution_id, &observations[0].id).await?;
   assert_eq!(obs.name, "test-observation");
-  assert_eq!(obs.payload.as_str(), Some("test payload data"));
+  assert_eq!(obs.payload().as_str(), Some("test payload data"));
 
   Ok(())
 }
@@ -188,7 +189,6 @@ async fn test_blob_upload_with_auth() -> anyhow::Result<()> {
 
   let observation_id = observation_tools::with_execution(execution, async {
     observation_tools::observe!("large-observation")
-      .label("test/large-payload")
       .serde(&large_payload)
       .wait_for_upload()
       .await
@@ -204,7 +204,7 @@ async fn test_blob_upload_with_auth() -> anyhow::Result<()> {
   assert_eq!(obs.name, "large-observation");
 
   assert!(
-    matches!(obs.payload, PayloadOrPointerResponse::Pointer { .. }),
+    matches!(obs.payload(), PayloadOrPointerResponse::Pointer { .. }),
     "Large payload data should be empty in metadata (stored as blob)"
   );
 

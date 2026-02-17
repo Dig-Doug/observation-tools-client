@@ -25,11 +25,8 @@ pub async fn observation_detail(
       "Rendering observation detail page"
   );
   let parsed_observation_id = observation_tools_shared::ObservationId::parse(&observation_id)?;
-  let observation = match metadata.get_observations(&[parsed_observation_id]).await {
-    Ok(observations) => observations
-      .into_iter()
-      .next()
-      .map(|obs| GetObservation::new(obs)),
+  let observation = match metadata.get_observation(parsed_observation_id).await {
+    Ok(obs) => Some(GetObservation::new(obs)),
     Err(crate::storage::StorageError::NotFound(_)) => {
       // The user may go to the observation page before it's uploaded. Since the page
       // auto-refreshes, we do not throw an error so it will show up once it's

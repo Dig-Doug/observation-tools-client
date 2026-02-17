@@ -10,6 +10,7 @@ mod client;
 pub(crate) mod context;
 mod error;
 mod execution;
+mod group;
 mod logger;
 mod observation;
 mod observation_handle;
@@ -26,15 +27,21 @@ pub use error::Error;
 pub use error::Result;
 pub use execution::BeginExecution;
 pub use execution::ExecutionHandle;
+pub use group::GroupBuilder;
+pub use group::GroupHandle;
+pub use group::SendGroup;
 pub use logger::ObservationLogger;
 pub use observation::ObservationBuilder;
 pub use observation_handle::ObservationHandle;
+pub use observation_handle::ObservationPayloadHandle;
 pub use observation_handle::SendObservation;
-// Re-export procedural macro
+// Re-export procedural macros
+pub use observation_tools_macros::group;
 pub use observation_tools_macros::observe;
 // Re-export from shared for convenience
-use observation_tools_shared::Observation;
+pub use observation_tools_shared::GroupId;
 pub use observation_tools_shared::Payload;
+pub use observation_tools_shared::PayloadBuilder;
 
 /// Register a global execution shared across all threads
 ///
@@ -65,8 +72,3 @@ pub fn clear_global_execution() {
   context::clear_global_execution()
 }
 
-#[derive(Debug)]
-struct ObservationWithPayload {
-  observation: Observation,
-  payload: Payload,
-}
