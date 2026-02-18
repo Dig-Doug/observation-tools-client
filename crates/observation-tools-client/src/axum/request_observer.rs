@@ -78,7 +78,8 @@ impl Drop for StreamingObserverState {
       .label("http/response/body")
       .metadata("status", &self.status_code.to_string())
       .log_level(self.log_level)
-      .payload_with_execution(payload, &self.execution);
+      .execution(&self.execution)
+      .payload(payload);
   }
 }
 
