@@ -155,19 +155,13 @@ impl ObservationBuilder {
   }
 
   /// Internal method to build and send the observation
-  fn send_observation(self, payload: Payload) -> SendObservation {
-    let execution = match self.execution {
-      Some(ref exec) => exec.clone(),
-      None => match context::get_current_execution() {
-        Some(exec) => exec,
-        None => {
-          log::trace!(
-            "No execution context available for observation '{}'",
-            self.name
-          );
-          return SendObservation::stub(Error::NoExecutionContext);
-        }
-      },
+  fn send_observation(mut self, payload: Payload) -> SendObservation {
+    let Some(execution) = self.execution.take().or_else(context::get_current_execution) else {
+      log::error!(
+        "No execution context available for observation '{}'",
+        self.name
+      );
+      return SendObservation::stub(Error::NoExecutionContext);
     };
 
     self.send_with_execution(payload, &execution)
