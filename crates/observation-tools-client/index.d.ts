@@ -78,6 +78,8 @@ export declare class ObservationHandle {
 
 export declare class SendObservation {
   handle(): ObservationHandle
+  /** Wait for the observation to be uploaded to the server */
+  waitForUpload(): Promise<ObservationHandle>
 }
 
 /**

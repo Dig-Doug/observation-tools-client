@@ -15,7 +15,7 @@
       <main
         class="overflow-y-auto"
         id="execution-detail"
-        hx-get="/exe/{{ execution_id }}"
+        hx-get="{{ base_path }}?offset={{ offset }}&limit={{ limit }}{% if selected_observation %}&obs={{ selected_observation.id }}{% endif %}"
         hx-trigger="every 2s"
         hx-select="#execution-detail > *"
         hx-swap="innerHTML"
@@ -82,7 +82,7 @@
                     {% for obs in observations %}
                       <a
                         data-testid="ObservationListItemLink"
-                        href="{{ base_path }}?obs={{ obs.id }}"
+                        href="{{ base_path }}?offset={{ offset }}&limit={{ limit }}&obs={{ obs.id }}"
                         class="block px-3 py-1.5 hover:bg-neutral-800 cursor-pointer border-b border-neutral-800 last:border-b-0 {% if selected_observation and selected_observation.id == obs.id %}bg-neutral-800{% endif %}"
                       >
                         <div data-testid="ObservationListItem" class="flex items-start gap-3">
@@ -132,7 +132,7 @@
                       <li data-testid="ObservationListItem" class="my-2">
                         <a
                           data-testid="ObservationListItemLink"
-                          href="{{ base_path }}?obs={{ obs.id }}"
+                          href="{{ base_path }}?offset={{ offset }}&limit={{ limit }}&obs={{ obs.id }}"
                           class="link {% if selected_observation and selected_observation.id == obs.id %}font-bold{% endif %}"
                           >{{ obs.name }}</a
                         >
