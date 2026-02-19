@@ -78,6 +78,15 @@ impl SendObservation {
   pub fn handle_napi(&self) -> ObservationHandle {
     self.handle.clone()
   }
+
+  /// Wait for the observation to be uploaded to the server
+  #[napi(js_name = "waitForUpload")]
+  pub async unsafe fn wait_for_upload_napi(&mut self) -> napi::Result<ObservationHandle> {
+    self
+      .wait_for_upload()
+      .await
+      .map_err(|e| napi::Error::from_reason(e.to_string()))
+  }
 }
 
 #[napi]

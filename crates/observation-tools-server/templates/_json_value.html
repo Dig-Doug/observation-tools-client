@@ -44,7 +44,8 @@ null/undefined FIRST since none passes other type checks -#}
           <summary data-testid="JsonCollapseToggle">
             <span class="json-bracket">(</span>
             <span class="json-preview"
-              >{{ plain_tuple | length }} {% if plain_tuple | length == 1 %}item{% else %}items{% endif %}</span
+              >{{ plain_tuple | length }}
+              {% if plain_tuple | length == 1 %}item{% else %}items{% endif %}</span
             >
           </summary>
           <div class="json-content">
@@ -58,13 +59,15 @@ null/undefined FIRST since none passes other type checks -#}
     {%- elif type_name is defined and tuple_values is defined -%}
       {# Tuple struct: (_type: "Some", _values: [x]) -> Some(x) #}
       {%- if tuple_values | length == 0 -%}
-        <span class="json-type">{{ type_name }}</span><span class="json-bracket">()</span>{% if not is_last %},{% endif %}
+        <span class="json-type">{{ type_name }}</span
+        ><span class="json-bracket">()</span>{% if not is_last %},{% endif %}
       {%- else -%}
         <details open data-testid="JsonCollapsibleArea">
           <summary data-testid="JsonCollapseToggle">
             <span class="json-type">{{ type_name }}</span><span class="json-bracket">(</span>
             <span class="json-preview"
-              >{{ tuple_values | length }} {% if tuple_values | length == 1 %}item{% else %}items{% endif %}</span
+              >{{ tuple_values | length }}
+              {% if tuple_values | length == 1 %}item{% else %}items{% endif %}</span
             >
           </summary>
           <div class="json-content">
@@ -86,7 +89,8 @@ null/undefined FIRST since none passes other type checks -#}
           <summary data-testid="JsonCollapseToggle">
             <span class="json-type">{{ type_name }}</span> <span class="json-bracket">{</span>
             <span class="json-preview"
-              >{{ items | length }} {% if items | length == 1 %}field{% else %}fields{% endif %}</span
+              >{{ items | length }}
+              {% if items | length == 1 %}field{% else %}fields{% endif %}</span
             >
           </summary>
           <div class="json-content">
