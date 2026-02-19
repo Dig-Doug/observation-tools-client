@@ -1,0 +1,47 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-edit-format.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cargo build:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo clean:*)",
+      "Bash(cargo doc:*)",
+      "Bash(cargo fix:*)",
+      "Bash(cargo metadata:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo tree:*)",
+      "Bash(cargo update:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(grep:*)",
+      "Bash(jq:*)",
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run build:css:*)",
+      "Bash(npm run build:debug:*)",
+      "Bash(npm test:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(pnpm exec playwright test:*)",
+      "Bash(pnpm run build:debug:*)",
+      "Bash(pnpm test:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:daisyui.com)",
+      "WebFetch(domain:playwright.dev)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
