@@ -48,7 +48,7 @@ impl TestServer {
 
     let config = observation_tools_server::Config::new()
       .with_bind_addr(addr)
-      .with_data_dir(data_dir.path().to_path_buf())
+      .with_data_dir(Some(data_dir.path().to_path_buf()))
       .with_api_secret(api_secret.clone());
 
     let server = observation_tools_server::Server::new(config);

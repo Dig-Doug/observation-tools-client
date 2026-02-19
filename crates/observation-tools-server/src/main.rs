@@ -22,9 +22,9 @@ struct Cli {
 enum Commands {
   /// Start the observation tools server
   Serve {
-    /// Directory for storing data
-    #[arg(short, long, default_value = ".observation-tools")]
-    data_dir: PathBuf,
+    /// Directory for storing data [default: platform data dir]
+    #[arg(short, long)]
+    data_dir: Option<PathBuf>,
   },
   /// Generate an API key using the secret from OBSERVATION_TOOLS_API_SECRET
   GenerateKey,
