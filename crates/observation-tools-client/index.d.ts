@@ -2,34 +2,34 @@
 /* eslint-disable */
 /** Client for observation-tools */
 export declare class Client {
-  beginExecution(name: string): ExecutionHandle
+  beginExecution(name: string): ExecutionHandle;
   /**
    * Begin a new execution with a specific ID (for testing)
    *
    * This allows tests to create an execution with a known ID, enabling
    * navigation to the execution URL before the execution is uploaded.
    */
-  beginExecutionWithId(id: string, name: string): ExecutionHandle
+  beginExecutionWithId(id: string, name: string): ExecutionHandle;
 }
 
 /** Builder for Client */
 export declare class ClientBuilder {
   /** Create a new client builder */
-  constructor()
+  constructor();
   /** Set the base URL for the server */
-  setBaseUrl(url: string): void
+  setBaseUrl(url: string): void;
   /** Set the API key for authentication */
-  setApiKey(apiKey: string): void
+  setApiKey(apiKey: string): void;
   /** Build the client */
-  build(): Client
+  build(): Client;
 }
 
 /** Handle to an execution that can be used to send observations */
 export declare class ExecutionHandle {
   /** Get the execution ID as a string */
-  get idString(): string
+  get idString(): string;
   /** Get the URL to the execution page */
-  get url(): string
+  get url(): string;
 }
 
 /**
@@ -43,43 +43,43 @@ export declare class ExecutionHandle {
  */
 export declare class ObservationBuilder {
   /** Create a new observation builder with the given name */
-  constructor(name: string)
+  constructor(name: string);
   /**
    * Set a custom observation ID (for testing)
    *
    * This allows tests to create an observation with a known ID, enabling
    * navigation to the observation URL before the observation is uploaded.
    */
-  withId(id: string): this
+  withId(id: string): this;
   /** Add a label to the observation */
-  label(label: string): this
+  label(label: string): this;
   /** Add metadata to the observation */
-  metadata(key: string, value: string): this
+  metadata(key: string, value: string): this;
   /** Set the source info for the observation */
-  source(file: string, line: number): this
+  source(file: string, line: number): this;
   /** Set the payload as JSON data, returning a builder that can be sent with an execution */
-  jsonPayload(jsonString: string): ObservationBuilderWithPayloadNapi
+  jsonPayload(jsonString: string): ObservationBuilderWithPayloadNapi;
   /** Set the payload with custom data and MIME type, returning a builder that can be sent */
-  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayloadNapi
+  rawPayload(data: string, mimeType: string): ObservationBuilderWithPayloadNapi;
   /** Set the payload as markdown content, returning a builder that can be sent */
-  markdownPayload(content: string): ObservationBuilderWithPayloadNapi
+  markdownPayload(content: string): ObservationBuilderWithPayloadNapi;
 }
 
 /** Intermediate NAPI type that holds a builder and payload, allowing `.send(exe)` pattern */
 export declare class ObservationBuilderWithPayloadNapi {
   /** Send the observation using the provided execution handle */
-  send(execution: ExecutionHandle): SendObservation
+  send(execution: ExecutionHandle): SendObservation;
 }
 
 export declare class ObservationHandle {
-  get url(): string
-  get id(): string
+  get url(): string;
+  get id(): string;
 }
 
 export declare class SendObservation {
-  handle(): ObservationHandle
+  handle(): ObservationHandle;
   /** Wait for the observation to be uploaded to the server */
-  waitForUpload(): Promise<ObservationHandle>
+  waitForUpload(): Promise<ObservationHandle>;
 }
 
 /**
@@ -88,7 +88,7 @@ export declare class SendObservation {
  * This allows tests to generate an execution ID before creating the execution,
  * enabling navigation to the execution URL before the execution is uploaded.
  */
-export declare function generateExecutionId(): string
+export declare function generateExecutionId(): string;
 
 /**
  * Generate a new observation ID (for testing)
@@ -97,4 +97,4 @@ export declare function generateExecutionId(): string
  * observation, enabling navigation to the observation URL before the
  * observation is uploaded.
  */
-export declare function generateObservationId(): string
+export declare function generateObservationId(): string;

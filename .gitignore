@@ -512,3 +512,4 @@ Cargo.lock
 .observation-tools/
 *.node
 .idea/
+test-results/

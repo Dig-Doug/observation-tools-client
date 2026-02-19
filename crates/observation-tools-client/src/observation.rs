@@ -266,7 +266,8 @@ impl ObservationBuilder {
   }
 }
 
-/// Intermediate NAPI type that holds a builder and payload, allowing `.send(exe)` pattern
+/// Intermediate NAPI type that holds a builder and payload, allowing
+/// `.send(exe)` pattern
 #[napi]
 pub struct ObservationBuilderWithPayloadNapi {
   builder: ObservationBuilder,
@@ -330,9 +331,13 @@ impl ObservationBuilder {
     self
   }
 
-  /// Set the payload as JSON data, returning a builder that can be sent with an execution
+  /// Set the payload as JSON data, returning a builder that can be sent with an
+  /// execution
   #[napi(js_name = "jsonPayload")]
-  pub fn json_payload_napi(&self, json_string: String) -> napi::Result<ObservationBuilderWithPayloadNapi> {
+  pub fn json_payload_napi(
+    &self,
+    json_string: String,
+  ) -> napi::Result<ObservationBuilderWithPayloadNapi> {
     let value = serde_json::from_str::<serde_json::Value>(&json_string)
       .map_err(|e| napi::Error::from_reason(format!("Invalid JSON payload: {}", e)))?;
     let payload = Payload::json(serde_json::to_string(&value).unwrap_or_default());
@@ -342,9 +347,14 @@ impl ObservationBuilder {
     })
   }
 
-  /// Set the payload with custom data and MIME type, returning a builder that can be sent
+  /// Set the payload with custom data and MIME type, returning a builder that
+  /// can be sent
   #[napi(js_name = "rawPayload")]
-  pub fn raw_payload_napi(&self, data: String, mime_type: String) -> ObservationBuilderWithPayloadNapi {
+  pub fn raw_payload_napi(
+    &self,
+    data: String,
+    mime_type: String,
+  ) -> ObservationBuilderWithPayloadNapi {
     let payload = Payload::with_mime_type(data, mime_type);
     ObservationBuilderWithPayloadNapi {
       builder: self.clone(),
