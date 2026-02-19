@@ -1,6 +1,7 @@
 //! Server configuration
 
 use crate::auth::ApiKeySecret;
+use directories::ProjectDirs;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
@@ -23,7 +24,9 @@ pub struct Config {
 impl Config {
   /// Create a new configuration with default values
   pub fn new() -> Self {
-    let data_dir = PathBuf::from(".observation-tools");
+    let data_dir = ProjectDirs::from("", "", "observation-tools")
+      .map(|dirs| dirs.data_dir().to_path_buf())
+      .unwrap_or_else(|| PathBuf::from(".observation-tools"));
     let blob_dir = data_dir.join("blobs");
 
     Self {
@@ -40,10 +43,12 @@ impl Config {
     self
   }
 
-  /// Set the data directory
-  pub fn with_data_dir(mut self, dir: PathBuf) -> Self {
-    self.data_dir = dir.clone();
-    self.blob_dir = dir.join("blobs");
+  /// Set the data directory. If `None`, keeps the default.
+  pub fn with_data_dir(mut self, dir: Option<PathBuf>) -> Self {
+    if let Some(dir) = dir {
+      self.data_dir = dir.clone();
+      self.blob_dir = dir.join("blobs");
+    }
     self
   }
 
