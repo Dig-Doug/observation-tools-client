@@ -40,6 +40,8 @@ pub struct ObservationBuilder {
   log_level: LogLevel,
   /// Custom observation ID (for testing)
   custom_id: Option<ObservationId>,
+  /// Explicit execution handle (overrides context)
+  execution: Option<ExecutionHandle>,
 }
 
 impl ObservationBuilder {
@@ -54,7 +56,17 @@ impl ObservationBuilder {
       observation_type: ObservationType::Payload,
       log_level: LogLevel::Info,
       custom_id: None,
+      execution: None,
     }
+  }
+
+  /// Set an explicit execution handle for this observation
+  ///
+  /// When set, this execution is used instead of the current execution context.
+  /// Useful when sending observations outside of an execution context scope.
+  pub fn execution(mut self, execution: &ExecutionHandle) -> Self {
+    self.execution = Some(execution.clone());
+    self
   }
 
   /// Set a custom observation ID (for testing)
@@ -142,65 +154,21 @@ impl ObservationBuilder {
     self.send_observation(payload)
   }
 
-  /// Serialize the value as JSON and send the observation with an explicit
-  /// execution
-  ///
-  /// Use this when you have an execution handle but no execution context is
-  /// set.
-  pub fn serde_with_execution<T: ?Sized + Serialize + 'static>(
-    self,
-    value: &T,
-    execution: &ExecutionHandle,
-  ) -> SendObservation {
-    if TypeId::of::<T>() == TypeId::of::<Payload>() {
-      panic!("Use payload_with_execution() method to set Payload directly");
-    }
-    let payload = Payload::json(serde_json::to_string(value).unwrap_or_default());
-    self.send_observation_with_execution(payload, execution)
-  }
-
-  /// Send the observation with a custom payload and explicit execution
-  ///
-  /// Use this when you have an execution handle but no execution context is
-  /// set.
-  pub fn payload_with_execution<T: Into<Payload>>(
-    self,
-    value: T,
-    execution: &ExecutionHandle,
-  ) -> SendObservation {
-    self.send_observation_with_execution(value.into(), execution)
-  }
-
-  /// Format the value using Debug and send the observation with explicit
-  /// execution
-  ///
-  /// Use this when you have an execution handle but no execution context is
-  /// set.
-  pub fn debug_with_execution<T: Debug + ?Sized>(
-    self,
-    value: &T,
-    execution: &ExecutionHandle,
-  ) -> SendObservation {
-    let payload = Payload::debug(format!("{:#?}", value));
-    self.send_observation_with_execution(payload, execution)
-  }
-
   /// Internal method to build and send the observation
-  fn send_observation(self, payload: Payload) -> SendObservation {
-    match context::get_current_execution() {
-      Some(execution) => self.send_observation_with_execution(payload, &execution),
-      None => {
-        log::trace!(
-          "No execution context available for observation '{}'",
-          self.name
-        );
-        SendObservation::stub(Error::NoExecutionContext)
-      }
-    }
+  fn send_observation(mut self, payload: Payload) -> SendObservation {
+    let Some(execution) = self.execution.take().or_else(context::get_current_execution) else {
+      log::error!(
+        "No execution context available for observation '{}'",
+        self.name
+      );
+      return SendObservation::stub(Error::NoExecutionContext);
+    };
+
+    self.send_with_execution(payload, &execution)
   }
 
-  /// Internal method to build and send the observation with explicit execution
-  fn send_observation_with_execution(
+  /// Internal method to build and send the observation with a resolved execution
+  fn send_with_execution(
     self,
     payload: Payload,
     execution: &ExecutionHandle,
@@ -281,7 +249,8 @@ impl ObservationBuilderWithPayloadNapi {
     self
       .builder
       .clone()
-      .send_observation_with_execution(self.payload.clone(), execution)
+      .execution(execution)
+      .send_observation(self.payload.clone())
   }
 }
 
