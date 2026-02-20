@@ -29,6 +29,44 @@ fn is_variable_name(name: &str) -> bool {
   name.chars().next().is_some_and(|c| c.is_lowercase())
 }
 
+/// The group! procedural macro
+///
+/// Creates a GroupBuilder with the given name. Unlike `observe!`, groups
+/// do not capture source info since they represent logical containers.
+///
+/// Examples:
+/// ```ignore
+/// let group = group!("my_group").build();
+/// let child = group.child("child_group").build();
+///
+/// observe!("data").group(&group).serde(&data);
+/// ```
+#[proc_macro]
+pub fn group(input: TokenStream) -> TokenStream {
+  let args = parse_macro_input!(input as ObserveArg);
+
+  let name_expr = match &args.name_expr {
+    Expr::Path(expr_path) if expr_path.path.segments.len() == 1 => {
+      let ident_name = expr_path.path.segments[0].ident.to_string();
+      if is_variable_name(&ident_name) {
+        Expr::Lit(syn::ExprLit {
+          attrs: vec![],
+          lit: syn::Lit::Str(LitStr::new(&ident_name, args.name_expr.span())),
+        })
+      } else {
+        args.name_expr
+      }
+    }
+    _ => args.name_expr,
+  };
+
+  let expanded = quote! {
+      ::observation_tools::GroupBuilder::new(#name_expr)
+  };
+
+  TokenStream::from(expanded)
+}
+
 /// The observe! procedural macro
 ///
 /// Creates an ObservationBuilder with the given name and source info

@@ -84,6 +84,15 @@ impl ExecutionHandle {
   pub fn base_url(&self) -> &str {
     &self.base_url
   }
+
+  /// Create a placeholder handle (for stub observations when no execution context exists)
+  pub(crate) fn placeholder() -> Self {
+    Self {
+      execution_id: ExecutionId::nil(),
+      uploader_tx: async_channel::unbounded().0,
+      base_url: String::new(),
+    }
+  }
 }
 
 #[napi]

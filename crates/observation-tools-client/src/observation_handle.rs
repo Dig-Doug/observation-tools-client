@@ -133,3 +133,57 @@ impl From<SendObservation> for ObservationHandle {
     send.into_handle()
   }
 }
+
+/// Handle for multi-part observations that allows adding additional named payloads
+pub struct ObservationPayloadHandle {
+  handle: ObservationHandle,
+  execution: crate::execution::ExecutionHandle,
+}
+
+impl ObservationPayloadHandle {
+  pub(crate) fn new(handle: ObservationHandle, execution: crate::execution::ExecutionHandle) -> Self {
+    Self { handle, execution }
+  }
+
+  /// Add a named payload serialized via serde
+  pub fn payload<T: ?Sized + serde::Serialize>(&self, name: impl Into<String>, value: &T) -> &Self {
+    let payload =
+      observation_tools_shared::Payload::json(serde_json::to_string(value).unwrap_or_default());
+    self.raw_payload(name, payload)
+  }
+
+  /// Add a named payload formatted via Debug
+  pub fn debug_payload<T: std::fmt::Debug + ?Sized>(
+    &self,
+    name: impl Into<String>,
+    value: &T,
+  ) -> &Self {
+    let payload = observation_tools_shared::Payload::debug(format!("{:#?}", value));
+    self.raw_payload(name, payload)
+  }
+
+  /// Add a named raw payload
+  pub fn raw_payload(&self, name: impl Into<String>, payload: observation_tools_shared::Payload) -> &Self {
+    let _ = self
+      .execution
+      .uploader_tx
+      .try_send(crate::client::UploaderMessage::Payload {
+        observation_id: self.handle.observation_id,
+        execution_id: self.handle.execution_id,
+        payload_id: observation_tools_shared::PayloadId::new(),
+        name: name.into(),
+        payload,
+      });
+    self
+  }
+
+  /// Get a reference to the observation handle
+  pub fn handle(&self) -> &ObservationHandle {
+    &self.handle
+  }
+
+  /// Consume and return the observation handle
+  pub fn into_handle(self) -> ObservationHandle {
+    self.handle
+  }
+}
