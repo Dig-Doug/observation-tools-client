@@ -18,6 +18,7 @@ axum.workspace = true
 axum-extra.workspace = true
 base64.workspace = true
 bytes.workspace = true
+chrono.workspace = true
 clap.workspace = true
 directories.workspace = true
 hmac.workspace = true
@@ -26,6 +27,7 @@ minijinja-embed = {workspace = true}
 minijinja.workspace = true
 nom.workspace = true
 object_store.workspace = true
+prost.workspace = true
 observation-tools-shared.workspace = true
 rand.workspace = true
 serde.workspace = true

@@ -2,13 +2,13 @@
 
 pub mod blob;
 pub mod metadata;
+pub mod proto;
 
 pub use blob::BlobStorage;
 pub use blob::LocalBlobStorage;
 pub use metadata::MetadataStorage;
 pub use metadata::SledStorage;
-use serde::Deserialize;
-use serde::Serialize;
+use observation_tools_shared::PayloadId;
 use thiserror::Error;
 
 /// Storage errors
@@ -29,6 +29,9 @@ pub enum StorageError {
   #[error("Database error: {0}")]
   Database(#[from] sled::Error),
 
+  #[error("Protobuf decode error: {0}")]
+  Protobuf(#[from] prost::DecodeError),
+
   #[error("Search error: {0}")]
   Search(String),
 
@@ -39,13 +42,26 @@ pub enum StorageError {
 /// Result type for storage operations
 pub type StorageResult<T> = Result<T, StorageError>;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ObservationWithPayloadPointer {
+/// An observation with all its payloads
+#[derive(Clone, Debug)]
+pub struct ObservationWithPayloads {
   pub observation: observation_tools_shared::Observation,
-  pub payload_or_pointer: PayloadOrPointer,
+  pub payloads: Vec<StoredPayload>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PayloadOrPointer {
-  pub payload: Option<Vec<u8>>,
+/// A single payload attached to an observation
+#[derive(Clone, Debug)]
+pub struct StoredPayload {
+  pub id: PayloadId,
+  pub name: String,
+  pub mime_type: String,
+  pub size: usize,
+  pub data: PayloadData,
+}
+
+/// Whether payload data is inline or stored as a blob
+#[derive(Clone, Debug)]
+pub enum PayloadData {
+  Inline(Vec<u8>),
+  Blob,
 }
