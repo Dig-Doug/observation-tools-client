@@ -2,14 +2,16 @@
 
 use crate::api::AppError;
 use crate::storage::MetadataStorage;
-use crate::storage::ObservationWithPayloadPointer;
-use crate::storage::PayloadOrPointer;
+use crate::storage::ObservationWithPayloads;
+use crate::storage::PayloadData;
+use crate::storage::StoredPayload;
 use axum::extract::Path;
 use axum::extract::State;
 use axum::Json;
 use observation_tools_shared::models::ExecutionId;
 use observation_tools_shared::Observation;
 use observation_tools_shared::ObservationId;
+use observation_tools_shared::PayloadId;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Arc;
@@ -24,14 +26,42 @@ pub struct GetObservationResponse {
 pub struct GetObservation {
   #[serde(flatten)]
   pub observation: Observation,
-  pub payload: PayloadOrPointerResponse,
+  pub payloads: Vec<GetPayload>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct GetPayload {
+  pub id: PayloadId,
+  pub name: String,
+  pub mime_type: String,
+  pub size: usize,
+  pub data: PayloadOrPointerResponse,
 }
 
 impl GetObservation {
-  pub fn new(obs: ObservationWithPayloadPointer) -> GetObservation {
+  pub fn new(obs: ObservationWithPayloads) -> GetObservation {
+    let exec_id = obs.observation.execution_id;
+    let obs_id = obs.observation.id;
+    let payloads = obs
+      .payloads
+      .into_iter()
+      .map(|p| {
+        let id = p.id.clone();
+        let name = p.name.clone();
+        let mime_type = p.mime_type.clone();
+        let size = p.size;
+        GetPayload {
+          id,
+          name,
+          mime_type,
+          size,
+          data: PayloadOrPointerResponse::from_stored_payload(p, exec_id, obs_id),
+        }
+      })
+      .collect();
     GetObservation {
-      payload: PayloadOrPointerResponse::new(&obs.observation, obs.payload_or_pointer),
       observation: obs.observation,
+      payloads,
     }
   }
 }
@@ -46,30 +76,40 @@ pub enum PayloadOrPointerResponse {
 }
 
 impl PayloadOrPointerResponse {
-  pub fn new(obs: &Observation, payload_or_pointer: PayloadOrPointer) -> Self {
-    let Some(data) = payload_or_pointer.payload else {
-      return PayloadOrPointerResponse::Pointer {
-        url: format!("/api/exe/{}/obs/{}/content", obs.execution_id, obs.id),
-      };
+  pub fn from_stored_payload(
+    payload: StoredPayload,
+    exec_id: ExecutionId,
+    obs_id: ObservationId,
+  ) -> Self {
+    let data = match payload.data {
+      PayloadData::Inline(data) => data,
+      PayloadData::Blob => {
+        return PayloadOrPointerResponse::Pointer {
+          url: format!(
+            "/api/exe/{}/obs/{}/payload/{}/content",
+            exec_id, obs_id, payload.id.as_str()
+          ),
+        };
+      }
     };
 
-    if obs.mime_type.starts_with("application/json") {
+    if payload.mime_type.starts_with("application/json") {
       if let Ok(json_value) = serde_json::from_slice::<serde_json::Value>(&data) {
         return PayloadOrPointerResponse::Json(json_value);
       }
     }
-    if obs.mime_type.starts_with("text/x-rust-debug") {
+    if payload.mime_type.starts_with("text/x-rust-debug") {
       if let Ok(text) = String::from_utf8(data.clone()) {
         let parsed = crate::debug_parser::parse_debug_to_json(&text);
         return PayloadOrPointerResponse::Json(parsed);
       }
     }
-    if obs.mime_type.starts_with("text/plain") {
+    if payload.mime_type.starts_with("text/plain") {
       if let Ok(text) = String::from_utf8(data.clone()) {
         return PayloadOrPointerResponse::Text(text);
       }
     }
-    if obs.mime_type.starts_with("text/markdown") {
+    if payload.mime_type.starts_with("text/markdown") {
       if let Ok(text) = String::from_utf8(data.clone()) {
         return PayloadOrPointerResponse::Markdown { raw: text };
       }
@@ -101,10 +141,7 @@ pub async fn get_observation(
 ) -> Result<Json<GetObservationResponse>, AppError> {
   let _execution_id = ExecutionId::parse(&execution_id)?;
   let observation_id = ObservationId::parse(&observation_id)?;
-  let observations = metadata.get_observations(&[observation_id]).await?;
-  let observation = observations.into_iter().next().ok_or_else(|| {
-    crate::storage::StorageError::NotFound(format!("Observation {} not found", observation_id))
-  })?;
+  let observation = metadata.get_observation(observation_id).await?;
   Ok(Json(GetObservationResponse {
     observation: GetObservation::new(observation),
   }))

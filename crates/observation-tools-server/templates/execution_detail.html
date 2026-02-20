@@ -95,27 +95,27 @@
                             >{% if obs.source %}{{ obs.source.file }}:{{ obs.source.line }}{% else %}-{% endif %}</span
                           >
                           <span class="text-neutral-200 truncate"
-                            >{% if obs.observation_type == 'LogEntry' %}
-                              {% if obs.payload.Text is defined %}
-                                {{ obs.payload.Text[:200] }}{% if obs.payload.Text|length > 200 %}...{% endif %}
-                              {% elif obs.payload.Json is defined %}
+                            >{% set p = obs.payloads[0].data if obs.payloads else none %}{% if obs.observation_type == 'LogEntry' %}
+                              {% if p.Text is defined %}
+                                {{ p.Text[:200] }}{% if p.Text|length > 200 %}...{% endif %}
+                              {% elif p.Json is defined %}
                                 [JSON]
-                              {% elif obs.payload.Markdown is defined %}
-                                {{ obs.payload.Markdown.raw[:200] }}{% if obs.payload.Markdown.raw|length > 200 %}...{% endif %}
-                              {% elif obs.payload.Pointer is defined %}
+                              {% elif p.Markdown is defined %}
+                                {{ p.Markdown.raw[:200] }}{% if p.Markdown.raw|length > 200 %}...{% endif %}
+                              {% elif p.Pointer is defined %}
                                 [external content]
                               {% else %}
                                 [binary]
                               {% endif %}
                             {% else %}
                               {{ obs.name }}:
-                              {% if obs.payload.Text is defined %}
-                                {{ obs.payload.Text[:100] }}{% if obs.payload.Text|length > 100 %}...{% endif %}
-                              {% elif obs.payload.Json is defined %}
+                              {% if p.Text is defined %}
+                                {{ p.Text[:100] }}{% if p.Text|length > 100 %}...{% endif %}
+                              {% elif p.Json is defined %}
                                 [JSON]
-                              {% elif obs.payload.Markdown is defined %}
-                                {{ obs.payload.Markdown.raw[:100] }}{% if obs.payload.Markdown.raw|length > 100 %}...{% endif %}
-                              {% elif obs.payload.Pointer is defined %}
+                              {% elif p.Markdown is defined %}
+                                {{ p.Markdown.raw[:100] }}{% if p.Markdown.raw|length > 100 %}...{% endif %}
+                              {% elif p.Pointer is defined %}
                                 [external content]
                               {% else %}
                                 [binary]
@@ -137,13 +137,13 @@
                           >{{ obs.name }}</a
                         >
                         <span class="text-base-content/60 text-sm">
-                          — {{ obs.mime_type }}
+                          {% if obs.payloads %}— {{ obs.payloads[0].mime_type }}{% endif %}
                           {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
                           — {{ obs.created_at }}
                         </span>
-                        {% if obs.labels %}
+                        {% if obs.group_ids %}
                           <br /><span class="text-base-content/60 text-sm"
-                            >labels: {{ obs.labels|join(", ") }}</span
+                            >groups: {{ obs.group_ids|join(", ") }}</span
                           >
                         {% endif %}
                       </li>

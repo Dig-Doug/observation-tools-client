@@ -144,6 +144,7 @@ pub fn build_api() -> (Router<AppState>, Router<AppState>, OpenApi) {
     .routes(routes!(observations::list_observations))
     .routes(routes!(observations::get_observation))
     .routes(routes!(observations::get_observation_blob))
+    .routes(routes!(observations::get_observation_blob_legacy))
     .split_for_parts();
 
   let mut openapi = OpenApi::default();

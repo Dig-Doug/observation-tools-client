@@ -83,12 +83,15 @@
           },
           {
             "properties": {
-              "payload": {
-                "$ref": "#/components/schemas/PayloadOrPointerResponse"
+              "payloads": {
+                "items": {
+                  "$ref": "#/components/schemas/GetPayload"
+                },
+                "type": "array"
               }
             },
             "required": [
-              "payload"
+              "payloads"
             ],
             "type": "object"
           }
@@ -104,6 +107,39 @@
           "observation"
         ],
         "type": "object"
+      },
+      "GetPayload": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PayloadOrPointerResponse"
+          },
+          "id": {
+            "$ref": "#/components/schemas/PayloadId"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mime_type",
+          "size",
+          "data"
+        ],
+        "type": "object"
+      },
+      "GroupId": {
+        "description": "Unique identifier for a group\n\nGroup IDs are user-provided strings. By default, a UUID v7 string is generated,\nbut any string value is accepted.",
+        "example": "018e9a3a2c1b7e3f8d2a4b5c6d7e8f9b",
+        "type": "string"
       },
       "ListExecutionsResponse": {
         "description": "Response for listing executions",
@@ -170,16 +206,16 @@
             "$ref": "#/components/schemas/ExecutionId",
             "description": "ID of the execution this observation belongs to"
           },
+          "group_ids": {
+            "description": "IDs of groups this observation belongs to",
+            "items": {
+              "$ref": "#/components/schemas/GroupId"
+            },
+            "type": "array"
+          },
           "id": {
             "$ref": "#/components/schemas/ObservationId",
             "description": "Unique identifier for this observation"
-          },
-          "labels": {
-            "description": "Hierarchical labels for grouping observations\nUses path convention (e.g., \"api/request/headers\")",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
           },
           "log_level": {
             "$ref": "#/components/schemas/LogLevel",
@@ -195,10 +231,6 @@
             },
             "type": "object"
           },
-          "mime_type": {
-            "description": "MIME type of the payload (e.g., \"text/plain\", \"application/json\")",
-            "type": "string"
-          },
           "name": {
             "description": "User-defined name for this observation",
             "type": "string"
@@ -207,15 +239,15 @@
             "$ref": "#/components/schemas/ObservationType",
             "description": "Type of observation"
           },
+          "parent_group_id": {
+            "$ref": "#/components/schemas/GroupId",
+            "description": "Parent group ID (used when observation_type == Group)",
+            "nullable": true
+          },
           "parent_span_id": {
             "description": "Parent span ID (for tracing integration)",
             "nullable": true,
             "type": "string"
-          },
-          "payload_size": {
-            "description": "Size of the payload in bytes",
-            "minimum": 0,
-            "type": "integer"
           },
           "source": {
             "$ref": "#/components/schemas/SourceInfo",
@@ -229,9 +261,7 @@
           "name",
           "observation_type",
           "log_level",
-          "created_at",
-          "mime_type",
-          "payload_size"
+          "created_at"
         ],
         "type": "object"
       },
@@ -245,8 +275,14 @@
         "enum": [
           "LogEntry",
           "Payload",
-          "Span"
+          "Span",
+          "Group"
         ],
+        "type": "string"
+      },
+      "PayloadId": {
+        "description": "Unique identifier for a payload (UUIDv7)",
+        "example": "018e9a3a2c1b7e3f8d2a4b5c6d7e8f9c",
         "type": "string"
       },
       "PayloadOrPointerResponse": {
@@ -556,7 +592,7 @@
     },
     "/api/exe/{execution_id}/obs/{observation_id}/content": {
       "get": {
-        "operationId": "get_observation_blob",
+        "operationId": "get_observation_blob_legacy",
         "parameters": [
           {
             "description": "Execution ID",
@@ -600,7 +636,68 @@
             "description": "Observation blob not found"
           }
         },
-        "summary": "Get observation blob content",
+        "summary": "Get observation blob content (legacy route for backward compat)\nThis is kept to support old URLs like /api/exe/{exec_id}/obs/{obs_id}/content",
+        "tags": [
+          "observations"
+        ]
+      }
+    },
+    "/api/exe/{execution_id}/obs/{observation_id}/payload/{payload_id}/content": {
+      "get": {
+        "operationId": "get_observation_blob",
+        "parameters": [
+          {
+            "description": "Execution ID",
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Observation ID",
+            "in": "path",
+            "name": "observation_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Payload ID",
+            "in": "path",
+            "name": "payload_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "items": {
+                    "format": "int32",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Payload content"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Payload not found"
+          }
+        },
+        "summary": "Get observation payload content",
         "tags": [
           "observations"
         ]
