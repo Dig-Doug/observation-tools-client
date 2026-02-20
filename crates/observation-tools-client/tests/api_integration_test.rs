@@ -9,7 +9,9 @@ use anyhow::anyhow;
 use common::TestServer;
 use observation_tools::observe;
 use observation_tools::server_client::types::PayloadOrPointerResponse;
+use observation_tools::ObservationBuilder;
 use observation_tools_shared::Payload;
+use serde_json::json;
 use std::collections::HashSet;
 use tracing::debug;
 
@@ -45,8 +47,6 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
   let (execution, _) = server
     .with_execution("test-execution-with-observation", async {
       observation_tools::ObservationBuilder::new("test-observation")
-        .label("test/label1")
-        .label("test/label2")
         .metadata("key1", "value1")
         .metadata("key2", "value2")
         .payload("test payload data");
@@ -57,15 +57,14 @@ async fn test_create_observation_with_metadata() -> anyhow::Result<()> {
 
   assert_eq!(observations.len(), 1);
 
-  let obs = &observations[0];
+  // Get the full observation with inline payload data
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.name, "test-observation");
   assert_eq!(obs.execution_id.to_string(), execution.id().to_string());
-  assert!(obs.labels.contains(&"test/label1".to_string()));
-  assert!(obs.labels.contains(&"test/label2".to_string()));
   assert_eq!(obs.metadata.get("key1"), Some(&"value1".to_string()));
   assert_eq!(obs.metadata.get("key2"), Some(&"value2".to_string()));
-  assert_eq!(obs.mime_type, "text/plain");
-  assert_eq!(obs.payload.as_str(), Some("test payload data"));
+  assert_eq!(obs.payloads[0].mime_type, "text/plain");
+  assert_eq!(obs.payload().as_str(), Some("test payload data"));
 
   Ok(())
 }
@@ -100,18 +99,19 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
   assert_eq!(observations.len(), expected_names.len());
 
-  // Verify all payloads are stored inline (not as blobs) since they're under the
-  // threshold
+  // List returns metadata only (payloads as Pointers)
+  // Verify payload sizes are correct
   for obs in &observations {
-    assert!(
-      !matches!(obs.payload, PayloadOrPointerResponse::Pointer { .. }),
-      "Observation {} should have inline payload data (not stored as blob)",
-      obs.name
-    );
     assert_eq!(
-      obs.payload_size,
+      obs.payloads[0].size as u64,
       observation_tools::BLOB_THRESHOLD_BYTES as u64 - 1,
       "Observation {} payload size should be exactly 1 byte under threshold",
+      obs.name
+    );
+    // When listing, all payloads come back as Pointers
+    assert!(
+      matches!(obs.payload(), PayloadOrPointerResponse::Pointer { .. }),
+      "Observation {} should have Pointer payload in list response",
       obs.name
     );
   }
@@ -168,7 +168,6 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
       for _ in 0..NUM_OBSERVATIONS {
         debug!("Task 1 sending observation");
         observation_tools::observe!(TASK_1_NAME)
-          .label("concurrent/task1")
           .serde(&"data from task 1")
           .wait_for_upload()
           .await?;
@@ -186,7 +185,6 @@ async fn test_concurrent_executions() -> anyhow::Result<()> {
       while let Some(_) = task1_receiver.recv().await {
         debug!("Task 2 sending observation");
         observation_tools::observe!(TASK_2_NAME)
-          .label("concurrent/task2")
           .serde(&"data from task 2")
           .wait_for_upload()
           .await?;
@@ -237,7 +235,6 @@ async fn test_with_observations_spawned_task() -> anyhow::Result<()> {
       async move {
         // This observation should be associated with the parent execution
         observe!(SPAWNED_OBS_NAME)
-          .label("spawned/task")
           .serde(&"data from spawned task")
           .wait_for_upload()
           .await
@@ -296,7 +293,6 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
   let (execution, _) = server
     .with_execution("test-execution-with-large-payload", async {
       observe!("large-observation")
-        .label("test/large-payload")
         .serde(&large_payload);
     })
     .await?;
@@ -310,22 +306,24 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
 
   // The payload.data should be empty because it was uploaded as a blob
   assert!(
-    matches!(obs.payload, PayloadOrPointerResponse::Pointer { .. }),
+    matches!(obs.payload(), PayloadOrPointerResponse::Pointer { .. }),
     "Large payload data should be stored as a blob pointer"
   );
 
   // But the size should still be recorded
   assert_eq!(
-    obs.payload_size, expected_size as u64,
+    obs.payloads[0].size as u64, expected_size as u64,
     "Payload size should be recorded correctly"
   );
 
   // Verify the blob can be retrieved via the OpenAPI client
   let api_client = server.create_api_client()?;
+  let payload_id = &obs.payloads[0].id;
   let blob_response = api_client
     .get_observation_blob()
     .execution_id(&execution.id().to_string())
     .observation_id(&obs.id.to_string())
+    .payload_id(&payload_id.to_string())
     .send()
     .await?;
 
@@ -349,6 +347,66 @@ async fn test_large_payload_blob_upload() -> anyhow::Result<()> {
     retrieved_payload["size"].as_u64().unwrap(),
     70_000,
     "Retrieved blob should have the correct size field"
+  );
+
+  Ok(())
+}
+
+#[test_log::test(tokio::test)]
+async fn test_named_payloads() -> anyhow::Result<()> {
+  let server = TestServer::new().await;
+  let client = server.create_client()?;
+  let execution = client
+    .begin_execution("test-named-payloads")?
+    .wait_for_upload()
+    .await?;
+
+  observation_tools::with_execution(execution.clone(), async {
+    // Create an observation with a named payload, then add more payloads via the handle
+    let handle = ObservationBuilder::new("multi-payload-obs")
+      .metadata("kind", "multi")
+      .named_payload("headers", &json!({"content-type": "application/json"}));
+
+    handle.payload("body", &json!({"message": "hello"}));
+    handle.raw_payload(
+      "raw-part",
+      Payload::text("some raw text"),
+    );
+  })
+  .await;
+
+  client.shutdown().await?;
+
+  let observations = server.list_observations(&execution.id()).await?;
+
+  assert_eq!(observations.len(), 1, "Should have exactly one observation");
+
+  // Get full observation with inline payload data
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
+  assert_eq!(obs.name, "multi-payload-obs");
+  assert_eq!(obs.metadata.get("kind"), Some(&"multi".to_string()));
+
+  // The observation should have 3 named payloads (headers, body, raw-part)
+  assert_eq!(
+    obs.payloads.len(), 3,
+    "Should have 3 payloads (headers + body + raw-part), got {}",
+    obs.payloads.len()
+  );
+
+  // Find the "headers" payload by name
+  let headers_payload = obs
+    .payloads
+    .iter()
+    .find(|p| p.name == "headers")
+    .expect("Should have a 'headers' payload");
+  let payload_json: serde_json::Value = match &headers_payload.data {
+    PayloadOrPointerResponse::Json(v) => v.clone(),
+    other => anyhow::bail!("Expected JSON payload for 'headers', got {:?}", other),
+  };
+  assert_eq!(
+    payload_json,
+    json!({"content-type": "application/json"}),
+    "Headers payload should contain the headers data"
   );
 
   Ok(())

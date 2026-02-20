@@ -21,8 +21,8 @@ async fn test_logger() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
 
   assert_eq!(observations.len(), 2);
-  let obs = &observations[0];
-  assert_eq!(obs.payload.as_str(), Some("info-log"));
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
+  assert_eq!(obs.payload().as_str(), Some("info-log"));
   assert_eq!(obs.observation_type, ObservationType::LogEntry);
   assert_eq!(obs.log_level, LogLevel::Info);
 
