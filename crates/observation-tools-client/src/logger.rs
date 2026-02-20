@@ -40,7 +40,7 @@ impl Log for ObservationLogger {
     let builder = ObservationBuilder::new("ObservationLogger")
       .observation_type(ObservationType::LogEntry)
       .log_level(record.level().into())
-      .label(format!("log/{}", record.target()));
+      .metadata("target", record.target());
     let builder = if let (Some(file), Some(line)) = (record.file(), record.line()) {
       builder.source(file, line)
     } else {

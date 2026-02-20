@@ -4,13 +4,13 @@ use crate::error::Result;
 use crate::execution::BeginExecution;
 use crate::execution::ExecutionHandle;
 use crate::observation_handle::ObservationHandle;
-use crate::ObservationWithPayload;
 use async_channel;
 use log::error;
 use log::info;
 use log::trace;
 use napi_derive::napi;
 use observation_tools_shared::models::Execution;
+use observation_tools_shared::Observation;
 // Re-export constants from shared crate for convenience
 pub use observation_tools_shared::BATCH_SIZE;
 pub use observation_tools_shared::BLOB_THRESHOLD_BYTES;
@@ -31,10 +31,17 @@ pub(crate) enum UploaderMessage {
     handle: ExecutionHandle,
     uploaded_tx: tokio::sync::watch::Sender<ExecutionUploadResult>,
   },
-  Observations {
-    observations: Vec<ObservationWithPayload>,
+  Observation {
+    observation: Observation,
     handle: ObservationHandle,
     uploaded_tx: tokio::sync::watch::Sender<ObservationUploadResult>,
+  },
+  Payload {
+    observation_id: observation_tools_shared::ObservationId,
+    execution_id: observation_tools_shared::models::ExecutionId,
+    payload_id: observation_tools_shared::PayloadId,
+    name: String,
+    payload: observation_tools_shared::Payload,
   },
   Flush,
   Shutdown,
@@ -48,14 +55,25 @@ impl std::fmt::Debug for UploaderMessage {
         .debug_struct("Execution")
         .field("execution", execution)
         .finish(),
-      Self::Observations {
-        observations,
+      Self::Observation {
+        observation,
         handle,
         ..
       } => f
-        .debug_struct("Observations")
-        .field("observations", observations)
+        .debug_struct("Observation")
+        .field("observation", observation)
         .field("handle", handle)
+        .finish(),
+      Self::Payload {
+        observation_id,
+        payload_id,
+        name,
+        ..
+      } => f
+        .debug_struct("Payload")
+        .field("observation_id", observation_id)
+        .field("payload_id", payload_id)
+        .field("name", name)
         .finish(),
       Self::Flush => write!(f, "Flush"),
       Self::Shutdown => write!(f, "Shutdown"),
@@ -279,6 +297,18 @@ impl ClientBuilder {
   }
 }
 
+/// Data for a payload ready to be uploaded
+#[derive(Debug)]
+pub(crate) struct PayloadUploadData {
+  pub(crate) observation_id: observation_tools_shared::ObservationId,
+  pub(crate) execution_id: observation_tools_shared::models::ExecutionId,
+  pub(crate) payload_id: observation_tools_shared::PayloadId,
+  pub(crate) name: String,
+  pub(crate) mime_type: String,
+  pub(crate) size: usize,
+  pub(crate) data: Vec<u8>,
+}
+
 async fn uploader_task(
   api_client: crate::server_client::Client,
   rx: async_channel::Receiver<UploaderMessage>,
@@ -291,12 +321,14 @@ async fn uploader_task(
     tokio::sync::watch::Sender<ObservationUploadResult>,
   );
 
-  let flush_observations = async |buffer: &mut Vec<ObservationWithPayload>,
-                                  senders: &mut Vec<ObservationSender>| {
-    if buffer.is_empty() {
+  let flush = async |observation_buffer: &mut Vec<Observation>,
+                     senders: &mut Vec<ObservationSender>,
+                     payload_buffer: &mut Vec<PayloadUploadData>| {
+    if observation_buffer.is_empty() && payload_buffer.is_empty() {
       return;
     }
-    let result = upload_observations(&api_client, buffer.drain(..).collect()).await;
+    let result =
+      upload_observations(&api_client, observation_buffer.drain(..).collect(), payload_buffer.drain(..).collect()).await;
     match result {
       Ok(()) => {
         // Signal all senders that observations were uploaded successfully
@@ -314,8 +346,9 @@ async fn uploader_task(
       }
     }
   };
-  let mut observation_buffer: Vec<ObservationWithPayload> = Vec::new();
+  let mut observation_buffer: Vec<Observation> = Vec::new();
   let mut sender_buffer: Vec<ObservationSender> = Vec::new();
+  let mut payload_buffer: Vec<PayloadUploadData> = Vec::new();
   loop {
     let msg = rx.recv().await.ok();
     match msg {
@@ -327,7 +360,6 @@ async fn uploader_task(
         let result = upload_execution(&api_client, execution).await;
         match result {
           Ok(()) => {
-            // Signal successful upload with handle
             let _ = uploaded_tx.send(Some(Ok(handle)));
           }
           Err(e) => {
@@ -337,22 +369,36 @@ async fn uploader_task(
           }
         }
       }
-      Some(UploaderMessage::Observations {
-        observations,
+      Some(UploaderMessage::Observation {
+        observation,
         handle,
         uploaded_tx,
       }) => {
-        observation_buffer.extend(observations);
+        observation_buffer.push(observation);
         sender_buffer.push((handle, uploaded_tx));
-        if observation_buffer.len() >= BATCH_SIZE {
-          flush_observations(&mut observation_buffer, &mut sender_buffer).await;
-        }
+      }
+      Some(UploaderMessage::Payload {
+        observation_id,
+        execution_id,
+        payload_id,
+        name,
+        payload,
+      }) => {
+        payload_buffer.push(PayloadUploadData {
+          observation_id,
+          execution_id,
+          payload_id,
+          name,
+          mime_type: payload.mime_type,
+          size: payload.size,
+          data: payload.data,
+        });
       }
       Some(UploaderMessage::Flush) => {
-        flush_observations(&mut observation_buffer, &mut sender_buffer).await;
+        flush(&mut observation_buffer, &mut sender_buffer, &mut payload_buffer).await;
       }
       Some(UploaderMessage::Shutdown) | None => {
-        flush_observations(&mut observation_buffer, &mut sender_buffer).await;
+        flush(&mut observation_buffer, &mut sender_buffer, &mut payload_buffer).await;
         break;
       }
     }
@@ -383,31 +429,42 @@ async fn upload_execution(
 
 async fn upload_observations(
   client: &crate::server_client::Client,
-  observations: Vec<ObservationWithPayload>,
+  observations: Vec<Observation>,
+  payloads: Vec<PayloadUploadData>,
 ) -> Result<()> {
-  if observations.is_empty() {
+  if observations.is_empty() && payloads.is_empty() {
     return Ok(());
   }
 
   // Group by execution_id
-  let mut by_execution: std::collections::HashMap<_, Vec<_>> = std::collections::HashMap::new();
+  let mut by_execution: std::collections::HashMap<_, (Vec<_>, Vec<_>)> =
+    std::collections::HashMap::new();
   for obs in observations {
     by_execution
-      .entry(obs.observation.execution_id)
+      .entry(obs.execution_id)
       .or_default()
+      .0
       .push(obs);
+  }
+  for p in payloads {
+    by_execution
+      .entry(p.execution_id)
+      .or_default()
+      .1
+      .push(p);
   }
 
   // Upload each batch via multipart form
-  for (execution_id, observations) in by_execution {
+  for (execution_id, (observations, payloads)) in by_execution {
     trace!(
-      "Uploading {} observations for execution {}",
+      "Uploading {} observations + {} payloads for execution {}",
       observations.len(),
+      payloads.len(),
       execution_id
     );
 
     client
-      .create_observations_multipart(&execution_id.to_string(), observations)
+      .create_observations_multipart(&execution_id.to_string(), observations, payloads)
       .await
       .map_err(|e| crate::error::Error::Config(e.to_string()))?;
   }
