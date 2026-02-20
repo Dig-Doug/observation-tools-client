@@ -2,11 +2,14 @@
 
 pub mod error;
 pub mod models;
+mod group_id;
 mod observation;
 mod payload;
+mod payload_id;
 
 pub use error::Error;
 pub use error::Result;
+pub use group_id::GroupId;
 pub use models::Execution;
 pub use models::ExecutionId;
 pub use observation::LogLevel;
@@ -16,7 +19,9 @@ pub use observation::ObservationType;
 pub use observation::SourceInfo;
 pub use payload::Markdown;
 pub use payload::Payload;
+pub use payload::PayloadBuilder;
 pub use payload::MIME_TYPE_RUST_DEBUG;
+pub use payload_id::PayloadId;
 
 /// Payload size threshold for blob storage (64KB)
 /// Payloads larger than this will be uploaded as separate blobs
@@ -26,10 +31,10 @@ pub const BLOB_THRESHOLD_BYTES: usize = 65536;
 pub const BATCH_SIZE: usize = 100;
 
 /// Estimated maximum observation metadata overhead (in bytes)
-/// This includes JSON structure, field names, IDs, timestamps, labels, etc.
+/// This includes JSON structure, field names, IDs, timestamps, group_ids, etc.
 /// Assumes reasonable limits:
 /// - name: ~256 bytes
-/// - labels: ~10 labels * ~100 bytes = 1KB
+/// - group_ids: ~10 groups * ~40 bytes = 400 bytes
 /// - metadata: ~10 entries * ~200 bytes = 2KB
 /// - source info: ~256 bytes
 /// - IDs, timestamps, JSON structure: ~512 bytes
