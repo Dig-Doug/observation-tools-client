@@ -38,6 +38,7 @@ observation-tools-macros = { path = "crates/observation-tools-macros", version =
 observation-tools-server = { path = "crates/observation-tools-server", version = "0.0.14" }
 observation-tools-shared = { path = "crates/observation-tools-shared", version = "0.0.14" }
 openapiv3 = "2.2"
+prost = "0.13"
 prettyplease = "0.2"
 progenitor = "0.11.2"
 progenitor-client = "0.11.2"
