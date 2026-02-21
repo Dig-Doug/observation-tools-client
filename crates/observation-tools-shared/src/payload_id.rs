@@ -25,3 +25,15 @@ impl Default for PayloadId {
     Self::new()
   }
 }
+
+impl From<String> for PayloadId {
+  fn from(s: String) -> Self {
+    Self(s)
+  }
+}
+
+impl From<&str> for PayloadId {
+  fn from(s: &str) -> Self {
+    Self(s.to_string())
+  }
+}
