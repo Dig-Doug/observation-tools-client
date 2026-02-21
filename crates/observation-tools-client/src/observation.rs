@@ -4,7 +4,9 @@ use crate::client::ObservationUploadResult;
 use crate::client::UploaderMessage;
 use crate::context;
 use crate::execution::ExecutionHandle;
+use crate::group::GroupHandle;
 use crate::observation_handle::ObservationHandle;
+use crate::observation_handle::ObservationPayloadHandle;
 use crate::observation_handle::SendObservation;
 use crate::Error;
 use napi_derive::napi;
@@ -43,6 +45,8 @@ pub struct ObservationBuilder {
   custom_id: Option<ObservationId>,
   /// Explicit execution handle (overrides context)
   execution: Option<ExecutionHandle>,
+  /// Parent group ID (for group observations)
+  parent_group_id: Option<GroupId>,
 }
 
 impl ObservationBuilder {
@@ -58,6 +62,7 @@ impl ObservationBuilder {
       log_level: LogLevel::Info,
       custom_id: None,
       execution: None,
+      parent_group_id: None,
     }
   }
 
@@ -76,6 +81,12 @@ impl ObservationBuilder {
   /// navigation to the observation URL before the observation is uploaded.
   pub fn with_id(mut self, id: ObservationId) -> Self {
     self.custom_id = Some(id);
+    self
+  }
+
+  /// Add a group to the observation
+  pub fn group(mut self, group: &GroupHandle) -> Self {
+    self.group_ids.push(group.id());
     self
   }
 
@@ -113,6 +124,12 @@ impl ObservationBuilder {
     self
   }
 
+  /// Set the parent group ID (for group observations)
+  pub(crate) fn parent_group(mut self, id: GroupId) -> Self {
+    self.parent_group_id = Some(id);
+    self
+  }
+
   /// Serialize the value as JSON and send the observation
   ///
   /// Returns a `SendObservation` which allows you to wait for the upload
@@ -142,6 +159,59 @@ impl ObservationBuilder {
     let payload = Payload::debug(format!("{:#?}", value));
     self.send_observation(payload)
   }
+
+  /// Send the observation with a named serde-serialized payload, returning a handle
+  /// that allows adding more named payloads later.
+  pub fn named_payload<T: ?Sized + Serialize + 'static>(
+    self,
+    name: impl Into<String>,
+    value: &T,
+  ) -> ObservationPayloadHandle {
+    if TypeId::of::<T>() == TypeId::of::<Payload>() {
+      panic!("Use named_raw_payload() method to set Payload directly");
+    }
+    let payload = Payload::json(serde_json::to_string(value).unwrap_or_default());
+    self.send_named_observation(name, payload)
+  }
+
+  /// Send the observation with a named Debug-formatted payload
+  pub fn named_debug<T: Debug + ?Sized>(
+    self,
+    name: impl Into<String>,
+    value: &T,
+  ) -> ObservationPayloadHandle {
+    let payload = Payload::debug(format!("{:#?}", value));
+    self.send_named_observation(name, payload)
+  }
+
+  /// Send the observation with a named raw payload
+  pub fn named_raw_payload(self, name: impl Into<String>, payload: Payload) -> ObservationPayloadHandle {
+    self.send_named_observation(name, payload)
+  }
+
+  fn send_named_observation(
+    mut self,
+    name: impl Into<String>,
+    payload: Payload,
+  ) -> ObservationPayloadHandle {
+    let execution = match self.execution.take().or_else(context::get_current_execution) {
+      Some(exec) => exec,
+      None => {
+        let send = SendObservation::stub(Error::NoExecutionContext);
+        return ObservationPayloadHandle::new(
+          send.into_handle(),
+          ExecutionHandle::placeholder(),
+        );
+      }
+    };
+
+    // Send the observation metadata + named payload (single path, no duplication)
+    let send = self.send_with_execution_and_name(payload, name, &execution);
+    let handle = send.into_handle();
+
+    ObservationPayloadHandle::new(handle, execution.clone())
+  }
+
 
   /// Internal method to build and send the observation
   pub(crate) fn send_observation(mut self, payload: Payload) -> SendObservation {
@@ -197,7 +267,7 @@ impl ObservationBuilder {
       observation_type: self.observation_type,
       log_level: self.log_level,
       group_ids: self.group_ids,
-      parent_group_id: None,
+      parent_group_id: self.parent_group_id,
       metadata: self.metadata,
       source: self.source,
       parent_span_id,
