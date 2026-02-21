@@ -112,3 +112,54 @@ impl From<Markdown> for Payload {
     Payload::with_mime_type(md.content, "text/markdown")
   }
 }
+
+/// Builder for creating named payloads to attach to observations.
+///
+/// Each `PayloadBuilder` pairs a name with a `Payload`, allowing observations
+/// to carry multiple named payloads (e.g., "headers", "body", "response").
+pub struct PayloadBuilder {
+  pub name: String,
+  pub payload: Payload,
+}
+
+impl PayloadBuilder {
+  /// Create a new named payload
+  pub fn new(name: impl Into<String>, payload: impl Into<Payload>) -> Self {
+    Self {
+      name: name.into(),
+      payload: payload.into(),
+    }
+  }
+
+  /// Create a named payload from a serde-serializable value (JSON)
+  pub fn json<T: ?Sized + serde::Serialize>(name: impl Into<String>, value: &T) -> Self {
+    Self {
+      name: name.into(),
+      payload: Payload::json(serde_json::to_string(value).unwrap_or_default()),
+    }
+  }
+
+  /// Create a named payload from a Debug-formatted value
+  pub fn debug<T: std::fmt::Debug + ?Sized>(name: impl Into<String>, value: &T) -> Self {
+    Self {
+      name: name.into(),
+      payload: Payload::debug(format!("{:#?}", value)),
+    }
+  }
+
+  /// Create a named plain text payload
+  pub fn text(name: impl Into<String>, data: impl Into<String>) -> Self {
+    Self {
+      name: name.into(),
+      payload: Payload::text(data),
+    }
+  }
+
+  /// Create a named markdown payload
+  pub fn markdown(name: impl Into<String>, content: impl Into<String>) -> Self {
+    Self {
+      name: name.into(),
+      payload: Payload::with_mime_type(content, "text/markdown"),
+    }
+  }
+}
