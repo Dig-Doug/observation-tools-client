@@ -1,7 +1,6 @@
 //! List observations handler
 
 use crate::api::observations::get::GetObservation;
-use crate::api::observations::get::PayloadOrPointerResponse;
 use crate::api::types::ListObservationsQuery;
 use crate::api::AppError;
 use crate::storage::MetadataStorage;
@@ -59,10 +58,7 @@ pub async fn list_observations(
   Ok(Json(ListObservationsResponse {
     observations: observations
       .into_iter()
-      .map(|o| GetObservation {
-        payload: PayloadOrPointerResponse::new(&o.observation, o.payload_or_pointer),
-        observation: o.observation,
-      })
+      .map(GetObservation::new)
       .collect(),
     has_next_page,
   }))

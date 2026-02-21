@@ -29,10 +29,10 @@
         <kbd class="kbd kbd-sm">{{ observation.parent_span_id }}</kbd>
       </p>
     {% endif %}
-    {% if observation.labels %}
-      <p data-testid="ObservationLabels" class="mb-2">
-        <span class="text-base-content/60 text-sm">labels:</span>
-        {{ observation.labels|join(", ") }}
+    {% if observation.group_ids %}
+      <p data-testid="ObservationGroups" class="mb-2">
+        <span class="text-base-content/60 text-sm">groups:</span>
+        {{ observation.group_ids|join(", ") }}
       </p>
     {% endif %}
     {% if observation.metadata %}
@@ -49,52 +49,56 @@
 
     <div class="divider"></div>
 
-    <h2 class="text-xl font-bold my-4">payload</h2>
-    <p class="mb-2">
-      <span class="text-base-content/60 text-sm">type:</span>
-      {{ observation.mime_type }}
-    </p>
-    <p class="mb-2">
-      <span class="text-base-content/60 text-sm">size:</span>
-      {{ observation.payload_size }} bytes
-    </p>
-    <p class="mb-2">
-      <a
-        href="/api/exe/{{ observation.execution_id }}/obs/{{ observation.id }}/content"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="link"
-        >Open raw content in new tab</a
-      >
-    </p>
+    <h2 class="text-xl font-bold my-4">payloads</h2>
   </div>
 
-  {% if observation.payload_size > display_threshold %}
-    <div class="flex-grow">
-      <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
+  {% for payload in observation.payloads %}
+    <div class="mb-4">
+      <h3 class="text-base font-bold my-2">{{ payload.name }}</h3>
+      <p class="mb-2">
+        <span class="text-base-content/60 text-sm">type:</span>
+        {{ payload.mime_type }}
+        <span class="text-base-content/60 text-sm ml-2">size:</span>
+        {{ payload.size }} bytes
+      </p>
+      <p class="mb-2">
+        <a
+          href="/api/exe/{{ observation.execution_id }}/obs/{{ observation.id }}/payload/{{ payload.id }}/content"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link"
+          >Open raw content in new tab</a
+        >
+      </p>
+
+      {% if payload.size > display_threshold %}
+        <div class="flex-grow">
+          <p data-testid="ObservationPayload">Payload is too large to display inline.</p>
+        </div>
+      {% elif payload.data.Markdown is defined %}
+        <div data-testid="ObservationPayload" class="markdown-body">
+          {{ payload.data.Markdown.raw|render_markdown|safe }}
+        </div>
+      {% elif payload.data.Json is defined %}
+        <div data-testid="ObservationPayload" class="json-body">
+          {{ render_json(payload.data.Json) }}
+        </div>
+      {% elif payload.data.Text is defined %}
+        <pre data-testid="ObservationPayload">{{ payload.data.Text|unescape }}</pre>
+      {% elif payload.data.Pointer is defined %}
+        <div data-testid="ObservationPayload">
+          <p class="mb-2">Payload stored externally.</p>
+          <a href="{{ payload.data.Pointer.url }}" target="_blank" class="link"
+            >Load external content</a
+          >
+        </div>
+      {% elif payload.data.InlineBinary is defined %}
+        <pre data-testid="ObservationPayload">
+[Binary content - {{ payload.size }} bytes]</pre
+        >
+      {% else %}
+        <pre data-testid="ObservationPayload">[Unknown payload type]</pre>
+      {% endif %}
     </div>
-  {% elif observation.payload.Markdown is defined %}
-    <div data-testid="ObservationPayload" class="markdown-body">
-      {{ observation.payload.Markdown.raw|render_markdown|safe }}
-    </div>
-  {% elif observation.payload.Json is defined %}
-    <div data-testid="ObservationPayload" class="json-body">
-      {{ render_json(observation.payload.Json) }}
-    </div>
-  {% elif observation.payload.Text is defined %}
-    <pre data-testid="ObservationPayload">{{ observation.payload.Text|unescape }}</pre>
-  {% elif observation.payload.Pointer is defined %}
-    <div data-testid="ObservationPayload">
-      <p class="mb-2">Payload stored externally.</p>
-      <a href="{{ observation.payload.Pointer.url }}" target="_blank" class="link"
-        >Load external content</a
-      >
-    </div>
-  {% elif observation.payload.InlineBinary is defined %}
-    <pre data-testid="ObservationPayload">
-[Binary content - {{ observation.payload_size }} bytes]</pre
-    >
-  {% else %}
-    <pre data-testid="ObservationPayload">[Unknown payload type]</pre>
-  {% endif %}
+  {% endfor %}
 </div>

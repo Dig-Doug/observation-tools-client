@@ -116,11 +116,11 @@ async fn execution_detail_view(
   // If observation ID is provided, load the observation for the side panel
   let selected_observation = if let Some(obs_id) = &query.obs {
     let observation_id = ObservationId::parse(obs_id)?;
-    let obs_list = metadata.get_observations(&[observation_id]).await?;
-    obs_list
-      .into_iter()
-      .next()
-      .map(|obs| GetObservation::new(obs))
+    match metadata.get_observation(observation_id).await {
+      Ok(obs) => Some(GetObservation::new(obs)),
+      Err(StorageError::NotFound(_)) => None,
+      Err(e) => return Err(e.into()),
+    }
   } else {
     None
   };
