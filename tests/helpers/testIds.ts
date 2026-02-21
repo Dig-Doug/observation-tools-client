@@ -23,7 +23,7 @@ export enum TestId {
   ObservationListItemLink = "ObservationListItemLink",
   ObservationId = "ObservationId",
   ObservationPayload = "ObservationPayload",
-  ObservationLabels = "ObservationLabels",
+  ObservationGroups = "ObservationGroups",
   ObservationSourceFile = "ObservationSourceFile",
   ObservationSourceLine = "ObservationSourceLine",
   ObservationMetadataHeader = "ObservationMetadataHeader",

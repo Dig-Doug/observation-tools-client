@@ -112,7 +112,7 @@ impl TestServer {
     observation_tools::server_client::create_client(&self.base_url, Some(api_key.to_string()))
   }
 
-  /// List all observations for an execution
+  /// List all observations for an execution (payloads returned as Pointers)
   #[allow(unused)]
   pub async fn list_observations(
     &self,
@@ -125,6 +125,23 @@ impl TestServer {
       .send()
       .await?;
     Ok(response.observations.clone())
+  }
+
+  /// Get a single observation with inline payload data
+  #[allow(unused)]
+  pub async fn get_observation(
+    &self,
+    execution_id: &impl ToString,
+    observation_id: &impl ToString,
+  ) -> anyhow::Result<GetObservation> {
+    let api_client = self.create_api_client()?;
+    let response = api_client
+      .get_observation()
+      .execution_id(&execution_id.to_string())
+      .observation_id(&observation_id.to_string())
+      .send()
+      .await?;
+    Ok(response.observation.clone())
   }
 
   #[allow(unused)]

@@ -52,12 +52,12 @@ async fn test_event_captured() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
   assert_eq!(observations.len(), 1);
 
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.observation_type, ObservationType::LogEntry);
   assert_eq!(obs.log_level, LogLevel::Info);
 
   // Check payload is the message text
-  let payload = obs.payload.as_str().expect("Expected text payload");
+  let payload = obs.payload().as_str().expect("Expected text payload");
   assert_eq!(payload, "test event message");
 
   // Check event fields are in metadata
@@ -119,10 +119,7 @@ async fn test_parent_span_attribution() -> anyhow::Result<()> {
   // Find our specific observations
   let event = observations
     .iter()
-    .find(|o| {
-      o.observation_type == ObservationType::LogEntry
-        && o.labels.iter().any(|l| l.starts_with("tracing/events"))
-    })
+    .find(|o| o.observation_type == ObservationType::LogEntry)
     .expect("Expected event observation");
   let inner = observations
     .iter()
@@ -245,9 +242,10 @@ async fn test_internal_events_filtered() -> anyhow::Result<()> {
     observations.iter().map(|o| &o.name).collect::<Vec<_>>()
   );
 
-  let obs = &observations[0];
-  assert!(
-    obs.labels.iter().any(|l| l.contains("user_app")),
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
+  assert_eq!(
+    obs.payload().as_str(),
+    Some("user event"),
     "The captured observation should be the user event"
   );
 
@@ -275,9 +273,9 @@ async fn test_span_with_multiple_fields() -> anyhow::Result<()> {
     .await?;
 
   let observations = server.list_observations(&execution.id()).await?;
-  let obs = &observations[0];
+  let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
   assert_eq!(obs.observation_type, ObservationType::Span);
-  let fields = obs.payload.as_json().expect("Expected JSON payload");
+  let fields = obs.payload().as_json().expect("Expected JSON payload");
   assert_eq!(fields["request_id"], 42);
   assert_eq!(fields["user"], "alice");
   assert_eq!(fields["enabled"], true);

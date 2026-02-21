@@ -1,6 +1,8 @@
 use super::span_data::SpanData;
 use crate::context;
+use crate::group::GroupHandle;
 use crate::observation::ObservationBuilder;
+use observation_tools_shared::GroupId;
 use observation_tools_shared::LogLevel;
 use observation_tools_shared::ObservationType;
 use observation_tools_shared::Payload;
@@ -70,9 +72,9 @@ where
 
   fn on_close(&self, id: Id, ctx: Context<'_, S>) {
     // Skip if no execution context
-    if context::get_current_execution().is_none() {
+    let Some(execution) = context::get_current_execution() else {
       return;
-    }
+    };
 
     let Some(span) = ctx.span(&id) else {
       return;
@@ -89,17 +91,20 @@ where
     let duration_ms = duration.as_secs_f64() * 1000.0;
 
     // Get the span's own ID and parent span ID
-    let span_id = id.into_u64().to_string();
+    let span_id = id.into_u64();
     let parent_span_id = span
       .parent()
       .map(|parent| parent.id().into_u64().to_string());
+
+    // Create a group handle from the span ID
+    let group_handle = GroupHandle::from_id(GroupId::from(span_id.to_string()), &execution);
 
     // Build and send observation
     let builder = ObservationBuilder::new(&data.name)
       .observation_type(ObservationType::Span)
       .log_level(tracing_level_to_log_level(data.level))
-      .label(format!("tracing/spans/{}", data.target))
-      .metadata("span_id", &span_id)
+      .group(&group_handle)
+      .metadata("span_id", &span_id.to_string())
       .metadata("duration_ms", format!("{:.3}", duration_ms))
       .metadata("target", &data.target);
 
@@ -127,9 +132,9 @@ where
       }
     }
 
-    if context::get_current_execution().is_none() {
+    let Some(execution) = context::get_current_execution() else {
       return;
-    }
+    };
 
     let mut visitor = FieldVisitor::new();
     event.record(&mut visitor);
@@ -153,13 +158,19 @@ where
       .unwrap_or_default();
 
     // Get current span from tracing's span stack for parent attribution
-    let parent_span_id = ctx.current_span().id().map(|id| id.into_u64().to_string());
+    let current_span_id = ctx.current_span().id().map(|id| id.into_u64());
+    let parent_span_id = current_span_id.map(|id| id.to_string());
 
     // Build and send observation
-    let builder = ObservationBuilder::new(metadata.name())
+    let mut builder = ObservationBuilder::new(metadata.name())
       .observation_type(ObservationType::LogEntry)
-      .log_level(tracing_level_to_log_level(*metadata.level()))
-      .label(format!("tracing/events/{}", metadata.target()));
+      .log_level(tracing_level_to_log_level(*metadata.level()));
+
+    // Add group reference from current span
+    if let Some(span_id) = current_span_id {
+      let group_handle = GroupHandle::from_id(GroupId::from(span_id.to_string()), &execution);
+      builder = builder.group(&group_handle);
+    }
 
     let builder = if let (Some(file), Some(line)) = (metadata.file(), metadata.line()) {
       builder.source(file, line)

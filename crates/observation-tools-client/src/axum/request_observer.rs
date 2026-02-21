@@ -1,6 +1,7 @@
 use crate::context;
-use crate::execution::ExecutionHandle;
+use crate::group::GroupBuilder;
 use crate::observation::ObservationBuilder;
+use crate::observation_handle::ObservationPayloadHandle;
 use axum::body::Body;
 use axum::extract::Request;
 use axum::response::Response;
@@ -28,30 +29,21 @@ use tower::Layer;
 use tower::Service;
 
 /// State shared between the streaming body and the observation emitter.
-/// This is used to collect data as it streams and emit the observation when
-/// complete. The observation is emitted in the Drop implementation when the
-/// body is finished.
+/// This is used to collect data as it streams and add the body payload when
+/// complete. The body payload is added in the Drop implementation via the
+/// ObservationPayloadHandle.
 struct StreamingObserverState {
   buffer: BytesMut,
   content_type: String,
-  log_level: LogLevel,
-  status_code: u16,
-  execution: ExecutionHandle,
+  payload_handle: ObservationPayloadHandle,
 }
 
 impl StreamingObserverState {
-  fn new(
-    content_type: String,
-    log_level: LogLevel,
-    status_code: u16,
-    execution: ExecutionHandle,
-  ) -> Self {
+  fn new(content_type: String, payload_handle: ObservationPayloadHandle) -> Self {
     Self {
       buffer: BytesMut::new(),
       content_type,
-      log_level,
-      status_code,
-      execution,
+      payload_handle,
     }
   }
 
@@ -64,7 +56,7 @@ impl Drop for StreamingObserverState {
   fn drop(&mut self) {
     let bytes = self.buffer.clone().freeze();
     tracing::debug!(
-      "StreamingObserverBody: emitting observation with {} bytes on drop",
+      "StreamingObserverBody: adding body payload with {} bytes on drop",
       bytes.len()
     );
     let payload = Payload {
@@ -73,19 +65,14 @@ impl Drop for StreamingObserverState {
       size: bytes.len(),
     };
 
-    ObservationBuilder::new("http/response/body")
-      .label("http/response")
-      .label("http/response/body")
-      .metadata("status", &self.status_code.to_string())
-      .log_level(self.log_level)
-      .execution(&self.execution)
-      .payload(payload);
+    self.payload_handle.raw_payload("body", payload);
   }
 }
 
 pin_project! {
   /// A body wrapper that streams data through while collecting it for observation.
-  /// When the stream completes, it emits the observation with the collected body.
+  /// When the stream completes, it adds the body as a named payload to the
+  /// existing response observation.
   pub struct StreamingObserverBody {
     #[pin]
     inner: Body,
@@ -94,20 +81,12 @@ pin_project! {
 }
 
 impl StreamingObserverBody {
-  fn new(
-    inner: Body,
-    content_type: String,
-    log_level: LogLevel,
-    status_code: u16,
-    execution: ExecutionHandle,
-  ) -> Self {
+  fn new(inner: Body, content_type: String, payload_handle: ObservationPayloadHandle) -> Self {
     Self {
       inner,
       state: Arc::new(Mutex::new(StreamingObserverState::new(
         content_type,
-        log_level,
-        status_code,
-        execution,
+        payload_handle,
       ))),
     }
   }
@@ -247,27 +226,33 @@ where
       };
 
       let (parts, body) = req.into_parts();
-      ObservationBuilder::new("http/request/headers")
-        .label("http/request")
-        .label("http/request/headers")
+
+      // Create a single group for the HTTP exchange
+      let http_group = GroupBuilder::new("http_request")
         .metadata("method", parts.method.to_string())
         .metadata("uri", parts.uri.to_string())
-        .serde(&json!(filter_headers(
-          &parts.headers,
-          &config.excluded_headers
-        )));
+        .build_with_execution(&execution)
+        .into_handle();
 
+      // Collect request body
       let request_body_bytes = body
         .collect()
         .await
         .map(|collected| collected.to_bytes())
         .unwrap_or_else(|_| Bytes::new());
-      ObservationBuilder::new("http/request/body")
-        .label("http/request")
-        .label("http/request/body")
+
+      // Single request observation with named payloads: "headers" + "body"
+      let headers_json = json!(filter_headers(&parts.headers, &config.excluded_headers));
+      let headers_payload = Payload::json(
+        serde_json::to_string(&headers_json).unwrap_or_default(),
+      );
+      ObservationBuilder::new("http/request")
+        .group(&http_group)
         .metadata("method", parts.method.to_string())
         .metadata("uri", parts.uri.to_string())
-        .payload(bytes_to_payload(&request_body_bytes, &parts.headers));
+        .execution(&execution)
+        .named_raw_payload("headers", headers_payload)
+        .raw_payload("body", bytes_to_payload(&request_body_bytes, &parts.headers));
 
       let response = inner
         .call(Request::from_parts(parts, Body::from(request_body_bytes)))
@@ -280,31 +265,30 @@ where
         500..=599 => LogLevel::Error,
         _ => LogLevel::Info,
       };
-      ObservationBuilder::new("http/response/headers")
-        .label("http/response")
-        .label("http/response/headers")
+
+      // Single response observation with named payload "headers" sent immediately,
+      // "body" added later when streaming completes via the payload handle
+      let resp_headers_json = json!(filter_headers(&parts.headers, &config.excluded_headers));
+      let resp_headers_payload = Payload::json(
+        serde_json::to_string(&resp_headers_json).unwrap_or_default(),
+      );
+      let payload_handle = ObservationBuilder::new("http/response")
+        .group(&http_group)
         .metadata("status", &parts.status.as_u16().to_string())
         .log_level(log_level)
-        .serde(&json!(filter_headers(
-          &parts.headers,
-          &config.excluded_headers
-        )));
+        .execution(&execution)
+        .named_raw_payload("headers", resp_headers_payload);
 
       // Wrap the response body in a streaming observer that captures data as it flows
-      // through and emits the observation when the stream completes
+      // through and adds the body payload when the stream completes
       let content_type = parts
         .headers
         .get(CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream")
         .to_string();
-      let streaming_body = StreamingObserverBody::new(
-        body,
-        content_type,
-        log_level,
-        parts.status.as_u16(),
-        execution,
-      );
+      let streaming_body =
+        StreamingObserverBody::new(body, content_type, payload_handle);
 
       Ok(Response::from_parts(parts, Body::new(streaming_body)))
     })

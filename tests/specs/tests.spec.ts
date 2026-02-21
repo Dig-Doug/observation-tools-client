@@ -35,7 +35,7 @@ test("Create execution with observation and verify data", async ({ page, server 
   const exe = client.beginExecution(executionName);
   const observationName = "test-observation";
   const observationPayload = { message: "Hello, World!", count: 42, nested: { value: true } };
-  const observationLabels = ["api", "test"];
+  const observationGroups = ["api", "test"];
   const sourceFile = "test.ts";
   const sourceLine = 123;
   const observationMetadata = [
@@ -44,8 +44,8 @@ test("Create execution with observation and verify data", async ({ page, server 
     ["user", "test-user"],
   ];
   let builder = new ObservationBuilder(observationName);
-  for (const label of observationLabels) {
-    builder = builder.label(label);
+  for (const label of observationGroups) {
+    builder = builder.group(label);
   }
   for (const [key, value] of observationMetadata) {
     builder = builder.metadata(key, value);
@@ -70,8 +70,8 @@ test("Create execution with observation and verify data", async ({ page, server 
   await expect(page.getByTestId(TestId.ObservationPayload)).toBeVisible();
   await expect(page.getByTestId(TestId.ObservationPayload)).toContainText("Hello, World!");
   await expect(page.getByTestId(TestId.ObservationPayload)).toContainText("42");
-  for (const label of observationLabels) {
-    await expect(page.getByTestId(TestId.ObservationLabels)).toContainText(label);
+  for (const label of observationGroups) {
+    await expect(page.getByTestId(TestId.ObservationGroups)).toContainText(label);
   }
   await expect(page.getByTestId(TestId.ObservationSourceFile)).toContainText(sourceFile);
   await expect(page.getByTestId(TestId.ObservationSourceLine)).toContainText(sourceLine.toString());
@@ -193,8 +193,8 @@ test("Large payload is uploaded as blob", async ({ page, server }) => {
   const largeData = "x".repeat(70000);
   const largePayload = { data: largeData, size: largeData.length };
   const observationId = new ObservationBuilder(observationName)
-    .label("test")
-    .label("large-payload")
+    .group("test")
+    .group("large-payload")
     .jsonPayload(JSON.stringify(largePayload))
     .send(exe)
     .handle().id;
@@ -347,7 +347,7 @@ test.describe("Auto-refresh behavior", () => {
       const observation1Name = "first-observation";
       const observation1Payload = { message: "First observation data" };
       const observation1Id = new ObservationBuilder(observation1Name)
-        .label("test")
+        .group("test")
         .source("test.ts", 10)
         .jsonPayload(JSON.stringify(observation1Payload))
         .send(exe)
@@ -356,7 +356,7 @@ test.describe("Auto-refresh behavior", () => {
       const observation2Name = "second-observation";
       const observation2Payload = { message: "Second observation data" };
       const observation2Id = new ObservationBuilder(observation2Name)
-        .label("test")
+        .group("test")
         .source("test.ts", 20)
         .jsonPayload(JSON.stringify(observation2Payload))
         .send(exe)
