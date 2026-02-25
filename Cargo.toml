@@ -5,6 +5,7 @@ members = [
     "crates/observation-tools-server",
     "crates/observation-tools-client",
     "crates/observation-tools-macros",
+    "examples"
 ]
 
 [workspace.package]
