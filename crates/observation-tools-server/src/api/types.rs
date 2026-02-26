@@ -66,16 +66,12 @@ pub struct CreateObservationsRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CreateObservationsResponse {}
 
-/// Query parameters for listing observations
+/// Query parameters for listing observations (cursor-based pagination)
 #[derive(Debug, Clone, Serialize, Deserialize, Default, ToSchema, IntoParams)]
 pub struct ListObservationsQuery {
-  /// Maximum number of results to return
+  /// Cursor token for the next page
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub limit: Option<usize>,
-
-  /// Number of results to skip (for pagination)
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub offset: Option<usize>,
+  pub page_token: Option<String>,
 }
 
 // ============================================================================

@@ -46,6 +46,9 @@ uuid.workspace = true
 pulldown-cmark.workspace = true
 ammonia.workspace = true
 
+[dev-dependencies]
+tempfile.workspace = true
+
 [build-dependencies]
 minijinja-embed.workspace = true
 serde_json.workspace = true
