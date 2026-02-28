@@ -75,7 +75,7 @@ impl GroupBuilder {
   }
 
   /// Create a GroupBuilder pre-configured for a tracing span
-  pub(crate) fn from_span(
+  pub fn from_span(
     name: impl Into<String>,
     log_level: LogLevel,
     parent_group_id: Option<GroupId>,
