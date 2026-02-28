@@ -1,3 +1,4 @@
+use super::StorageError;
 use observation_tools_shared::ExecutionId;
 use observation_tools_shared::GroupId;
 use observation_tools_shared::LogLevel;
@@ -7,8 +8,6 @@ use observation_tools_shared::ObservationType;
 use observation_tools_shared::PayloadId;
 use observation_tools_shared::SourceInfo;
 use std::collections::HashMap;
-
-use super::StorageError;
 
 /// Protobuf-encoded observation metadata + payload manifest
 #[derive(Clone, PartialEq, prost::Message)]
@@ -100,7 +99,19 @@ pub struct StoredInlinePayload {
   pub data: Vec<u8>,
 }
 
-// Conversion: Observation -> StoredObservation (without payloads, those are set separately)
+/// Protobuf-encoded group child entry for the group_children index
+#[derive(Clone, PartialEq, prost::Message)]
+pub struct StoredGroupChild {
+  /// The child's ID (observation or group ID)
+  #[prost(string, tag = "1")]
+  pub child_id: String,
+  /// Whether this child is a group (true) or a regular observation (false)
+  #[prost(bool, tag = "2")]
+  pub is_group: bool,
+}
+
+// Conversion: Observation -> StoredObservation (without payloads, those are set
+// separately)
 impl StoredObservation {
   pub fn from_observation(obs: &Observation) -> Self {
     StoredObservation {
@@ -122,7 +133,11 @@ impl StoredObservation {
           value: v.clone(),
         })
         .collect(),
-      group_ids: obs.group_ids.iter().map(|g| g.as_str().to_string()).collect(),
+      group_ids: obs
+        .group_ids
+        .iter()
+        .map(|g| g.as_str().to_string())
+        .collect(),
       parent_group_id: obs.parent_group_id.as_ref().map(|g| g.as_str().to_string()),
       parent_span_id: obs.parent_span_id.clone(),
       created_at: obs.created_at.to_rfc3339(),
@@ -158,8 +173,15 @@ impl StoredObservation {
         column: s.column,
       }),
       metadata,
-      group_ids: self.group_ids.iter().map(|g| GroupId::from(g.as_str())).collect(),
-      parent_group_id: self.parent_group_id.as_ref().map(|g| GroupId::from(g.as_str())),
+      group_ids: self
+        .group_ids
+        .iter()
+        .map(|g| GroupId::from(g.as_str()))
+        .collect(),
+      parent_group_id: self
+        .parent_group_id
+        .as_ref()
+        .map(|g| GroupId::from(g.as_str())),
       parent_span_id: self.parent_span_id.clone(),
       created_at,
     })

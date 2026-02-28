@@ -365,7 +365,7 @@ async fn test_named_payloads() -> anyhow::Result<()> {
     // Create an observation with a named payload, then add more payloads via the handle
     let handle = ObservationBuilder::new("multi-payload-obs")
       .metadata("kind", "multi")
-      .named_serde("headers", &json!({"content-type": "application/json"}));
+      .named_payload("headers", &json!({"content-type": "application/json"}));
 
     handle.serde("body", &json!({"message": "hello"}));
     handle.payload(

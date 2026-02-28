@@ -169,6 +169,11 @@
             "description": "Whether there are more results available",
             "type": "boolean"
           },
+          "next_page_token": {
+            "description": "Token for the next page (cursor-based pagination)",
+            "nullable": true,
+            "type": "string"
+          },
           "observations": {
             "description": "List of observations",
             "items": {
@@ -519,25 +524,13 @@
             }
           },
           {
-            "description": "Maximum number of results to return",
+            "description": "Cursor token for the next page",
             "in": "query",
-            "name": "limit",
+            "name": "page_token",
             "required": false,
             "schema": {
-              "minimum": 0,
               "nullable": true,
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Number of results to skip (for pagination)",
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "minimum": 0,
-              "nullable": true,
-              "type": "integer"
+              "type": "string"
             }
           }
         ],

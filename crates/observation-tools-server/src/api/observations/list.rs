@@ -22,6 +22,10 @@ pub struct ListObservationsResponse {
 
   /// Whether there are more results available
   pub has_next_page: bool,
+
+  /// Token for the next page (cursor-based pagination)
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub next_page_token: Option<String>,
 }
 
 /// List observations for an execution
@@ -45,21 +49,17 @@ pub async fn list_observations(
   Query(query): Query<ListObservationsQuery>,
 ) -> Result<Json<ListObservationsResponse>, AppError> {
   let execution_id = ExecutionId::parse(&execution_id)?;
-  let limit = query.limit.unwrap_or(100);
-  let mut observations = metadata
-    // Fetch one extra to see if there's a next page
-    .list_observations(execution_id, Some(limit + 1), query.offset, None)
+  let page = metadata
+    .get_observations(execution_id, query.page_token)
     .await?;
-  let has_next_page = observations.len() > limit;
-  if has_next_page {
-    // Remove the extra record fetched
-    observations.pop();
-  }
+  let has_next_page = page.pagination.next_page_token.is_some();
   Ok(Json(ListObservationsResponse {
-    observations: observations
+    observations: page
+      .observations
       .into_iter()
       .map(GetObservation::new)
       .collect(),
     has_next_page,
+    next_page_token: page.pagination.next_page_token,
   }))
 }
