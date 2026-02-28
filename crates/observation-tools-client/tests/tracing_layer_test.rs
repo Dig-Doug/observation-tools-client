@@ -27,8 +27,12 @@ async fn test_span_captured_on_close() -> anyhow::Result<()> {
   let obs = &observations[0];
   assert_eq!(obs.name.as_str(), "test_span");
   assert!(
-    obs.metadata.contains_key("duration_ms"),
-    "Expected duration_ms metadata"
+    obs.metadata.contains_key("duration_s"),
+    "Expected duration_s metadata"
+  );
+  assert!(
+    obs.metadata.contains_key("duration_ns"),
+    "Expected duration_ns metadata"
   );
 
   Ok(())
@@ -130,33 +134,27 @@ async fn test_parent_span_attribution() -> anyhow::Result<()> {
     .find(|o| o.name == "outer")
     .expect("Expected outer span");
 
-  // Get span IDs from metadata
-  let outer_span_id = outer
-    .metadata
-    .get("span_id")
-    .expect("Outer span should have span_id metadata");
-  let inner_span_id = inner
-    .metadata
-    .get("span_id")
-    .expect("Inner span should have span_id metadata");
-
   // outer should have no parent (it's the root span)
   assert!(
-    outer.parent_span_id.is_none(),
+    outer.parent_group_id.is_none(),
     "Outer span should not have a parent"
   );
 
-  // inner's parent_span_id should match outer's span_id
+  // inner's parent_group_id should reference outer's group ID
+  let inner_parent = inner
+    .parent_group_id
+    .as_ref()
+    .expect("Inner span should have a parent group");
   assert_eq!(
-    inner.parent_span_id.as_ref(),
-    Some(outer_span_id),
+    inner_parent,
+    &outer.group_ids[0],
     "Inner span's parent should be outer span"
   );
 
-  // The event's parent_span_id should match inner's span_id
+  // The event's parent_span_id should reference inner's group ID
   assert_eq!(
-    event.parent_span_id.as_ref(),
-    Some(inner_span_id),
+    event.parent_span_id.as_deref(),
+    Some(inner.group_ids[0].as_str()),
     "Event's parent should be inner span"
   );
 
@@ -194,18 +192,12 @@ async fn test_observe_macro_gets_parent_span() -> anyhow::Result<()> {
     .find(|o| o.name == "parent_span")
     .expect("Expected parent_span observation");
 
-  assert_eq!(span_obs.observation_type, ObservationType::Span);
+  assert_eq!(span_obs.observation_type, ObservationType::Group);
 
-  // Get the span's tracing ID from metadata
-  let span_id = span_obs
-    .metadata
-    .get("span_id")
-    .expect("parent_span should have span_id metadata");
-
-  // The observe!() observation's parent_span_id should match the span's span_id
+  // The observe!() observation's parent_span_id should match the span's group ID
   assert_eq!(
-    my_obs.parent_span_id.as_ref(),
-    Some(span_id),
+    my_obs.parent_span_id.as_deref(),
+    Some(span_obs.group_ids[0].as_str()),
     "observe!() should have parent_span as its parent"
   );
 
@@ -274,12 +266,11 @@ async fn test_span_with_multiple_fields() -> anyhow::Result<()> {
 
   let observations = server.list_observations(&execution.id()).await?;
   let obs = server.get_observation(&execution.id(), &observations[0].id).await?;
-  assert_eq!(obs.observation_type, ObservationType::Span);
-  let fields = obs.payload().as_json().expect("Expected JSON payload");
-  assert_eq!(fields["request_id"], 42);
-  assert_eq!(fields["user"], "alice");
-  assert_eq!(fields["enabled"], true);
-  assert_eq!(fields["latency"], 1.5);
+  assert_eq!(obs.observation_type, ObservationType::Group);
+  assert_eq!(obs.metadata.get("request_id"), Some(&"42".to_string()));
+  assert_eq!(obs.metadata.get("user"), Some(&"alice".to_string()));
+  assert_eq!(obs.metadata.get("enabled"), Some(&"true".to_string()));
+  assert_eq!(obs.metadata.get("latency"), Some(&"1.5".to_string()));
 
   Ok(())
 }

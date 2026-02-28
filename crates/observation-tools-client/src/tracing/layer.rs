@@ -1,5 +1,6 @@
 use super::span_data::SpanData;
 use crate::context;
+use crate::group::GroupBuilder;
 use crate::group::GroupHandle;
 use crate::observation::ObservationBuilder;
 use observation_tools_shared::GroupId;
@@ -86,41 +87,36 @@ where
       return;
     };
 
-    // Calculate duration
+    let builder = GroupBuilder::from_span(
+      &data.name,
+      tracing_level_to_log_level(data.level),
+      span
+        .parent()
+        .map(|parent| GroupId::from(parent.id().into_u64().to_string())),
+    )
+    .id(id.into_u64().to_string())
+    .metadata("target", &data.target);
+
     let duration = data.created_at.elapsed();
-    let duration_ms = duration.as_secs_f64() * 1000.0;
+    let mut builder = builder
+      .metadata("duration_s", duration.as_secs().to_string())
+      .metadata("duration_ns", duration.subsec_nanos().to_string());
 
-    // Get the span's own ID and parent span ID
-    let span_id = id.into_u64();
-    let parent_span_id = span
-      .parent()
-      .map(|parent| parent.id().into_u64().to_string());
+    if let serde_json::Value::Object(fields) = &data.fields {
+      for (key, value) in fields {
+        let value_str = match value {
+          serde_json::Value::String(s) => s.clone(),
+          other => other.to_string(),
+        };
+        builder = builder.metadata(key, value_str);
+      }
+    }
 
-    // Create a group handle from the span ID
-    let group_handle = GroupHandle::from_id(GroupId::from(span_id.to_string()), &execution);
+    if let (Some(file), Some(line)) = (data.file, data.line) {
+      builder = builder.source(file, line);
+    }
 
-    // Build and send observation
-    let builder = ObservationBuilder::new(&data.name)
-      .observation_type(ObservationType::Span)
-      .log_level(tracing_level_to_log_level(data.level))
-      .group(&group_handle)
-      .metadata("span_id", &span_id.to_string())
-      .metadata("duration_ms", format!("{:.3}", duration_ms))
-      .metadata("target", &data.target);
-
-    let builder = if let (Some(file), Some(line)) = (data.file, data.line) {
-      builder.source(file, line)
-    } else {
-      builder
-    };
-
-    let builder = if let Some(parent_id) = parent_span_id {
-      builder.parent_span_id(parent_id)
-    } else {
-      builder
-    };
-
-    let _ = builder.serde(&data.fields);
+    let _ = builder.build_with_execution(&execution);
   }
 
   fn on_event(&self, event: &Event<'_>, ctx: Context<'_, S>) {

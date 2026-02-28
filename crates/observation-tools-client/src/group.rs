@@ -7,9 +7,11 @@ use crate::observation::ObservationBuilder;
 use crate::observation_handle::SendObservation;
 use crate::Error;
 use observation_tools_shared::GroupId;
+use observation_tools_shared::LogLevel;
 use observation_tools_shared::ObservationId;
 use observation_tools_shared::ObservationType;
 use observation_tools_shared::Payload;
+use observation_tools_shared::SourceInfo;
 use std::collections::HashMap;
 
 /// Builder for creating groups
@@ -21,6 +23,8 @@ pub struct GroupBuilder {
   custom_id: Option<GroupId>,
   parent_group_id: Option<GroupId>,
   metadata: HashMap<String, String>,
+  source: Option<SourceInfo>,
+  log_level: Option<LogLevel>,
 }
 
 impl GroupBuilder {
@@ -31,6 +35,8 @@ impl GroupBuilder {
       custom_id: None,
       parent_group_id: None,
       metadata: HashMap::new(),
+      source: None,
+      log_level: None,
     }
   }
 
@@ -50,6 +56,37 @@ impl GroupBuilder {
   pub fn metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
     self.metadata.insert(key.into(), value.into());
     self
+  }
+
+  /// Set the source location for the group
+  pub fn source(mut self, file: impl Into<String>, line: u32) -> Self {
+    self.source = Some(SourceInfo {
+      file: file.into(),
+      line,
+      column: None,
+    });
+    self
+  }
+
+  /// Set the log level for the group
+  pub(crate) fn log_level(mut self, level: LogLevel) -> Self {
+    self.log_level = Some(level);
+    self
+  }
+
+  /// Create a GroupBuilder pre-configured for a tracing span
+  pub fn from_span(
+    name: impl Into<String>,
+    log_level: LogLevel,
+    parent_group_id: Option<GroupId>,
+  ) -> Self {
+    let mut builder = Self::new(name).log_level(log_level);
+
+    if let Some(parent_id) = parent_group_id {
+      builder = builder.parent(parent_id);
+    }
+
+    builder
   }
 
   /// Build and send the group using the current execution context
@@ -88,7 +125,13 @@ impl GroupBuilder {
     let mut builder = ObservationBuilder::new(self.name)
       .with_id(observation_id)
       .observation_type(ObservationType::Group)
-      .execution(execution);
+      .log_level(self.log_level.unwrap_or(LogLevel::Info))
+      .execution(execution)
+      .group(&group_handle);
+
+    if let Some(source) = self.source {
+      builder = builder.source(source.file, source.line);
+    }
 
     if let Some(parent_id) = self.parent_group_id {
       builder = builder.parent_group(parent_id);
