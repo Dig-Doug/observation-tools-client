@@ -10,16 +10,10 @@
   <div class="h-screen grid grid-rows-[auto_1fr]">
     {{ nav() }}
     <div
+      id="execution-layout"
       class="grid {% if selected_observation %}grid-cols-2{% else %}grid-cols-1{% endif %} overflow-hidden"
     >
-      <main
-        class="overflow-y-auto"
-        id="execution-detail"
-        hx-get="{{ base_path }}?offset={{ offset }}&limit={{ limit }}{% if selected_observation %}&obs={{ selected_observation.id }}{% endif %}"
-        hx-trigger="every 2s"
-        hx-select="#execution-detail > *"
-        hx-swap="innerHTML"
-      >
+      <main class="overflow-y-auto" id="execution-detail">
         {% if execution %}
           <div class="p-8">
             {{
@@ -74,8 +68,8 @@
             <h2 class="text-xl font-bold my-4">observations</h2>
 
             <div id="observations-list">
-              {% if observations %}
-                {% if view == 'log' %}
+              {% if view == 'log' %}
+                {% if observations %}
                   <div
                     class="font-mono text-sm bg-neutral-900 rounded border border-neutral-700 overflow-hidden"
                   >
@@ -126,55 +120,34 @@
                       </a>
                     {% endfor %}
                   </div>
+                  {% if total_count %}
+                    <div class="divider"></div>
+                    <p data-testid="PaginationInfo" class="mb-2 text-base-content/60 text-sm">
+                      showing {{ offset + 1 }}-{{ offset + observations|length }} of
+                      {{ total_count }} (page {{ page }})
+                    </p>
+                    <div class="join">
+                      <button
+                        data-testid="PaginationPrev"
+                        {% if offset > 0 %}onclick="window.location.href='{{ base_path }}?offset={{ offset - limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
+                        class="join-item btn btn-sm btn-outline"
+                      >
+                        &larr; prev
+                      </button>
+                      <button
+                        data-testid="PaginationNext"
+                        {% if has_next_page %}onclick="window.location.href='{{ base_path }}?offset={{ offset + limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
+                        class="join-item btn btn-sm btn-outline"
+                      >
+                        next &rarr;
+                      </button>
+                    </div>
+                  {% endif %}
                 {% else %}
-                  <ul class="list-none">
-                    {% for obs in observations %}
-                      <li data-testid="ObservationListItem" class="my-2">
-                        <a
-                          data-testid="ObservationListItemLink"
-                          href="{{ base_path }}?offset={{ offset }}&limit={{ limit }}&obs={{ obs.id }}"
-                          class="link {% if selected_observation and selected_observation.id == obs.id %}font-bold{% endif %}"
-                          >{{ obs.name }}</a
-                        >
-                        <span class="text-base-content/60 text-sm">
-                          {% if obs.payloads %}— {{ obs.payloads[0].mime_type }}{% endif %}
-                          {% if obs.source %}— {{ obs.source.file }}:{{ obs.source.line }}{% endif %}
-                          — {{ obs.created_at }}
-                        </span>
-                        {% if obs.group_ids %}
-                          <br /><span class="text-base-content/60 text-sm"
-                            >groups: {{ obs.group_ids|join(", ") }}</span
-                          >
-                        {% endif %}
-                      </li>
-                    {% endfor %}
-                  </ul>
-                {% endif %}
-                {% if total_count %}
-                  <div class="divider"></div>
-                  <p data-testid="PaginationInfo" class="mb-2 text-base-content/60 text-sm">
-                    showing {{ offset + 1 }}-{{ offset + observations|length }} of {{ total_count }}
-                    (page {{ page }})
-                  </p>
-                  <div class="join">
-                    <button
-                      data-testid="PaginationPrev"
-                      {% if offset > 0 %}onclick="window.location.href='{{ base_path }}?offset={{ offset - limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
-                      class="join-item btn btn-sm btn-outline"
-                    >
-                      ← prev
-                    </button>
-                    <button
-                      data-testid="PaginationNext"
-                      {% if has_next_page %}onclick="window.location.href='{{ base_path }}?offset={{ offset + limit }}&limit={{ limit }}'"{% else %}disabled{% endif %}
-                      class="join-item btn btn-sm btn-outline"
-                    >
-                      next →
-                    </button>
-                  </div>
+                  <p>no observations found.</p>
                 {% endif %}
               {% else %}
-                <p>no observations found.</p>
+                {% include "_group_tree.html" %}
               {% endif %}
             </div>
           </div>
@@ -208,7 +181,15 @@
           id="side-panel"
         >
           <div class="flex-shrink-0">
-            <a href="{{ base_path }}" class="block text-right text-xl mb-4 link no-underline">×</a>
+            {% if view == 'payload' %}
+              <a href="{{ tree.close_url }}" class="block text-right text-xl mb-4 link no-underline"
+                >&times;</a
+              >
+            {% else %}
+              <a href="{{ base_path }}" class="block text-right text-xl mb-4 link no-underline"
+                >&times;</a
+              >
+            {% endif %}
           </div>
           <div id="side-panel-content" class="flex-grow min-h-0 flex flex-col">
             {% set observation = selected_observation %} {% include "_observation_content.html" %}

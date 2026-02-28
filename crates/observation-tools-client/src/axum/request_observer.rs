@@ -251,7 +251,7 @@ where
         .metadata("method", parts.method.to_string())
         .metadata("uri", parts.uri.to_string())
         .execution(&execution)
-        .named_payload("headers", headers_payload)
+        .named_raw_payload("headers", headers_payload)
         .payload("body", bytes_to_payload(&request_body_bytes, &parts.headers));
 
       let response = inner
@@ -277,7 +277,7 @@ where
         .metadata("status", &parts.status.as_u16().to_string())
         .log_level(log_level)
         .execution(&execution)
-        .named_payload("headers", resp_headers_payload);
+        .named_raw_payload("headers", resp_headers_payload);
 
       // Wrap the response body in a streaming observer that captures data as it flows
       // through and adds the body payload when the stream completes

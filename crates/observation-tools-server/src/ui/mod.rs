@@ -2,6 +2,7 @@
 
 pub mod execution_detail;
 mod executions_list;
+pub mod group_tree;
 mod index;
 mod observation_detail;
 mod templates;

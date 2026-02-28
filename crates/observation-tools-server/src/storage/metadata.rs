@@ -104,6 +104,13 @@ pub trait MetadataStorage: Send + Sync {
     page_token: Option<String>,
   ) -> StorageResult<GroupDirectDescendantsPage>;
 
+  /// Look up a group observation by its GroupId.
+  /// Returns the observation that represents this group.
+  async fn get_observation_by_group_id(
+    &self,
+    group_id: GroupId,
+  ) -> StorageResult<ObservationWithPayloads>;
+
   /// BFS expansion of group tree up to max_nodes.
   /// Returns Tree if first level fits, List if first level exceeds max_nodes.
   async fn get_group_tree_bfs(
@@ -175,6 +182,11 @@ impl SledStorage {
   /// Get the group_children index tree
   fn group_children_tree(&self) -> StorageResult<sled::Tree> {
     Ok(self.db.open_tree("group_children")?)
+  }
+
+  /// Get the group_index tree (group_id → observation_id)
+  fn group_index_tree(&self) -> StorageResult<sled::Tree> {
+    Ok(self.db.open_tree("group_index")?)
   }
 
   /// Decode a stored observation from a metadata key's value, returning
@@ -315,6 +327,7 @@ impl SledStorage {
     obs_tree: &sled::Tree,
     group_obs: &ObservationWithPayloads,
   ) -> StorageResult<Vec<GroupId>> {
+    let gi_tree = self.group_index_tree()?;
     let mut ancestors = Vec::new();
     let mut current_parent = group_obs.observation.parent_group_id.clone();
 
@@ -325,24 +338,27 @@ impl SledStorage {
       }
       ancestors.push(parent_id.clone());
 
-      // Try to look up the parent observation to continue the chain
-      // Parent group's observation ID should match the group_id (they use the same ID space)
-      // We need to find the observation that has this group_id as its identity
-      // Since group observations use ObservationId as their ID and GroupId can be arbitrary,
-      // we try parsing it as an ObservationId
-      match ObservationId::parse(parent_id.as_str()) {
-        Ok(parent_obs_id) => {
-          let key = metadata_key(&parent_obs_id);
-          match obs_tree.get(key.as_bytes())? {
-            Some(value) => {
-              let stored = StoredObservation::decode(value.as_ref())?;
-              let obs = stored.to_observation()?;
-              current_parent = obs.parent_group_id;
-            }
-            None => break,
+      // Look up the observation ID for this group via the group_index
+      let obs_id = match gi_tree.get(parent_id.as_str().as_bytes())? {
+        Some(obs_id_bytes) => {
+          let obs_id_str = String::from_utf8(obs_id_bytes.to_vec())
+            .map_err(|e| StorageError::Internal(format!("Invalid obs ID encoding: {}", e)))?;
+          match ObservationId::parse(&obs_id_str) {
+            Ok(id) => id,
+            Err(_) => break,
           }
         }
-        Err(_) => break,
+        None => break,
+      };
+
+      let key = metadata_key(&obs_id);
+      match obs_tree.get(key.as_bytes())? {
+        Some(value) => {
+          let stored = StoredObservation::decode(value.as_ref())?;
+          let obs = stored.to_observation()?;
+          current_parent = obs.parent_group_id;
+        }
+        None => break,
       }
     }
 
@@ -493,6 +509,7 @@ impl MetadataStorage for SledStorage {
     let obs_tree = self.observations_tree()?;
     let exec_obs_tree = self.execution_observations_tree()?;
     let gc_tree = self.group_children_tree()?;
+    let gi_tree = self.group_index_tree()?;
 
     for obs_with_payloads in observations {
       let obs = &obs_with_payloads.observation;
@@ -531,6 +548,16 @@ impl MetadataStorage for SledStorage {
 
       // Index group children relationships
       self.index_group_child(&gc_tree, &obs.execution_id, obs)?;
+
+      // Index group_id → observation_id for group observations
+      if obs.observation_type == ObservationType::Group {
+        for group_id in &obs.group_ids {
+          gi_tree.insert(
+            group_id.as_str().as_bytes(),
+            obs_id.to_string().as_bytes(),
+          )?;
+        }
+      }
     }
     Ok(())
   }
@@ -705,6 +732,23 @@ impl MetadataStorage for SledStorage {
     })
   }
 
+  async fn get_observation_by_group_id(
+    &self,
+    group_id: GroupId,
+  ) -> StorageResult<ObservationWithPayloads> {
+    let gi_tree = self.group_index_tree()?;
+    let obs_id_bytes = gi_tree
+      .get(group_id.as_str().as_bytes())?
+      .ok_or_else(|| StorageError::NotFound(format!("Group {} not found", group_id.as_str())))?;
+    let obs_id_str = String::from_utf8(obs_id_bytes.to_vec())
+      .map_err(|e| StorageError::Internal(format!("Invalid observation ID encoding: {}", e)))?;
+    let obs_id = ObservationId::parse(&obs_id_str)
+      .map_err(|e| StorageError::Internal(format!("Invalid observation ID: {}", e)))?;
+    let obs_tree = self.observations_tree()?;
+    self.decode_metadata_only(&obs_tree.get(metadata_key(&obs_id).as_bytes())?
+      .ok_or_else(|| StorageError::NotFound(format!("Observation {} not found", obs_id)))?)
+  }
+
   async fn get_direct_descendants_page(
     &self,
     execution_id: ExecutionId,
@@ -809,6 +853,14 @@ impl MetadataStorage for SledStorage {
 
     for (i, (child, obs)) in root_children.into_iter().enumerate() {
       if child.is_group {
+        // Use group_ids[0] if available (the group's own GroupId),
+        // otherwise fall back to child_id (observation ID) for backward compatibility
+        let group_key = obs
+          .observation
+          .group_ids
+          .first()
+          .map(|g| g.as_str().to_string())
+          .unwrap_or_else(|| child.child_id.clone());
         let ancestors = self.compute_group_ancestors(&obs_tree, &obs)?;
         let node = GroupTreeNode::Group(Group {
           metadata: obs,
@@ -822,7 +874,7 @@ impl MetadataStorage for SledStorage {
             },
           },
         });
-        bfs_queue.push_back((child.child_id, vec![i]));
+        bfs_queue.push_back((group_key, vec![i]));
         roots.push(node);
       } else {
         roots.push(GroupTreeNode::Observation(obs));
@@ -859,6 +911,12 @@ impl MetadataStorage for SledStorage {
 
       for (j, (child, obs)) in children.into_iter().enumerate() {
         if child.is_group {
+          let group_key = obs
+            .observation
+            .group_ids
+            .first()
+            .map(|g| g.as_str().to_string())
+            .unwrap_or_else(|| child.child_id.clone());
           let ancestors = self.compute_group_ancestors(&obs_tree, &obs)?;
           let node = GroupTreeNode::Group(Group {
             metadata: obs,
@@ -874,7 +932,7 @@ impl MetadataStorage for SledStorage {
           });
           let mut child_path = path.clone();
           child_path.push(j);
-          new_queue_entries.push((child.child_id, child_path));
+          new_queue_entries.push((group_key, child_path));
           child_nodes.push(node);
         } else {
           child_nodes.push(GroupTreeNode::Observation(obs));

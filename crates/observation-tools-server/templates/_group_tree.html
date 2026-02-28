@@ -1,0 +1,196 @@
+{# Group tree view for the payload tab.
+   Expects: tree (GroupTreeView), execution_id, base_path, selected_observation
+#}
+
+{# Recursive macro to render a tree node #}
+{% macro render_tree_node(node, selected_observation) %}
+  {% if node.node_type == "group" %}
+    <div class="border-l-2 border-base-300 ml-2">
+      <div class="flex items-center gap-1 py-1 pl-2 hover:bg-base-200 rounded-r group/node">
+        {% if node.is_expanded %}
+          <a
+            data-testid="TreeCollapseGroup"
+            href="{{ node.collapse_url }}"
+            hx-get="{{ node.collapse_url }}"
+            hx-target="#execution-layout"
+            hx-select="#execution-layout"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            class="text-base-content/60 hover:text-base-content shrink-0"
+            title="Collapse"
+            >&#9660;</a
+          >
+        {% elif node.can_expand %}
+          <a
+            data-testid="TreeExpandGroup"
+            href="{{ node.expand_url }}"
+            hx-get="{{ node.expand_url }}"
+            hx-target="#execution-layout"
+            hx-select="#execution-layout"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            class="text-base-content/60 hover:text-base-content shrink-0"
+            title="Expand"
+            >&#9654;</a
+          >
+        {% else %}
+          <span class="text-base-content/30 shrink-0" title="Focus to explore this group"
+            >&#9654;</span
+          >
+        {% endif %}
+
+        <span class="font-medium">{{ node.observation.name }}/</span>
+
+        {% if node.observation.source %}
+          <span class="text-base-content/40 text-xs"
+            >{{ node.observation.source.file }}:{{ node.observation.source.line }}</span
+          >
+        {% endif %}
+
+        {% if node.focus_url %}
+          <a
+            data-testid="TreeFocusGroup"
+            href="{{ node.focus_url }}"
+            hx-get="{{ node.focus_url }}"
+            hx-target="#execution-layout"
+            hx-select="#execution-layout"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            class="text-xs text-base-content/40 hover:text-info invisible group-hover/node:visible ml-auto"
+            title="Focus on this group"
+            >focus</a
+          >
+        {% endif %}
+      </div>
+
+      {% if node.is_expanded %}
+        <div class="ml-4">
+          {% for child in node.children %}
+            {{ render_tree_node(child, selected_observation) }}
+          {% endfor %}
+
+          {% if node.pagination %}
+            <div class="flex items-center gap-2 py-1 pl-2 text-sm">
+              {% if node.pagination.prev %}
+                <a
+                  href="{{ node.pagination.prev }}"
+                  hx-get="{{ node.pagination.prev }}"
+                  hx-target="#execution-layout"
+                  hx-select="#execution-layout"
+                  hx-swap="outerHTML"
+                  hx-push-url="true"
+                  class="link text-xs"
+                  >&larr; prev</a
+                >
+              {% endif %}
+              {% if node.pagination.next %}
+                <a
+                  href="{{ node.pagination.next }}"
+                  hx-get="{{ node.pagination.next }}"
+                  hx-target="#execution-layout"
+                  hx-select="#execution-layout"
+                  hx-swap="outerHTML"
+                  hx-push-url="true"
+                  class="link text-xs"
+                  >next &rarr;</a
+                >
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if not node.can_expand and not node.is_expanded %}
+        <div class="ml-6 text-xs text-base-content/30 py-0.5">focus to explore</div>
+      {% endif %}
+    </div>
+  {% else %}
+    {# Observation leaf node #}
+    <div class="py-1 pl-2 ml-2">
+      <a
+        data-testid="ObservationListItemLink"
+        href="{{ node.select_url }}"
+        hx-get="{{ node.select_url }}"
+        hx-target="#execution-layout"
+        hx-select="#execution-layout"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+        class="link {% if selected_observation and selected_observation.id == node.observation.id %}font-bold{% endif %}"
+        >{{ node.observation.name }}</a
+      >
+      <span class="text-base-content/60 text-sm">
+        {% if node.observation.payloads %}— {{ node.observation.payloads[0].mime_type }}{% endif %}
+        {% if node.observation.source %}
+          — {{ node.observation.source.file }}:{{ node.observation.source.line }}
+        {% endif %}
+        — {{ node.observation.created_at }}
+      </span>
+    </div>
+  {% endif %}
+{% endmacro %}
+
+{# Main tree rendering #}
+<div id="group-tree" data-testid="GroupTree">
+  {# Breadcrumbs when focused #}
+  {% if tree.focused_group_id %}
+    <div class="flex items-center gap-1 text-sm mb-3 flex-wrap">
+      {% for crumb in tree.breadcrumbs %}
+        {% if not loop.first %}
+          <span class="text-base-content/40">/</span>
+        {% endif %}
+        <a
+          href="{{ crumb.url }}"
+          hx-get="{{ crumb.url }}"
+          hx-target="#execution-layout"
+          hx-select="#execution-layout"
+          hx-swap="outerHTML"
+          hx-push-url="true"
+          class="link"
+          >{{ crumb.name }}</a
+        >
+      {% endfor %}
+      <span class="text-base-content/40">/</span>
+      <span class="font-bold">current</span>
+    </div>
+  {% endif %}
+
+  {# Tree nodes #}
+  {% if tree.nodes %}
+    {% for node in tree.nodes %}
+      {{ render_tree_node(node, selected_observation) }}
+    {% endfor %}
+
+    {# Root-level pagination #}
+    {% if tree.pagination %}
+      <div class="flex items-center gap-2 mt-3 text-sm">
+        {% if tree.pagination.prev %}
+          <a
+            href="{{ tree.pagination.prev }}"
+            hx-get="{{ tree.pagination.prev }}"
+            hx-target="#execution-layout"
+            hx-select="#execution-layout"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            class="btn btn-sm btn-outline"
+            >&larr; prev</a
+          >
+        {% endif %}
+        <span class="text-base-content/60">{{ tree.node_count }} nodes</span>
+        {% if tree.pagination.next %}
+          <a
+            href="{{ tree.pagination.next }}"
+            hx-get="{{ tree.pagination.next }}"
+            hx-target="#execution-layout"
+            hx-select="#execution-layout"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            class="btn btn-sm btn-outline"
+            >next &rarr;</a
+          >
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <p>no observations found.</p>
+  {% endif %}
+</div>

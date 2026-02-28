@@ -93,6 +93,13 @@ impl ObservationBuilder {
     self
   }
 
+  /// Add a raw group ID to the observation (used for Group observations to
+  /// record their own ID)
+  pub(crate) fn with_group_id(mut self, id: GroupId) -> Self {
+    self.group_ids.push(id);
+    self
+  }
+
   /// Add metadata to the observation
   pub fn metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
     self.metadata.insert(key.into(), value.into());
@@ -165,7 +172,7 @@ impl ObservationBuilder {
 
   /// Send the observation with a named serde-serialized payload, returning a
   /// handle that allows adding more named payloads later.
-  pub fn named_serde<T: ?Sized + Serialize + 'static>(
+  pub fn named_payload<T: ?Sized + Serialize + 'static>(
     self,
     name: impl Into<String>,
     value: &T,
@@ -187,13 +194,13 @@ impl ObservationBuilder {
     self.send_named_observation(name, payload)
   }
 
-  /// Send the observation with a named payload
-  pub fn named_payload(
+  /// Send the observation with a named raw payload
+  pub fn named_raw_payload(
     self,
     name: impl Into<String>,
-    payload: impl Into<Payload>,
+    payload: Payload,
   ) -> ObservationPayloadHandle {
-    self.send_named_observation(name, payload.into())
+    self.send_named_observation(name, payload)
   }
 
   fn send_named_observation(
