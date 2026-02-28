@@ -146,24 +146,24 @@ impl ObservationPayloadHandle {
   }
 
   /// Add a named payload serialized via serde
-  pub fn payload<T: ?Sized + serde::Serialize>(&self, name: impl Into<String>, value: &T) -> &Self {
+  pub fn serde<T: ?Sized + serde::Serialize>(&self, name: impl Into<String>, value: &T) -> &Self {
     let payload =
       observation_tools_shared::Payload::json(serde_json::to_string(value).unwrap_or_default());
-    self.raw_payload(name, payload)
+    self.payload(name, payload)
   }
 
   /// Add a named payload formatted via Debug
-  pub fn debug_payload<T: std::fmt::Debug + ?Sized>(
+  pub fn debug<T: std::fmt::Debug + ?Sized>(
     &self,
     name: impl Into<String>,
     value: &T,
   ) -> &Self {
     let payload = observation_tools_shared::Payload::debug(format!("{:#?}", value));
-    self.raw_payload(name, payload)
+    self.payload(name, payload)
   }
 
-  /// Add a named raw payload
-  pub fn raw_payload(&self, name: impl Into<String>, payload: observation_tools_shared::Payload) -> &Self {
+  /// Add a named payload
+  pub fn payload(&self, name: impl Into<String>, payload: impl Into<observation_tools_shared::Payload>) -> &Self {
     let _ = self
       .execution
       .uploader_tx
@@ -172,7 +172,7 @@ impl ObservationPayloadHandle {
         execution_id: self.handle.execution_id,
         payload_id: observation_tools_shared::PayloadId::new(),
         name: name.into(),
-        payload,
+        payload: payload.into(),
       });
     self
   }

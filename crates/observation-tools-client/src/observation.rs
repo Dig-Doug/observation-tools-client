@@ -31,6 +31,8 @@ use std::fmt::Debug;
 ///
 /// Payload methods (`.serde()`, `.debug()`, `.payload()`) send the observation
 /// immediately and return `SendObservation` for optional waiting.
+/// Named variants (`.named_serde()`, `.named_debug()`, `.named_payload()`)
+/// return `ObservationPayloadHandle` for adding additional payloads.
 #[derive(Clone)]
 #[napi]
 pub struct ObservationBuilder {
@@ -160,15 +162,15 @@ impl ObservationBuilder {
     self.send_observation(payload)
   }
 
-  /// Send the observation with a named serde-serialized payload, returning a handle
-  /// that allows adding more named payloads later.
-  pub fn named_payload<T: ?Sized + Serialize + 'static>(
+  /// Send the observation with a named serde-serialized payload, returning a
+  /// handle that allows adding more named payloads later.
+  pub fn named_serde<T: ?Sized + Serialize + 'static>(
     self,
     name: impl Into<String>,
     value: &T,
   ) -> ObservationPayloadHandle {
     if TypeId::of::<T>() == TypeId::of::<Payload>() {
-      panic!("Use named_raw_payload() method to set Payload directly");
+      panic!("Use named_payload() method to set Payload directly");
     }
     let payload = Payload::json(serde_json::to_string(value).unwrap_or_default());
     self.send_named_observation(name, payload)
@@ -184,9 +186,13 @@ impl ObservationBuilder {
     self.send_named_observation(name, payload)
   }
 
-  /// Send the observation with a named raw payload
-  pub fn named_raw_payload(self, name: impl Into<String>, payload: Payload) -> ObservationPayloadHandle {
-    self.send_named_observation(name, payload)
+  /// Send the observation with a named payload
+  pub fn named_payload(
+    self,
+    name: impl Into<String>,
+    payload: impl Into<Payload>,
+  ) -> ObservationPayloadHandle {
+    self.send_named_observation(name, payload.into())
   }
 
   fn send_named_observation(
@@ -194,14 +200,15 @@ impl ObservationBuilder {
     name: impl Into<String>,
     payload: Payload,
   ) -> ObservationPayloadHandle {
-    let execution = match self.execution.take().or_else(context::get_current_execution) {
+    let execution = match self
+      .execution
+      .take()
+      .or_else(context::get_current_execution)
+    {
       Some(exec) => exec,
       None => {
         let send = SendObservation::stub(Error::NoExecutionContext);
-        return ObservationPayloadHandle::new(
-          send.into_handle(),
-          ExecutionHandle::placeholder(),
-        );
+        return ObservationPayloadHandle::new(send.into_handle(), ExecutionHandle::placeholder());
       }
     };
 
@@ -212,10 +219,13 @@ impl ObservationBuilder {
     ObservationPayloadHandle::new(handle, execution.clone())
   }
 
-
   /// Internal method to build and send the observation
   pub(crate) fn send_observation(mut self, payload: Payload) -> SendObservation {
-    let Some(execution) = self.execution.take().or_else(context::get_current_execution) else {
+    let Some(execution) = self
+      .execution
+      .take()
+      .or_else(context::get_current_execution)
+    else {
       log::error!(
         "No execution context available for observation '{}'",
         self.name
@@ -226,13 +236,9 @@ impl ObservationBuilder {
     self.send_with_execution(payload, &execution)
   }
 
-  /// Internal method to build and send the observation with a resolved execution.
-  /// Sends the default payload with name "default".
-  fn send_with_execution(
-    self,
-    payload: Payload,
-    execution: &ExecutionHandle,
-  ) -> SendObservation {
+  /// Internal method to build and send the observation with a resolved
+  /// execution. Sends the default payload with name "default".
+  fn send_with_execution(self, payload: Payload, execution: &ExecutionHandle) -> SendObservation {
     self.send_with_execution_and_name(payload, "default", execution)
   }
 
