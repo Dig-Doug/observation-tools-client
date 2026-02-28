@@ -11,6 +11,7 @@ use crate::observation_handle::SendObservation;
 use crate::Error;
 use napi_derive::napi;
 use observation_tools_shared::GroupId;
+use observation_tools_shared::Html;
 use observation_tools_shared::LogLevel;
 use observation_tools_shared::Markdown;
 use observation_tools_shared::Observation;
@@ -417,6 +418,16 @@ impl ObservationBuilder {
   #[napi(js_name = "markdownPayload")]
   pub fn markdown_payload_napi(&self, content: String) -> ObservationBuilderWithPayloadNapi {
     let payload: Payload = Markdown::from(content).into();
+    ObservationBuilderWithPayloadNapi {
+      builder: self.clone(),
+      payload,
+    }
+  }
+
+  /// Set the payload as HTML content, returning a builder that can be sent
+  #[napi(js_name = "htmlPayload")]
+  pub fn html_payload_napi(&self, content: String) -> ObservationBuilderWithPayloadNapi {
+    let payload: Payload = Html::from(content).into();
     ObservationBuilderWithPayloadNapi {
       builder: self.clone(),
       payload,

@@ -137,7 +137,7 @@
         "type": "object"
       },
       "GroupId": {
-        "description": "Unique identifier for a group\n\nGroup IDs are user-provided strings. By default, a UUID v7 string is generated,\nbut any string value is accepted.",
+        "description": "Unique identifier for a group\n\nGroup IDs are user-provided strings. By default, a UUID v7 string is\ngenerated, but any string value is accepted.",
         "example": "018e9a3a2c1b7e3f8d2a4b5c6d7e8f9b",
         "type": "string"
       },
@@ -323,6 +323,25 @@
             },
             "required": [
               "Markdown"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "Html": {
+                "properties": {
+                  "raw": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "raw"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "Html"
             ],
             "type": "object"
           },

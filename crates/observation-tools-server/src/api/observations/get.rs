@@ -71,6 +71,7 @@ pub enum PayloadOrPointerResponse {
   Text(String),
   Json(serde_json::Value),
   Markdown { raw: String },
+  Html { raw: String },
   InlineBinary(Vec<u8>),
   Pointer { url: String },
 }
@@ -112,6 +113,11 @@ impl PayloadOrPointerResponse {
     if payload.mime_type.starts_with("text/markdown") {
       if let Ok(text) = String::from_utf8(data.clone()) {
         return PayloadOrPointerResponse::Markdown { raw: text };
+      }
+    }
+    if payload.mime_type.starts_with("text/html") {
+      if let Ok(text) = String::from_utf8(data.clone()) {
+        return PayloadOrPointerResponse::Html { raw: text };
       }
     }
 

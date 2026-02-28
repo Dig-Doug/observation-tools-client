@@ -40,6 +40,17 @@ impl Payload {
     }
   }
 
+  /// Create a new payload from HTML
+  pub fn html(data: impl Into<String>) -> Self {
+    let data = data.into().into_bytes();
+    let size = data.len();
+    Self {
+      data,
+      mime_type: "text/html".to_string(),
+      size,
+    }
+  }
+
   /// Create a new payload with a custom MIME type
   pub fn with_mime_type(data: impl Into<String>, mime_type: impl Into<String>) -> Self {
     let data = data.into().into_bytes();
@@ -113,6 +124,38 @@ impl From<Markdown> for Payload {
   }
 }
 
+/// A wrapper type for HTML content.
+///
+/// Use this to create observations with HTML payloads that will be
+/// rendered directly in the UI.
+///
+/// # Example
+/// ```rust
+/// use observation_tools_shared::Html;
+///
+/// let html = Html::from("<h1>Hello</h1><p>This is <strong>bold</strong> text.</p>");
+/// ```
+#[derive(Debug, Clone)]
+pub struct Html {
+  content: String,
+}
+
+impl Html {
+  /// Create a new Html payload from any type that can be converted to a
+  /// String.
+  pub fn from(content: impl Into<String>) -> Self {
+    Self {
+      content: content.into(),
+    }
+  }
+}
+
+impl From<Html> for Payload {
+  fn from(html: Html) -> Self {
+    Payload::with_mime_type(html.content, "text/html")
+  }
+}
+
 /// Builder for creating named payloads to attach to observations.
 ///
 /// Each `PayloadBuilder` pairs a name with a `Payload`, allowing observations
@@ -160,6 +203,14 @@ impl PayloadBuilder {
     Self {
       name: name.into(),
       payload: Payload::with_mime_type(content, "text/markdown"),
+    }
+  }
+
+  /// Create a named HTML payload
+  pub fn html(name: impl Into<String>, content: impl Into<String>) -> Self {
+    Self {
+      name: name.into(),
+      payload: Payload::html(content),
     }
   }
 }
