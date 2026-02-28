@@ -126,7 +126,8 @@ impl GroupBuilder {
       .with_id(observation_id)
       .observation_type(ObservationType::Group)
       .log_level(self.log_level.unwrap_or(LogLevel::Info))
-      .execution(execution);
+      .execution(execution)
+      .group(&group_handle);
 
     if let Some(source) = self.source {
       builder = builder.source(source.file, source.line);

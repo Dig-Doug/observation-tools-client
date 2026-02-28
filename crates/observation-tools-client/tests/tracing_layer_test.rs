@@ -4,7 +4,6 @@ mod common;
 
 use common::TestServer;
 use observation_tools::observe;
-use observation_tools::server_client::types::GroupId;
 use observation_tools::server_client::types::ObservationType;
 use observation_tools::tracing::ObservationLayer;
 use tracing_subscriber::prelude::*;
@@ -135,34 +134,27 @@ async fn test_parent_span_attribution() -> anyhow::Result<()> {
     .find(|o| o.name == "outer")
     .expect("Expected outer span");
 
-  // Get span IDs from metadata
-  let outer_span_id = outer
-    .metadata
-    .get("span_id")
-    .expect("Outer span should have span_id metadata");
-  let inner_span_id = inner
-    .metadata
-    .get("span_id")
-    .expect("Inner span should have span_id metadata");
-
   // outer should have no parent (it's the root span)
   assert!(
     outer.parent_group_id.is_none(),
     "Outer span should not have a parent"
   );
 
-  // inner's parent_group_id should match outer's span_id
-  let outer_group_id = GroupId::from(outer_span_id.clone());
+  // inner's parent_group_id should reference outer's group ID
+  let inner_parent = inner
+    .parent_group_id
+    .as_ref()
+    .expect("Inner span should have a parent group");
   assert_eq!(
-    inner.parent_group_id.as_ref(),
-    Some(&outer_group_id),
+    inner_parent,
+    &outer.group_ids[0],
     "Inner span's parent should be outer span"
   );
 
-  // The event's parent_span_id should match inner's span_id
+  // The event's parent_span_id should reference inner's group ID
   assert_eq!(
-    event.parent_span_id.as_ref(),
-    Some(inner_span_id),
+    event.parent_span_id.as_deref(),
+    Some(inner.group_ids[0].as_str()),
     "Event's parent should be inner span"
   );
 
@@ -202,16 +194,10 @@ async fn test_observe_macro_gets_parent_span() -> anyhow::Result<()> {
 
   assert_eq!(span_obs.observation_type, ObservationType::Group);
 
-  // Get the span's tracing ID from metadata
-  let span_id = span_obs
-    .metadata
-    .get("span_id")
-    .expect("parent_span should have span_id metadata");
-
-  // The observe!() observation's parent_span_id should match the span's span_id
+  // The observe!() observation's parent_span_id should match the span's group ID
   assert_eq!(
-    my_obs.parent_span_id.as_ref(),
-    Some(span_id),
+    my_obs.parent_span_id.as_deref(),
+    Some(span_obs.group_ids[0].as_str()),
     "observe!() should have parent_span as its parent"
   );
 

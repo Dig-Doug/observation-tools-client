@@ -87,7 +87,7 @@ where
       return;
     };
 
-    let builder = GroupBuilder::from_span(
+    let mut builder = GroupBuilder::from_span(
       &data.name,
       tracing_level_to_log_level(data.level),
       span
@@ -98,7 +98,7 @@ where
     .metadata("target", &data.target);
 
     let duration = data.created_at.elapsed();
-    let builder = builder
+    let mut builder = builder
       .metadata("duration_s", duration.as_secs().to_string())
       .metadata("duration_ns", duration.subsec_nanos().to_string());
 
