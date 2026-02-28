@@ -87,7 +87,7 @@ where
       return;
     };
 
-    let mut builder = GroupBuilder::from_span(
+    let builder = GroupBuilder::from_span(
       &data.name,
       tracing_level_to_log_level(data.level),
       span
