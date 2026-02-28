@@ -1,8 +1,8 @@
 //! Shared types and models for observation-tools
 
 pub mod error;
-pub mod models;
 mod group_id;
+pub mod models;
 mod observation;
 mod payload;
 mod payload_id;
@@ -17,6 +17,7 @@ pub use observation::Observation;
 pub use observation::ObservationId;
 pub use observation::ObservationType;
 pub use observation::SourceInfo;
+pub use payload::Html;
 pub use payload::Markdown;
 pub use payload::Payload;
 pub use payload::PayloadBuilder;

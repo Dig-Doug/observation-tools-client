@@ -4,8 +4,8 @@ use utoipa::ToSchema;
 
 /// Unique identifier for a group
 ///
-/// Group IDs are user-provided strings. By default, a UUID v7 string is generated,
-/// but any string value is accepted.
+/// Group IDs are user-provided strings. By default, a UUID v7 string is
+/// generated, but any string value is accepted.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(transparent)]
 #[schema(value_type = String, example = "018e9a3a2c1b7e3f8d2a4b5c6d7e8f9b")]
