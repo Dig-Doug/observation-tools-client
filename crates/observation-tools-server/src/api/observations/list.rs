@@ -50,14 +50,14 @@ pub async fn list_observations(
 ) -> Result<Json<ListObservationsResponse>, AppError> {
   let execution_id = ExecutionId::parse(&execution_id)?;
   let page = metadata
-    .get_observations(execution_id, query.page_token)
+    .get_observations(execution_id, query.page_token, None)
     .await?;
   let has_next_page = page.pagination.next_page_token.is_some();
   Ok(Json(ListObservationsResponse {
     observations: page
       .observations
       .into_iter()
-      .map(GetObservation::new)
+      .map(|obs| GetObservation::new(obs.observation, obs.payloads))
       .collect(),
     has_next_page,
     next_page_token: page.pagination.next_page_token,

@@ -39,11 +39,10 @@ pub async fn get_observation_blob(
 ) -> Result<impl IntoResponse, AppError> {
   let observation_id = ObservationId::parse(&observation_id)?;
   let payload_id = PayloadId::from(payload_id);
-  let observation = metadata.get_observation(observation_id).await?;
+  let payloads = metadata.get_all_payloads(observation_id).await?;
 
   // Find the payload in the manifest
-  let payload = observation
-    .payloads
+  let payload = payloads
     .iter()
     .find(|p| p.id == payload_id)
     .ok_or_else(|| {
@@ -97,10 +96,10 @@ pub async fn get_observation_blob_legacy(
   Path((_execution_id, observation_id)): Path<(String, String)>,
 ) -> Result<impl IntoResponse, AppError> {
   let observation_id = ObservationId::parse(&observation_id)?;
-  let observation = metadata.get_observation(observation_id).await?;
+  let payloads = metadata.get_all_payloads(observation_id).await?;
 
   // Use the first payload
-  let payload = observation.payloads.first().ok_or_else(|| {
+  let payload = payloads.first().ok_or_else(|| {
     StorageError::NotFound(format!(
       "No payloads found for observation {}",
       observation_id

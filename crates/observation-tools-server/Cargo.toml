@@ -41,7 +41,6 @@ tracing-subscriber.workspace = true
 tracing.workspace = true
 utoipa.workspace = true
 utoipa-axum.workspace = true
-utoipa-swagger-ui.workspace = true
 uuid.workspace = true
 pulldown-cmark.workspace = true
 ammonia.workspace = true

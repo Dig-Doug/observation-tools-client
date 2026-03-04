@@ -7,7 +7,7 @@
   {% if node.node_type == "group" %}
     <div class="border-l-2 border-base-300 ml-2">
       <div class="flex items-center gap-1 py-1 pl-2 hover:bg-base-200 rounded-r group/node">
-        {% if node.is_expanded %}
+        {% if node.children | length > 0 %}
           <a
             data-testid="TreeCollapseGroup"
             href="{{ node.collapse_url }}"
@@ -63,7 +63,7 @@
         {% endif %}
       </div>
 
-      {% if node.is_expanded %}
+      {% if node.children | length > 0 %}
         <div class="ml-4">
           {% for child in node.children %}
             {{ render_tree_node(child, selected_observation) }}
@@ -98,10 +98,6 @@
             </div>
           {% endif %}
         </div>
-      {% endif %}
-
-      {% if not node.can_expand and not node.is_expanded %}
-        <div class="ml-6 text-xs text-base-content/30 py-0.5">focus to explore</div>
       {% endif %}
     </div>
   {% else %}

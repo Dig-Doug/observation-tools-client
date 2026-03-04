@@ -1,14 +1,19 @@
 //! Storage layer abstractions and implementations
 
 pub mod blob;
-pub mod metadata;
+mod group;
 pub mod proto;
+pub mod sled;
+pub mod stored_execution;
 
 pub use blob::BlobStorage;
 pub use blob::LocalBlobStorage;
-pub use metadata::MetadataStorage;
-pub use metadata::SledStorage;
+pub use self::sled::SledStorage;
+use observation_tools_shared::Execution;
+use observation_tools_shared::ExecutionId;
 use observation_tools_shared::GroupId;
+use observation_tools_shared::ObservationId;
+use observation_tools_shared::ObservationType;
 use observation_tools_shared::PayloadId;
 use thiserror::Error;
 
@@ -28,7 +33,7 @@ pub enum StorageError {
   Serialization(#[from] serde_json::Error),
 
   #[error("Database error: {0}")]
-  Database(#[from] sled::Error),
+  Database(#[from] ::sled::Error),
 
   #[error("Protobuf decode error: {0}")]
   Protobuf(#[from] prost::DecodeError),
@@ -108,6 +113,13 @@ pub struct Group {
   pub content: GroupDirectDescendantsPage,
 }
 
+impl Group {
+  pub fn group_id(&self) -> &GroupId {
+    // TODO: Make this guaranteed by the API
+    &self.metadata.observation.group_ids.first().expect("Group must have a group id")
+  }
+}
+
 /// Result of expanding a group tree via BFS
 #[derive(Clone, Debug)]
 pub enum GroupTree {
@@ -122,4 +134,102 @@ pub enum GroupTree {
 pub enum GroupTreeNode {
   Group(Group),
   Observation(ObservationWithPayloads),
+}
+
+impl GroupTreeNode {
+  pub fn group_id(&self) -> Option<&GroupId> {
+    match self {
+      GroupTreeNode::Group(group) => group.metadata.observation.group_ids.first(),
+      _ => None,
+    }
+  }
+}
+
+/// Trait for storing and retrieving execution and observation metadata
+#[async_trait::async_trait]
+pub trait MetadataStorage: Send + Sync {
+  /// Store an execution
+  async fn store_execution(&self, execution: &Execution) -> StorageResult<()>;
+
+  /// Get an execution by ID
+  async fn get_execution(&self, id: ExecutionId) -> StorageResult<Execution>;
+
+  /// List all executions (with optional pagination)
+  async fn list_executions(
+    &self,
+    limit: Option<usize>,
+    offset: Option<usize>,
+  ) -> StorageResult<Vec<Execution>>;
+
+  /// Count total number of executions
+  async fn count_executions(&self) -> StorageResult<usize>;
+
+  /// Store multiple observations (metadata and indexes only, no payloads)
+  async fn store_observations(
+    &self,
+    observations: Vec<observation_tools_shared::Observation>,
+  ) -> StorageResult<()>;
+
+  /// Store payloads for a single observation
+  async fn store_payloads(
+    &self,
+    observation_id: &ObservationId,
+    payloads: &[StoredPayload],
+  ) -> StorageResult<()>;
+
+  /// Get a single observation (metadata only, no payloads)
+  async fn get_observation(
+    &self,
+    id: ObservationId,
+  ) -> StorageResult<observation_tools_shared::Observation>;
+
+  /// Get all payloads for an observation (with inline data resolved)
+  async fn get_all_payloads(
+    &self,
+    observation_id: ObservationId,
+  ) -> StorageResult<Vec<StoredPayload>>;
+
+  /// Paginated observations sorted by creation time (UUIDv7 order).
+  /// Uses cursor-based pagination with page tokens.
+  /// Optionally filters by observation type.
+  async fn get_observations(
+    &self,
+    execution_id: ExecutionId,
+    page_token: Option<String>,
+    observation_type: Option<ObservationType>,
+  ) -> StorageResult<ObservationPage>;
+
+  /// Paginated payload retrieval for observation detail panel.
+  /// Uses payload_id as cursor.
+  async fn get_payloads(
+    &self,
+    execution_id: ExecutionId,
+    observation_id: ObservationId,
+    page_token: Option<String>,
+  ) -> StorageResult<ObservationPayloadPage>;
+
+  /// Direct children of a group (or root if group_id is None).
+  /// Uses cursor-based pagination.
+  async fn get_direct_descendants_page(
+    &self,
+    execution_id: ExecutionId,
+    group_id: Option<GroupId>,
+    page_token: Option<String>,
+  ) -> StorageResult<GroupDirectDescendantsPage>;
+
+  /// Look up a group observation by its GroupId.
+  /// Returns the observation that represents this group.
+  async fn get_observation_by_group_id(
+    &self,
+    group_id: GroupId,
+  ) -> StorageResult<ObservationWithPayloads>;
+
+  /// BFS expansion of group tree up to max_nodes.
+  /// Returns Tree if first level fits, List if first level exceeds max_nodes.
+  async fn get_group_tree_bfs(
+    &self,
+    execution_id: ExecutionId,
+    group_id: Option<GroupId>,
+    max_nodes: usize,
+  ) -> StorageResult<GroupTree>;
 }

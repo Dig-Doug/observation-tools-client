@@ -19,13 +19,8 @@ use std::sync::Arc;
 /// Query parameters for execution detail page (log view)
 #[derive(Debug, serde::Deserialize)]
 pub struct ExecutionDetailQuery {
-  /// Maximum number of results to return
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub limit: Option<usize>,
-
-  /// Number of results to skip (for pagination)
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub offset: Option<usize>,
+  /// Cursor-based page token
+  pub page_token: Option<String>,
 
   /// Optional observation ID to display in side panel
   obs: Option<String>,
@@ -55,31 +50,26 @@ pub async fn execution_detail_log(
     Err(e) => return Err(e.into()),
   };
 
-  let limit = query.limit.unwrap_or(100);
-  let offset = query.offset.unwrap_or(0);
-
-  let total_count = metadata
-    .count_observations(execution_id, None)
+  let page = metadata
+    .get_observations(execution_id, query.page_token.clone(), None)
     .await?;
+  let next_page_token = page.pagination.next_page_token;
+  let previous_page_token = page.pagination.previous_page_token;
+  let has_next_page = next_page_token.is_some();
 
-  let mut observations = metadata
-    .list_observations(execution_id, Some(limit + 1), Some(offset), None)
-    .await?;
-  let has_next_page = observations.len() > limit;
-  if has_next_page {
-    observations.pop();
-  }
-  let page = (offset / limit) + 1;
-
-  let observations: Vec<_> = observations
+  let observations: Vec<_> = page
+    .observations
     .into_iter()
-    .map(|obs| GetObservation::new(obs))
+    .map(|obs| GetObservation::new(obs.observation, obs.payloads))
     .collect();
 
   let selected_observation = if let Some(obs_id) = &query.obs {
     let observation_id = ObservationId::parse(obs_id)?;
     match metadata.get_observation(observation_id).await {
-      Ok(obs) => Some(GetObservation::new(obs)),
+      Ok(obs) => {
+        let payloads = metadata.get_all_payloads(observation_id).await?;
+        Some(GetObservation::new(obs, payloads))
+      }
       Err(StorageError::NotFound(_)) => None,
       Err(e) => return Err(e.into()),
     }
@@ -96,10 +86,8 @@ pub async fn execution_detail_log(
       execution_id => id,
       observations => observations,
       has_next_page => has_next_page,
-      total_count => total_count,
-      offset => offset,
-      limit => limit,
-      page => page,
+      next_page_token => next_page_token,
+      previous_page_token => previous_page_token,
       selected_observation => selected_observation,
       display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
       csrf_token => csrf.0,
@@ -134,7 +122,10 @@ pub async fn execution_detail_payload(
   let selected_observation = if let Some(obs_id) = &query.obs {
     let observation_id = ObservationId::parse(obs_id)?;
     match metadata.get_observation(observation_id).await {
-      Ok(obs) => Some(GetObservation::new(obs)),
+      Ok(obs) => {
+        let payloads = metadata.get_all_payloads(observation_id).await?;
+        Some(GetObservation::new(obs, payloads))
+      }
       Err(StorageError::NotFound(_)) => None,
       Err(e) => return Err(e.into()),
     }

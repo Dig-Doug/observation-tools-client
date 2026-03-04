@@ -5,11 +5,10 @@ use observation_tools_shared::LogLevel;
 use observation_tools_shared::Observation;
 use observation_tools_shared::ObservationId;
 use observation_tools_shared::ObservationType;
-use observation_tools_shared::PayloadId;
 use observation_tools_shared::SourceInfo;
 use std::collections::HashMap;
 
-/// Protobuf-encoded observation metadata + payload manifest
+/// Protobuf-encoded observation metadata
 #[derive(Clone, PartialEq, prost::Message)]
 pub struct StoredObservation {
   /// ObservationId as simple UUID string
@@ -43,15 +42,6 @@ pub struct StoredObservation {
   /// Created at as RFC3339 string
   #[prost(string, tag = "11")]
   pub created_at: String,
-  /// MIME type of the primary payload (kept for backward compat in Observation)
-  #[prost(string, tag = "12")]
-  pub mime_type: String,
-  /// Size of the primary payload in bytes
-  #[prost(uint64, tag = "13")]
-  pub payload_size: u64,
-  /// Payload manifest: metadata about all payloads for this observation
-  #[prost(message, repeated, tag = "14")]
-  pub payload_manifest: Vec<StoredPayloadMeta>,
 }
 
 #[derive(Clone, PartialEq, prost::Message)]
@@ -72,30 +62,26 @@ pub struct StoredKeyValue {
   pub value: String,
 }
 
-/// Metadata about a single payload attached to an observation
+/// Protobuf-encoded payload entry in the payloads tree.
+/// Every payload (inline or blob) gets an entry with full metadata.
+/// For inline payloads, `data` contains the payload bytes.
+/// For blob payloads, `data` is empty and `is_blob` is true.
 #[derive(Clone, PartialEq, prost::Message)]
-pub struct StoredPayloadMeta {
-  /// PayloadId as simple UUID string
-  #[prost(string, tag = "1")]
-  pub payload_id: String,
+pub struct StoredPayloadEntry {
   /// Name of the payload (e.g., "default", "headers", "body")
-  #[prost(string, tag = "2")]
+  #[prost(string, tag = "1")]
   pub name: String,
   /// MIME type
-  #[prost(string, tag = "3")]
+  #[prost(string, tag = "2")]
   pub mime_type: String,
   /// Size in bytes
-  #[prost(uint64, tag = "4")]
+  #[prost(uint64, tag = "3")]
   pub size: u64,
   /// Whether this payload is stored as a blob (true) or inline (false)
-  #[prost(bool, tag = "5")]
+  #[prost(bool, tag = "4")]
   pub is_blob: bool,
-}
-
-/// Protobuf-encoded inline payload data
-#[derive(Clone, PartialEq, prost::Message)]
-pub struct StoredInlinePayload {
-  #[prost(bytes = "vec", tag = "1")]
+  /// Inline payload data (empty for blob payloads)
+  #[prost(bytes = "vec", tag = "5")]
   pub data: Vec<u8>,
 }
 
@@ -110,8 +96,6 @@ pub struct StoredGroupChild {
   pub is_group: bool,
 }
 
-// Conversion: Observation -> StoredObservation (without payloads, those are set
-// separately)
 impl StoredObservation {
   pub fn from_observation(obs: &Observation) -> Self {
     StoredObservation {
@@ -141,9 +125,6 @@ impl StoredObservation {
       parent_group_id: obs.parent_group_id.as_ref().map(|g| g.as_str().to_string()),
       parent_span_id: obs.parent_span_id.clone(),
       created_at: obs.created_at.to_rfc3339(),
-      mime_type: String::new(),
-      payload_size: 0,
-      payload_manifest: Vec::new(),
     }
   }
 
@@ -185,12 +166,6 @@ impl StoredObservation {
       parent_span_id: self.parent_span_id.clone(),
       created_at,
     })
-  }
-}
-
-impl StoredPayloadMeta {
-  pub fn to_payload_id(&self) -> PayloadId {
-    PayloadId::from(self.payload_id.clone())
   }
 }
 
