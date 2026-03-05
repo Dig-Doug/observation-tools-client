@@ -2,8 +2,9 @@
 
 use crate::api::observations::GetObservation;
 use crate::storage::MetadataStorage;
+use crate::storage::GroupMembershipOptions;
 use crate::storage::StorageError;
-use crate::storage::{GroupTree, GroupTreeNode};
+use crate::storage::{make_group_tree, root_group_id, GroupTree, GroupTreeNode};
 use observation_tools_shared::models::ExecutionId;
 use observation_tools_shared::GroupId;
 use serde::Serialize;
@@ -296,9 +297,16 @@ pub async fn build_group_tree_view(
       .await?;
     GroupTree::List(page)
   } else {
-    metadata
-      .get_group_tree_bfs(execution_id, focus_group_id.clone(), 100)
-      .await?
+    let options = GroupMembershipOptions {
+      root: focus_group_id.clone(),
+      expanded: HashSet::new(),
+      collapsed: HashSet::new(),
+      max_default_nodes: TREE_NODE_BUDGET,
+      page_size: TREE_PAGE_SIZE,
+    };
+    let root_key = root_group_id(&options.root);
+    let data = metadata.get_descendants(execution_id, options).await?;
+    make_group_tree(data, root_key)
   };
   info!("{:#?}", root_page);
 

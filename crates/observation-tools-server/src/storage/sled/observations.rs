@@ -8,21 +8,21 @@ use super::ROOT_SENTINEL;
 use crate::storage::proto::StoredGroupChild;
 use crate::storage::proto::StoredObservation;
 use crate::storage::ObservationPage;
-use crate::storage::ObservationWithPayloads;
+use crate::storage::ObservationStorage;
 use crate::storage::PaginationInfo;
 use crate::storage::StorageError;
 use crate::storage::StorageResult;
 use crate::storage::PAGE_SIZE;
 use observation_tools_shared::ExecutionId;
-use observation_tools_shared::GroupId;
 use observation_tools_shared::Observation;
 use observation_tools_shared::ObservationId;
 use observation_tools_shared::ObservationType;
 use prost::Message;
 use tracing::trace;
 
-impl SledStorage {
-  pub(super) fn store_observations_impl(
+#[async_trait::async_trait]
+impl ObservationStorage for SledStorage {
+  async fn store_observations(
     &self,
     observations: Vec<Observation>,
   ) -> StorageResult<()> {
@@ -64,7 +64,7 @@ impl SledStorage {
     Ok(())
   }
 
-  pub(super) fn get_observation_impl(
+  async fn get_observation(
     &self,
     id: ObservationId,
   ) -> StorageResult<Observation> {
@@ -77,7 +77,7 @@ impl SledStorage {
     stored.to_observation()
   }
 
-  pub(super) fn get_observations_impl(
+  async fn get_observations(
     &self,
     execution_id: ExecutionId,
     page_token: Option<String>,
@@ -142,25 +142,6 @@ impl SledStorage {
       },
     })
   }
-
-  pub(super) fn get_observation_by_group_id_impl(
-    &self,
-    group_id: GroupId,
-  ) -> StorageResult<ObservationWithPayloads> {
-    let gi_tree = self.group_index_tree()?;
-    let obs_id_bytes = gi_tree
-      .get(group_id.as_str().as_bytes())?
-      .ok_or_else(|| StorageError::NotFound(format!("Group {} not found", group_id.as_str())))?;
-    let obs_id_str = String::from_utf8(obs_id_bytes.to_vec())
-      .map_err(|e| StorageError::Internal(format!("Invalid observation ID encoding: {}", e)))?;
-    let obs_id = ObservationId::parse(&obs_id_str)
-      .map_err(|e| StorageError::Internal(format!("Invalid observation ID: {}", e)))?;
-    let obs_tree = self.observations_tree()?;
-    let value = obs_tree
-      .get(metadata_key(&obs_id).as_bytes())?
-      .ok_or_else(|| StorageError::NotFound(format!("Observation {} not found", obs_id)))?;
-    self.decode_metadata_only(&obs_id, &value)
-  }
 }
 
 impl SledStorage {
@@ -224,7 +205,7 @@ impl SledStorage {
 #[cfg(test)]
 mod tests {
   use super::super::test_helpers::*;
-  use crate::storage::MetadataStorage;
+  use crate::storage::{ExecutionStorage, ObservationStorage};
 
   #[tokio::test]
   async fn test_get_observations_pagination() {

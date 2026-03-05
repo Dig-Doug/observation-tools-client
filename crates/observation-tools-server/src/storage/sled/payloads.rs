@@ -8,6 +8,7 @@ use crate::storage::ObservationPayloadPage;
 use crate::storage::ObservationWithPayloads;
 use crate::storage::PaginationInfo;
 use crate::storage::PayloadData;
+use crate::storage::PayloadStorage;
 use crate::storage::StorageError;
 use crate::storage::StorageResult;
 use crate::storage::StoredPayload;
@@ -16,6 +17,61 @@ use observation_tools_shared::ExecutionId;
 use observation_tools_shared::ObservationId;
 use observation_tools_shared::PayloadId;
 use prost::Message;
+
+#[async_trait::async_trait]
+impl PayloadStorage for SledStorage {
+  async fn store_payloads(
+    &self,
+    obs_id: &ObservationId,
+    payloads: &[StoredPayload],
+  ) -> StorageResult<()> {
+    let payload_tree = self.payloads_tree()?;
+    self.insert_payloads(&payload_tree, obs_id, payloads)
+  }
+
+  async fn get_all_payloads(
+    &self,
+    observation_id: ObservationId,
+  ) -> StorageResult<Vec<StoredPayload>> {
+    self.scan_payloads(&observation_id, true)
+  }
+
+  async fn get_payloads(
+    &self,
+    _execution_id: ExecutionId,
+    observation_id: ObservationId,
+    page_token: Option<String>,
+  ) -> StorageResult<ObservationPayloadPage> {
+    let all_payloads = self.scan_payloads(&observation_id, true)?;
+
+    // Filter payloads using cursor (payload_id)
+    let mut payloads: Vec<StoredPayload> = if let Some(ref token) = page_token {
+      all_payloads
+        .into_iter()
+        .skip_while(|p| p.id.as_str() <= token.as_str())
+        .collect()
+    } else {
+      all_payloads
+    };
+
+    let next_page_token = if payloads.len() > PAGE_SIZE {
+      payloads.truncate(PAGE_SIZE);
+      payloads.last().map(|p| p.id.as_str().to_string())
+    } else {
+      None
+    };
+
+    let item_count = payloads.len();
+    Ok(ObservationPayloadPage {
+      payloads,
+      pagination: PaginationInfo {
+        item_count,
+        previous_page_token: page_token,
+        next_page_token,
+      },
+    })
+  }
+}
 
 impl SledStorage {
   /// Scan the payloads tree for entries belonging to an observation.
@@ -72,24 +128,6 @@ impl SledStorage {
     })
   }
 
-  /// Get all payloads for an observation with inline data resolved.
-  pub(super) fn get_all_payloads_impl(
-    &self,
-    observation_id: ObservationId,
-  ) -> StorageResult<Vec<StoredPayload>> {
-    self.scan_payloads(&observation_id, true)
-  }
-
-  /// Store payloads for an observation (opens the tree internally).
-  pub(super) fn store_payloads_impl(
-    &self,
-    obs_id: &ObservationId,
-    payloads: &[StoredPayload],
-  ) -> StorageResult<()> {
-    let payload_tree = self.payloads_tree()?;
-    self.insert_payloads(&payload_tree, obs_id, payloads)
-  }
-
   /// Store all payloads for an observation into a specific payloads tree.
   fn insert_payloads(
     &self,
@@ -118,48 +156,12 @@ impl SledStorage {
     }
     Ok(())
   }
-
-  pub(super) fn get_payloads_impl(
-    &self,
-    _execution_id: ExecutionId,
-    observation_id: ObservationId,
-    page_token: Option<String>,
-  ) -> StorageResult<ObservationPayloadPage> {
-    let all_payloads = self.scan_payloads(&observation_id, true)?;
-
-    // Filter payloads using cursor (payload_id)
-    let mut payloads: Vec<StoredPayload> = if let Some(ref token) = page_token {
-      all_payloads
-        .into_iter()
-        .skip_while(|p| p.id.as_str() <= token.as_str())
-        .collect()
-    } else {
-      all_payloads
-    };
-
-    let next_page_token = if payloads.len() > PAGE_SIZE {
-      payloads.truncate(PAGE_SIZE);
-      payloads.last().map(|p| p.id.as_str().to_string())
-    } else {
-      None
-    };
-
-    let item_count = payloads.len();
-    Ok(ObservationPayloadPage {
-      payloads,
-      pagination: PaginationInfo {
-        item_count,
-        previous_page_token: page_token,
-        next_page_token,
-      },
-    })
-  }
 }
 
 #[cfg(test)]
 mod tests {
   use super::super::test_helpers::*;
-  use crate::storage::MetadataStorage;
+  use crate::storage::{ExecutionStorage, ObservationStorage, PayloadStorage};
   use crate::storage::PayloadData;
   use crate::storage::StoredPayload;
   use observation_tools_shared::PayloadId;

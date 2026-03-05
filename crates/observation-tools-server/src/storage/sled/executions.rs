@@ -2,6 +2,7 @@
 
 use super::SledStorage;
 use crate::storage::stored_execution::StoredExecution;
+use crate::storage::ExecutionStorage;
 use crate::storage::StorageError;
 use crate::storage::StorageResult;
 use observation_tools_shared::Execution;
@@ -9,8 +10,9 @@ use observation_tools_shared::ExecutionId;
 use prost::Message;
 use tracing::trace;
 
-impl SledStorage {
-  pub(super) fn store_execution_impl(&self, execution: &Execution) -> StorageResult<()> {
+#[async_trait::async_trait]
+impl ExecutionStorage for SledStorage {
+  async fn store_execution(&self, execution: &Execution) -> StorageResult<()> {
     let tree = self.executions_tree()?;
     let key = execution.id.to_string();
     let stored = StoredExecution::from_execution(execution);
@@ -18,7 +20,7 @@ impl SledStorage {
     Ok(())
   }
 
-  pub(super) fn get_execution_impl(&self, id: ExecutionId) -> StorageResult<Execution> {
+  async fn get_execution(&self, id: ExecutionId) -> StorageResult<Execution> {
     let tree = self.executions_tree()?;
     let key = id.to_string();
     trace!("Retrieving execution: {}", key);
@@ -30,7 +32,7 @@ impl SledStorage {
     stored.to_execution()
   }
 
-  pub(super) fn list_executions_impl(
+  async fn list_executions(
     &self,
     limit: Option<usize>,
     offset: Option<usize>,
@@ -55,7 +57,7 @@ impl SledStorage {
     Ok(executions)
   }
 
-  pub(super) fn count_executions_impl(&self) -> StorageResult<usize> {
+  async fn count_executions(&self) -> StorageResult<usize> {
     let tree = self.executions_tree()?;
     Ok(tree.len())
   }
