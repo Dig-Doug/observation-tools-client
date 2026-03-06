@@ -24,10 +24,11 @@ pub async fn observation_detail(
       observation_id = %observation_id,
       "Rendering observation detail page"
   );
+  let parsed_execution_id = observation_tools_shared::ExecutionId::parse(&execution_id)?;
   let parsed_observation_id = observation_tools_shared::ObservationId::parse(&observation_id)?;
   let observation = match metadata.get_observation(parsed_observation_id).await {
     Ok(obs) => {
-      let payloads = metadata.get_all_payloads(parsed_observation_id).await?;
+      let payloads = metadata.get_all_payloads(parsed_execution_id, parsed_observation_id).await?;
       Some(GetObservation::new(obs, payloads))
     }
     Err(crate::storage::StorageError::NotFound(_)) => {

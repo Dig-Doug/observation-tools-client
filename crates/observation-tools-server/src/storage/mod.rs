@@ -49,13 +49,6 @@ pub enum StorageError {
 /// Result type for storage operations
 pub type StorageResult<T> = Result<T, StorageError>;
 
-/// An observation with all its payloads
-#[derive(Clone, Debug)]
-pub struct ObservationWithPayloads {
-  pub observation: observation_tools_shared::Observation,
-  pub payloads: Vec<StoredPayload>,
-}
-
 /// A single payload attached to an observation
 #[derive(Clone, Debug)]
 pub struct StoredPayload {
@@ -87,7 +80,7 @@ pub struct PaginationInfo {
 /// A page of observations with pagination info
 #[derive(Clone, Debug)]
 pub struct ObservationPage {
-  pub observations: Vec<ObservationWithPayloads>,
+  pub observations: Vec<observation_tools_shared::Observation>,
   pub pagination: PaginationInfo,
 }
 
@@ -108,7 +101,7 @@ pub struct GroupDirectDescendantsPage {
 /// A group observation with its ancestor chain and immediate children
 #[derive(Clone, Debug)]
 pub struct Group {
-  pub metadata: ObservationWithPayloads,
+  pub observation: observation_tools_shared::Observation,
   /// Oldest ancestor first
   pub group_ancestors: Vec<GroupId>,
   pub content: GroupDirectDescendantsPage,
@@ -117,7 +110,7 @@ pub struct Group {
 impl Group {
   pub fn group_id(&self) -> &GroupId {
     // TODO: Make this guaranteed by the API
-    &self.metadata.observation.group_ids.first().expect("Group must have a group id")
+    &self.observation.group_ids.first().expect("Group must have a group id")
   }
 }
 
@@ -134,13 +127,13 @@ pub enum GroupTree {
 #[derive(Clone, Debug)]
 pub enum GroupTreeNode {
   Group(Group),
-  Observation(ObservationWithPayloads),
+  Observation(observation_tools_shared::Observation),
 }
 
 impl GroupTreeNode {
   pub fn group_id(&self) -> Option<&GroupId> {
     match self {
-      GroupTreeNode::Group(group) => group.metadata.observation.group_ids.first(),
+      GroupTreeNode::Group(group) => group.observation.group_ids.first(),
       _ => None,
     }
   }
@@ -188,14 +181,24 @@ pub trait ObservationStorage: Send + Sync {
 pub trait PayloadStorage: Send + Sync {
   async fn store_payloads(
     &self,
+    execution_id: ExecutionId,
     observation_id: &ObservationId,
     payloads: &[StoredPayload],
   ) -> StorageResult<()>;
 
   async fn get_all_payloads(
     &self,
+    execution_id: ExecutionId,
     observation_id: ObservationId,
   ) -> StorageResult<Vec<StoredPayload>>;
+
+  /// Get a single payload by observation ID and payload ID.
+  async fn get_payload(
+    &self,
+    execution_id: ExecutionId,
+    observation_id: ObservationId,
+    payload_id: PayloadId,
+  ) -> StorageResult<StoredPayload>;
 
   /// Paginated payload retrieval for observation detail panel.
   /// Uses payload_id as cursor.
@@ -259,7 +262,7 @@ fn attach_children(
 ) -> GroupTreeNode {
   match node {
     GroupTreeNode::Group(mut group) => {
-      let group_id = group.metadata.observation.group_ids.first().cloned();
+      let group_id = group.observation.group_ids.first().cloned();
       if let Some(children_page) = group_id.and_then(|id| data.remove(&id)) {
         let descendants = children_page
           .descendants
@@ -285,12 +288,13 @@ pub trait GroupStorage: Send + Sync {
     execution_id: ExecutionId,
     group_id: Option<GroupId>,
     page_token: Option<String>,
+    page_size: usize,
   ) -> StorageResult<GroupDirectDescendantsPage>;
 
   async fn get_observation_by_group_id(
     &self,
     group_id: GroupId,
-  ) -> StorageResult<ObservationWithPayloads>;
+  ) -> StorageResult<observation_tools_shared::Observation>;
 
   /// BFS expansion of group descendants.
   /// Returns a flat map of group_id → direct descendants page.

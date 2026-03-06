@@ -69,12 +69,9 @@ impl ObservationStorage for SledStorage {
     id: ObservationId,
   ) -> StorageResult<Observation> {
     let obs_tree = self.observations_tree()?;
-    let key = metadata_key(&id);
-    let meta_value = obs_tree
-      .get(key.as_bytes())?
-      .ok_or_else(|| StorageError::NotFound(format!("Observation {} not found", id)))?;
-    let stored = StoredObservation::decode(meta_value.as_ref())?;
-    stored.to_observation()
+    self
+      .decode_observation(&obs_tree, &id)?
+      .ok_or_else(|| StorageError::NotFound(format!("Observation {} not found", id)))
   }
 
   async fn get_observations(
@@ -87,50 +84,47 @@ impl ObservationStorage for SledStorage {
     let exec_obs_tree = self.execution_observations_tree()?;
     let prefix = ExecutionObservationKey::encode_prefix(&execution_id);
 
-    let iter: Box<dyn Iterator<Item = sled::Result<(sled::IVec, sled::IVec)>>> =
-      if let Some(ref token) = page_token {
-        let start_key = format!("{}{}\x00", prefix, token);
-        Box::new(
-          exec_obs_tree
-            .range(start_key.as_bytes()..)
-            .take_while({
-              let prefix = prefix.clone();
-              move |item| {
-                item
-                  .as_ref()
-                  .map(|(k, _)| k.starts_with(prefix.as_bytes()))
-                  .unwrap_or(false)
-              }
-            }),
-        )
-      } else {
-        Box::new(exec_obs_tree.scan_prefix(prefix.as_bytes()))
-      };
+    let start_key = match page_token {
+      Some(ref token) => format!("{}{}\x00", prefix, token),
+      None => prefix.clone(),
+    };
 
     let mut observations = Vec::new();
-    let mut next_page_token = None;
-    let mut count = 0;
 
-    for item in iter {
+    for item in exec_obs_tree
+      .range(start_key.as_bytes()..)
+      .take_while({
+        let prefix = prefix.clone();
+        move |item| {
+          item
+            .as_ref()
+            .map(|(k, _)| k.starts_with(prefix.as_bytes()))
+            .unwrap_or(false)
+        }
+      })
+    {
       let (_key, obs_id_bytes) = item?;
       let obs_id_str = String::from_utf8(obs_id_bytes.to_vec())
         .map_err(|e| StorageError::Internal(format!("Invalid obs ID encoding: {}", e)))?;
       let obs_id = ObservationId::parse(&obs_id_str)
         .map_err(|e| StorageError::Internal(format!("Invalid observation ID: {}", e)))?;
-      let key = metadata_key(&obs_id);
-      if let Some(v) = obs_tree.get(key.as_bytes())? {
-        let obs = self.decode_metadata_only(&obs_id, &v)?;
-        if observation_type.map_or(true, |t| obs.observation.observation_type == t) {
-          count += 1;
-          if count <= PAGE_SIZE {
-            observations.push(obs);
-          } else {
-            next_page_token = observations.last().map(|o| o.observation.id.to_string());
+      let obs = self.decode_observation(&obs_tree, &obs_id)?;
+      if let Some(obs) = obs {
+        if observation_type.map_or(true, |t| obs.observation_type == t) {
+          observations.push(obs);
+          if observations.len() > PAGE_SIZE {
             break;
           }
         }
       }
     }
+
+    let next_page_token = if observations.len() > PAGE_SIZE {
+      observations.pop();
+      observations.last().map(|o| o.id.to_string())
+    } else {
+      None
+    };
 
     let item_count = observations.len();
     Ok(ObservationPage {
@@ -145,6 +139,21 @@ impl ObservationStorage for SledStorage {
 }
 
 impl SledStorage {
+  fn decode_observation(
+    &self,
+    obs_tree: &sled::Tree,
+    id: &ObservationId,
+  ) -> StorageResult<Option<Observation>> {
+    let key = metadata_key(id);
+    match obs_tree.get(key.as_bytes())? {
+      Some(value) => {
+        let stored = StoredObservation::decode(value.as_ref())?;
+        Ok(Some(stored.to_observation()?))
+      }
+      None => Ok(None),
+    }
+  }
+
   pub(super) fn index_group_child(
     &self,
     gc_tree: &sled::Tree,
@@ -206,24 +215,117 @@ impl SledStorage {
 mod tests {
   use super::super::test_helpers::*;
   use crate::storage::{ExecutionStorage, ObservationStorage};
+  use observation_tools_shared::ObservationId;
 
   #[tokio::test]
-  async fn test_get_observations_pagination() {
+  async fn test_store_and_get_observation() -> anyhow::Result<()> {
     let (storage, _dir) = test_storage();
     let exec = make_execution();
-    storage.store_execution(&exec).await.expect("store exec");
+    storage.store_execution(&exec).await?;
 
-    let mut obs = Vec::new();
-    for i in 0..5 {
-      obs.push(make_observation(exec.id, &format!("obs-{}", i)));
-    }
-    storage.store_observations(obs).await.expect("store obs");
+    let obs = make_observation(exec.id, "my-obs");
+    let obs_id = obs.id;
+    storage.store_observations(vec![obs]).await?;
 
-    let page = storage
-      .get_observations(exec.id, None, None)
-      .await
-      .expect("get page");
+    let result = storage.get_observation(obs_id).await?;
+    assert_eq!(result.name, "my-obs");
+    assert_eq!(result.execution_id, exec.id);
+    Ok(())
+  }
+
+  #[tokio::test]
+  async fn test_get_observation_not_found() -> anyhow::Result<()> {
+    let (storage, _dir) = test_storage();
+
+    let result = storage.get_observation(ObservationId::new()).await;
+    assert!(result.is_err());
+    Ok(())
+  }
+
+  #[tokio::test]
+  async fn test_get_observations_empty() -> anyhow::Result<()> {
+    let (storage, _dir) = test_storage();
+    let exec = make_execution();
+    storage.store_execution(&exec).await?;
+
+    let page = storage.get_observations(exec.id, None, None).await?;
+    assert_eq!(page.observations.len(), 0);
+    assert!(page.pagination.next_page_token.is_none());
+    Ok(())
+  }
+
+  #[tokio::test]
+  async fn test_get_observations_returns_all() -> anyhow::Result<()> {
+    let (storage, _dir) = test_storage();
+    let exec = make_execution();
+    storage.store_execution(&exec).await?;
+
+    let obs: Vec<_> = (0..5)
+      .map(|i| make_observation(exec.id, &format!("obs-{}", i)))
+      .collect();
+    storage.store_observations(obs).await?;
+
+    let page = storage.get_observations(exec.id, None, None).await?;
     assert_eq!(page.observations.len(), 5);
     assert!(page.pagination.next_page_token.is_none());
+    Ok(())
+  }
+
+  #[tokio::test]
+  async fn test_get_observations_pagination() -> anyhow::Result<()> {
+    let (storage, _dir) = test_storage();
+    let exec = make_execution();
+    storage.store_execution(&exec).await?;
+
+    let count = crate::storage::PAGE_SIZE + 5;
+    let obs: Vec<_> = (0..count)
+      .map(|i| make_observation(exec.id, &format!("obs-{}", i)))
+      .collect();
+    storage.store_observations(obs).await?;
+
+    let page1 = storage.get_observations(exec.id, None, None).await?;
+    assert_eq!(page1.observations.len(), crate::storage::PAGE_SIZE);
+    assert!(page1.pagination.next_page_token.is_some());
+    assert!(page1.pagination.previous_page_token.is_none());
+
+    let page2 = storage
+      .get_observations(exec.id, page1.pagination.next_page_token, None)
+      .await?;
+    assert_eq!(page2.observations.len(), 5);
+    assert!(page2.pagination.next_page_token.is_none());
+    assert!(page2.pagination.previous_page_token.is_some());
+
+    // No overlap between pages
+    let page1_ids: std::collections::HashSet<_> =
+      page1.observations.iter().map(|o| o.id).collect();
+    for o in &page2.observations {
+      assert!(!page1_ids.contains(&o.id));
+    }
+    Ok(())
+  }
+
+  #[tokio::test]
+  async fn test_get_observations_isolates_executions() -> anyhow::Result<()> {
+    let (storage, _dir) = test_storage();
+    let exec1 = make_execution();
+    let exec2 = make_execution();
+    storage.store_execution(&exec1).await?;
+    storage.store_execution(&exec2).await?;
+
+    storage
+      .store_observations(vec![
+        make_observation(exec1.id, "exec1-obs"),
+        make_observation(exec2.id, "exec2-obs"),
+      ])
+      .await?;
+
+    let page1 = storage.get_observations(exec1.id, None, None).await?;
+    assert_eq!(page1.observations.len(), 1);
+    assert_eq!(page1.observations[0].name, "exec1-obs");
+
+    let page2 = storage.get_observations(exec2.id, None, None).await?;
+    assert_eq!(page2.observations.len(), 1);
+    assert_eq!(page2.observations[0].name, "exec2-obs");
+    Ok(())
   }
 }

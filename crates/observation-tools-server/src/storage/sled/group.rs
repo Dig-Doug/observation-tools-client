@@ -10,18 +10,14 @@ use crate::storage::GroupDirectDescendantsPage;
 use crate::storage::GroupMembershipOptions;
 use crate::storage::GroupStorage;
 use crate::storage::GroupTreeNode;
-use crate::storage::ObservationWithPayloads;
 use crate::storage::PaginationInfo;
 use crate::storage::StorageError;
 use crate::storage::StorageResult;
-use crate::storage::PAGE_SIZE;
 use observation_tools_shared::ExecutionId;
 use observation_tools_shared::GroupId;
 use observation_tools_shared::ObservationId;
 use prost::Message;
 use std::collections::HashMap;
-
-// -- GroupStorage trait implementation --
 
 #[async_trait::async_trait]
 impl GroupStorage for SledStorage {
@@ -30,19 +26,42 @@ impl GroupStorage for SledStorage {
     execution_id: ExecutionId,
     group_id: Option<GroupId>,
     page_token: Option<String>,
+    page_size: usize,
   ) -> StorageResult<GroupDirectDescendantsPage> {
-    self.get_direct_descendants(
+    let gc_tree = self.group_children_tree()?;
+    let obs_tree = self.observations_tree()?;
+    let parent_id = group_id.as_ref().map_or(ROOT_SENTINEL, |g| g.as_str());
+
+    let (results, next_page_token) = self.scan_direct_descendants(
+      &gc_tree,
+      &obs_tree,
       &execution_id,
-      group_id.as_ref(),
+      parent_id,
       page_token.as_deref(),
-      PAGE_SIZE,
-    )
+      page_size,
+    )?;
+
+    let mut descendants = Vec::new();
+    for (child, obs) in results {
+      let node = self.build_tree_node(&child, obs, &obs_tree)?;
+      descendants.push(node);
+    }
+
+    let item_count = descendants.len();
+    Ok(GroupDirectDescendantsPage {
+      descendants,
+      pagination: PaginationInfo {
+        item_count,
+        previous_page_token: page_token,
+        next_page_token,
+      },
+    })
   }
 
   async fn get_observation_by_group_id(
     &self,
     group_id: GroupId,
-  ) -> StorageResult<ObservationWithPayloads> {
+  ) -> StorageResult<observation_tools_shared::Observation> {
     self
       .get_group(&group_id)?
       .ok_or_else(|| StorageError::NotFound(format!("Group {} not found", group_id.as_str())))
@@ -53,12 +72,14 @@ impl GroupStorage for SledStorage {
     execution_id: ExecutionId,
     options: GroupMembershipOptions,
   ) -> StorageResult<HashMap<GroupId, GroupDirectDescendantsPage>> {
-    let root_children = self.get_direct_descendants(
-      &execution_id,
-      options.root.as_ref(),
-      None,
-      options.max_default_nodes,
-    )?;
+    let root_children = self
+      .get_direct_descendants_page(
+        execution_id,
+        options.root.clone(),
+        None,
+        options.max_default_nodes,
+      )
+      .await?;
 
     let collapsed_groups = options.collapsed.clone();
     let get_expandable_descendant_group_ids =
@@ -83,11 +104,13 @@ impl GroupStorage for SledStorage {
       .saturating_sub(root_children.pagination.item_count);
     all_levels.insert(root_key.clone(), root_children);
     while remaining_nodes > 0 && !current_level_ids.is_empty() {
-      let Some(next_level) = self.get_all_direct_descendants_bounded(
-        &execution_id,
-        &current_level_ids,
-        remaining_nodes,
-      )?
+      let Some(next_level) = self
+        .get_all_direct_descendants_bounded(
+          execution_id,
+          &current_level_ids,
+          remaining_nodes,
+        )
+        .await?
       else {
         break;
       };
@@ -104,14 +127,16 @@ impl GroupStorage for SledStorage {
     for expanded in options.expanded {
       let ancestors = self.get_groups_to_ancestor(&expanded, &options.root)?;
       for ancestor in ancestors {
-        let ancestor_id = ancestor.observation.group_ids.first().cloned();
+        let ancestor_id = ancestor.group_ids.first().cloned();
         if let Some(ancestor_id) = ancestor_id {
-          let descendants = self.get_direct_descendants(
-            &execution_id,
-            Some(&ancestor_id),
-            None,
-            options.page_size,
-          )?;
+          let descendants = self
+            .get_direct_descendants_page(
+              execution_id,
+              Some(ancestor_id.clone()),
+              None,
+              options.page_size,
+            )
+            .await?;
           all_levels.insert(ancestor_id, descendants);
         }
       }
@@ -121,88 +146,35 @@ impl GroupStorage for SledStorage {
   }
 }
 
-// -- Private helpers --
-
 impl SledStorage {
-  fn get_direct_descendants(
-    &self,
-    execution_id: &ExecutionId,
-    group_id: Option<&GroupId>,
-    page_token: Option<&str>,
-    page_size: usize,
-  ) -> StorageResult<GroupDirectDescendantsPage> {
-    let gc_tree = self.group_children_tree()?;
-    let obs_tree = self.observations_tree()?;
-    let parent_id = group_id.map_or(ROOT_SENTINEL, |g| g.as_str());
-
-    let (results, next_page_token) = self.scan_direct_descendants(
-      &gc_tree,
-      &obs_tree,
-      execution_id,
-      parent_id,
-      page_token,
-      page_size,
-    )?;
-
-    let mut descendants = Vec::new();
-    for (child, obs) in results {
-      let node = self.build_tree_node(&child, obs, &obs_tree)?;
-      descendants.push(node);
-    }
-
-    let item_count = descendants.len();
-    Ok(GroupDirectDescendantsPage {
-      descendants,
-      pagination: PaginationInfo {
-        item_count,
-        previous_page_token: page_token.map(String::from),
-        next_page_token,
-      },
-    })
-  }
-
   /// Attempts to get all direct descendants of the input nodes but exits early
   /// if the total descendants exceeds the max.
-  fn get_all_direct_descendants_bounded(
+  async fn get_all_direct_descendants_bounded(
     &self,
-    execution_id: &ExecutionId,
+    execution_id: ExecutionId,
     current_level: &Vec<GroupId>,
     max_nodes: usize,
   ) -> StorageResult<Option<HashMap<GroupId, GroupDirectDescendantsPage>>> {
     let mut results = HashMap::new();
     let mut remaining_nodes = max_nodes;
     for node in current_level {
-      let Some(node_descendants) =
-        self.get_direct_descendants_bounded(execution_id, Some(node), remaining_nodes)?
-      else {
+      let node_descendants = self
+        .get_direct_descendants_page(execution_id, Some(node.clone()), None, remaining_nodes)
+        .await?;
+      if node_descendants.pagination.item_count > remaining_nodes {
         return Ok(None);
-      };
-      remaining_nodes = remaining_nodes - node_descendants.pagination.item_count;
+      }
+      remaining_nodes -= node_descendants.pagination.item_count;
       results.insert(node.clone(), node_descendants);
     }
     Ok(Some(results))
-  }
-
-  /// Helper method to get direct descendants for use cases that require
-  /// exit-early capability.
-  fn get_direct_descendants_bounded(
-    &self,
-    execution_id: &ExecutionId,
-    group_id: Option<&GroupId>,
-    max: usize,
-  ) -> StorageResult<Option<GroupDirectDescendantsPage>> {
-    let node_descendants = self.get_direct_descendants(execution_id, group_id, None, max)?;
-    if node_descendants.pagination.item_count > max {
-      return Ok(None);
-    }
-    Ok(Some(node_descendants))
   }
 
   fn get_groups_to_ancestor(
     &self,
     group_id: &GroupId,
     parent: &Option<GroupId>,
-  ) -> StorageResult<Vec<ObservationWithPayloads>> {
+  ) -> StorageResult<Vec<observation_tools_shared::Observation>> {
     let mut current_group_id = Some(group_id.clone());
     let mut ancestors = vec![];
     while let Some(group_id) = current_group_id {
@@ -211,17 +183,17 @@ impl SledStorage {
         .ok_or_else(|| StorageError::NotFound(format!("Group {:?} does not exist", group_id)))?;
       if ancestors
         .iter()
-        .any(|g: &ObservationWithPayloads| g.observation.group_ids.contains(&group_id))
+        .any(|g: &observation_tools_shared::Observation| g.group_ids.contains(&group_id))
       {
         return Err(StorageError::Internal(format!(
           "Cycle detected {:?} -> {:?}",
           group_id,
           ancestors
             .last()
-            .and_then(|g: &ObservationWithPayloads| g.observation.group_ids.first())
+            .and_then(|g: &observation_tools_shared::Observation| g.group_ids.first())
         )));
       }
-      current_group_id = current_group.observation.parent_group_id.clone();
+      current_group_id = current_group.parent_group_id.clone();
       ancestors.push(current_group);
       if current_group_id == *parent {
         break;
@@ -230,7 +202,10 @@ impl SledStorage {
     Ok(ancestors)
   }
 
-  fn get_group(&self, group_id: &GroupId) -> StorageResult<Option<ObservationWithPayloads>> {
+  fn get_group(
+    &self,
+    group_id: &GroupId,
+  ) -> StorageResult<Option<observation_tools_shared::Observation>> {
     let gi_tree = self.group_index_tree()?;
     let obs_id_bytes = match gi_tree.get(group_id.as_str().as_bytes())? {
       Some(bytes) => bytes,
@@ -247,7 +222,8 @@ impl SledStorage {
       Some(v) => v,
       None => return Ok(None),
     };
-    Ok(Some(self.decode_metadata_only(&obs_id, &value)?))
+    let stored = StoredObservation::decode(value.as_ref())?;
+    Ok(Some(stored.to_observation()?))
   }
 
   /// Scan group_children for direct descendants of a parent, with cursor pagination
@@ -259,7 +235,7 @@ impl SledStorage {
     parent_id: &str,
     page_token: Option<&str>,
     limit: usize,
-  ) -> StorageResult<(Vec<(StoredGroupChild, ObservationWithPayloads)>, Option<String>)> {
+  ) -> StorageResult<(Vec<(StoredGroupChild, observation_tools_shared::Observation)>, Option<String>)> {
     let prefix = GroupChildrenKey::encode_prefix(execution_id, parent_id);
 
     let iter: Box<dyn Iterator<Item = sled::Result<(sled::IVec, sled::IVec)>>> =
@@ -294,7 +270,8 @@ impl SledStorage {
       let key = metadata_key(&child_obs_id);
       let obs_value = obs_tree.get(key.as_bytes())?;
       if let Some(v) = obs_value {
-        let obs = self.decode_metadata_only(&child_obs_id, &v)?;
+        let stored = StoredObservation::decode(v.as_ref())?;
+        let obs = stored.to_observation()?;
         count += 1;
         if count <= limit {
           results.push((child, obs));
@@ -312,7 +289,7 @@ impl SledStorage {
   fn build_tree_node(
     &self,
     child: &StoredGroupChild,
-    obs: ObservationWithPayloads,
+    obs: observation_tools_shared::Observation,
     obs_tree: &sled::Tree,
   ) -> StorageResult<GroupTreeNode> {
     if child.is_group {
@@ -326,7 +303,7 @@ impl SledStorage {
         },
       };
       Ok(GroupTreeNode::Group(Group {
-        metadata: obs,
+        observation: obs,
         group_ancestors: ancestors,
         content,
       }))
@@ -339,11 +316,11 @@ impl SledStorage {
   fn compute_group_ancestors(
     &self,
     obs_tree: &sled::Tree,
-    group_obs: &ObservationWithPayloads,
+    group_obs: &observation_tools_shared::Observation,
   ) -> StorageResult<Vec<GroupId>> {
     let gi_tree = self.group_index_tree()?;
     let mut ancestors = Vec::new();
-    let mut current_parent = group_obs.observation.parent_group_id.clone();
+    let mut current_parent = group_obs.parent_group_id.clone();
 
     while let Some(ref parent_id) = current_parent {
       if ancestors.iter().any(|a: &GroupId| a.as_str() == parent_id.as_str()) {
@@ -387,7 +364,7 @@ mod tests {
   use crate::storage::GroupMembershipOptions;
   use crate::storage::GroupTree;
   use crate::storage::GroupTreeNode;
-  use crate::storage::{ExecutionStorage, GroupStorage, ObservationStorage};
+  use crate::storage::{ExecutionStorage, GroupStorage, ObservationStorage, PAGE_SIZE};
   use observation_tools_shared::GroupId;
   use std::collections::HashSet;
 
@@ -405,7 +382,7 @@ mod tests {
       .expect("store obs");
 
     let page = storage
-      .get_direct_descendants_page(exec.id, None, None)
+      .get_direct_descendants_page(exec.id, None, None, PAGE_SIZE)
       .await
       .expect("get descendants");
     assert_eq!(page.descendants.len(), 2);
@@ -447,7 +424,7 @@ mod tests {
         assert_eq!(roots.len(), 1);
         match &roots[0] {
           GroupTreeNode::Group(g) => {
-            assert_eq!(g.metadata.observation.name, "parent-group");
+            assert_eq!(g.observation.name, "parent-group");
             assert_eq!(g.content.descendants.len(), 2);
           }
           _ => panic!("expected group node"),
@@ -529,11 +506,11 @@ mod tests {
         assert_eq!(roots.len(), 1);
         match &roots[0] {
           GroupTreeNode::Group(g) => {
-            assert_eq!(g.metadata.observation.name, "grandparent");
+            assert_eq!(g.observation.name, "grandparent");
             assert_eq!(g.content.descendants.len(), 1);
             match &g.content.descendants[0] {
               GroupTreeNode::Group(inner) => {
-                assert_eq!(inner.metadata.observation.name, "parent");
+                assert_eq!(inner.observation.name, "parent");
                 assert_eq!(inner.group_ancestors.len(), 1);
                 assert_eq!(inner.content.descendants.len(), 1);
               }

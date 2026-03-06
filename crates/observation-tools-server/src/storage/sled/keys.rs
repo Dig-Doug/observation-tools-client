@@ -21,20 +21,27 @@ impl ExecutionObservationKey<'_> {
   }
 }
 
-/// Key for the payloads tree: `{observation_id}:{payload_id}`
+/// Key for the payloads tree: `{execution_id}:{observation_id}:{payload_id}`
 pub(crate) struct PayloadKey<'a> {
+  pub execution_id: &'a ExecutionId,
   pub observation_id: &'a ObservationId,
   pub payload_id: &'a PayloadId,
 }
 
 impl PayloadKey<'_> {
   pub fn encode(&self) -> String {
-    format!("{}:{}", self.observation_id, self.payload_id.as_str())
+    format!(
+      "{}:{}:{}",
+      self.execution_id,
+      self.observation_id,
+      self.payload_id.as_str()
+    )
   }
 
-  /// Prefix for scanning all payloads belonging to an observation.
-  pub fn encode_prefix(observation_id: &ObservationId) -> String {
-    format!("{}:", observation_id)
+  /// Prefix for scanning all payloads belonging to an observation within an
+  /// execution.
+  pub fn encode_prefix(execution_id: &ExecutionId, observation_id: &ObservationId) -> String {
+    format!("{}:{}:", execution_id, observation_id)
   }
 
   /// Extract the payload_id portion from a full key given the prefix.

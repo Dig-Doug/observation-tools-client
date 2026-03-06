@@ -60,14 +60,14 @@ pub async fn execution_detail_log(
   let observations: Vec<_> = page
     .observations
     .into_iter()
-    .map(|obs| GetObservation::new(obs.observation, obs.payloads))
+    .map(|obs| GetObservation::new(obs, Vec::new()))
     .collect();
 
   let selected_observation = if let Some(obs_id) = &query.obs {
     let observation_id = ObservationId::parse(obs_id)?;
     match metadata.get_observation(observation_id).await {
       Ok(obs) => {
-        let payloads = metadata.get_all_payloads(observation_id).await?;
+        let payloads = metadata.get_all_payloads(execution_id, observation_id).await?;
         Some(GetObservation::new(obs, payloads))
       }
       Err(StorageError::NotFound(_)) => None,
@@ -123,7 +123,7 @@ pub async fn execution_detail_payload(
     let observation_id = ObservationId::parse(obs_id)?;
     match metadata.get_observation(observation_id).await {
       Ok(obs) => {
-        let payloads = metadata.get_all_payloads(observation_id).await?;
+        let payloads = metadata.get_all_payloads(execution_id, observation_id).await?;
         Some(GetObservation::new(obs, payloads))
       }
       Err(StorageError::NotFound(_)) => None,

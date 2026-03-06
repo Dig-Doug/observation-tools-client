@@ -293,6 +293,7 @@ pub async fn build_group_tree_view(
         execution_id,
         focus_group_id.clone(),
         Some(root_page_token.to_string()),
+        TREE_PAGE_SIZE,
       )
       .await?;
     GroupTree::List(page)
@@ -343,13 +344,13 @@ fn build_node_recursive2<'a>(
 ) -> TreeNodeView {
   match node {
     GroupTreeNode::Group(group) => {
-      let group_id = group.metadata.observation.group_ids.first().cloned();
+      let group_id = group.observation.group_ids.first().cloned();
       let child_pag = to_pagination_view(&group.content.pagination, execution_id, &group_id, query);
-      let obs_id_str = group.metadata.observation.id.to_string();
+      let obs_id_str = group.observation.id.to_string();
       let select_url = url_ctx.select_url(&obs_id_str);
       TreeNodeView {
         node_type: "group".to_string(),
-        observation: GetObservation::new(group.metadata.observation, group.metadata.payloads),
+        observation: GetObservation::new(group.observation, Vec::new()),
         group_id: group_id.map(|g| g.as_str().to_string()),
         can_expand: false,
         children: group
@@ -366,11 +367,11 @@ fn build_node_recursive2<'a>(
       }
     }
     GroupTreeNode::Observation(obs) => {
-      let obs_id_str = obs.observation.id.to_string();
+      let obs_id_str = obs.id.to_string();
       let select_url = url_ctx.select_url(&obs_id_str);
       TreeNodeView {
         node_type: "observation".to_string(),
-        observation: GetObservation::new(obs.observation, obs.payloads),
+        observation: GetObservation::new(obs, Vec::new()),
         group_id: None,
         can_expand: false,
         children: Vec::new(),
@@ -405,7 +406,7 @@ async fn build_breadcrumbs(
   }];
 
   let mut ancestors = Vec::new();
-  let mut current_parent = obs.observation.parent_group_id.clone();
+  let mut current_parent = obs.parent_group_id.clone();
 
   while let Some(ref parent_id) = current_parent {
     // Prevent infinite loops
@@ -424,9 +425,9 @@ async fn build_breadcrumbs(
       Ok(parent_obs) => {
         ancestors.push((
           parent_id.as_str().to_string(),
-          parent_obs.observation.name.clone(),
+          parent_obs.name.clone(),
         ));
-        current_parent = parent_obs.observation.parent_group_id.clone();
+        current_parent = parent_obs.parent_group_id.clone();
       }
       Err(_) => break,
     }

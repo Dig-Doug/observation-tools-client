@@ -43,7 +43,7 @@ pub async fn create_observations(
   Path(execution_id): Path<String>,
   mut multipart: Multipart,
 ) -> Result<Json<CreateObservationsResponse>, AppError> {
-  let _execution_id = ExecutionId::parse(&execution_id)?;
+  let execution_id = ExecutionId::parse(&execution_id)?;
 
   let mut observations: Option<Vec<Observation>> = None;
   let mut payload_manifest: Option<Vec<PayloadManifestEntry>> = None;
@@ -180,7 +180,7 @@ pub async fn create_observations(
   metadata.store_observations(observations).await?;
 
   for (obs_id, obs_payloads) in &payloads_per_obs {
-    metadata.store_payloads(obs_id, obs_payloads).await?;
+    metadata.store_payloads(execution_id, obs_id, obs_payloads).await?;
   }
 
   tracing::info!(

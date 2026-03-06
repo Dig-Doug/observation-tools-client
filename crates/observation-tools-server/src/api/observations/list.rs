@@ -53,12 +53,13 @@ pub async fn list_observations(
     .get_observations(execution_id, query.page_token, None)
     .await?;
   let has_next_page = page.pagination.next_page_token.is_some();
+  let mut observations = Vec::with_capacity(page.observations.len());
+  for obs in page.observations {
+    let payloads = metadata.get_all_payloads(execution_id, obs.id).await?;
+    observations.push(GetObservation::new(obs, payloads));
+  }
   Ok(Json(ListObservationsResponse {
-    observations: page
-      .observations
-      .into_iter()
-      .map(|obs| GetObservation::new(obs.observation, obs.payloads))
-      .collect(),
+    observations,
     has_next_page,
     next_page_token: page.pagination.next_page_token,
   }))
