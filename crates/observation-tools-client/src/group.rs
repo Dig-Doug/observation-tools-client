@@ -109,7 +109,7 @@ impl GroupBuilder {
     let observation_id = ObservationId::new();
 
     let group_handle = GroupHandle {
-      group_id,
+      group_id: group_id.clone(),
       execution_id: execution.id(),
       uploader_tx: execution.uploader_tx.clone(),
       base_url: execution.base_url().to_string(),
@@ -126,8 +126,8 @@ impl GroupBuilder {
       .with_id(observation_id)
       .observation_type(ObservationType::Group)
       .log_level(self.log_level.unwrap_or(LogLevel::Info))
-      .execution(execution)
-      .group(&group_handle);
+      .with_group_id(group_id.clone())
+      .execution(execution);
 
     if let Some(source) = self.source {
       builder = builder.source(source.file, source.line);

@@ -5,6 +5,7 @@ use crate::api::AppError;
 use crate::csrf::CsrfToken;
 use crate::storage::MetadataStorage;
 use crate::storage::StorageError;
+use crate::ui::group_tree::{build_group_tree_view, PayloadTreeQuery};
 use axum::extract::Path;
 use axum::extract::Query;
 use axum::extract::State;
@@ -13,19 +14,13 @@ use minijinja::context;
 use minijinja_autoreload::AutoReloader;
 use observation_tools_shared::models::ExecutionId;
 use observation_tools_shared::ObservationId;
-use observation_tools_shared::ObservationType;
 use std::sync::Arc;
 
-/// Query parameters for execution detail page
+/// Query parameters for execution detail page (log view)
 #[derive(Debug, serde::Deserialize)]
 pub struct ExecutionDetailQuery {
-  /// Maximum number of results to return
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub limit: Option<usize>,
-
-  /// Number of results to skip (for pagination)
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub offset: Option<usize>,
+  /// Cursor-based page token
+  pub page_token: Option<String>,
 
   /// Optional observation ID to display in side panel
   obs: Option<String>,
@@ -47,77 +42,34 @@ pub async fn execution_detail_log(
   Query(query): Query<ExecutionDetailQuery>,
   csrf: CsrfToken,
 ) -> Result<Html<String>, AppError> {
-  execution_detail_view(metadata, templates, id, query, csrf, ExecutionView::Log).await
-}
-
-/// Execution detail page - Payload view (shows only payload observations)
-#[tracing::instrument(skip(metadata, templates))]
-pub async fn execution_detail_payload(
-  State(metadata): State<Arc<dyn MetadataStorage>>,
-  State(templates): State<Arc<AutoReloader>>,
-  Path(id): Path<String>,
-  Query(query): Query<ExecutionDetailQuery>,
-  csrf: CsrfToken,
-) -> Result<Html<String>, AppError> {
-  execution_detail_view(metadata, templates, id, query, csrf, ExecutionView::Payload).await
-}
-
-async fn execution_detail_view(
-  metadata: Arc<dyn MetadataStorage>,
-  templates: Arc<AutoReloader>,
-  id: String,
-  query: ExecutionDetailQuery,
-  csrf: CsrfToken,
-  view: ExecutionView,
-) -> Result<Html<String>, AppError> {
-  tracing::debug!(execution_id = %id, ?view, "Rendering execution detail page");
+  tracing::debug!(execution_id = %id, "Rendering execution detail log page");
   let execution_id = ExecutionId::parse(&id)?;
   let execution = match metadata.get_execution(execution_id).await {
     Ok(execution) => Some(execution),
-    Err(StorageError::NotFound(_)) => {
-      // The user may go to the page before it's uploaded. Since the page
-      // auto-refreshes, we do not throw an error so it will show up once it's
-      // available.
-      None
-    }
+    Err(StorageError::NotFound(_)) => None,
     Err(e) => return Err(e.into()),
   };
 
-  let limit = query.limit.unwrap_or(100);
-  let offset = query.offset.unwrap_or(0);
-  let observation_type_filter = match view {
-    ExecutionView::Log => None,
-    ExecutionView::Payload => Some(ObservationType::Payload),
-  };
-
-  let total_count = metadata
-    .count_observations(execution_id, observation_type_filter)
+  let page = metadata
+    .get_observations(execution_id, query.page_token.clone(), None)
     .await?;
+  let next_page_token = page.pagination.next_page_token;
+  let previous_page_token = page.pagination.previous_page_token;
+  let has_next_page = next_page_token.is_some();
 
-  let mut observations = metadata
-    .list_observations(
-      execution_id,
-      Some(limit + 1),
-      Some(offset),
-      observation_type_filter,
-    )
-    .await?;
-  let has_next_page = observations.len() > limit;
-  if has_next_page {
-    observations.pop();
-  }
-  let page = (offset / limit) + 1;
-
-  let observations: Vec<_> = observations
+  let observations: Vec<_> = page
+    .observations
     .into_iter()
-    .map(|obs| GetObservation::new(obs))
+    .map(|obs| GetObservation::new(obs, Vec::new()))
     .collect();
 
-  // If observation ID is provided, load the observation for the side panel
   let selected_observation = if let Some(obs_id) = &query.obs {
     let observation_id = ObservationId::parse(obs_id)?;
     match metadata.get_observation(observation_id).await {
-      Ok(obs) => Some(GetObservation::new(obs)),
+      Ok(obs) => {
+        let payloads = metadata.get_all_payloads(execution_id, observation_id).await?;
+        Some(GetObservation::new(obs, payloads))
+      }
       Err(StorageError::NotFound(_)) => None,
       Err(e) => return Err(e.into()),
     }
@@ -127,24 +79,72 @@ async fn execution_detail_view(
 
   let env = templates.acquire_env()?;
   let tmpl = env.get_template("execution_detail.html")?;
-  let (view_name, base_path) = match view {
-    ExecutionView::Log => ("log", format!("/exe/{}", id)),
-    ExecutionView::Payload => ("payload", format!("/exe/{}/payload", id)),
-  };
+  let base_path = format!("/exe/{}", id);
 
   let html = tmpl.render(context! {
       execution => execution,
       execution_id => id,
       observations => observations,
       has_next_page => has_next_page,
-      total_count => total_count,
-      offset => offset,
-      limit => limit,
-      page => page,
+      next_page_token => next_page_token,
+      previous_page_token => previous_page_token,
       selected_observation => selected_observation,
       display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
       csrf_token => csrf.0,
-      view => view_name,
+      view => "log",
+      base_path => base_path,
+  })?;
+
+  Ok(Html(html))
+}
+
+/// Execution detail page - Payload view (shows group tree)
+#[tracing::instrument(skip(metadata, templates))]
+pub async fn execution_detail_payload(
+  State(metadata): State<Arc<dyn MetadataStorage>>,
+  State(templates): State<Arc<AutoReloader>>,
+  Path(id): Path<String>,
+  Query(query): Query<PayloadTreeQuery>,
+  csrf: CsrfToken,
+) -> Result<Html<String>, AppError> {
+  tracing::debug!(execution_id = %id, "Rendering execution detail payload page");
+  let execution_id = ExecutionId::parse(&id)?;
+  let execution = match metadata.get_execution(execution_id).await {
+    Ok(execution) => Some(execution),
+    Err(StorageError::NotFound(_)) => None,
+    Err(e) => return Err(e.into()),
+  };
+
+  // Build the group tree view
+  let tree = build_group_tree_view(&metadata, execution_id, &query).await?;
+
+  // If observation ID is provided, load the observation for the side panel
+  let selected_observation = if let Some(obs_id) = &query.obs {
+    let observation_id = ObservationId::parse(obs_id)?;
+    match metadata.get_observation(observation_id).await {
+      Ok(obs) => {
+        let payloads = metadata.get_all_payloads(execution_id, observation_id).await?;
+        Some(GetObservation::new(obs, payloads))
+      }
+      Err(StorageError::NotFound(_)) => None,
+      Err(e) => return Err(e.into()),
+    }
+  } else {
+    None
+  };
+
+  let env = templates.acquire_env()?;
+  let tmpl = env.get_template("execution_detail.html")?;
+  let base_path = format!("/exe/{}/payload", id);
+
+  let html = tmpl.render(context! {
+      execution => execution,
+      execution_id => id,
+      tree => tree,
+      selected_observation => selected_observation,
+      display_threshold => observation_tools_shared::DISPLAY_THRESHOLD_BYTES,
+      csrf_token => csrf.0,
+      view => "payload",
       base_path => base_path,
   })?;
 

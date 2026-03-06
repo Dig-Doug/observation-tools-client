@@ -11,6 +11,7 @@ use axum::http::header;
 use axum::http::HeaderValue;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use observation_tools_shared::ExecutionId;
 use observation_tools_shared::ObservationId;
 use observation_tools_shared::PayloadId;
 use std::sync::Arc;
@@ -35,23 +36,12 @@ use std::sync::Arc;
 pub async fn get_observation_blob(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   State(blobs): State<Arc<dyn BlobStorage>>,
-  Path((_execution_id, observation_id, payload_id)): Path<(String, String, String)>,
+  Path((execution_id, observation_id, payload_id)): Path<(String, String, String)>,
 ) -> Result<impl IntoResponse, AppError> {
+  let execution_id = ExecutionId::parse(&execution_id)?;
   let observation_id = ObservationId::parse(&observation_id)?;
   let payload_id = PayloadId::from(payload_id);
-  let observation = metadata.get_observation(observation_id).await?;
-
-  // Find the payload in the manifest
-  let payload = observation
-    .payloads
-    .iter()
-    .find(|p| p.id == payload_id)
-    .ok_or_else(|| {
-      StorageError::NotFound(format!(
-        "Payload {} not found for observation {}",
-        payload_id.as_str(), observation_id
-      ))
-    })?;
+  let payload = metadata.get_payload(execution_id, observation_id, payload_id.clone()).await?;
 
   let content_type = HeaderValue::from_str(&payload.mime_type)
     .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream"));
@@ -94,18 +84,22 @@ pub async fn get_observation_blob(
 pub async fn get_observation_blob_legacy(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   State(blobs): State<Arc<dyn BlobStorage>>,
-  Path((_execution_id, observation_id)): Path<(String, String)>,
+  Path((execution_id, observation_id)): Path<(String, String)>,
 ) -> Result<impl IntoResponse, AppError> {
+  let execution_id = ExecutionId::parse(&execution_id)?;
   let observation_id = ObservationId::parse(&observation_id)?;
-  let observation = metadata.get_observation(observation_id).await?;
+  let payloads = metadata.get_all_payloads(execution_id, observation_id).await?;
 
   // Use the first payload
-  let payload = observation.payloads.first().ok_or_else(|| {
+  let payload_meta = payloads.first().ok_or_else(|| {
     StorageError::NotFound(format!(
       "No payloads found for observation {}",
       observation_id
     ))
   })?;
+  let payload = metadata
+    .get_payload(execution_id, observation_id, payload_meta.id.clone())
+    .await?;
 
   let content_type = HeaderValue::from_str(&payload.mime_type)
     .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream"));

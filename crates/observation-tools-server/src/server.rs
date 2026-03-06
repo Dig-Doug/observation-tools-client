@@ -14,7 +14,6 @@ use tower_http::trace::TraceLayer;
 use tracing::debug;
 use tracing::info;
 use tracing::warn;
-use utoipa_swagger_ui::SwaggerUi;
 
 /// The Observation Tools server
 pub struct Server {
@@ -72,7 +71,6 @@ impl Server {
     let app = Router::new()
       .merge(ui_router)
       .merge(api_router)
-      .merge(SwaggerUi::new("/api/swagger-ui").url("/api/openapi.json", openapi))
       .layer(TraceLayer::new_for_http())
       .with_state(state);
 

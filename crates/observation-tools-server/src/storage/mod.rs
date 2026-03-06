@@ -1,14 +1,21 @@
 //! Storage layer abstractions and implementations
 
 pub mod blob;
-pub mod metadata;
 pub mod proto;
+pub mod sled;
+pub mod stored_execution;
 
 pub use blob::BlobStorage;
 pub use blob::LocalBlobStorage;
-pub use metadata::MetadataStorage;
-pub use metadata::SledStorage;
+pub use self::sled::SledStorage;
+use observation_tools_shared::Execution;
+use observation_tools_shared::ExecutionId;
+use observation_tools_shared::GroupId;
+use observation_tools_shared::ObservationId;
+use observation_tools_shared::ObservationType;
 use observation_tools_shared::PayloadId;
+use std::collections::HashMap;
+use std::collections::HashSet;
 use thiserror::Error;
 
 /// Storage errors
@@ -27,7 +34,7 @@ pub enum StorageError {
   Serialization(#[from] serde_json::Error),
 
   #[error("Database error: {0}")]
-  Database(#[from] sled::Error),
+  Database(#[from] ::sled::Error),
 
   #[error("Protobuf decode error: {0}")]
   Protobuf(#[from] prost::DecodeError),
@@ -41,13 +48,6 @@ pub enum StorageError {
 
 /// Result type for storage operations
 pub type StorageResult<T> = Result<T, StorageError>;
-
-/// An observation with all its payloads
-#[derive(Clone, Debug)]
-pub struct ObservationWithPayloads {
-  pub observation: observation_tools_shared::Observation,
-  pub payloads: Vec<StoredPayload>,
-}
 
 /// A single payload attached to an observation
 #[derive(Clone, Debug)]
@@ -64,4 +64,265 @@ pub struct StoredPayload {
 pub enum PayloadData {
   Inline(Vec<u8>),
   Blob,
+}
+
+/// Default page size for cursor-based pagination
+pub const PAGE_SIZE: usize = 100;
+
+/// Pagination metadata for cursor-based responses
+#[derive(Clone, Debug)]
+pub struct PaginationInfo {
+  pub item_count: usize,
+  pub previous_page_token: Option<String>,
+  pub next_page_token: Option<String>,
+}
+
+/// A page of observations with pagination info
+#[derive(Clone, Debug)]
+pub struct ObservationPage {
+  pub observations: Vec<observation_tools_shared::Observation>,
+  pub pagination: PaginationInfo,
+}
+
+/// A page of payloads with pagination info
+#[derive(Clone, Debug)]
+pub struct ObservationPayloadPage {
+  pub payloads: Vec<StoredPayload>,
+  pub pagination: PaginationInfo,
+}
+
+/// A page of direct descendants (children) of a group
+#[derive(Clone, Debug)]
+pub struct GroupDirectDescendantsPage {
+  pub descendants: Vec<observation_tools_shared::Observation>,
+  pub pagination: PaginationInfo,
+}
+
+/// A group observation with its ancestor chain and immediate children (assembled tree node)
+#[derive(Clone, Debug)]
+pub struct Group {
+  pub observation: observation_tools_shared::Observation,
+  pub children: Vec<GroupTreeNode>,
+  pub children_pagination: PaginationInfo,
+}
+
+impl Group {
+  pub fn group_id(&self) -> &GroupId {
+    // TODO: Make this guaranteed by the API
+    &self.observation.group_ids.first().expect("Group must have a group id")
+  }
+}
+
+/// Result of expanding a group tree via BFS
+#[derive(Clone, Debug)]
+pub enum GroupTree {
+  /// First level fits in max_nodes - may include deeper levels
+  Tree { roots: Vec<GroupTreeNode> },
+  /// First level too large - paginated list
+  List(GroupDirectDescendantsPage),
+}
+
+/// A node in the group tree - either a group or a leaf observation
+#[derive(Clone, Debug)]
+pub enum GroupTreeNode {
+  Group(Group),
+  Observation(observation_tools_shared::Observation),
+}
+
+impl GroupTreeNode {
+  pub fn group_id(&self) -> Option<&GroupId> {
+    match self {
+      GroupTreeNode::Group(group) => group.observation.group_ids.first(),
+      _ => None,
+    }
+  }
+}
+
+/// Trait for storing and retrieving executions
+#[async_trait::async_trait]
+pub trait ExecutionStorage: Send + Sync {
+  async fn store_execution(&self, execution: &Execution) -> StorageResult<()>;
+  async fn get_execution(&self, id: ExecutionId) -> StorageResult<Execution>;
+  async fn list_executions(
+    &self,
+    limit: Option<usize>,
+    offset: Option<usize>,
+  ) -> StorageResult<Vec<Execution>>;
+  async fn count_executions(&self) -> StorageResult<usize>;
+}
+
+/// Trait for storing and retrieving observations
+#[async_trait::async_trait]
+pub trait ObservationStorage: Send + Sync {
+  async fn store_observations(
+    &self,
+    observations: Vec<observation_tools_shared::Observation>,
+  ) -> StorageResult<()>;
+
+  async fn get_observation(
+    &self,
+    id: ObservationId,
+  ) -> StorageResult<observation_tools_shared::Observation>;
+
+  /// Paginated observations sorted by creation time (UUIDv7 order).
+  /// Uses cursor-based pagination with page tokens.
+  /// Optionally filters by observation type.
+  async fn get_observations(
+    &self,
+    execution_id: ExecutionId,
+    page_token: Option<String>,
+    observation_type: Option<ObservationType>,
+  ) -> StorageResult<ObservationPage>;
+}
+
+/// Trait for storing and retrieving payloads
+#[async_trait::async_trait]
+pub trait PayloadStorage: Send + Sync {
+  async fn store_payloads(
+    &self,
+    execution_id: ExecutionId,
+    observation_id: &ObservationId,
+    payloads: &[StoredPayload],
+  ) -> StorageResult<()>;
+
+  async fn get_all_payloads(
+    &self,
+    execution_id: ExecutionId,
+    observation_id: ObservationId,
+  ) -> StorageResult<Vec<StoredPayload>>;
+
+  /// Get a single payload by observation ID and payload ID.
+  async fn get_payload(
+    &self,
+    execution_id: ExecutionId,
+    observation_id: ObservationId,
+    payload_id: PayloadId,
+  ) -> StorageResult<StoredPayload>;
+
+  /// Paginated payload retrieval for observation detail panel.
+  /// Uses payload_id as cursor.
+  async fn get_payloads(
+    &self,
+    execution_id: ExecutionId,
+    observation_id: ObservationId,
+    page_token: Option<String>,
+  ) -> StorageResult<ObservationPayloadPage>;
+}
+
+/// Options for BFS group descendant expansion
+pub struct GroupMembershipOptions {
+  /// The root group to start the BFS from.
+  pub root: Option<GroupId>,
+  /// The additional groups that should be expanded in the tree.
+  pub expanded: HashSet<GroupId>,
+  /// The groups that should be collapsed in the returned tree.
+  pub collapsed: HashSet<GroupId>,
+  /// The max number of nodes to return in the BFS.
+  pub max_default_nodes: usize,
+  /// The page size of nodes to return in expanded groups.
+  pub page_size: usize,
+}
+
+const ROOT_SENTINEL: &str = "_ROOT_";
+
+/// Get the GroupId key for a root, using a sentinel for the actual root.
+pub fn root_group_id(root: &Option<GroupId>) -> GroupId {
+  root
+    .as_ref()
+    .cloned()
+    .unwrap_or_else(|| GroupId::from(ROOT_SENTINEL))
+}
+
+/// Assemble a nested GroupTree from a flat map of group_id → descendants.
+pub fn make_group_tree(
+  mut data: HashMap<GroupId, GroupDirectDescendantsPage>,
+  root_group: GroupId,
+) -> GroupTree {
+  let Some(root_page) = data.remove(&root_group) else {
+    return GroupTree::Tree { roots: Vec::new() };
+  };
+
+  if root_page.pagination.next_page_token.is_some() {
+    return GroupTree::List(root_page);
+  }
+
+  let roots = root_page
+    .descendants
+    .into_iter()
+    .map(|obs| obs_to_tree_node(obs, &mut data))
+    .collect();
+
+  GroupTree::Tree { roots }
+}
+
+fn obs_to_tree_node(
+  obs: observation_tools_shared::Observation,
+  data: &mut HashMap<GroupId, GroupDirectDescendantsPage>,
+) -> GroupTreeNode {
+  if obs.observation_type == observation_tools_shared::ObservationType::Group {
+    let group_id = obs.group_ids.first().cloned();
+    let children_page = group_id.as_ref().and_then(|id| data.remove(id));
+    let (descendants, pagination) = match children_page {
+      Some(page) => {
+        let nodes = page
+          .descendants
+          .into_iter()
+          .map(|child| obs_to_tree_node(child, data))
+          .collect();
+        (nodes, page.pagination)
+      }
+      None => (
+        Vec::new(),
+        PaginationInfo {
+          item_count: 0,
+          previous_page_token: None,
+          next_page_token: None,
+        },
+      ),
+    };
+    GroupTreeNode::Group(Group {
+      observation: obs,
+      children: descendants,
+      children_pagination: pagination,
+    })
+  } else {
+    GroupTreeNode::Observation(obs)
+  }
+}
+
+/// Trait for group tree operations
+#[async_trait::async_trait]
+pub trait GroupStorage: Send + Sync {
+  async fn get_direct_descendants_page(
+    &self,
+    execution_id: ExecutionId,
+    group_id: Option<GroupId>,
+    page_token: Option<String>,
+    page_size: usize,
+  ) -> StorageResult<GroupDirectDescendantsPage>;
+
+  async fn get_observation_by_group_id(
+    &self,
+    group_id: GroupId,
+  ) -> StorageResult<observation_tools_shared::Observation>;
+
+  /// BFS expansion of group descendants.
+  /// Returns a flat map of group_id → direct descendants page.
+  /// Use `make_group_tree` to assemble into a nested `GroupTree`.
+  async fn get_descendants(
+    &self,
+    execution_id: ExecutionId,
+    options: GroupMembershipOptions,
+  ) -> StorageResult<HashMap<GroupId, GroupDirectDescendantsPage>>;
+}
+
+/// Combined trait for all storage operations
+pub trait MetadataStorage:
+  ExecutionStorage + ObservationStorage + PayloadStorage + GroupStorage
+{
+}
+
+impl<T: ExecutionStorage + ObservationStorage + PayloadStorage + GroupStorage> MetadataStorage
+  for T
+{
 }

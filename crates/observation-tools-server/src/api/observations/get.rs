@@ -2,7 +2,6 @@
 
 use crate::api::AppError;
 use crate::storage::MetadataStorage;
-use crate::storage::ObservationWithPayloads;
 use crate::storage::PayloadData;
 use crate::storage::StoredPayload;
 use axum::extract::Path;
@@ -39,11 +38,10 @@ pub struct GetPayload {
 }
 
 impl GetObservation {
-  pub fn new(obs: ObservationWithPayloads) -> GetObservation {
-    let exec_id = obs.observation.execution_id;
-    let obs_id = obs.observation.id;
-    let payloads = obs
-      .payloads
+  pub fn new(observation: Observation, stored_payloads: Vec<StoredPayload>) -> GetObservation {
+    let exec_id = observation.execution_id;
+    let obs_id = observation.id;
+    let payloads = stored_payloads
       .into_iter()
       .map(|p| {
         let id = p.id.clone();
@@ -60,7 +58,7 @@ impl GetObservation {
       })
       .collect();
     GetObservation {
-      observation: obs.observation,
+      observation,
       payloads,
     }
   }
@@ -145,10 +143,11 @@ pub async fn get_observation(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   Path((execution_id, observation_id)): Path<(String, String)>,
 ) -> Result<Json<GetObservationResponse>, AppError> {
-  let _execution_id = ExecutionId::parse(&execution_id)?;
+  let execution_id = ExecutionId::parse(&execution_id)?;
   let observation_id = ObservationId::parse(&observation_id)?;
   let observation = metadata.get_observation(observation_id).await?;
+  let payloads = metadata.get_all_payloads(execution_id, observation_id).await?;
   Ok(Json(GetObservationResponse {
-    observation: GetObservation::new(observation),
+    observation: GetObservation::new(observation, payloads),
   }))
 }

@@ -4,7 +4,6 @@ use crate::api::types::CreateObservationsResponse;
 use crate::api::AppError;
 use crate::storage::BlobStorage;
 use crate::storage::MetadataStorage;
-use crate::storage::ObservationWithPayloads;
 use crate::storage::PayloadData;
 use crate::storage::StoredPayload;
 use axum::extract::Multipart;
@@ -44,7 +43,7 @@ pub async fn create_observations(
   Path(execution_id): Path<String>,
   mut multipart: Multipart,
 ) -> Result<Json<CreateObservationsResponse>, AppError> {
-  let _execution_id = ExecutionId::parse(&execution_id)?;
+  let execution_id = ExecutionId::parse(&execution_id)?;
 
   let mut observations: Option<Vec<Observation>> = None;
   let mut payload_manifest: Option<Vec<PayloadManifestEntry>> = None;
@@ -107,8 +106,9 @@ pub async fn create_observations(
     })
     .unwrap_or_default();
 
-  // Build ObservationWithPayloads for each observation by collecting all matching payloads
-  let mut observations_with_payloads = Vec::with_capacity(observations.len());
+  // Collect payloads per observation
+  let mut payloads_per_obs: Vec<(observation_tools_shared::ObservationId, Vec<StoredPayload>)> =
+    Vec::with_capacity(observations.len());
 
   for obs in &observations {
     let obs_id_str = obs.id.to_string();
@@ -165,10 +165,7 @@ pub async fn create_observations(
       )));
     }
 
-    observations_with_payloads.push(ObservationWithPayloads {
-      observation: obs.clone(),
-      payloads: obs_payloads,
-    });
+    payloads_per_obs.push((obs.id, obs_payloads));
   }
 
   // Warn about any orphaned payloads
@@ -179,13 +176,16 @@ pub async fn create_observations(
     );
   }
 
-  metadata
-    .store_observations(observations_with_payloads)
-    .await?;
+  let obs_count = observations.len();
+  metadata.store_observations(observations).await?;
+
+  for (obs_id, obs_payloads) in &payloads_per_obs {
+    metadata.store_payloads(execution_id, obs_id, obs_payloads).await?;
+  }
 
   tracing::info!(
     execution_id = %execution_id,
-    count = observations.len(),
+    count = obs_count,
     "Observations created successfully"
   );
 

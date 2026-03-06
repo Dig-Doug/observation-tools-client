@@ -99,19 +99,12 @@ async fn test_create_many_observations() -> anyhow::Result<()> {
   let observations = server.list_observations(&execution.id()).await?;
   assert_eq!(observations.len(), expected_names.len());
 
-  // List returns metadata only (payloads as Pointers)
   // Verify payload sizes are correct
   for obs in &observations {
     assert_eq!(
       obs.payloads[0].size as u64,
       observation_tools::BLOB_THRESHOLD_BYTES as u64 - 1,
       "Observation {} payload size should be exactly 1 byte under threshold",
-      obs.name
-    );
-    // When listing, all payloads come back as Pointers
-    assert!(
-      matches!(obs.payload(), PayloadOrPointerResponse::Pointer { .. }),
-      "Observation {} should have Pointer payload in list response",
       obs.name
     );
   }
@@ -365,7 +358,7 @@ async fn test_named_payloads() -> anyhow::Result<()> {
     // Create an observation with a named payload, then add more payloads via the handle
     let handle = ObservationBuilder::new("multi-payload-obs")
       .metadata("kind", "multi")
-      .named_serde("headers", &json!({"content-type": "application/json"}));
+      .named_payload("headers", &json!({"content-type": "application/json"}));
 
     handle.serde("body", &json!({"message": "hello"}));
     handle.payload(
