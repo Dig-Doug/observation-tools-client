@@ -653,4 +653,61 @@ mod tests {
     assert!(names.contains(&"child-2"));
     Ok(())
   }
+
+  #[tokio::test]
+  async fn test_get_descendants_collapsed() -> anyhow::Result<()> {
+    let (storage, _dir) = test_storage();
+    let exec = make_execution();
+    storage.store_execution(&exec).await?;
+
+    let parent = make_group(exec.id, "parent", None);
+    let child = make_obs_in_group(exec.id, "child", GroupId::from("parent"));
+    storage.store_observations(vec![parent, child]).await?;
+
+    let options = GroupMembershipOptions {
+      collapsed: HashSet::from([GroupId::from("parent")]),
+      ..default_options()
+    };
+    let data = storage.get_descendants(exec.id, options).await?;
+    let root_key = root_group_id(&None);
+    // Root has the parent group, but parent's children are NOT fetched
+    assert_eq!(data.len(), 1);
+    assert_eq!(data[&root_key].descendants.len(), 1);
+    assert_eq!(data[&root_key].descendants[0].name, "parent");
+    assert!(!data.contains_key(&GroupId::from("parent")));
+    Ok(())
+  }
+
+  #[tokio::test]
+  async fn test_get_descendants_expanded() -> anyhow::Result<()> {
+    let (storage, _dir) = test_storage();
+    let exec = make_execution();
+    storage.store_execution(&exec).await?;
+
+    // Create a deep tree: grandparent -> parent -> leaf
+    let grandparent = make_group(exec.id, "grandparent", None);
+    let parent = make_group(exec.id, "parent", Some(GroupId::from("grandparent")));
+    let leaf = make_obs_in_group(exec.id, "leaf", GroupId::from("parent"));
+    storage
+      .store_observations(vec![grandparent, parent, leaf])
+      .await?;
+
+    // Use a tiny budget so BFS only gets the root level
+    let options = GroupMembershipOptions {
+      max_default_nodes: 1,
+      expanded: HashSet::from([GroupId::from("parent")]),
+      ..default_options()
+    };
+    let data = storage.get_descendants(exec.id, options).await?;
+    let root_key = root_group_id(&None);
+    // Root has grandparent (from BFS, truncated)
+    assert!(data.contains_key(&root_key));
+    // Expanded "parent" triggers ancestor walk: parent + grandparent both get fetched
+    assert!(data.contains_key(&GroupId::from("grandparent")));
+    assert!(data.contains_key(&GroupId::from("parent")));
+    let parent_page = &data[&GroupId::from("parent")];
+    assert_eq!(parent_page.descendants.len(), 1);
+    assert_eq!(parent_page.descendants[0].name, "leaf");
+    Ok(())
+  }
 }
