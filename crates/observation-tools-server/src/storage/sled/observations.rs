@@ -139,7 +139,7 @@ impl ObservationStorage for SledStorage {
 }
 
 impl SledStorage {
-  fn decode_observation(
+  pub(super) fn decode_observation(
     &self,
     obs_tree: &sled::Tree,
     id: &ObservationId,

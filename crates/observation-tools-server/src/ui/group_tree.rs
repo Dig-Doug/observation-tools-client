@@ -312,7 +312,28 @@ pub async fn build_group_tree_view(
   info!("{:#?}", root_page);
 
   let (nodes, pagination) = match root_page {
-    GroupTree::List(nodes) => (nodes.descendants, Some(nodes.pagination)),
+    GroupTree::List(page) => {
+      let nodes = page
+        .descendants
+        .into_iter()
+        .map(|obs| {
+          if obs.observation_type == observation_tools_shared::ObservationType::Group {
+            GroupTreeNode::Group(crate::storage::Group {
+              observation: obs,
+              children: Vec::new(),
+              children_pagination: crate::storage::PaginationInfo {
+                item_count: 0,
+                previous_page_token: None,
+                next_page_token: None,
+              },
+            })
+          } else {
+            GroupTreeNode::Observation(obs)
+          }
+        })
+        .collect();
+      (nodes, Some(page.pagination))
+    }
     GroupTree::Tree { roots } => (roots, None),
   };
   node_count += nodes.len();
@@ -345,7 +366,7 @@ fn build_node_recursive2<'a>(
   match node {
     GroupTreeNode::Group(group) => {
       let group_id = group.observation.group_ids.first().cloned();
-      let child_pag = to_pagination_view(&group.content.pagination, execution_id, &group_id, query);
+      let child_pag = to_pagination_view(&group.children_pagination, execution_id, &group_id, query);
       let obs_id_str = group.observation.id.to_string();
       let select_url = url_ctx.select_url(&obs_id_str);
       TreeNodeView {
@@ -354,8 +375,7 @@ fn build_node_recursive2<'a>(
         group_id: group_id.map(|g| g.as_str().to_string()),
         can_expand: false,
         children: group
-          .content
-          .descendants
+          .children
           .into_iter()
           .map(|d| build_node_recursive2(execution_id, url_ctx, query, d))
           .collect(),

@@ -94,17 +94,16 @@ pub struct ObservationPayloadPage {
 /// A page of direct descendants (children) of a group
 #[derive(Clone, Debug)]
 pub struct GroupDirectDescendantsPage {
-  pub descendants: Vec<GroupTreeNode>,
+  pub descendants: Vec<observation_tools_shared::Observation>,
   pub pagination: PaginationInfo,
 }
 
-/// A group observation with its ancestor chain and immediate children
+/// A group observation with its ancestor chain and immediate children (assembled tree node)
 #[derive(Clone, Debug)]
 pub struct Group {
   pub observation: observation_tools_shared::Observation,
-  /// Oldest ancestor first
-  pub group_ancestors: Vec<GroupId>,
-  pub content: GroupDirectDescendantsPage,
+  pub children: Vec<GroupTreeNode>,
+  pub children_pagination: PaginationInfo,
 }
 
 impl Group {
@@ -250,33 +249,44 @@ pub fn make_group_tree(
   let roots = root_page
     .descendants
     .into_iter()
-    .map(|node| attach_children(node, &mut data))
+    .map(|obs| obs_to_tree_node(obs, &mut data))
     .collect();
 
   GroupTree::Tree { roots }
 }
 
-fn attach_children(
-  node: GroupTreeNode,
+fn obs_to_tree_node(
+  obs: observation_tools_shared::Observation,
   data: &mut HashMap<GroupId, GroupDirectDescendantsPage>,
 ) -> GroupTreeNode {
-  match node {
-    GroupTreeNode::Group(mut group) => {
-      let group_id = group.observation.group_ids.first().cloned();
-      if let Some(children_page) = group_id.and_then(|id| data.remove(&id)) {
-        let descendants = children_page
+  if obs.observation_type == observation_tools_shared::ObservationType::Group {
+    let group_id = obs.group_ids.first().cloned();
+    let children_page = group_id.as_ref().and_then(|id| data.remove(id));
+    let (descendants, pagination) = match children_page {
+      Some(page) => {
+        let nodes = page
           .descendants
           .into_iter()
-          .map(|child| attach_children(child, data))
+          .map(|child| obs_to_tree_node(child, data))
           .collect();
-        group.content = GroupDirectDescendantsPage {
-          descendants,
-          pagination: children_page.pagination,
-        };
+        (nodes, page.pagination)
       }
-      GroupTreeNode::Group(group)
-    }
-    other => other,
+      None => (
+        Vec::new(),
+        PaginationInfo {
+          item_count: 0,
+          previous_page_token: None,
+          next_page_token: None,
+        },
+      ),
+    };
+    GroupTreeNode::Group(Group {
+      observation: obs,
+      children: descendants,
+      children_pagination: pagination,
+    })
+  } else {
+    GroupTreeNode::Observation(obs)
   }
 }
 

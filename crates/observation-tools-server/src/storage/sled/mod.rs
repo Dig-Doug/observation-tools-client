@@ -101,10 +101,9 @@ pub(super) mod test_helpers {
   }
 
   pub fn make_group(exec_id: ExecutionId, name: &str, parent: Option<GroupId>) -> Observation {
-    let id = ObservationId::new();
-    let group_id = GroupId::from(id.to_string());
+    let group_id = GroupId::from(name);
     Observation {
-      id,
+      id: ObservationId::new(),
       execution_id: exec_id,
       name: name.to_string(),
       observation_type: ObservationType::Group,
