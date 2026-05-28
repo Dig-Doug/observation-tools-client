@@ -227,7 +227,7 @@ impl ObservationBuilder {
       .take()
       .or_else(context::get_current_execution)
     else {
-      log::error!(
+      log::debug!(
         "No execution context available for observation '{}'",
         self.name
       );
