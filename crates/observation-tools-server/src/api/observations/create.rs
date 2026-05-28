@@ -37,13 +37,28 @@ struct PayloadManifestEntry {
 /// - "observations": JSON array of observation metadata
 /// - "{obs_id}:{payload_id}:{name}": Binary payload data for each payload
 /// - Legacy: "{obs_id}:{name}" or "{obs_id}" formats are also supported
-#[tracing::instrument(skip(metadata, blobs, multipart))]
+#[tracing::instrument(skip(metadata, blobs, multipart, headers))]
 pub async fn create_observations(
   State(metadata): State<Arc<dyn MetadataStorage>>,
   State(blobs): State<Arc<dyn BlobStorage>>,
   Path(execution_id): Path<String>,
+  headers: axum::http::HeaderMap,
   mut multipart: Multipart,
 ) -> Result<Json<CreateObservationsResponse>, AppError> {
+  let content_length = headers
+    .get(axum::http::header::CONTENT_LENGTH)
+    .and_then(|v| v.to_str().ok())
+    .and_then(|v| v.parse::<usize>().ok());
+  let content_type = headers
+    .get(axum::http::header::CONTENT_TYPE)
+    .and_then(|v| v.to_str().ok())
+    .map(|v| v.to_string());
+  tracing::debug!(
+    execution_id = %execution_id,
+    content_length = ?content_length,
+    content_type = ?content_type,
+    "Receiving multipart observation request"
+  );
   let _execution_id = ExecutionId::parse(&execution_id)?;
 
   let mut observations: Option<Vec<Observation>> = None;
@@ -51,12 +66,31 @@ pub async fn create_observations(
   let mut payloads: HashMap<String, bytes::Bytes> = HashMap::new();
 
   // Parse all multipart fields
+  let mut field_index: usize = 0;
+  let mut total_bytes: usize = 0;
   while let Some(field) = multipart
     .next_field()
     .await
-    .map_err(|e| AppError::BadRequest(format!("Failed to read multipart field: {}", e)))?
+    .map_err(|e| {
+      tracing::warn!(
+        execution_id = %execution_id,
+        field_index,
+        total_bytes,
+        "Failed to read multipart field: {}", e
+      );
+      AppError::BadRequest(format!("Failed to read multipart field: {}", e))
+    })?
   {
     let name = field.name().unwrap_or_default().to_string();
+    let content_type = field.content_type().map(|ct| ct.to_string());
+
+    tracing::trace!(
+      execution_id = %execution_id,
+      field_index,
+      field_name = %name,
+      content_type = ?content_type,
+      "Reading multipart field"
+    );
 
     if name == "observations" {
       // Parse JSON observations metadata
@@ -64,6 +98,8 @@ pub async fn create_observations(
         .bytes()
         .await
         .map_err(|e| AppError::BadRequest(format!("Failed to read observations data: {}", e)))?;
+      tracing::trace!(execution_id = %execution_id, size = data.len(), "Read observations field");
+      total_bytes += data.len();
       let parsed: Vec<Observation> = serde_json::from_slice(&data)
         .map_err(|e| AppError::BadRequest(format!("Failed to parse observations JSON: {}", e)))?;
       observations = Some(parsed);
@@ -73,16 +109,45 @@ pub async fn create_observations(
         .bytes()
         .await
         .map_err(|e| AppError::BadRequest(format!("Failed to read payload manifest: {}", e)))?;
+      tracing::trace!(execution_id = %execution_id, size = data.len(), "Read payload_manifest field");
+      total_bytes += data.len();
       let parsed: Vec<PayloadManifestEntry> = serde_json::from_slice(&data)
         .map_err(|e| AppError::BadRequest(format!("Failed to parse payload manifest JSON: {}", e)))?;
       payload_manifest = Some(parsed);
     } else {
       // This is a payload field
       let data = field.bytes().await.map_err(|e| {
+        let source_chain = {
+          let mut chain = Vec::new();
+          let mut current: &dyn std::error::Error = &e;
+          while let Some(source) = current.source() {
+            chain.push(format!("{}", source));
+            current = source;
+          }
+          chain
+        };
+        tracing::warn!(
+          execution_id = %execution_id,
+          field_name = %name,
+          field_index,
+          total_bytes,
+          content_length = ?content_length,
+          error_debug = ?e,
+          error_sources = ?source_chain,
+          "Failed to read payload data: {}", e
+        );
         AppError::BadRequest(format!("Failed to read payload data for {}: {}", name, e))
       })?;
+      tracing::trace!(
+        execution_id = %execution_id,
+        field_name = %name,
+        size = data.len(),
+        "Read payload field"
+      );
+      total_bytes += data.len();
       payloads.insert(name, data);
     }
+    field_index += 1;
   }
 
   let observations = observations.ok_or_else(|| {
